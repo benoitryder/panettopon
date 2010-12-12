@@ -467,6 +467,7 @@ void FieldDisplay::step()
 
   lift_offset_ = 1-(float)field_.raiseStep()/field_.conf().raise_steps;
 
+  // cursor
   if( field_.tick() % 15 == 0 ) {
     if( (field_.tick()/15) % 2 == 0 ) {
       spr_cursor_.SetSubRect( sf::IntRect(
@@ -479,15 +480,37 @@ void FieldDisplay::step()
               ) );
     }
   }
-
   spr_cursor_.SetPosition(
       res_.bk_size * (field_.cursor().x + 1),
       res_.bk_size * (FIELD_HEIGHT-field_.cursor().y + 0.5 - lift_offset_)
       );
 
-  //XXX:temp labels_.step(&field_);
+  // field raised: update crouch_dt_
+  if( field_.stepInfo().raised ) {
+    for(int x=0; x<FIELD_WIDTH; x++) {
+      for(int y=FIELD_HEIGHT; y>0; y--) {
+        crouch_dt_[x][y] = crouch_dt_[x][y-1];
+      }
+      crouch_dt_[x][0] = 0;
+    }
+  }
 
-  //TODO:crouch update bouncing
+  // block bouncing after fall
+  //TODO update when a block fall?
+  for(int x=0; x<FIELD_WIDTH; x++) {
+    for(int y=1; y<=FIELD_WIDTH; y++) {
+      const Block &bk = field_.block(x,y);
+      if( bk.isState(BkColor::LAID) ) {
+        crouch_dt_[x][y] = CROUCH_DURATION;
+      } else if( bk.isState(BkColor::REST) && crouch_dt_[x][y] != 0 ) {
+        crouch_dt_[x][y]--;
+      } else {
+        crouch_dt_[x][y] = 0;
+      }
+    }
+  }
+
+  labels_.step(&field_);
 }
 
 
@@ -502,8 +525,6 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
 
   if( bk.isColor() ) {
     const DisplayRes::TilesBkColor &tiles = res_.tiles_bk_color[bk.bk_color.color];
-    //TODO:crouch
-    const unsigned int *crouch_dt = &crouch_dt_[x][y];
 
     const FieldTile *tile = &tiles.normal; // default
     if( bk.bk_color.state == BkColor::FLASH ) {
@@ -511,23 +532,20 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
         tile = &tiles.flash;
     } else if( bk.bk_color.state == BkColor::MUTATE ) {
       tile = &tiles.mutate;
-    } else if( bk.bk_color.state == BkColor::LAID ) {
-      //TODO:crouch
-      //*crouch_dt = CROUCH_DURATION; // restart bouncing
     } else if( bk.swapped ) {
       center.x += field_.swapPos().x ? 1 : -1;
       center.y += field_.swapDelay()/(field_.conf().swap_tk+1);
     }
 
-    //TODO:crouch cancel bouncing sometimes + swap in crouch_dt_
-    if( *crouch_dt == 0 ) {
+    unsigned int crouch_dt = crouch_dt_[x][y];
+    if( crouch_dt == 0 ) {
       tile->render(target, x, y);
     } else {
       // bounce positions: -1 -> +1 (quick) -> 0 (slow)
-      float bounce = ( *crouch_dt > CROUCH_DURATION/2 )
-        ? 4*(float)(CROUCH_DURATION-*crouch_dt)/CROUCH_DURATION-1.0
-        : 2*(float)(*crouch_dt)/CROUCH_DURATION;
-      this->renderBouncingBlock(target, x, y, bk.bk_color.color, bounce);
+      float bounce = ( crouch_dt > CROUCH_DURATION/2 )
+        ? 4*(float)(CROUCH_DURATION-crouch_dt)/CROUCH_DURATION-1.0
+        : 2*(float)crouch_dt/CROUCH_DURATION;
+      this->renderBouncingBlock(target, x, y, bounce, bk.bk_color.color);
     }
 
   } else if( bk.isGarbage() ) {
@@ -623,16 +641,16 @@ void FieldDisplay::renderBouncingBlock(sf::RenderTarget &target, int x, int y, f
 
   float offy, dx, dy;
   if( bounce < 0 ) {
-    offy = -bounce*(float)(BOUNCE_Y_MIN+BOUNCE_HEIGHT_MIN/2);
-    dx = -0.5 * bounce*((float)BOUNCE_WIDTH_MAX/BOUNCE_SYMBOL_SIZE-1);
-    dy = -0.5 * bounce*((float)BOUNCE_HEIGHT_MIN/BOUNCE_SYMBOL_SIZE-1);
+    offy = bounce*(float)(BOUNCE_Y_MIN+BOUNCE_HEIGHT_MIN/2);
+    dx = 0.5 * bounce*((float)BOUNCE_WIDTH_MAX/BOUNCE_SYMBOL_SIZE-1);
+    dy = 0.5 * bounce*((float)BOUNCE_HEIGHT_MIN/BOUNCE_SYMBOL_SIZE-1);
   } else {
-    offy = bounce*(float)(BOUNCE_Y_MAX-BOUNCE_HEIGHT_MAX/2);
-    dx = 0.5 * bounce*((float)BOUNCE_WIDTH_MIN/BOUNCE_SYMBOL_SIZE-1);
-    dy = 0.5 * bounce*((float)BOUNCE_HEIGHT_MAX/BOUNCE_SYMBOL_SIZE-1);
+    offy = -bounce*(float)(BOUNCE_Y_MAX-BOUNCE_HEIGHT_MAX/2);
+    dx = -0.5 * bounce*((float)BOUNCE_WIDTH_MIN/BOUNCE_SYMBOL_SIZE-1);
+    dy = -0.5 * bounce*((float)BOUNCE_HEIGHT_MAX/BOUNCE_SYMBOL_SIZE-1);
   }
 
-  sf::FloatRect pos( x + dx, x+1 - dx, y + dy - offy, y+1 - dy - offy );
+  sf::FloatRect pos( x + dx, y + dy - offy, x+1 - dx, y+1 - dy - offy );
   tiles.face.render(target, pos);
 }
 
