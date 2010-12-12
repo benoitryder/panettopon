@@ -595,8 +595,9 @@ bool ServerMatch::stepField(ServerPlayer *pl, KeyState keys)
 void ServerMatch::distributeGarbages(ServerPlayer *pl)
 {
   Field *fld = pl->field();
+  const Field::StepInfo info = fld->stepInfo();
 
-  if( fld->fcombo() == 0 )
+  if( info.combo == 0 )
     return; // no match, no new garbages
   // check if there is an opponent
   // if there is only one, keep it (faster target choice for 2-player game)
@@ -620,7 +621,7 @@ void ServerMatch::distributeGarbages(ServerPlayer *pl)
   void updateTick();
   // maps it if there is only one opponent
 
-  if( fld->fchain() == 2 ) {
+  if( info.chain == 2 ) {
     Field *target_fld = single_opponent;
     if( target_fld == NULL ) {
       // get player with the least chain garbages
@@ -655,13 +656,13 @@ void ServerMatch::distributeGarbages(ServerPlayer *pl)
     }
     this->addGarbage(fld, target_fld, Garbage::TYPE_CHAIN, 1);
 
-  } else if( fld->fchain() > 2 ) {
+  } else if( info.chain > 2 ) {
     this->increaseChainGarbage(fld);
   }
 
   // combo garbage
   // with a width of 6, values match the original PdP rules
-  if( fld->fcombo() > 3 ) {
+  if( info.combo > 3 ) {
     Field *target_fld = single_opponent;
     if( target_fld == NULL ) {
       // get the next target player
@@ -680,22 +681,22 @@ void ServerMatch::distributeGarbages(ServerPlayer *pl)
       assert( target_fld != NULL );
     }
 
-    if( fld->fcombo()-1 <= FIELD_WIDTH ) {
+    if( info.combo-1 <= FIELD_WIDTH ) {
       // one block
-      this->addGarbage(fld, target_fld, Garbage::TYPE_COMBO, fld->fcombo()-1);
-    } else if( fld->fcombo() <= 2*FIELD_WIDTH ) {
+      this->addGarbage(fld, target_fld, Garbage::TYPE_COMBO, info.combo-1);
+    } else if( info.combo <= 2*FIELD_WIDTH ) {
       // two blocks
-      unsigned int n = (fld->fcombo() > FIELD_WIDTH*3/2) ? fld->fcombo() : fld->fcombo()-1;
+      unsigned int n = (info.combo > FIELD_WIDTH*3/2) ? info.combo : info.combo-1;
       this->addGarbage(fld, target_fld, Garbage::TYPE_COMBO, n/2);
       this->addGarbage(fld, target_fld, Garbage::TYPE_COMBO, n/2+n%2);
     } else {
       // n blocks
       unsigned int n;
-      if( fld->fcombo() == 2*FIELD_WIDTH+1 )
+      if( info.combo == 2*FIELD_WIDTH+1 )
         n = 3;
-      else if( fld->fcombo() <= 3*FIELD_WIDTH+1 )
+      else if( info.combo <= 3*FIELD_WIDTH+1 )
         n = 4;
-      else if( fld->fcombo() <= 4*FIELD_WIDTH+2 )
+      else if( info.combo <= 4*FIELD_WIDTH+2 )
         n = 6;
       else
         n = 8;

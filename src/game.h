@@ -186,6 +186,14 @@ struct Block
 class Field
 {
  public:
+  /// Information on the last step.
+  struct StepInfo {
+    StepInfo();  /// Create a new instance with default fresh values.
+    unsigned int combo; ///< Combo count (0 if no match).
+    unsigned int chain; ///< Chain count (default: 1).
+    bool raised;  ///< Field lifted up.
+  };
+
   Field(Player *pl, uint32_t seed);
   ~Field();
 
@@ -194,8 +202,6 @@ class Field
   bool lost() const { return lost_; }
   int32_t seed() const { return seed_; }
   unsigned int chain() const { return chain_; }
-  unsigned int fcombo() const { return fcombo_; }
-  unsigned int fchain() const { return fchain_; }
   const FieldPos &cursor() const { return cursor_; }
   /// Return true if swap is active.
   bool isSwapping() const { return swap_dt_ != 0; }
@@ -204,6 +210,7 @@ class Field
   unsigned int rank() const { return rank_; }
   unsigned int raiseStep() const { return raise_step_; }
 
+  const StepInfo &stepInfo() const { return step_info_; }
   const FieldConf &conf() const { return conf_; }
   void setConf(const FieldConf &conf) { conf_ = conf; }
   const Block &block(uint8_t x, uint8_t y) const {
@@ -344,8 +351,6 @@ class Field
   unsigned int swap_dt_;
 
   unsigned int chain_;  ///< Current chain value, or 1
-  unsigned int fcombo_; ///< Combo for the current frame, cleared at each step
-  unsigned int fchain_; ///< Chain for the current frame, cleared at each step
   Tick tick_;           ///< Current frame (don't change after losing)
   int32_t seed_;        ///< Current random seed
 
@@ -359,6 +364,7 @@ class Field
    */
   Block grid_[FIELD_WIDTH][FIELD_HEIGHT+1];
 
+  StepInfo step_info_;     ///< Last step information.
   FieldConf conf_;  ///< Configuration.
 
   /// Key state, or-ed GameKeyState values.

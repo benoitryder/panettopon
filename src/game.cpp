@@ -42,8 +42,6 @@ void Field::initMatch()
   swap_ = FieldPos();
   swap_dt_ = 0;
   chain_ = 1;
-  fcombo_ = 0;
-  chain_ = 1;
   tick_ = 0;
   lost_ = false;
   lost_dt_ = 0;
@@ -54,8 +52,17 @@ void Field::initMatch()
   raised_lines_ = 0;
   ::memset(gb_drop_pos_, 0, sizeof(gb_drop_pos_));
 
+  step_info_ = StepInfo();
+
   this->resetAutoRaise();
   raise_step_ = conf_.raise_steps;
+}
+
+
+
+Field::StepInfo::StepInfo():
+    combo(0), chain(1), raised(false)
+{
 }
 
 
@@ -63,6 +70,8 @@ void Field::step(KeyState keys)
 {
   assert( player_ != NULL );
   assert( !lost_ );
+
+  step_info_ = StepInfo();
 
   tick_++;
 
@@ -338,19 +347,17 @@ void Field::step(KeyState keys)
   }
 
   // chains, combos, garbages
-  fcombo_ = 0;
-  fchain_ = 1;
   bool chained = false;
   for( x=0; x<FIELD_WIDTH; x++ ) {
     for( y=1; y<=FIELD_HEIGHT; y++ ) {
       if( (match[x][y] & 0x40) == 0 )
         continue;
-      fcombo_++;
+      step_info_.combo++;
       chained = chained || block(x,y).chaining;
     }
   }
 
-  if( fcombo_ > 0 ) {
+  if( step_info_.combo > 0 ) {
     for( x=0; x<FIELD_WIDTH; x++ ) {
       for( y=1; y<=FIELD_HEIGHT; y++ ) {
         if( (match[x][y] & 0x40) == 0 )
@@ -370,9 +377,9 @@ void Field::step(KeyState keys)
     }
 
     if( chained ) {
-      fchain_ = ++chain_;
+      step_info_.chain = ++chain_;
     }
-    LOG("[%u|%u] match +%d x%d", player_->plid(), tick_, fcombo_, fchain_);
+    LOG("[%u|%u] match +%d x%d", player_->plid(), tick_, step_info_.combo, step_info_.chain);
   }
 
 
@@ -422,8 +429,6 @@ void Field::step(KeyState keys)
     } else if( --lost_dt_ == 0 ) {
       lost_ = true;
       chain_ = 1; // just in case
-      fcombo_ = 0;
-      fchain_ = 1;
       return;
     }
   }
@@ -536,7 +541,7 @@ void Field::step(KeyState keys)
 
   // reset chain count
   // after adding chain flag above removed blocks
-  if( chain_ > 1 && fcombo_ == 0 ) {
+  if( chain_ > 1 && step_info_.combo == 0 ) {
     // reset chain count
     bool cancel = true;
     for( x=0; cancel && x<FIELD_WIDTH; x++ ) {
@@ -555,17 +560,17 @@ void Field::step(KeyState keys)
     }
   }
 
-  if( fcombo_ > 0 ) {
+  if( step_info_.combo > 0 ) {
     if( raise_dt_ < 0 )
       this->resetAutoRaise(); // cancel manual raise on match
     // update stop ticks
-    if( fcombo_ > 3 ) {
-      unsigned int tk = conf_.stop_combo_0+conf_.stop_combo_k*(fcombo_-4);
+    if( step_info_.combo > 3 ) {
+      unsigned int tk = conf_.stop_combo_0+conf_.stop_combo_k*(step_info_.combo-4);
       if( tk > stop_dt_ )
         stop_dt_ = tk;
     }
-    if( fchain_ > 1 ) {
-      unsigned int tk = conf_.stop_chain_0+conf_.stop_chain_k*(fchain_-2);
+    if( step_info_.chain > 1 ) {
+      unsigned int tk = conf_.stop_chain_0+conf_.stop_chain_k*(step_info_.chain-2);
       if( tk > stop_dt_ )
         stop_dt_ = tk;
     }
@@ -726,6 +731,8 @@ void Field::raise()
   this->resetAutoRaise();
   raise_step_ = conf_.raise_steps;
   raised_lines_++;
+
+  step_info_.raised = true;
 }
 
 

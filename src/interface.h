@@ -103,18 +103,19 @@ class LabelHolder
       labels_.pop_front();
     }
 
+    const Field::StepInfo &info = fld->stepInfo();
     // create new labels, if needed
-    if( fld->fcombo() ) {
+    if( info.combo != 0 ) {
       FieldPos pos = this->frameLabelPos(fld);
       if( pos.y < FIELD_HEIGHT ) {
         pos.y++; // display label above top matching block, if possible
       }
-      if( fld->fchain() > 1 ) {
-        this->addLabel(pos, true, fld->fchain());
+      if( info.chain > 1 ) {
+        this->addLabel(pos, true, info.chain);
         pos.y--;
       }
-      if( fld->fcombo() > 3 ) {
-        this->addLabel(pos, false, fld->fcombo());
+      if( info.combo > 3 ) {
+        this->addLabel(pos, false, info.combo);
       }
     }
   }
@@ -134,7 +135,7 @@ class LabelHolder
         }
       }
     }
-    // should not happen, fcombo_ != 0 tested before call
+    // should not happen, combo != 0 tested before call
     assert( false );
     return FieldPos();
   }
