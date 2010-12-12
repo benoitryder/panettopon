@@ -1,0 +1,776 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.0"
+   width="2000px"
+   height="1600px"
+   id="Panettopon-res"
+   sodipodi:version="0.32"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="res.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape">
+   <title>Panettopon resources</title>
+  <metadata>
+  </metadata>
+  <defs>
+    <!--
+
+    Colors: light / dark
+      1: #5a0000 / #ef1010
+      2: #005a00 / #00e700
+      3: #006b6b / #00efef
+      4: #524a00 / #dede00
+      5: #42008c / #d618ff
+      6: #000094 / #3963ff
+      g: #a0a0a0 / #5a5a5a
+
+    -->
+
+    <!-- 3D-effect gradients -->
+    <linearGradient id="BkColor1-gradient"
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      <stop offset="0" stop-color="#ef1010" />
+      <stop offset="1" stop-color="black" />
+    </linearGradient>
+    <linearGradient id="BkColor2-gradient"
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      <stop offset="0" stop-color="#00e700" />
+      <stop offset="1" stop-color="black" />
+    </linearGradient>
+    <linearGradient id="BkColor3-gradient"
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      <stop offset="0" stop-color="#00efef" />
+      <stop offset="1" stop-color="black" />
+    </linearGradient>
+    <linearGradient id="BkColor4-gradient"
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      <stop offset="0" stop-color="#dede00" />
+      <stop offset="1" stop-color="black" />
+    </linearGradient>
+    <linearGradient id="BkColor5-gradient"
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      <stop offset="0" stop-color="#d618ff" />
+      <stop offset="1" stop-color="black" />
+    </linearGradient>
+    <linearGradient id="BkColor6-gradient"
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      <stop offset="0" stop-color="#3963ff" />
+      <stop offset="1" stop-color="black" />
+    </linearGradient>
+
+    <!-- Border (bg) and inner part (fg) -->
+    <symbol id="BkColor-bg">
+      <rect class="bk-bg"
+        x="-64" y="-64"
+        width="128" height="128"
+        rx="16" ry="16"
+        />
+    </symbol>
+    <symbol id="BkColor-fg">
+      <rect class="bk-fg"
+        x="-56" y="-56"
+        width="112" height="112"
+        rx="8" ry="8"
+        />
+    </symbol>
+
+    <!-- Faces -->
+    <symbol id="BkColor1-face">
+      <path class="bk-face"
+        d="m 0,36 c 8,0 36,-32 36,-48 s -8,-24 -16,-24 c -12,0 -19,18 -20,18 s -8,-18 -20,-18 c -8,0 -16,8 -16,24 s 28,48 36,48 z"
+        />
+    </symbol>
+    <symbol id="BkColor2-face">
+      <path class="bk-face"
+        sodipodi:ry="36"
+        sodipodi:rx="36"
+        sodipodi:cy="0"
+        sodipodi:cx="0"
+        sodipodi:type="arc"
+        d="M 36,0 C 36,19.882251 19.882251,36 0,36 -19.882251,36 -36,19.882251 -36,0 c 0,-19.882251 16.117749,-36 36,-36 19.882251,0 36,16.117749 36,36 z"
+        />
+    </symbol>
+    <symbol id="BkColor3-face">
+      <path class="bk-face"
+        sodipodi:nodetypes="cccc"
+        d="m 0,-36 -36,72 72,0 z"
+        />
+    </symbol>
+    <symbol id="BkColor4-face">
+      <path class="bk-face"
+        inkscape:randomized="0"
+        inkscape:rounded="0"
+        inkscape:flatsided="false"
+        sodipodi:arg1="-1.5707963"
+        sodipodi:arg2="-0.9424778"
+        sodipodi:r1="38"
+        sodipodi:r2="22"
+        sodipodi:cx="0"
+        sodipodi:cy="3.62868"
+        sodipodi:sides="5"
+        sodipodi:type="star"
+        />
+    </symbol>
+    <symbol id="BkColor5-face">
+      <path class="bk-face"
+        sodipodi:nodetypes="ccccc"
+        d="m 0,-36 36,36 -36,36 -36,-36 z"
+        />
+    </symbol>
+    <symbol id="BkColor6-face">
+      <path class="bk-face"
+        sodipodi:nodetypes="cccc"
+        d="m 0,36 -36,-72 72,0 z"
+        />
+    </symbol>
+
+    <!-- Garbage parts -->
+    <linearGradient id="BkGarbage-gradient"
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      <stop offset="0" stop-color="#505050" />
+      <stop offset="1" stop-color="black" />
+    </linearGradient>
+    <linearGradient id="BkGarbage-Big-gradient"
+      x1="0.475" y1="0.475" x2="0.525" y2="0.525" spreadMethod="pad">
+      <stop offset="0" stop-color="#505050" />
+      <stop offset="1" stop-color="black" />
+    </linearGradient>
+    <pattern id="BkGarbage-tile"
+      class="bk-gb bk-tile"
+      x="0" y="0" width="128" height="128"
+      patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="129" height="129" fill="#a0a0a0" />
+      <circle cx="32" cy="32" r="12" fill="#5a5a5a" />
+      <circle cx="96" cy="96" r="12" fill="#5a5a5a" />
+      <circle cx="96" cy="32" r="4" fill="#5a5a5a" />
+      <circle cx="32" cy="96" r="4" fill="#5a5a5a" />
+    </pattern>
+    <symbol id="BkGarbage-face">
+      <path class="bk-face"
+        d="M -36,-36 L 36,36 M -36,36 L 36,-36"
+        />
+    </symbol>
+
+    <!-- Waiting garbages -->
+    <symbol id="WaitingGb-large"
+      class="bk-gb bk-mutate">
+      <rect class="bk-bg"
+        x="-96" y="-64"
+        width="192" height="128"
+        rx="16" ry="16"
+        />
+      <rect class="bk-fg"
+        x="-88" y="-56"
+        width="176" height="112"
+        rx="8" ry="8"
+        />
+    </symbol>
+    <symbol id="WaitingGb-small"
+      class="bk-gb bk-mutate" transform="scale(0.5)">
+      <use class="bk-bg" xlink:href="#BkColor-bg" />
+      <use class="bk-fg" xlink:href="#BkColor-fg" />
+    </symbol>
+
+    <!-- Cursor parts -->
+    <symbol id="SwapCursor-corner">
+      <path d="m 12,12 32,0 0,-24 -32,0 a 24,24 0 0,0 -24,24 l 0,32 24,0 z" />
+    </symbol>
+    <symbol id="SwapCursor-tee">
+      <path d="m 0,-8.7846 A 24,24 0, 0,0 -12,-12 l -32,0 0,24 32,0 0,32 24,0 0,-32 32,0 0,-24 -32,0 A 24,24 0 0,0 0,-8.7846 z" />
+    </symbol>
+
+    <!-- Labels -->
+    <symbol id="Label-bg">
+      <rect class="lbl-bg"
+        x="-64" y="-64"
+        width="128" height="128"
+        rx="16" ry="16"
+        />
+    </symbol>
+    <symbol id="Label-fg">
+      <rect class="lbl-fg"
+        x="-56" y="-56"
+        width="112" height="112"
+        rx="8" ry="8"
+        />
+    </symbol>
+
+    <!-- Field parts -->
+
+
+    <!-- RJ45 socket (units: mm) -->
+    <symbol id="RJ45-socket"
+      transform="translate(0,-4.826)">
+      <g id="RJ45-socket-hole">
+        <rect x="-5.9563" y="0"
+          width="11.9126" height="6.8326"
+          rx="0.127" ry="0.127"
+          />
+        <rect x="-3.1496" y="0"
+          width="6.2992" height="8.382"
+          rx="0.127" ry="0.127"
+          />
+        <rect x="-2.032" y="0"
+          width="4.064" height="9.652"
+          rx="0.127" ry="0.127"
+          />
+      </g>
+      <g id="RJ45-socket-pins">
+        <rect x="-3.556" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
+        <rect x="-2.54"  y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
+        <rect x="-1.524" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
+        <rect x="-0.508" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
+        <rect x=" 0.508" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
+        <rect x=" 1.524" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
+        <rect x=" 2.54"  y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
+        <rect x=" 3.556" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
+      </g>
+    </symbol>
+
+
+    <style type="text/css"><![CDATA[
+
+      .bk-bg { stroke: none; }
+      .bk-flash .bk-fg { fill: white; }
+      .bk-mutate .bk-face { fill: none; }
+      .bk-mutate .bk-fg { fill: none; } /* hidden */
+
+      .bk-fg, .bk-fg *, .bk-face {
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .bk-fg, .bk-fg *, .bk-normal .bk-face, .bk-flash .bk-face {
+        stroke-width: 8;
+      }
+      .bk-mutate .bk-face {
+        stroke-width: 12;
+      }
+
+      .bk-color1 .bk-bg { fill: url(#BkColor1-gradient); }
+      .bk-color1.bk-normal .bk-fg {  fill: #5a0000; }
+      .bk-color1.bk-normal .bk-face { stroke: #ef1010; fill: #ef1010; }
+      .bk-color1.bk-flash .bk-face { stroke: #5a0000; fill: #5a0000; }
+      .bk-color1.bk-mutate .bk-face { stroke: #ef1010; }
+      .bk-color1.bk-mutate .bk-bg { fill: #5a0000; }
+
+      .bk-color2 .bk-bg { fill: url(#BkColor2-gradient); }
+      .bk-color2.bk-normal .bk-fg {  fill: #005a00; }
+      .bk-color2.bk-normal .bk-face { stroke: #00e700; fill: #00e700; }
+      .bk-color2.bk-flash .bk-face { stroke: #005a00; fill: #005a00; }
+      .bk-color2.bk-mutate .bk-face { stroke: #00e700; }
+      .bk-color2.bk-mutate .bk-bg { fill: #005a00; }
+
+      .bk-color3 .bk-bg { fill: url(#BkColor3-gradient); }
+      .bk-color3.bk-normal .bk-fg {  fill: #006b6b; }
+      .bk-color3.bk-normal .bk-face { stroke: #00efef; fill: #00efef; }
+      .bk-color3.bk-flash .bk-face { stroke: #006b6b; fill: #006b6b; }
+      .bk-color3.bk-mutate .bk-face { stroke: #00efef; }
+      .bk-color3.bk-mutate .bk-bg { fill: #006b6b; }
+
+      .bk-color4 .bk-bg { fill: url(#BkColor4-gradient); }
+      .bk-color4.bk-normal .bk-fg {  fill: #524a00; }
+      .bk-color4.bk-normal .bk-face { stroke: #dede00; fill: #dede00; }
+      .bk-color4.bk-flash .bk-face { stroke: #524a00; fill: #524a00; }
+      .bk-color4.bk-mutate .bk-face { stroke: #dede00; }
+      .bk-color4.bk-mutate .bk-bg { fill: #524a00; }
+
+      .bk-color5 .bk-bg { fill: url(#BkColor5-gradient); }
+      .bk-color5.bk-normal .bk-fg {  fill: #42008c; }
+      .bk-color5.bk-normal .bk-face { stroke: #d618ff; fill: #d618ff; }
+      .bk-color5.bk-flash .bk-face { stroke: #42008c; fill: #42008c; }
+      .bk-color5.bk-mutate .bk-face { stroke: #d618ff; }
+      .bk-color5.bk-mutate .bk-bg { fill: #42008c; }
+
+      .bk-color6 .bk-bg { fill: url(#BkColor6-gradient); }
+      .bk-color6.bk-normal .bk-fg {  fill: #000094; }
+      .bk-color6.bk-normal .bk-face { stroke: #3963ff; fill: #3963ff; }
+      .bk-color6.bk-flash .bk-face { stroke: #000094; fill: #000094; }
+      .bk-color6.bk-mutate .bk-face { stroke: #3963ff; }
+      .bk-color6.bk-mutate .bk-bg { fill: #000094; }
+
+      .bk-gb .bk-bg { fill: url(#BkGarbage-gradient); }
+      .bk-gb.bk-normal .bk-bg { fill: url(#BkGarbage-Big-gradient); }
+      .bk-gb.bk-normal .bk-fg { fill: url(#BkGarbage-tile); }
+      .bk-gb .bk-face { stroke: #5a5a5a; }
+      .bk-gb.bk-mutate .bk-face { stroke: #a0a0a0; }
+      .bk-gb.bk-mutate .bk-fg { fill: #5a5a5a; }
+
+
+      #SwapCursor * {
+        fill: white;
+        stroke: black;
+        stroke-width: 6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .lbl-bg {
+        fill: white;
+        stroke: none;
+      }
+      .lbl-fg { stroke: none; }
+      #Label-Chain .lbl-fg { fill: green; }
+      #Label-Combo .lbl-fg { fill: red; }
+
+
+      #Field-Frame {
+        fill: #202020;
+        stroke: #606060;
+      }
+
+      #RJ45-socket-hole { stroke: none; fill: #111111; }
+      #RJ45-socket-pins { stroke: none; fill: #888800; }
+
+      .bk-rj45 .bk-bg { fill: url(#BkGarbage-gradient); }
+      .bk-rj45 .bk-fg { fill: #5a5a5a; }
+
+    ]]></style>
+  </defs>
+  <sodipodi:namedview
+     inkscape:window-height="751"
+     inkscape:window-width="1280"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     guidetolerance="10.0"
+     gridtolerance="10.0"
+     objecttolerance="10.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base"
+     showgrid="true"
+     inkscape:zoom="1.28"
+     inkscape:cx="466.00805"
+     inkscape:cy="527.24875"
+     inkscape:window-x="1020"
+     inkscape:window-y="-4"
+     inkscape:current-layer="svg2"
+     inkscape:window-maximized="0"
+     inkscape:snap-bbox="true"
+     inkscape:snap-nodes="true">
+    <inkscape:grid
+       type="xygrid"
+       id="grid2411" />
+  </sodipodi:namedview>
+
+  <g id="BkColor-map"
+    transform="translate(80,80)">
+
+    <g id="BkColor-Normal-all"
+      transform="translate(0,0)">
+      <g id="BkColor1-Normal"
+        class="bk-color1 bk-normal"
+        transform="translate(0,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor1-face" />
+      </g>
+      <g id="BkColor2-Normal"
+        class="bk-color2 bk-normal"
+        transform="translate(128,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor2-face" />
+      </g>
+      <g id="BkColor3-Normal"
+        class="bk-color3 bk-normal"
+        transform="translate(256,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor3-face" />
+      </g>
+      <g id="BkColor4-Normal"
+        class="bk-color4 bk-normal"
+        transform="translate(384,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor4-face" />
+      </g>
+      <g id="BkColor5-Normal"
+        class="bk-color5 bk-normal"
+        transform="translate(512,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor5-face" />
+      </g>
+      <g id="BkColor6-Normal"
+        class="bk-color6 bk-normal"
+        transform="translate(640,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor6-face" />
+      </g>
+    </g>
+    <g id="BkColor-Back-all"
+      transform="translate(0,128)">
+      <g id="BkColor1-Back"
+        class="bk-color1 bk-normal"
+        transform="translate(0,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+      </g>
+      <g id="BkColor2-Back"
+        class="bk-color2 bk-normal"
+        transform="translate(128,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+      </g>
+      <g id="BkColor3-Back"
+        class="bk-color3 bk-normal"
+        transform="translate(256,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+      </g>
+      <g id="BkColor4-Back"
+        class="bk-color4 bk-normal"
+        transform="translate(384,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+      </g>
+      <g id="BkColor5-Back"
+        class="bk-color5 bk-normal"
+        transform="translate(512,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+      </g>
+      <g id="BkColor6-Back"
+        class="bk-color6 bk-normal"
+        transform="translate(640,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+      </g>
+    </g>
+    <g id="BkColor-Face-all"
+      transform="translate(0,256)">
+      <g id="BkColor1-Face"
+        class="bk-color1 bk-normal"
+        transform="translate(0,0)">
+        <use class="bk-face" xlink:href="#BkColor1-face"
+          transform="translate(0,0)" />
+      </g>
+      <g id="BkColor2-Face"
+        class="bk-color2 bk-normal"
+        transform="translate(128,0)">
+        <use class="bk-face" xlink:href="#BkColor2-face"
+          transform="translate(0,0)" />
+      </g>
+      <g id="BkColor3-Face"
+        class="bk-color3 bk-normal"
+        transform="translate(256,0)">
+        <use class="bk-face" xlink:href="#BkColor3-face"
+          transform="translate(0,0)" />
+      </g>
+      <g id="BkColor4-Face"
+        class="bk-color4 bk-normal"
+        transform="translate(384,0)">
+        <use class="bk-face" xlink:href="#BkColor4-face"
+          transform="translate(0,0)" />
+      </g>
+      <g id="BkColor5-Face"
+        class="bk-color5 bk-normal"
+        transform="translate(512,0)">
+        <use class="bk-face" xlink:href="#BkColor5-face"
+          transform="translate(0,0)" />
+      </g>
+      <g id="BkColor6-Face"
+        class="bk-color6 bk-normal"
+        transform="translate(640,0)">
+        <use class="bk-face" xlink:href="#BkColor6-face"
+          transform="translate(0,0)" />
+      </g>
+    </g>
+
+    <g id="BkColor-Flash-all"
+      transform="translate(0,384)">
+      <g id="BkColor1-Flash"
+        class="bk-color1 bk-flash"
+        transform="translate(0,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor1-face" />
+      </g>
+      <g id="BkColor2-Flash"
+        class="bk-color2 bk-flash"
+        transform="translate(128,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor2-face" />
+      </g>
+      <g id="BkColor3-Flash"
+        class="bk-color3 bk-flash"
+        transform="translate(256,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor3-face" />
+      </g>
+      <g id="BkColor4-Flash"
+        class="bk-color4 bk-flash"
+        transform="translate(384,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor4-face" />
+      </g>
+      <g id="BkColor5-Flash"
+        class="bk-color5 bk-flash"
+        transform="translate(512,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor5-face" />
+      </g>
+      <g id="BkColor6-Flash"
+        class="bk-color6 bk-flash"
+        transform="translate(640,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor6-face" />
+      </g>
+    </g>
+
+    <g id="BkColor-Mutate-all"
+      transform="translate(0,512)">
+      <g id="BkColor1-Mutate"
+        class="bk-color1 bk-mutate"
+        transform="translate(0,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor1-face" />
+      </g>
+      <g id="BkColor2-Mutate"
+        class="bk-color2 bk-mutate"
+        transform="translate(128,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor2-face" width="80" />
+      </g>
+      <g id="BkColor3-Mutate"
+        class="bk-color3 bk-mutate"
+        transform="translate(256,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor3-face" />
+      </g>
+      <g id="BkColor4-Mutate"
+        class="bk-color4 bk-mutate"
+        transform="translate(384,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor4-face" />
+      </g>
+      <g id="BkColor5-Mutate"
+        class="bk-color5 bk-mutate"
+        transform="translate(512,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor5-face" />
+      </g>
+      <g id="BkColor6-Mutate"
+        class="bk-color6 bk-mutate"
+        transform="translate(640,0)">
+        <use class="bk-bg" xlink:href="#BkColor-bg" />
+        <use class="bk-fg" xlink:href="#BkColor-fg" />
+        <use class="bk-face" xlink:href="#BkColor6-face" />
+      </g>
+    </g>
+
+  </g>
+
+  <g id="BkGarbage-map"
+    transform="translate(928,144)">
+    <g id="BkGarbage-Big"
+      class="bk-gb bk-normal">
+      <rect class="bk-bg"
+        x="-128" y="-128"
+        width="256" height="256"
+        rx="16" ry="16"
+        />
+      <rect class="bk-fg"
+        x="-120" y="-120"
+        width="240" height="240"
+        rx="8" ry="8"
+        />
+    </g>
+    <g id="BkGarbage-center"
+      class="bk-gb bk-normal"
+      transform="translate(192,-64)">
+      <rect x="-64" y="-64" width="128" height="128" fill="#a0a0a0" />
+      <use class="bk-face" xlink:href="#BkGarbage-face" />
+    </g>
+    <g id="BkGarbage-Mutate"
+      class="bk-gb bk-mutate"
+      transform="translate(320,-64)">
+      <use class="bk-bg" xlink:href="#BkColor-bg" />
+      <use class="bk-fg" xlink:href="#BkColor-fg" />
+      <use class="bk-face" xlink:href="#BkGarbage-face" />
+    </g>
+    <g id="BkGarbage-Flash"
+      class="bk-gb bk-flash"
+      transform="translate(320,64)">
+      <use class="bk-bg" xlink:href="#BkColor-bg" />
+      <use class="bk-fg" xlink:href="#BkColor-fg" />
+      <use class="bk-face" xlink:href="#BkGarbage-face" />
+    </g>
+  </g>
+
+  <g id="SwapCursor"
+    transform="translate(812,304)">
+    <!-- force the bounding box for the export -->
+    <rect id="SwapCursor-container"
+      width="320" height="384"
+      style="stroke: none; fill: none;"
+      />
+    <g id="SwapCursor-normal"
+      transform="translate(160,96)">
+      <use xlink:href="#SwapCursor-corner" transform="translate(-128,-64) scale( 1, 1)" />
+      <use xlink:href="#SwapCursor-corner" transform="translate( 128,-64) scale(-1, 1)" />
+      <use xlink:href="#SwapCursor-corner" transform="translate(-128, 64) scale( 1,-1)" />
+      <use xlink:href="#SwapCursor-corner" transform="translate( 128, 64) scale(-1,-1)" />
+      <use xlink:href="#SwapCursor-tee"    transform="translate(0,-64) scale(1, 1)" />
+      <use xlink:href="#SwapCursor-tee"    transform="translate(0, 64) scale(1,-1)" />
+    </g>
+    <g id="SwapCursor-extend"
+      transform="translate(160,288)">
+      <use xlink:href="#SwapCursor-corner" transform="translate(-140,-76) scale( 1, 1)" />
+      <use xlink:href="#SwapCursor-corner" transform="translate( 140,-76) scale(-1, 1)" />
+      <use xlink:href="#SwapCursor-corner" transform="translate(-140, 76) scale( 1,-1)" />
+      <use xlink:href="#SwapCursor-corner" transform="translate( 140, 76) scale(-1,-1)" />
+      <use xlink:href="#SwapCursor-tee"    transform="translate(0,-76) scale(1, 1)" />
+      <use xlink:href="#SwapCursor-tee"    transform="translate(0, 76) scale(1,-1)" />
+    </g>
+  </g>
+
+  <g id="Labels"
+    transform="translate(928,828)">
+    <g id="Label-Chain"
+      class="lbl"
+      transform="translate(-64,-64)">
+      <use class="lbl-bg" xlink:href="#Label-bg" />
+      <use class="lbl-fg" xlink:href="#Label-fg" />
+    </g>
+    <g id="Label-Combo"
+      class="lbl"
+      transform="translate(64,-64)">
+      <use class="lbl-bg" xlink:href="#Label-bg" />
+      <use class="lbl-fg" xlink:href="#Label-fg" />
+    </g>
+  </g>
+
+  <g id="WaitingGb-map"
+    transform="translate(16,700)">
+    <!-- force the bounding box for the export -->
+    <rect id="WaitingGb-container"
+      width="768" height="256"
+      style="stroke: none; fill: none;"
+      />
+    <g id="WaitingGb-1"
+      transform="translate(96,64) scale(0.8)">
+      <use xlink:href="#WaitingGb-small" transform="translate(  0,0)" />
+    </g>
+    <g id="WaitingGb-2"
+      transform="translate(288,64) scale(0.8)">
+      <use xlink:href="#WaitingGb-small" transform="translate(-32,0)" />
+      <use xlink:href="#WaitingGb-small" transform="translate( 32,0)" />
+    </g>
+    <g id="WaitingGb-3"
+      transform="translate(480,64) scale(0.8)">
+      <use xlink:href="#WaitingGb-small" transform="translate(-64,0)" />
+      <use xlink:href="#WaitingGb-small" transform="translate(  0,0)" />
+      <use xlink:href="#WaitingGb-small" transform="translate( 64,0)" />
+    </g>
+    <g id="WaitingGb-4"
+      transform="translate(96,192) scale(0.8)">
+      <use xlink:href="#WaitingGb-small" transform="translate(-32,-32)" />
+      <use xlink:href="#WaitingGb-small" transform="translate( 32,-32)" />
+      <use xlink:href="#WaitingGb-small" transform="translate(-32, 32)" />
+      <use xlink:href="#WaitingGb-small" transform="translate( 32, 32)" />
+    </g>
+    <g id="WaitingGb-5"
+      transform="translate(288,192) scale(0.8)">
+      <use xlink:href="#WaitingGb-small" transform="translate(-32,-32)" />
+      <use xlink:href="#WaitingGb-small" transform="translate( 32,-32)" />
+      <use xlink:href="#WaitingGb-small" transform="translate(-64, 32)" />
+      <use xlink:href="#WaitingGb-small" transform="translate(  0, 32)" />
+      <use xlink:href="#WaitingGb-small" transform="translate( 64, 32)" />
+    </g>
+    <g id="WaitingGb-6"
+      transform="translate(480,192) scale(0.8)">
+      <use xlink:href="#WaitingGb-small" transform="translate(-64,-32)" />
+      <use xlink:href="#WaitingGb-small" transform="translate(  0,-32)" />
+      <use xlink:href="#WaitingGb-small" transform="translate( 64,-32)" />
+      <use xlink:href="#WaitingGb-small" transform="translate(-64, 32)" />
+      <use xlink:href="#WaitingGb-small" transform="translate(  0, 32)" />
+      <use xlink:href="#WaitingGb-small" transform="translate( 64, 32)" />
+    </g>
+    <g id="WaitingGb-Line"
+      transform="translate(672,64) scale(0.8)">
+      <use xlink:href="#WaitingGb-large" />
+    </g>
+  </g>
+
+  <g id="Field-Frame"
+    transform="translate(1400,16)">
+    <!-- force the bounding box for the export -->
+    <rect id="Field-Frame-container"
+      width="512" height="1024"
+      style="stroke: none; fill: none;"
+      />
+    <!-- drawn clockwise -->
+    <!--
+    <path
+      transform="translate(128,256) scale(0.25,0.25)"
+      fill-rule="evenodd" stroke-width="16"
+      d="
+      M -392,-752 a 24,24 0,0,1  24,-24
+      h    736    a 24,24 0,0,1  24, 24
+      v   1504    a 24,24 0,0,1 -24, 24
+      h   -736    a 24,24 0,0,1 -24,-24
+      z
+      M -440,-864 a 24,24 0,0,1  24,-24
+      h    832    a 24,24 0,0,1  24, 24
+      v   1728    a 24,24 0,0,1 -24, 24
+      h   -832    a 24,24 0,0,1 -24,-24
+      z
+      " />
+    -->
+    <path
+      transform="translate(256,512) scale(0.5,0.5)"
+      fill-rule="evenodd" stroke-width="16"
+      d="
+      M -392,-768 a 8,8 0,0,1  8,-8
+      h    768    a 8,8 0,0,1  8, 8
+      v   1536    a 8,8 0,0,1 -8, 8
+      h   -768    a 8,8 0,0,1 -8,-8
+      z
+      M -440,-864 a 24,24 0,0,1  24,-24
+      h    832    a 24,24 0,0,1  24, 24
+      v   1728    a 24,24 0,0,1 -24, 24
+      h   -832    a 24,24 0,0,1 -24,-24
+      z
+      " />
+  </g>
+
+
+
+  <g id="App-icon"
+    transform="translate(200,1360)">
+    <use xlink:href="#BkColor1-Normal" transform="translate(-64,-64)" />
+    <use xlink:href="#BkColor2-Normal" transform="translate(-64,-64)" />
+    <use xlink:href="#BkColor3-Normal" transform="translate(-320,64)" />
+    <g id="BkRJ45"
+      class="bk-rj45"
+      transform="translate(64,64)">
+      <use class="bk-bg" xlink:href="#BkColor-bg" />
+      <use class="bk-fg" xlink:href="#BkColor-fg" />
+      <use xlink:href="#RJ45-socket" transform="scale(7)" />
+    </g>
+  </g>
+
+</svg>

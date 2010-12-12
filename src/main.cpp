@@ -1,0 +1,202 @@
+#include <unistd.h>
+#include <cstdio>
+#include "interface.h"
+#include "config.h"
+#include "log.h"
+#include "optget.h"
+#include "util.h"
+
+#include "intf_server.h"
+#ifndef WITHOUT_INTF_CURSES
+#include "intf_curses.h"
+#endif
+#ifndef WITHOUT_INTF_GUI
+#include "gui/intf.h"
+#endif
+
+/// Default config file.
+#define CONF_FILE_DEFAULT  "panettopon.ini"
+
+#ifdef USE_WINMAIN
+#include <windows.h>
+#include <shellapi.h>
+
+int main(int /*argc*/, char **argv);
+
+/// Wrapper for the standard main function
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+{
+  return main(__argc, __argv);
+}
+
+#endif
+
+
+/// Print program usage.
+void usage(void)
+{
+  printf(
+      "PaNettoPon - a network multiplayer Panel de Pon\n"
+      "\n"
+      "usage: panettopon [OPTIONS] [host] port\n"
+      "\n"
+      " -c  --conf       configuration file\n"
+      " -i  --interface  interface type, from the following\n"
+      "                      server  simple server runner\n"
+#ifndef WITHOUT_INTF_GUI
+      "                      gui     graphic interface\n"
+#endif
+#ifndef WITHOUT_INTF_CURSES
+      "                      curses  text-based interface\n"
+#endif
+      " -n  --nick       nickname\n"
+      " -h, --help       display this help\n"
+      " -o, --log-file   log messages to the given file (messages are still\n"
+      "                  displayed), use \"-\" to write to stderr\n"
+    );
+}
+
+
+/** @brief Entry point.
+ *
+ * Parse program arguments, start interfaces.
+ *
+ * @retval  0  program lived normally
+ * @retval  1  fatal error
+ * @retval  2  invalid arguments
+ * @retval  3  configuration file error
+ */
+int main(int /*argc*/, char **argv)
+{
+  OptGetItem opts[] = {
+    { 'c', "conf", OPTGET_STR, {} },
+    { 'i', "interface", OPTGET_STR, {} },
+    { 'n', "nick", OPTGET_STR, {} },
+    { 'o', "log-file", OPTGET_STR, {} },
+    { 'h', "help", OPTGET_FLAG, {} },
+    { 0, 0, OPTGET_NONE, {} }
+  };
+
+  FileLogger *logger = new FileLogger;
+  Logger::setLogger(logger);
+
+
+  // Program arguments
+  const char *conf_file = NULL;
+  char *port = NULL;
+  char *host = NULL;
+  const char *nick = NULL;
+  const char *intfarg = NULL;
+
+  char *const *opt_args = argv+1;
+  OptGetItem *opt;
+  int ret;
+  for(;;) {
+    ret = optget_parse(opts, &opt_args, &opt);
+    if( ret != OPTGET_OK )
+      break;
+
+    // extra arguments
+    if( opt->type == OPTGET_NONE ) {
+      if( port == NULL ) {
+        port = opt->value.str;
+      } else if( host == NULL ) {
+        host = port;
+        port = opt->value.str;
+      }
+      else {
+        LOG("unexpected extra argument: %s", opt->value.str);
+      }
+    } else {
+      // options
+      switch( opt->short_name ) {
+        case 'c':
+          conf_file = opt->value.str;
+        case 'i':
+          intfarg = opt->value.str;
+          break;
+        case 'n':
+          nick = opt->value.str;
+          break;
+        case 'o':
+          logger->setFile( opt->value.str );
+          break;
+        case 'h':
+          usage();
+          return 0;
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  // standard parsing errors
+  if( ret != OPTGET_LAST ) {
+    switch( ret ) {
+      case OPTGET_ERR_SHORT_NAME:
+      case OPTGET_ERR_LONG_NAME:
+        LOG("unknown option: %s", *opt_args);
+        break;
+      case OPTGET_ERR_VAL_FMT:
+        LOG("invalid option value: %s", *opt_args);
+        break;
+      case OPTGET_ERR_VAL_MISSING:
+        LOG("missing option value: -%c", opt->short_name);
+        break;
+      case OPTGET_ERR_VAL_UNEXP:
+        LOG("unexpected value for option: %s", *opt_args);
+        break;
+      default:
+        // nothing to do
+        break;
+    }
+    return 2;
+  }
+
+  // load configuration
+  Config cfg;
+  if( conf_file == NULL && ::access(CONF_FILE_DEFAULT, R_OK) == 0 )
+    conf_file = CONF_FILE_DEFAULT; // default config file
+  if( conf_file != NULL ) {
+    if( !cfg.load(conf_file) ) {
+      LOG("failed to load configuration file");
+      return 3;
+    }
+  }
+
+  if( intfarg != NULL )
+    cfg.set("Global", "Interface", intfarg);
+  if( port != NULL )
+    cfg.set("Global", "Port", port);
+  if( host != NULL )
+    cfg.set("Client", "Hostname", host);
+  if( nick != NULL )
+    cfg.set("Client", "Nick", nick);
+
+  // init randomness
+  ::srand( game_time() );
+
+  const std::string intfstr = cfg.get("Global", "Interface", "server");
+  Interface *intf = NULL;
+  if( intfstr == "server" ) {
+    intf = new BasicServerInterface();
+  } else
+#ifndef WITHOUT_INTF_CURSES
+  if( intfstr == "curses" ) {
+    intf = new curses::CursesInterface();
+  } else
+#endif
+#ifndef WITHOUT_INTF_GUI
+  if( intfstr == "gui" ) {
+    intf = new gui::GuiInterface();
+  } else
+#endif
+  {
+    LOG("invalid interface: '%s'", intfstr.c_str());
+    return 2;
+  }
+  boost::scoped_ptr<Interface> intf_ptr(intf);
+  return intf_ptr->run(cfg) ? 0 : 1;
+}
+

@@ -1,0 +1,188 @@
+package netplay;
+//XXX option optimize_for = LITE_RUNTIME;
+
+
+// Wrapper packet.
+// Only one field must be set.
+message Packet {
+  optional Input input = 1;
+  optional Garbage garbage = 2;
+  optional Field field = 3;
+  optional Player player = 4;
+  optional Server server = 5;
+  optional Chat chat = 10;
+  optional Notification notification = 11;
+}
+
+
+// Chat message from a player.
+message Chat {
+  required uint32 plid = 1;
+  required string txt = 2;
+}
+
+// Server message.
+message Notification {
+  enum Severity {
+    MESSAGE = 1;
+    NOTICE  = 2;
+    WARNING = 3;
+    ERROR   = 4;
+  }
+  required string txt = 1;
+  optional Severity severity = 2 [default = MESSAGE];
+}
+
+
+// Player informations.
+// The ready flag must be automatically reset when server state changes.
+message Player {
+  required uint32 plid = 1;
+  optional bool ready = 2;
+  optional string nick = 3;
+  optional bool out = 11; // disconnected
+}
+
+// Server informations.
+message Server {
+
+  enum State {
+    ROOM  = 1; // no active match
+    INIT  = 2; // match init are being sent
+    READY = 3; // init done, waiting for players to be ready
+    GAME  = 4; // match is running
+  }
+  optional State state = 1;
+
+  // Server configuration.
+  // Invalid when a match is running.
+  // Defaults values apply until the first conf is transmitted.
+  message Conf {
+    // Maximum packet size, limit is 2^16-1
+    // Note: value must be high enough for sending grid data.
+    optional uint32 pkt_size_max = 1 [default =  1024];
+    optional uint32 pl_nb_max    = 2 [default =     2];
+    optional uint32 tk_usec      = 3 [default = 16667]; // 60Hz
+    optional uint32 tk_lag_max   = 4 [default =    60]; // 1s (at 60Hz)
+  }
+  optional Conf conf = 2;
+}
+
+// Field informations.
+// Sent before match starts to initialize fields.
+// Not supported during match yet, except for rank.
+message Field {
+  required uint32  plid = 1;
+  // tick at which the changes will apply, or current one
+  // match init: must be unset
+  optional uint32  tick = 2;
+  optional fixed32 seed = 3; // only set for init
+  optional uint32  rank = 4; // 0: still playing, 1: first, 2: second, ...
+
+  message Conf {
+    // random color picking mode for raised lines
+    enum RaiseAdjacent {
+      NEVER     = 1;
+      ALWAYS    = 2;
+      ALTERNATE = 3;
+    }
+    optional uint32 raise_tk = 1;
+    optional uint32 raise_steps = 2;
+    optional uint32 swap_tk = 3;
+    optional uint32 stop_combo_0 = 4;
+    optional uint32 stop_combo_k = 5;
+    optional uint32 stop_chain_0 = 6;
+    optional uint32 stop_chain_k = 7;
+    optional uint32 lost_tk = 8;
+    optional uint32 gb_wait_tk = 9;
+    optional uint32 flash_tk = 10;
+    optional uint32 levitate_tk = 11;
+    optional uint32 pop_tk = 12;
+    optional uint32 pop0_tk = 13;
+    optional uint32 transform_tk = 14;
+    optional uint32 color_nb = 15;
+    optional RaiseAdjacent raise_adjacent = 16;
+  }
+  optional Conf conf = 5; // field init: all fields must be set
+
+  // Color block
+  message BkColor {
+    enum State {
+      REST        = 1;
+      FALL        = 2;
+      LAID        = 3;
+      LEVITATE    = 4;
+      FLASH       = 5;
+      MUTATE      = 6;
+      CLEARED     = 7;
+      TRANSFORMED = 8;
+    }
+    required State state = 1;
+    required uint32 color = 2;
+  }
+
+  message BkGarbage {
+    enum State {
+      REST        = 1;
+      FALL        = 2;
+      FLASH       = 3;
+      MUTATE      = 4;
+      TRANSFORMED = 5;
+    }
+    required State state = 1;
+    //TODO required uint32 garbage
+  }
+
+  // Block content
+  message Block {
+    optional BkColor bk_color = 1;
+    optional BkGarbage bk_garbage = 2;
+    optional bool swapped = 3 [default = false];
+    optional bool chaining = 4 [default = false];
+    optional uint32 ntick = 5 [default = 0];
+    //TODO group_pos
+  }
+  
+  // Grid content, starting at (x,y) = (0,0).
+  // repeat order: (0,0) (1,0) ... (0,1) (1,1) ...
+  repeated Block blocks = 10;
+}
+
+// Input for a field.
+// Keys of skipped frames default to 0 (no input).
+// If keys is empty, input for given tick is not provided but skipped frames
+// are processed.
+message Input {
+  // key values
+  // keys field is a OR-ed set of them
+  enum Keys {
+    NONE  =  0;
+    UP    =  1;
+    DOWN  =  2;
+    LEFT  =  4;
+    RIGHT =  8;
+    SWAP  = 16;
+    RAISE = 32;
+  };
+  required uint32 plid = 1;
+  required uint32 tick = 2; // tick of the first given keys
+  repeated uint32 keys = 3 [packed = true]; // successive input keys
+}
+
+// Garbage-related actions.
+message Garbage {
+  enum Type {
+    COMBO   = 1;
+    CHAIN   = 2;
+    SPECIAL = 3;
+  }
+  required uint32 gbid = 1;
+  optional uint32 plid_to = 2;   // garbage target (must be set at creation)
+  optional uint32 plid_from = 3; // garbage sender (or 0)
+  // zero-based position in waiting list, -1 for the end
+  optional sint32 pos = 4;
+  optional Type   type = 5;
+  optional uint32 size = 6;
+  optional bool   drop = 7 [default = false]; // if set, other fields should be unset
+}
+
