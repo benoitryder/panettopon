@@ -350,8 +350,7 @@ FieldDisplay::FieldDisplay(const Field &fld, const DisplayRes &res, int slot):
 
   ::memset(crouch_dt_, 0, sizeof(crouch_dt_));
 
-  this->SetPosition( slot * 2*res.img_field_frame.GetWidth() + 100, 100 );
-  this->SetScale(0.5, 0.5); //XXX
+  this->SetPosition( slot * 2*res.img_field_frame.GetWidth(), 0 );
 
   spr_frame_.SetImage(res_.img_field_frame);
   spr_frame_.SetCenter(
@@ -429,42 +428,18 @@ void FieldDisplay::Render(sf::RenderTarget &target) const
   // cursor
   target.Draw(spr_cursor_);
 
-#if 0
-  // display labels, older first / newer above
-  BasicLabelHolder::iterator it;
+  // labels
+  LabelContainer::const_iterator it;
   for( it=labels_.begin(); it!=labels_.end(); ++it ) {
-    glPushMatrix();
-    glTranslatef(it->pos.x+0.5, it->pos.y-0.5
-                 //XXX:hack space between combo and chain labels for a same match
-                 +(it->chain?0.1:0)
-                 +1-0.5*(float)it->dt/BasicLabelHolder::DURATION, 0);
-
-    if( it->chain ) {
-      res_.spr_label.chain.draw();
-    } else {
-      res_.spr_label.combo.draw();
-    }
-
-    char buf[5];
-    if( it->chain ) {
-      ::snprintf(buf, sizeof(buf), "x%u", it->val);
-    } else {
-      ::snprintf(buf, sizeof(buf), "%u", it->val);
-    }
-    buf[sizeof(buf)-1] = '\0';
-    const std::string txt(buf);
-
-    res_.font.render(txt, 0.6, 0.6, Font::STRETCH_Y);
-
-    glPopMatrix();
+    target.Draw( (*it) );
   }
-#endif
 }
 
 
 void FieldDisplay::step()
 {
   // Note: called at init, even if init does not actually steps the field.
+  const Field::StepInfo &info = field_.stepInfo();
 
   lift_offset_ = 1-(float)field_.raiseStep()/field_.conf().raise_steps;
 
@@ -487,7 +462,7 @@ void FieldDisplay::step()
       );
 
   // field raised: update crouch_dt_
-  if( field_.stepInfo().raised ) {
+  if( info.raised ) {
     for(int x=0; x<FIELD_WIDTH; x++) {
       for(int y=FIELD_HEIGHT; y>0; y--) {
         crouch_dt_[x][y] = crouch_dt_[x][y-1];
@@ -511,7 +486,32 @@ void FieldDisplay::step()
     }
   }
 
-  labels_.step(&field_);
+  // labels
+
+  // update display time, move labels
+  LabelContainer::iterator it;
+  for( it=labels_.begin(); it!=labels_.end(); ++it ) {
+    it->Move(0, -0.5*res_.bk_size/Label::DURATION);
+    it->dt--;
+  }
+  // remove expired labels
+  while( !labels_.empty() && labels_.front().dt == 0 ) {
+    labels_.pop_front();
+  }
+  // create new labels, if needed
+  if( info.combo != 0 ) {
+    FieldPos pos = this->matchLabelPos();
+    if( pos.y < FIELD_HEIGHT ) {
+      pos.y++; // display label above top matching block, if possible
+    }
+    if( info.chain > 1 ) {
+      labels_.push_back( Label(res_, pos, true, info.chain) );
+      pos.y--;
+    }
+    if( info.combo > 3 ) {
+      labels_.push_back( Label(res_, pos, false, info.combo) );
+    }
+  }
 }
 
 
@@ -653,6 +653,78 @@ void FieldDisplay::renderBouncingBlock(sf::RenderTarget &target, int x, int y, f
 
   sf::FloatRect pos( x + dx, y + dy - offy, x+1 - dx, y+1 - dy - offy );
   tiles.face.render(target, pos);
+}
+
+
+const unsigned int FieldDisplay::Label::DURATION = 42;
+
+FieldDisplay::Label::Label(const DisplayRes &res, const FieldPos &pos, bool chain, unsigned int val):
+    dt(DURATION)
+{
+  this->SetPosition((pos.x+0.5)*res.bk_size, (FIELD_HEIGHT-pos.y+0.5)*res.bk_size);
+  //XXX:hack space between combo and chain labels for a same match
+  this->Move(0, -0.1*res.bk_size);
+
+  // prepare label text
+  char buf[5];
+  if( chain) {
+    ::snprintf(buf, sizeof(buf), "x%u", val);
+  } else {
+    ::snprintf(buf, sizeof(buf), "%u", val);
+  }
+  buf[sizeof(buf)-1] = '\0';
+
+  // initialize text
+  txt.SetText(buf);
+  txt.SetFont(res.font);
+  txt.SetColor(sf::Color::White);
+  sf::FloatRect txt_rect = txt.GetRect();
+  const float txt_dx = txt_rect.Right - txt_rect.Left;
+  const float txt_dy = txt_rect.Bottom - txt_rect.Top;
+  float txt_sx = 0.8*res.bk_size / txt_dx;
+  float txt_sy = 0.8*res.bk_size / txt_dy;
+  if( txt_sx > txt_sy ) {
+    txt_sx = txt_sy; // stretch Y, not X
+  }
+  //XXX:hack add the baseline offset, not usually included in 'x' and digits
+  txt.SetCenter(txt_dx/2, (txt_dy+txt.GetFont().GetGlyph('p').Rectangle.Bottom)/2);
+  txt.SetScale(txt_sx, txt_sy);
+
+  // initialize sprite
+  unsigned int img_w = res.img_labels.GetWidth();
+  unsigned int img_h = res.img_labels.GetHeight();
+  bg.SetImage(res.img_labels);
+  bg.SetCenter(img_w/4, img_h/2);
+  if( chain ) {
+    bg.SetSubRect(sf::IntRect(img_w/2, 0, img_w, img_h));
+  } else {
+    bg.SetSubRect(sf::IntRect(0, 0, img_w/2, img_h));
+  }
+}
+
+
+void FieldDisplay::Label::Render(sf::RenderTarget &target) const
+{
+  target.Draw(bg);
+  target.Draw(txt);
+}
+
+
+FieldPos FieldDisplay::matchLabelPos()
+{
+  unsigned int x, y;
+  for( y=FIELD_HEIGHT; y>0; y-- ) {
+    for( x=0; x<FIELD_WIDTH; x++ ) {
+      const Block &bk = field_.block(x,y);
+      if( bk.isState(BkColor::FLASH) &&
+         bk.ntick - field_.tick() == field_.conf().flash_tk ) {
+        return FieldPos(x,y);
+      }
+    }
+  }
+  // should not happen, combo != 0 tested before call
+  assert( false );
+  return FieldPos();
 }
 
 

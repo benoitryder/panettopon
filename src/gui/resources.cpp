@@ -82,17 +82,9 @@ void DisplayRes::load(const std::string &res_path)
 
   img_field_frame.LoadFromFile(res_path+"/Field-Frame.png");
   img_cursor.LoadFromFile(res_path+"/SwapCursor.png");
+  img_labels.LoadFromFile(res_path+"/Labels.png");
 
 #if 0
-  {
-    Image img("Labels");
-    const int tw = img.w()/2;
-    const int th = img.h();
-
-    spr_label.chain.initFromImage(img, 0,  0, tw, th).setSize(1,1);
-    spr_label.combo.initFromImage(img, tw, 0, tw, th).setSize(1,1);
-  }
-
   {
     Image img("WaitingGb-map");
     const size_t nb_w = FIELD_WIDTH/2;

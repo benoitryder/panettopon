@@ -2,6 +2,8 @@
 #define GUI_INTF_H_
 
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/Sprite.hpp>
+#include <SFML/Graphics/String.hpp>
 #include "monotone_timer.hpp"
 #include "interface.h"
 #include "client.h"
@@ -137,7 +139,26 @@ class FieldDisplay: public sf::Drawable
   /// Per-block crouching state.
   unsigned int crouch_dt_[FIELD_WIDTH][FIELD_HEIGHT+1];
 
-  BasicLabelHolder labels_;
+  /** @name Labels. */
+  //@{
+
+  struct Label: public sf::Drawable
+  {
+    static const unsigned int DURATION;
+    Label(const DisplayRes &res, const FieldPos &pos, bool chain, unsigned int val);
+    virtual void Render(sf::RenderTarget &target) const;
+    sf::Sprite bg;    ///< Background sprite.
+    sf::String txt;   ///< Label text.
+    unsigned int dt;  ///< Remaining display time.
+  };
+
+  typedef std::deque<Label> LabelContainer;
+  LabelContainer labels_;
+
+  /// Return top-left match position.
+  FieldPos matchLabelPos();
+
+  //@}
 };
 
 

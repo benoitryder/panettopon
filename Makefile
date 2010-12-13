@@ -40,7 +40,7 @@ endif
 
 ifndef WITHOUT_INTF_GUI
 cxx_names += gui/intf gui/resources
-LDFLAGS += -lsfml-graphics -lsfml-window
+LDFLAGS += -lsfml-graphics -lsfml-window -lsfml-system
 LDFLAGS_WIN += -lopengl32
 LDFLAGS_POSIX +=
 CFLAGS_WIN += -DUSE_WINMAIN

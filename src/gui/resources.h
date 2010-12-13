@@ -2,8 +2,8 @@
 #define GUI_RESOURCES_H_
 
 #include <GL/gl.h>
+#include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/Image.hpp>
-#include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Font.hpp>
 
 
@@ -63,22 +63,14 @@ class DisplayRes
     FieldTile mutate, flash;
   } tiles_gb;
 
-  /// Labels
-  struct SprsLabels {
-    sf::Sprite chain, combo;
-  } spr_label;
-
-  // Waiting garbages
-  struct SprsWaitingGb {
-    sf::Sprite line;
-    sf::Sprite blocks[FIELD_WIDTH];
-  } spr_waiting_gb;
-
   /// Field frame
   sf::Image img_field_frame;
 
   /// Cursor (two positions).
   sf::Image img_cursor;
+
+  /// Labels (combo and chain).
+  sf::Image img_labels;
 
   /// Default font
   const sf::Font &font;
