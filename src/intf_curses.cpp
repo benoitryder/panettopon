@@ -362,7 +362,7 @@ void FieldDisplay::draw()
   }
 
   // labels
-  BasicLabelHolder::iterator it;
+  LabelContainer::iterator it;
   for( it=labels_.begin(); it!=labels_.end(); ++it ) {
     char buf[5];
     chtype ch = A_REVERSE|A_BLINK;
@@ -387,7 +387,33 @@ void FieldDisplay::draw()
 
 void FieldDisplay::step()
 {
-  labels_.step(&field_);
+  const Field::StepInfo &info = field_.stepInfo();
+
+  // labels
+
+  // update display time
+  LabelContainer::iterator it;
+  for( it=labels_.begin(); it!=labels_.end(); ++it ) {
+    it->dt--;
+  }
+  // remove expired labels
+  while( !labels_.empty() && labels_.front().dt == 0 ) {
+    labels_.pop_front();
+  }
+  // create new labels, if needed
+  if( info.combo != 0 ) {
+    FieldPos pos = this->matchLabelPos();
+    if( pos.y < FIELD_HEIGHT ) {
+      pos.y++; // display label above top matching block, if possible
+    }
+    if( info.chain > 1 ) {
+      labels_.push_back( Label(pos, true, info.chain) );
+      pos.y--;
+    }
+    if( info.combo > 3 ) {
+      labels_.push_back( Label(pos, false, info.combo) );
+    }
+  }
 }
 
 
@@ -487,6 +513,31 @@ void FieldDisplay::drawBlock(int x, int y)
   }
 
   mvwaddchnstr(wgrid_, FIELD_HEIGHT-y+1, 2*x+1, chs, 2);
+}
+
+
+const unsigned int FieldDisplay::Label::DURATION = 42;
+
+FieldDisplay::Label::Label(const FieldPos &pos, bool chain, unsigned int val):
+    pos(pos), chain(chain), val(val), dt(DURATION)
+{
+}
+
+FieldPos FieldDisplay::matchLabelPos()
+{
+  unsigned int x, y;
+  for( y=FIELD_HEIGHT; y>0; y-- ) {
+    for( x=0; x<FIELD_WIDTH; x++ ) {
+      const Block &bk = field_.block(x,y);
+      if( bk.isState(BkColor::FLASH) &&
+         bk.ntick - field_.tick() == field_.conf().flash_tk ) {
+        return FieldPos(x,y);
+      }
+    }
+  }
+  // should not happen, combo != 0 tested before call
+  assert( false );
+  return FieldPos();
 }
 
 

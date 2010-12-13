@@ -81,7 +81,25 @@ class FieldDisplay
   WINDOW *wfield_;
   WINDOW *wgrid_;
 
-  BasicLabelHolder labels_;
+  /** @name Labels. */
+  //@{
+
+  struct Label {
+    static const unsigned int DURATION;
+    Label(const FieldPos &pos, bool chain, unsigned int val);
+    FieldPos pos;      ///< position, in field coordinates
+    bool chain;        ///< true for chain, false for combo
+    unsigned int val;  ///< combo or chain value
+    unsigned int dt;   ///< remaining display time
+  };
+
+  typedef std::deque<Label> LabelContainer;
+  LabelContainer labels_;
+
+  /// Return top-left match position.
+  FieldPos matchLabelPos();
+
+  //@}
 };
 
 }
