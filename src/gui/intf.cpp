@@ -76,8 +76,19 @@ bool GuiInterface::run(const Config &cfg)
   int port = cfg.getInt("Global", "Port", 20102);
   const std::string host = cfg.get("Client", "Hostname", "localhost");
 
+  conf_.res_path = cfg.get(CONF_SECTION, "ResPath", "./res");
+  // strip trailing '/' (or '\' on Windows)
+#ifdef WIN32
+  size_t p = conf_.res_path.find_last_not_of("/\\");
+#else
+  size_t p = conf_.res_path.find_last_not_of('/');
+#endif
+  if( p != std::string::npos ) {
+    conf_.res_path = conf_.res_path.substr(0, p+1);
+  }
+
   // start display loop
-  if( !this->initDisplay(cfg) ) {
+  if( !this->initDisplay() ) {
     LOG("display initialization failed");
     this->endDisplay();
     return false;
@@ -93,7 +104,7 @@ bool GuiInterface::run(const Config &cfg)
 }
 
 
-bool GuiInterface::initDisplay(const Config &cfg)
+bool GuiInterface::initDisplay()
 {
   //TODO handle errors/exceptions
   window_.Create(
@@ -104,6 +115,8 @@ bool GuiInterface::initDisplay(const Config &cfg)
   window_.SetIcon(icon.width, icon.height, icon.data);
   window_.EnableKeyRepeat(false);
   //window_.PreserveOpenGLStates();
+
+  window_.GetDefaultView().Zoom(conf_.zoom);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -119,19 +132,8 @@ bool GuiInterface::initDisplay(const Config &cfg)
 
   // Load resources
   {
-    std::string res_path = cfg.get(CONF_SECTION, "ResPath", "./res");
-    // strip trailing '/' (or '\' on Windows)
-#ifdef WIN32
-    size_t p = res_path.find_last_not_of("/\\");
-#else
-    size_t p = res_path.find_last_not_of('/');
-#endif
-    if( p != std::string::npos ) {
-      res_path = res_path.substr(0, p+1);
-    }
-
     try {
-      res_.load(res_path);
+      res_.load(conf_.res_path);
     } catch(const std::exception &e) {
       LOG("failed to load resources: %s", e.what());
       return false;
@@ -158,7 +160,6 @@ void GuiInterface::redraw()
 
   glPushMatrix();
 
-  glScalef( conf_.zoom, conf_.zoom, 1); //XXX
   FieldDisplayMap::iterator it;
   for( it=fdisplays_.begin(); it!=fdisplays_.end(); ++it ) {
     window_.Draw(*(*it).second);

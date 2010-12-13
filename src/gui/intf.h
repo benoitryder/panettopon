@@ -62,6 +62,7 @@ class GuiInterface: public ClientInterface
     bool fullscreen;
     unsigned int screen_width, screen_height;
     float zoom;
+    std::string res_path;
   } conf_;
 
   /// Get a key code from a key name, 0 if invalid.
@@ -69,7 +70,7 @@ class GuiInterface: public ClientInterface
 
 
   /// Init display, load resources.
-  bool initDisplay(const Config &cfg);
+  bool initDisplay();
   /// Close display (but don't free resources).
   void endDisplay();
 
