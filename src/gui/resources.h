@@ -4,6 +4,8 @@
 #include <GL/gl.h>
 #include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/Sprite.hpp>
+#include <SFML/Graphics/Font.hpp>
+
 
 namespace gui {
 
@@ -40,6 +42,8 @@ class FieldTile
 class DisplayRes
 {
  public:
+  DisplayRes();
+
   void load(const std::string &res_path);
 
   /// Block pixel size.
@@ -76,10 +80,8 @@ class DisplayRes
   /// Cursor (two positions).
   sf::Image img_cursor;
 
-#if 0
-  /// Main font
-  Font font;
-#endif
+  /// Default font
+  const sf::Font &font;
 
  private:
   sf::Image img_bk_color_;

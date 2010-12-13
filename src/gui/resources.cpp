@@ -41,6 +41,11 @@ void FieldTile::render(sf::RenderTarget &, const sf::FloatRect &pos) const
 }
 
 
+DisplayRes::DisplayRes():
+  font(sf::Font::GetDefaultFont())
+{
+}
+
 void DisplayRes::load(const std::string &res_path)
 {
   //TODO check number of available colors
