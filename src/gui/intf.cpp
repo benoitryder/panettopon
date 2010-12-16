@@ -158,14 +158,10 @@ void GuiInterface::redraw()
 
   window_.Clear(sf::Color(48,48,48));
 
-  glPushMatrix();
-
   FieldDisplayMap::iterator it;
   for( it=fdisplays_.begin(); it!=fdisplays_.end(); ++it ) {
     window_.Draw(*(*it).second);
   }
-
-  glPopMatrix();
 
   window_.Display();
 }
