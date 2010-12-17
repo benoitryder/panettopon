@@ -114,23 +114,10 @@ bool GuiInterface::initDisplay()
       );
   window_.SetIcon(icon.width, icon.height, icon.data);
   window_.EnableKeyRepeat(false);
-  //window_.PreserveOpenGLStates();
 
   sf::View view = window_.GetDefaultView();
   view.Zoom(conf_.zoom);
   window_.SetView(view);
-
-  /*TODO:check
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(0, window_.GetWidth(), 0, window_.GetHeight(), -1, 1);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  //glTranslatef(0.5, 0.5, 0);
-  */
 
   // Load resources
   {
@@ -152,10 +139,6 @@ void GuiInterface::endDisplay()
 
 void GuiInterface::redraw()
 {
-  /* TODO:check
-  glClear(GL_COLOR_BUFFER_BIT);
-  glEnable(GL_TEXTURE_2D);
-  */
   //TODO draw fields only during match
 
   window_.Clear(sf::Color(48,48,48));

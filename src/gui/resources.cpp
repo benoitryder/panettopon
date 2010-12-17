@@ -32,14 +32,6 @@ void FieldTile::render(sf::Renderer &renderer, const sf::FloatRect &pos) const
     renderer.AddVertex(pos.Left,           pos.Top+pos.Height, rect_.Left,             rect_.Top);
     renderer.AddVertex(pos.Left+pos.Width, pos.Top+pos.Height, rect_.Left+rect_.Width, rect_.Top);
   renderer.End();
-  /*XXX:temp
-  glBegin(GL_TRIANGLE_STRIP);
-    glTexCoord2f(rect_.Left,             rect_.Top+rect_.Height); glVertex2f(pos.Left,           pos.Top);
-    glTexCoord2f(rect_.Left+rect_.Width, rect_.Top+rect_.Height); glVertex2f(pos.Left+pos.Width, pos.Top);
-    glTexCoord2f(rect_.Left,             rect_.Top);              glVertex2f(pos.Left,           pos.Top+pos.Height);
-    glTexCoord2f(rect_.Left+rect_.Width, rect_.Top);              glVertex2f(pos.Left+pos.Width, pos.Top+pos.Height);
-  glEnd();
-  */
 }
 
 
