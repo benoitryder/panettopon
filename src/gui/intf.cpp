@@ -339,11 +339,7 @@ FieldDisplay::FieldDisplay(const Field &fld, const DisplayRes &res, int slot):
       );
   spr_frame_.SetScale(2,2);
 
-  spr_cursor_.SetImage(res_.img_cursor);
-  spr_cursor_.SetOrigin(
-      res_.img_cursor.GetWidth()/2,
-      res_.img_cursor.GetHeight()/4
-      );
+  res_.tiles_cursor[0].setToSprite(spr_cursor_, true);
 
   this->step();  // not a step, but do the work
 }
@@ -428,11 +424,7 @@ void FieldDisplay::step()
 
   // cursor
   if( field_.tick() % 15 == 0 ) {
-    sf::IntRect rect(0, 0, res_.img_cursor.GetWidth(), res_.img_cursor.GetHeight()/2);
-    if( (field_.tick()/15) % 2 != 0 ) {
-      rect.Top = rect.Height;
-    }
-    spr_cursor_.SetSubRect(rect);
+    res_.tiles_cursor[ (field_.tick()/15) % 2 ].setToSprite(spr_cursor_, true);
   }
   spr_cursor_.SetPosition(
       res_.bk_size * (field_.cursor().x + 1),
@@ -667,14 +659,10 @@ FieldDisplay::Label::Label(const DisplayRes &res, const FieldPos &pos, bool chai
   txt.SetScale(txt_sx, txt_sy); // scale after computations (needed)
 
   // initialize sprite
-  unsigned int img_w = res.img_labels.GetWidth();
-  unsigned int img_h = res.img_labels.GetHeight();
-  bg.SetImage(res.img_labels);
-  bg.SetOrigin(img_w/4, img_h/2);
   if( chain ) {
-    bg.SetSubRect(sf::IntRect(img_w/2, 0, img_w/2, img_h));
+    res.tiles_labels.chain.setToSprite(bg, true);
   } else {
-    bg.SetSubRect(sf::IntRect(0, 0, img_w/2, img_h));
+    res.tiles_labels.combo.setToSprite(bg, true);
   }
 }
 

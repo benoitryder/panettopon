@@ -68,10 +68,12 @@ class DisplayRes
   sf::Image img_field_frame;
 
   /// Cursor (two positions).
-  sf::Image img_cursor;
+  ImageTile tiles_cursor[2];
 
   /// Labels (combo and chain).
-  sf::Image img_labels;
+  struct TilesLabels {
+    ImageTile combo, chain;
+  } tiles_labels;
 
   /// Default font
   const sf::Font &font;
@@ -79,6 +81,8 @@ class DisplayRes
  private:
   sf::Image img_bk_color_;
   sf::Image img_bk_gb_;
+  sf::Image img_cursor_;
+  sf::Image img_labels_;
 };
 
 }

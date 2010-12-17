@@ -15,7 +15,7 @@ void ImageTile::create(const sf::Image &img, int sx, int sy, int x, int y)
   //XXX check 'img.GetWidth() % sx == 0' and 'img.GetHeight() % sy == 0'
   const int kx = img.GetWidth()  / sx;
   const int ky = img.GetHeight() / sy;
-  this->create(img, sf::IntRect(kx*x, kx*y, kx, ky));
+  this->create(img, sf::IntRect(kx*x, ky*y, kx, ky));
 }
 
 void ImageTile::render(sf::Renderer &renderer, float x, float y, float w, float h) const
@@ -85,8 +85,16 @@ void DisplayRes::load(const std::string &res_path)
   tiles_gb.flash .create(img_bk_gb_, 4, 2, 3, 1);
 
   img_field_frame.LoadFromFile(res_path+"/Field-Frame.png");
-  img_cursor.LoadFromFile(res_path+"/SwapCursor.png");
-  img_labels.LoadFromFile(res_path+"/Labels.png");
+
+  // Cursor
+  img_cursor_.LoadFromFile(res_path+"/SwapCursor.png");
+  tiles_cursor[0].create(img_cursor_, 1, 2, 0, 0);
+  tiles_cursor[1].create(img_cursor_, 1, 2, 0, 1);
+
+  // Labels
+  img_labels_.LoadFromFile(res_path+"/Labels.png");
+  tiles_labels.combo.create(img_labels_, 2, 1, 0, 0);
+  tiles_labels.chain.create(img_labels_, 2, 1, 1, 0);
 
 #if 0
   {
