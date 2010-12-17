@@ -116,12 +116,14 @@ bool GuiInterface::initDisplay()
   window_.EnableKeyRepeat(false);
   //window_.PreserveOpenGLStates();
 
-  window_.GetDefaultView().Zoom(conf_.zoom);
+  sf::View view = window_.GetDefaultView();
+  view.Zoom(conf_.zoom);
+  window_.SetView(view);
 
+  /*TODO:check
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  /*TODO:check
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glOrtho(0, window_.GetWidth(), 0, window_.GetHeight(), -1, 1);
@@ -172,7 +174,6 @@ void GuiInterface::onRedrawTick(const boost::system::error_code &ec)
   if( ec == asio::error::operation_aborted )
     return;
 
-  // process SDL events
   if( ! window_.IsOpened() ) {
     //TODO
     io_service_.stop();
@@ -349,14 +350,14 @@ FieldDisplay::FieldDisplay(const Field &fld, const DisplayRes &res, int slot):
   this->SetPosition( slot * 2*res.img_field_frame.GetWidth(), 0 );
 
   spr_frame_.SetImage(res_.img_field_frame);
-  spr_frame_.SetCenter(
+  spr_frame_.SetOrigin(
       (res_.img_field_frame.GetWidth()-res_.bk_size*FIELD_WIDTH/2)/2,
       (res_.img_field_frame.GetHeight()-res_.bk_size*FIELD_HEIGHT/2)/2
       );
   spr_frame_.SetScale(2,2);
 
   spr_cursor_.SetImage(res_.img_cursor);
-  spr_cursor_.SetCenter(
+  spr_cursor_.SetOrigin(
       res_.img_cursor.GetWidth()/2,
       res_.img_cursor.GetHeight()/4
       );
@@ -367,23 +368,26 @@ FieldDisplay::FieldDisplay(const Field &fld, const DisplayRes &res, int slot):
 FieldDisplay::~FieldDisplay() {}
 
 
-void FieldDisplay::Render(sf::RenderTarget &target) const
+void FieldDisplay::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
 {
   // grid content
-  glPushMatrix();
+  renderer.PushStates();
     // scale blocks, reverse Y axis
-    glScalef( res_.bk_size, -(float)res_.bk_size, 1 );
-    glTranslatef(0, lift_offset_-FIELD_HEIGHT-1, 0);
+    renderer.ApplyModelView(sf::Matrix3::Transformation(
+            sf::Vector2f(0,0),
+            sf::Vector2f(0, -(float)res_.bk_size*(lift_offset_-FIELD_HEIGHT-1)),
+            0, sf::Vector2f(res_.bk_size, -(float)res_.bk_size)
+            ));
     int x, y;
     for( x=0; x<FIELD_WIDTH; x++ ) {
       for( y=1; y<=FIELD_HEIGHT; y++ )
-        this->renderBlock(target, x, y);
+        this->renderBlock(renderer, x, y);
       // raising line: darker
-      glColor3f(0.4, 0.4, 0.4);
-      this->renderBlock(target, x, 0);
-      glColor3f(1,1,1);
+      renderer.SetColor(sf::Color(96,96,96));
+      this->renderBlock(renderer, x, 0);
+      renderer.SetColor(sf::Color::White);
     }
-  glPopMatrix();
+  renderer.PopStates();
 
   target.Draw(spr_frame_);
 
@@ -441,16 +445,11 @@ void FieldDisplay::step()
 
   // cursor
   if( field_.tick() % 15 == 0 ) {
-    if( (field_.tick()/15) % 2 == 0 ) {
-      spr_cursor_.SetSubRect( sf::IntRect(
-              0, 0, res_.img_cursor.GetWidth(), res_.img_cursor.GetHeight()/2
-              ) );
-    } else {
-      spr_cursor_.SetSubRect( sf::IntRect(
-              0, res_.img_cursor.GetHeight()/2,
-              res_.img_cursor.GetWidth(), res_.img_cursor.GetHeight()
-              ) );
+    sf::IntRect rect(0, 0, res_.img_cursor.GetWidth(), res_.img_cursor.GetHeight()/2);
+    if( (field_.tick()/15) % 2 != 0 ) {
+      rect.Top = rect.Height;
     }
+    spr_cursor_.SetSubRect(rect);
   }
   spr_cursor_.SetPosition(
       res_.bk_size * (field_.cursor().x + 1),
@@ -511,7 +510,7 @@ void FieldDisplay::step()
 }
 
 
-void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
+void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
 {
   const Block &bk = field_.block(x,y);
   if( bk.isNone() || bk.isState(BkColor::CLEARED) ) {
@@ -536,27 +535,27 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
 
     unsigned int crouch_dt = crouch_dt_[x][y];
     if( crouch_dt == 0 ) {
-      tile->render(target, x, y);
+      tile->render(renderer, x, y);
     } else {
       // bounce positions: -1 -> +1 (quick) -> 0 (slow)
       float bounce = ( crouch_dt > CROUCH_DURATION/2 )
         ? 4*(float)(CROUCH_DURATION-crouch_dt)/CROUCH_DURATION-1.0
         : 2*(float)crouch_dt/CROUCH_DURATION;
-      this->renderBouncingBlock(target, x, y, bounce, bk.bk_color.color);
+      this->renderBouncingBlock(renderer, x, y, bounce, bk.bk_color.color);
     }
 
   } else if( bk.isGarbage() ) {
     const DisplayRes::TilesGb &tiles = res_.tiles_gb;
-    glColor3f(0.8, 0.4, 0.1); //XXX:temp
+    renderer.SetColor(sf::Color(204,102,25)); //XXX:temp
 
     if( bk.bk_garbage.state == BkGarbage::FLASH ) {
       if( (bk.ntick - field_.tick()) % 2 == 0 ) {
-       tiles.mutate.render(target, x, y);
+       tiles.mutate.render(renderer, x, y);
       } else {
-       tiles.flash.render(target, x, y);
+       tiles.flash.render(renderer, x, y);
       }
     } else if( bk.bk_garbage.state == BkGarbage::MUTATE ) {
-      tiles.mutate.render(target, x, y);
+      tiles.mutate.render(renderer, x, y);
     } else {
       const Garbage *gb = bk.bk_garbage.garbage;
       bool center_mark = gb->size.x > 2 && gb->size.y > 1;
@@ -579,7 +578,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
         int ty = ( y == gb->pos.y+gb->size.y-1 ) ? 0 : 2;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(target, sf::FloatRect(x, y+0.5, x+0.5, y+1));
+      tile->render(renderer, sf::FloatRect(x, y+0.5, 0.5, 0.5));
 
       // top right
       if( center_mark &&
@@ -594,7 +593,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
         int ty = ( y == gb->pos.y+gb->size.y-1 ) ? 0 : 2;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(target, sf::FloatRect(x+0.5, y+0.5, x+1, y+1));
+      tile->render(renderer, sf::FloatRect(x+0.5, y+0.5, 0.5, 0.5));
 
       // bottom left
       if( center_mark &&
@@ -609,7 +608,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
         int ty = ( y == gb->pos.y ) ? 3 : 1;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(target, sf::FloatRect(x, y, x+0.5, y+0.5));
+      tile->render(renderer, sf::FloatRect(x, y, 0.5, 0.5));
 
       // bottom right
       if( center_mark &&
@@ -624,17 +623,17 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
         int ty = ( y == gb->pos.y              ) ? 3 : 1;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(target, sf::FloatRect(x+0.5, y, x+1, y+0.5));
+      tile->render(renderer, sf::FloatRect(x+0.5, y, 0.5, 0.5));
     }
-    glColor3f(1,1,1); //XXX:temp (cf. above)
+    renderer.SetColor(sf::Color::White); //XXX:temp (cf. above)
   }
 }
 
 
-void FieldDisplay::renderBouncingBlock(sf::RenderTarget &target, int x, int y, float bounce, unsigned int color) const
+void FieldDisplay::renderBouncingBlock(sf::Renderer &renderer, int x, int y, float bounce, unsigned int color) const
 {
   const DisplayRes::TilesBkColor &tiles = res_.tiles_bk_color[color];
-  tiles.bg.render(target, x, y);
+  tiles.bg.render(renderer, x, y);
 
   float offy, dx, dy;
   if( bounce < 0 ) {
@@ -647,8 +646,8 @@ void FieldDisplay::renderBouncingBlock(sf::RenderTarget &target, int x, int y, f
     dy = -0.5 * bounce*((float)BOUNCE_HEIGHT_MAX/BOUNCE_SYMBOL_SIZE-1);
   }
 
-  sf::FloatRect pos( x + dx, y + dy - offy, x+1 - dx, y+1 - dy - offy );
-  tiles.face.render(target, pos);
+  sf::FloatRect pos( x + dx, y + dy - offy, 1-2*dx, 1-2*dy );
+  tiles.face.render(renderer, pos);
 }
 
 
@@ -671,35 +670,34 @@ FieldDisplay::Label::Label(const DisplayRes &res, const FieldPos &pos, bool chai
   buf[sizeof(buf)-1] = '\0';
 
   // initialize text
-  txt.SetText(buf);
+  txt.SetString(buf);
   txt.SetFont(res.font);
   txt.SetColor(sf::Color::White);
   sf::FloatRect txt_rect = txt.GetRect();
-  const float txt_dx = txt_rect.Right - txt_rect.Left;
-  const float txt_dy = txt_rect.Bottom - txt_rect.Top;
-  float txt_sx = 0.8*res.bk_size / txt_dx;
-  float txt_sy = 0.8*res.bk_size / txt_dy;
+  float txt_sx = 0.8*res.bk_size / txt_rect.Width;
+  float txt_sy = 0.8*res.bk_size / txt_rect.Height;
   if( txt_sx > txt_sy ) {
     txt_sx = txt_sy; // stretch Y, not X
   }
   //XXX:hack add the baseline offset, not usually included in 'x' and digits
-  txt.SetCenter(txt_dx/2, (txt_dy+txt.GetFont().GetGlyph('p').Rectangle.Bottom)/2);
-  txt.SetScale(txt_sx, txt_sy);
+  const sf::IntRect &glyph_rect = txt.GetFont().GetGlyph('p', txt.GetCharacterSize(), false).Bounds;
+  txt.SetOrigin(txt_rect.Width/2, (txt_rect.Height+glyph_rect.Top+glyph_rect.Height)/2);
+  txt.SetScale(txt_sx, txt_sy); // scale after computations (needed)
 
   // initialize sprite
   unsigned int img_w = res.img_labels.GetWidth();
   unsigned int img_h = res.img_labels.GetHeight();
   bg.SetImage(res.img_labels);
-  bg.SetCenter(img_w/4, img_h/2);
+  bg.SetOrigin(img_w/4, img_h/2);
   if( chain ) {
-    bg.SetSubRect(sf::IntRect(img_w/2, 0, img_w, img_h));
+    bg.SetSubRect(sf::IntRect(img_w/2, 0, img_w/2, img_h));
   } else {
     bg.SetSubRect(sf::IntRect(0, 0, img_w/2, img_h));
   }
 }
 
 
-void FieldDisplay::Label::Render(sf::RenderTarget &target) const
+void FieldDisplay::Label::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
   target.Draw(bg);
   target.Draw(txt);

@@ -3,7 +3,7 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/String.hpp>
+#include <SFML/Graphics/Text.hpp>
 #include "monotone_timer.hpp"
 #include "interface.h"
 #include "client.h"
@@ -111,10 +111,10 @@ class FieldDisplay: public sf::Drawable
   void step();
 
  protected:
-  virtual void Render(sf::RenderTarget &target) const;
+  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
 
  private:
-  void renderBlock(sf::RenderTarget &target, int x, int y) const;
+  void renderBlock(sf::Renderer &renderer, int x, int y) const;
 
   /** @brief Draw a bouncing block.
    *
@@ -126,7 +126,7 @@ class FieldDisplay: public sf::Drawable
    * Only the symbol part is drawn, to drawing pixels of adjacent tiles because
    * of stretching.
    */
-  void renderBouncingBlock(sf::RenderTarget &target, int x, int y, float bounce, unsigned int color) const;
+  void renderBouncingBlock(sf::Renderer &renderer, int x, int y, float bounce, unsigned int color) const;
 
   const Field &field_;
   const DisplayRes &res_;
@@ -146,9 +146,9 @@ class FieldDisplay: public sf::Drawable
   {
     static const unsigned int DURATION;
     Label(const DisplayRes &res, const FieldPos &pos, bool chain, unsigned int val);
-    virtual void Render(sf::RenderTarget &target) const;
+    virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
     sf::Sprite bg;    ///< Background sprite.
-    sf::String txt;   ///< Label text.
+    sf::Text txt;     ///< Label text.
     unsigned int dt;  ///< Remaining display time.
   };
 

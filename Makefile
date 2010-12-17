@@ -40,7 +40,10 @@ endif
 
 ifndef WITHOUT_INTF_GUI
 cxx_names += gui/intf gui/resources
-LDFLAGS += -lsfml-graphics -lsfml-window -lsfml-system
+# use static SFML: avoid an error on exit with ATI cards
+#LDFLAGS += -lsfml-graphics -lsfml-window -lsfmlystem
+LDFLAGS += -lsfml-graphics-s -lsfml-window-s -lsfml-system-s
+CFLAGS += -DSFML_STATIC
 LDFLAGS_WIN += -lopengl32
 LDFLAGS_POSIX +=
 CFLAGS_WIN += -DUSE_WINMAIN

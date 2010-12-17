@@ -2,7 +2,7 @@
 #define GUI_RESOURCES_H_
 
 #include <GL/gl.h>
-#include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Graphics/Renderer.hpp>
 #include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/Font.hpp>
 
@@ -28,9 +28,9 @@ class FieldTile
   /// Initialize the tile using number of horizontal tiles and positions.
   void create(const sf::Image &img, int nx, int x, int y);
   /// Draw the tile using x,y as top left corner.
-  void render(sf::RenderTarget &target, int x, int y) const;
+  void render(sf::Renderer &renderer, int x, int y) const;
   /// Draw the tile using a given quad position.
-  void render(sf::RenderTarget &target, const sf::FloatRect &pos) const;
+  void render(sf::Renderer &renderer, const sf::FloatRect &pos) const;
 
  private:
   sf::ResourcePtr<sf::Image> image_;

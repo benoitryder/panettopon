@@ -15,29 +15,31 @@ void FieldTile::create(const sf::Image &img, int nx, int x, int y)
   int ny = img.GetHeight() / (img.GetWidth() / nx);
   float kx = 1./nx;
   float ky = 1./ny;
-  this->create(img, sf::FloatRect(kx*x, ky*y, kx*(x+1), ky*(y+1)));
+  this->create(img, sf::FloatRect(kx*x, ky*y, kx, ky));
 }
 
-void FieldTile::render(sf::RenderTarget &, int x, int y) const
+void FieldTile::render(sf::Renderer &renderer, int x, int y) const
 {
-  image_->Bind();
-  glBegin(GL_QUADS);
-    glTexCoord2f(rect_.Left,  rect_.Bottom); glVertex2f(x,   y);
-    glTexCoord2f(rect_.Left,  rect_.Top);    glVertex2f(x,   y+1);
-    glTexCoord2f(rect_.Right, rect_.Top);    glVertex2f(x+1, y+1);
-    glTexCoord2f(rect_.Right, rect_.Bottom); glVertex2f(x+1, y);
-  glEnd();
+  this->render(renderer, sf::FloatRect(x, y, 1, 1));
 }
 
-void FieldTile::render(sf::RenderTarget &, const sf::FloatRect &pos) const
+void FieldTile::render(sf::Renderer &renderer, const sf::FloatRect &pos) const
 {
-  image_->Bind();
-  glBegin(GL_QUADS);
-    glTexCoord2f(rect_.Left,  rect_.Bottom); glVertex2f(pos.Left,  pos.Top);
-    glTexCoord2f(rect_.Left,  rect_.Top);    glVertex2f(pos.Left,  pos.Bottom);
-    glTexCoord2f(rect_.Right, rect_.Top);    glVertex2f(pos.Right, pos.Bottom);
-    glTexCoord2f(rect_.Right, rect_.Bottom); glVertex2f(pos.Right, pos.Top);
+  renderer.SetTexture(image_);
+  renderer.Begin(sf::Renderer::TriangleStrip);
+    renderer.AddVertex(pos.Left,           pos.Top,            rect_.Left,             rect_.Top+rect_.Height);
+    renderer.AddVertex(pos.Left+pos.Width, pos.Top,            rect_.Left+rect_.Width, rect_.Top+rect_.Height);
+    renderer.AddVertex(pos.Left,           pos.Top+pos.Height, rect_.Left,             rect_.Top);
+    renderer.AddVertex(pos.Left+pos.Width, pos.Top+pos.Height, rect_.Left+rect_.Width, rect_.Top);
+  renderer.End();
+  /*XXX:temp
+  glBegin(GL_TRIANGLE_STRIP);
+    glTexCoord2f(rect_.Left,             rect_.Top+rect_.Height); glVertex2f(pos.Left,           pos.Top);
+    glTexCoord2f(rect_.Left+rect_.Width, rect_.Top+rect_.Height); glVertex2f(pos.Left+pos.Width, pos.Top);
+    glTexCoord2f(rect_.Left,             rect_.Top);              glVertex2f(pos.Left,           pos.Top+pos.Height);
+    glTexCoord2f(rect_.Left+rect_.Width, rect_.Top);              glVertex2f(pos.Left+pos.Width, pos.Top+pos.Height);
   glEnd();
+  */
 }
 
 
