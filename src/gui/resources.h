@@ -75,6 +75,12 @@ class DisplayRes
     ImageTile combo, chain;
   } tiles_labels;
 
+  /// Waiting garbages.
+  struct TilesWaitingGb {
+    ImageTile blocks[FIELD_WIDTH];
+    ImageTile line;
+  } tiles_waiting_gb;
+
   /// Default font
   const sf::Font &font;
 
@@ -83,6 +89,7 @@ class DisplayRes
   sf::Image img_bk_gb_;
   sf::Image img_cursor_;
   sf::Image img_labels_;
+  sf::Image img_waiting_gb_;
 };
 
 }

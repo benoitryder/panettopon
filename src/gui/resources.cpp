@@ -84,6 +84,7 @@ void DisplayRes::load(const std::string &res_path)
   tiles_gb.mutate.create(img_bk_gb_, 4, 2, 3, 0);
   tiles_gb.flash .create(img_bk_gb_, 4, 2, 3, 1);
 
+  // Frame
   img_field_frame.LoadFromFile(res_path+"/Field-Frame.png");
 
   // Cursor
@@ -96,19 +97,13 @@ void DisplayRes::load(const std::string &res_path)
   tiles_labels.combo.create(img_labels_, 2, 1, 0, 0);
   tiles_labels.chain.create(img_labels_, 2, 1, 1, 0);
 
-#if 0
-  {
-    Image img("WaitingGb-map");
-    const size_t nb_w = FIELD_WIDTH/2;
-    const int tw = img.w()/(nb_w+1);
-    const int th = img.h()/2;
-
-    for( unsigned int i=0; i<FIELD_WIDTH; i++) {
-      spr_waiting_gb.blocks[i].initFromImage(img, (i%nb_w)*tw, (i/nb_w)*th, tw, th).setSize(1.5,1);
-    }
-    spr_waiting_gb.line.initFromImage(img, nb_w*tw, 0, tw, th).setSize(1.5,1);
+  // Waiting garbages
+  img_waiting_gb_.LoadFromFile(res_path+"/WaitingGb-map.png");
+  const size_t waiting_gb_sx = FIELD_WIDTH/2; // on 2 rows
+  for(int i=0; i<FIELD_WIDTH; i++) {
+    tiles_waiting_gb.blocks[i].create(img_waiting_gb_, waiting_gb_sx+1, 2, i%waiting_gb_sx, i/waiting_gb_sx);
   }
-#endif
+  tiles_waiting_gb.line.create(img_waiting_gb_, waiting_gb_sx+1, 2, waiting_gb_sx, 0);
 }
 
 
