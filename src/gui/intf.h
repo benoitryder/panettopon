@@ -1,9 +1,6 @@
 #ifndef GUI_INTF_H_
 #define GUI_INTF_H_
 
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Text.hpp>
 #include "monotone_timer.hpp"
 #include "interface.h"
 #include "client.h"

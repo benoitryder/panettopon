@@ -505,7 +505,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
   if( bk.isColor() ) {
     const DisplayRes::TilesBkColor &tiles = res_.tiles_bk_color[bk.bk_color.color];
 
-    const FieldTile *tile = &tiles.normal; // default
+    const ImageTile *tile = &tiles.normal; // default
     if( bk.bk_color.state == BkColor::FLASH ) {
       if( (bk.ntick - field_.tick()) % 2 == 0 )
         tile = &tiles.flash;
@@ -518,7 +518,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
 
     unsigned int crouch_dt = crouch_dt_[x][y];
     if( crouch_dt == 0 ) {
-      tile->render(renderer, x, y);
+      tile->render(renderer, x, y, 1, 1);
     } else {
       // bounce positions: -1 -> +1 (quick) -> 0 (slow)
       float bounce = ( crouch_dt > CROUCH_DURATION/2 )
@@ -533,12 +533,12 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
 
     if( bk.bk_garbage.state == BkGarbage::FLASH ) {
       if( (bk.ntick - field_.tick()) % 2 == 0 ) {
-       tiles.mutate.render(renderer, x, y);
+       tiles.mutate.render(renderer, x, y, 1, 1);
       } else {
-       tiles.flash.render(renderer, x, y);
+       tiles.flash.render(renderer, x, y, 1, 1);
       }
     } else if( bk.bk_garbage.state == BkGarbage::MUTATE ) {
-      tiles.mutate.render(renderer, x, y);
+      tiles.mutate.render(renderer, x, y, 1, 1);
     } else {
       const Garbage *gb = bk.bk_garbage.garbage;
       bool center_mark = gb->size.x > 2 && gb->size.y > 1;
@@ -546,7 +546,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
       const int rel_y = 2*(y-gb->pos.y);
 
       // draw 4 sub-tiles
-      const FieldTile *tile;
+      const ImageTile *tile;
 
       // top left
       if( center_mark &&
@@ -561,7 +561,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
         int ty = ( y == gb->pos.y+gb->size.y-1 ) ? 0 : 2;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(renderer, sf::FloatRect(x, y+0.5, 0.5, 0.5));
+      tile->render(renderer, x, y+0.5, 0.5, 0.5);
 
       // top right
       if( center_mark &&
@@ -576,7 +576,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
         int ty = ( y == gb->pos.y+gb->size.y-1 ) ? 0 : 2;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(renderer, sf::FloatRect(x+0.5, y+0.5, 0.5, 0.5));
+      tile->render(renderer, x+0.5, y+0.5, 0.5, 0.5);
 
       // bottom left
       if( center_mark &&
@@ -591,7 +591,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
         int ty = ( y == gb->pos.y ) ? 3 : 1;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(renderer, sf::FloatRect(x, y, 0.5, 0.5));
+      tile->render(renderer, x, y, 0.5, 0.5);
 
       // bottom right
       if( center_mark &&
@@ -606,7 +606,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
         int ty = ( y == gb->pos.y              ) ? 3 : 1;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(renderer, sf::FloatRect(x+0.5, y, 0.5, 0.5));
+      tile->render(renderer, x+0.5, y, 0.5, 0.5);
     }
     renderer.SetColor(sf::Color::White); //XXX:temp (cf. above)
   }
@@ -616,7 +616,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
 void FieldDisplay::renderBouncingBlock(sf::Renderer &renderer, int x, int y, float bounce, unsigned int color) const
 {
   const DisplayRes::TilesBkColor &tiles = res_.tiles_bk_color[color];
-  tiles.bg.render(renderer, x, y);
+  tiles.bg.render(renderer, x, y, 1, 1);
 
   float offy, dx, dy;
   if( bounce < 0 ) {
@@ -629,8 +629,7 @@ void FieldDisplay::renderBouncingBlock(sf::Renderer &renderer, int x, int y, flo
     dy = -0.5 * bounce*((float)BOUNCE_HEIGHT_MAX/BOUNCE_SYMBOL_SIZE-1);
   }
 
-  sf::FloatRect pos( x + dx, y + dy - offy, 1-2*dx, 1-2*dy );
-  tiles.face.render(renderer, pos);
+  tiles.face.render(renderer, x + dx, y + dy - offy, 1-2*dx, 1-2*dy);
 }
 
 

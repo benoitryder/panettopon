@@ -2,39 +2,40 @@
 #define GUI_RESOURCES_H_
 
 #include <GL/gl.h>
-#include <SFML/Graphics/Renderer.hpp>
-#include <SFML/Graphics/Image.hpp>
-#include <SFML/Graphics/Font.hpp>
+#include <SFML/Graphics.hpp>
 
 
 namespace gui {
 
-/** @brief Sprite resource for field blocks.
+/** @brief Image subpart with rendering capabilities.
  *
- * Provide features similar to sf::Sprite but more suitable for field blocks
- * and is not a drawable itself.
+ * Similar to sf::Sprite but without positioning, scaling, rotating, etc.
  *
  * Tiles are drawn using positions in blocks and assuming Y=0 is the bottom of
- * the screen.
+ * the screen. It used in particular for field blocks.
  */
-class FieldTile
+class ImageTile
 {
  public:
-  FieldTile() {}
-  ~FieldTile() {}
+  ImageTile() {}
+  ~ImageTile() {}
 
-  /// Initialize the tile using texture coordinates (from 0 to 1).
-  void create(const sf::Image &img, const sf::FloatRect &rect);
-  /// Initialize the tile using number of horizontal tiles and positions.
-  void create(const sf::Image &img, int nx, int x, int y);
-  /// Draw the tile using x,y as top left corner.
-  void render(sf::Renderer &renderer, int x, int y) const;
-  /// Draw the tile using a given quad position.
-  void render(sf::Renderer &renderer, const sf::FloatRect &pos) const;
+  /// Initialize the tile using image subrect.
+  void create(const sf::Image &img, const sf::IntRect &rect);
+  /// Initialize the tile (x,y) from a (sx,sy) tilemap.
+  void create(const sf::Image &img, int sx, int sy, int x, int y);
+  /// Draw the tile at given position.
+  void render(sf::Renderer &renderer, float x, float y, float w, float h) const;
+  /** @brief Affect the tile to a sprite.
+   *
+   * If \e center is \e true, sprite origin is changed to be cented on the
+   * tile.
+   */
+  void setToSprite(sf::Sprite &spr, bool center=false) const;
 
  private:
   sf::ResourcePtr<sf::Image> image_;
-  sf::FloatRect rect_;
+  sf::IntRect rect_;
 };
 
 
@@ -51,16 +52,16 @@ class DisplayRes
 
   /// Tile group for block of a given color.
   struct TilesBkColor {
-    FieldTile normal, bg, face, flash, mutate;
+    ImageTile normal, bg, face, flash, mutate;
   };
   /// Color blocks
   std::vector<TilesBkColor> tiles_bk_color;
 
   /// Garbages
   struct TilesGb {
-    FieldTile tiles[4][4];
-    FieldTile center[2][2];
-    FieldTile mutate, flash;
+    ImageTile tiles[4][4];
+    ImageTile center[2][2];
+    ImageTile mutate, flash;
   } tiles_gb;
 
   /// Field frame
