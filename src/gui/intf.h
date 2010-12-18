@@ -141,14 +141,20 @@ class FieldDisplay: public sf::Drawable
   /** @name Labels. */
   //@{
 
-  struct Label: public sf::Drawable
+  class Label: public sf::Drawable
   {
-    static const unsigned int DURATION;
+   public:
     Label(const DisplayRes &res, const FieldPos &pos, bool chain, unsigned int val);
     virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
-    sf::Sprite bg;    ///< Background sprite.
-    sf::Text txt;     ///< Label text.
-    unsigned int dt;  ///< Remaining display time.
+    /// Step and update the label.
+    void step();
+    unsigned int dt() const { return dt_; }
+   private:
+    static const unsigned int DURATION;
+    const DisplayRes &res_;
+    sf::Sprite bg_;    ///< Background sprite.
+    sf::Text txt_;     ///< Label text.
+    unsigned int dt_;  ///< Remaining display time.
   };
 
   typedef std::deque<Label> LabelContainer;

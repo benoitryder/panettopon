@@ -435,14 +435,13 @@ void FieldDisplay::step()
 
   // labels
 
-  // update display time, move labels
+  // update
   LabelContainer::iterator it;
   for( it=labels_.begin(); it!=labels_.end(); ++it ) {
-    it->Move(0, -0.5*res_.bk_size/Label::DURATION);
-    it->dt--;
+    it->step();
   }
   // remove expired labels
-  while( !labels_.empty() && labels_.front().dt == 0 ) {
+  while( !labels_.empty() && labels_.front().dt() == 0 ) {
     labels_.pop_front();
   }
   // create new labels, if needed
@@ -649,11 +648,11 @@ void FieldDisplay::renderBouncingBlock(sf::Renderer &renderer, int x, int y, flo
 const unsigned int FieldDisplay::Label::DURATION = 42;
 
 FieldDisplay::Label::Label(const DisplayRes &res, const FieldPos &pos, bool chain, unsigned int val):
-    dt(DURATION)
+    res_(res), dt_(DURATION)
 {
-  this->SetPosition((pos.x+0.5)*res.bk_size, (FIELD_HEIGHT-pos.y+0.5)*res.bk_size);
+  this->SetPosition((pos.x+0.5)*res_.bk_size, (FIELD_HEIGHT-pos.y+0.5)*res_.bk_size);
   //XXX:hack space between combo and chain labels for a same match
-  this->Move(0, -0.1*res.bk_size);
+  this->Move(0, -0.1*res_.bk_size);
 
   // prepare label text
   char buf[5];
@@ -665,33 +664,39 @@ FieldDisplay::Label::Label(const DisplayRes &res, const FieldPos &pos, bool chai
   buf[sizeof(buf)-1] = '\0';
 
   // initialize text
-  txt.SetString(buf);
-  txt.SetFont(res.font);
-  txt.SetColor(sf::Color::White);
-  sf::FloatRect txt_rect = txt.GetRect();
-  float txt_sx = 0.8*res.bk_size / txt_rect.Width;
-  float txt_sy = 0.8*res.bk_size / txt_rect.Height;
+  txt_.SetString(buf);
+  txt_.SetFont(res_.font);
+  txt_.SetColor(sf::Color::White);
+  sf::FloatRect txt_rect = txt_.GetRect();
+  float txt_sx = 0.8*res_.bk_size / txt_rect.Width;
+  float txt_sy = 0.8*res_.bk_size / txt_rect.Height;
   if( txt_sx > txt_sy ) {
     txt_sx = txt_sy; // stretch Y, not X
   }
   //XXX:hack add the baseline offset, not usually included in 'x' and digits
-  const sf::IntRect &glyph_rect = txt.GetFont().GetGlyph('p', txt.GetCharacterSize(), false).Bounds;
-  txt.SetOrigin(txt_rect.Width/2, (txt_rect.Height+glyph_rect.Top+glyph_rect.Height)/2);
-  txt.SetScale(txt_sx, txt_sy); // scale after computations (needed)
+  const sf::IntRect &glyph_rect = txt_.GetFont().GetGlyph('p', txt_.GetCharacterSize(), false).Bounds;
+  txt_.SetOrigin(txt_rect.Width/2, (txt_rect.Height+glyph_rect.Top+glyph_rect.Height)/2);
+  txt_.SetScale(txt_sx, txt_sy); // scale after computations (needed for GetRect())
 
   // initialize sprite
   if( chain ) {
-    res.tiles_labels.chain.setToSprite(bg, true);
+    res_.tiles_labels.chain.setToSprite(bg_, true);
   } else {
-    res.tiles_labels.combo.setToSprite(bg, true);
+    res_.tiles_labels.combo.setToSprite(bg_, true);
   }
 }
 
 
 void FieldDisplay::Label::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
-  target.Draw(bg);
-  target.Draw(txt);
+  target.Draw(bg_);
+  target.Draw(txt_);
+}
+
+void FieldDisplay::Label::step()
+{
+  dt_--;
+  this->Move(0, -0.5*res_.bk_size/Label::DURATION);
 }
 
 
