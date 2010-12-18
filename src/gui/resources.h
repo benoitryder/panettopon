@@ -76,10 +76,10 @@ class DisplayRes
   } tiles_labels;
 
   /// Waiting garbages.
-  struct TilesWaitingGb {
+  struct TilesGbWaiting {
     ImageTile blocks[FIELD_WIDTH];
     ImageTile line;
-  } tiles_waiting_gb;
+  } tiles_gb_waiting;
 
   /// Default font
   const sf::Font &font;
@@ -89,7 +89,7 @@ class DisplayRes
   sf::Image img_bk_gb_;
   sf::Image img_cursor_;
   sf::Image img_labels_;
-  sf::Image img_waiting_gb_;
+  sf::Image img_gb_waiting_;
 };
 
 }

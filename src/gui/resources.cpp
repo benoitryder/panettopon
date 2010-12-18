@@ -98,12 +98,12 @@ void DisplayRes::load(const std::string &res_path)
   tiles_labels.chain.create(img_labels_, 2, 1, 1, 0);
 
   // Waiting garbages
-  img_waiting_gb_.LoadFromFile(res_path+"/WaitingGb-map.png");
-  const size_t waiting_gb_sx = FIELD_WIDTH/2; // on 2 rows
+  img_gb_waiting_.LoadFromFile(res_path+"/GbWaiting-map.png");
+  const size_t gb_waiting_sx = FIELD_WIDTH/2; // on 2 rows
   for(int i=0; i<FIELD_WIDTH; i++) {
-    tiles_waiting_gb.blocks[i].create(img_waiting_gb_, waiting_gb_sx+1, 2, i%waiting_gb_sx, i/waiting_gb_sx);
+    tiles_gb_waiting.blocks[i].create(img_gb_waiting_, gb_waiting_sx+1, 2, i%gb_waiting_sx, i/gb_waiting_sx);
   }
-  tiles_waiting_gb.line.create(img_waiting_gb_, waiting_gb_sx+1, 2, waiting_gb_sx, 0);
+  tiles_gb_waiting.line.create(img_gb_waiting_, gb_waiting_sx+1, 2, gb_waiting_sx, 0);
 }
 
 
