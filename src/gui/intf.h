@@ -107,6 +107,8 @@ class FieldDisplay: public sf::Drawable
   /// Update internal display after a step.
   void step();
 
+  const DisplayRes &res() const { return res_; }
+
  protected:
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
 
@@ -154,6 +156,38 @@ class FieldDisplay: public sf::Drawable
 
   /// Return top-left match position.
   FieldPos matchLabelPos();
+
+  //@}
+
+  /** @name Waiting garbages. */
+  //@{
+
+  /// Drawable for waiting garbages.
+  class GbWaitingDrb: public sf::Drawable
+  {
+   public:
+    GbWaitingDrb(const DisplayRes &res, const Garbage &gb);
+    virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+    /// Step and update the garbage.
+    void step();
+    /// Set position from drop order above the field.
+    void setPosition(int i);
+    GbId gbid() const { return gb_.gbid; }
+   private:
+    /// Update the text, if needed.
+    void updateText();
+
+    const DisplayRes &res_;
+    const Garbage &gb_;
+    sf::Sprite bg_;  ///< Background sprite.
+    sf::Text txt_;   ///< Label text, not used if size_ is 0.
+    /// Chain size written in text, 0 if no text.
+    int txt_size_;
+  };
+
+  /// List of waiting garbage drawables.
+  typedef boost::ptr_list<GbWaitingDrb> GbWaitingDrbList;
+  GbWaitingDrbList gbw_drbs_;
 
   //@}
 };

@@ -370,39 +370,16 @@ void FieldDisplay::Render(sf::RenderTarget &target, sf::Renderer &renderer) cons
 
   target.Draw(spr_frame_);
 
-#if 0
   // waiting garbages
-  glPushMatrix();
-  glColor3f(0.8, 0.4, 0.1); //XXX:temp
-  glTranslatef(0.75, FIELD_HEIGHT+0.5-raise_y, 0);
-
-  size_t gb_nb = field_.waitingGarbageCount();
-  if( gb_nb > FIELD_WIDTH*2/3 ) {
-    gb_nb = FIELD_WIDTH*2/3; // avoid display "overflow"
+  renderer.SetColor(sf::Color(204,102,25)); //XXX:temp
+  GbWaitingDrbList::const_iterator gb_it;
+  unsigned gb_i;  // avoid display "overflow", max: FIELD_WIDTH*2/3
+  for(gb_it=gbw_drbs_.begin(), gb_i=0;
+      gb_it != gbw_drbs_.end() && gb_i<FIELD_HEIGHT*2/3;
+      ++gb_it, gb_i++) {
+    target.Draw(*gb_it);
   }
-  size_t gb_i=0;
-  for( gb_i=0; gb_i<gb_nb; gb_i++ ) {
-    const Garbage &gb = field_.waitingGarbage(gb_i);
-    if( gb.type == Garbage::TYPE_CHAIN ) {
-      res_.spr_waiting_gb.line.draw();
-      if( gb.size.y > 1 ) {
-        char buf[5];
-        ::snprintf(buf, sizeof(buf), "x%u", gb.size.y);
-        buf[sizeof(buf)-1] = '\0';
-        const std::string txt(buf);
-        glColor3f(0.8,0.8,0.8); //XXX:temp
-        res_.font.render(txt, 1.5*0.6, 0.6, Font::STRETCH_Y);
-        glColor3f(0.8,0.4,0.1); //XXX:temp (cf. above)
-      }
-    } else if( gb.type == Garbage::TYPE_COMBO ) {
-      res_.spr_waiting_gb.blocks[gb.size.x-1].draw();
-    }
-    glTranslatef(1.5, 0, 0);
-  }
-
-  glColor3f(1,1,1); //XXX:temp (cf. above)
-  glPopMatrix();
-#endif
+  renderer.SetColor(sf::Color::White); //XXX:temp (cf. above)
 
   // cursor
   target.Draw(spr_cursor_);
@@ -481,6 +458,50 @@ void FieldDisplay::step()
     if( info.combo > 3 ) {
       labels_.push_back( Label(res_, pos, false, info.combo) );
     }
+  }
+
+  // waiting garbages
+  /* XXX
+   * Current implementation is a bit rough.
+   * It would be better to keep track of garbage changes through events
+   * and find a way to do nothing when nothing has changed.
+   */
+
+  size_t gb_nb = field_.waitingGarbageCount();
+  size_t gb_i;
+  GbWaitingDrbList::iterator gbd_it;
+
+  // normal case: no changes, only update garbages
+  for(gb_i=0, gbd_it=gbw_drbs_.begin();
+      gb_i<gb_nb && gbd_it!=gbw_drbs_.end();
+      gb_i++, ++gbd_it) {
+    const Garbage &gb = field_.waitingGarbage(gb_i);
+    if( gb.gbid != gbd_it->gbid() ) {
+      break;
+    }
+    gbd_it->step();
+  }
+  // move/insert other garbages
+  for( ; gb_i<gb_nb; gb_i++ ) {
+    const Garbage &gb = field_.waitingGarbage(gb_i);
+    // find an already existing drawable
+    GbWaitingDrbList::iterator gbd_it2;
+    for( gbd_it2=gbd_it; gbd_it2!=gbw_drbs_.end() && gb.gbid != gbd_it2->gbid(); ++gbd_it2 ) ;
+    if( gbd_it2 == gbw_drbs_.end() ) {
+      // not found: create and insert at the new position
+      gbd_it = gbw_drbs_.insert(gbd_it, new GbWaitingDrb(res_, gb));
+    } else if( gbd_it != gbd_it2 ) {
+      // found: move it at the right position (swap)
+      //note: do the '.release()' "by hand" to help the compiler
+      gbd_it = gbw_drbs_.insert(gbd_it, gbw_drbs_.release(gbd_it2).release());
+    }
+    gbd_it->step();
+    gbd_it->setPosition(gb_i);
+    gbd_it++;
+  }
+  // remove remaining garbages (those removed)
+  if( gbd_it != gbw_drbs_.end() ) {
+    gbw_drbs_.erase(gbd_it, gbw_drbs_.end());
   }
 }
 
@@ -689,6 +710,75 @@ FieldPos FieldDisplay::matchLabelPos()
   // should not happen, combo != 0 tested before call
   assert( false );
   return FieldPos();
+}
+
+
+
+FieldDisplay::GbWaitingDrb::GbWaitingDrb(const DisplayRes &res, const Garbage &gb):
+  res_(res), gb_(gb), txt_size_(0)
+{
+  // initialize sprite
+  if( gb.type == Garbage::TYPE_CHAIN ) {
+    res_.tiles_gb_waiting.line.setToSprite(bg_, true);
+  } else if( gb.type == Garbage::TYPE_COMBO ) {
+    res_.tiles_gb_waiting.blocks[gb.size.x-1].setToSprite(bg_, true);
+  } else {
+    //TODO not handled yet
+  }
+
+  this->updateText();
+}
+
+void FieldDisplay::GbWaitingDrb::Render(sf::RenderTarget &target, sf::Renderer &) const
+{
+  target.Draw(bg_);
+  if( txt_size_ != 0 ) {
+    target.Draw(txt_);
+  }
+}
+
+void FieldDisplay::GbWaitingDrb::setPosition(int i)
+{
+  this->SetPosition((0.75+1.5*i)*res_.bk_size, -0.5*res_.bk_size);
+}
+
+void FieldDisplay::GbWaitingDrb::step()
+{
+  this->updateText();
+}
+
+void FieldDisplay::GbWaitingDrb::updateText()
+{
+  // text for >x1 chain garbages only
+  if( gb_.type != Garbage::TYPE_CHAIN || gb_.size.y < 2 ) {
+    // not actually needed: type does not change and size only increases
+    txt_size_ = 0;
+    return;
+  }
+  // size did not changed: nothing to do
+  if( txt_size_ == gb_.size.y ) {
+    return;
+  }
+  txt_size_ = gb_.size.y;
+
+  // prepare label text
+  char buf[5];
+  ::snprintf(buf, sizeof(buf), "x%u", txt_size_);
+  buf[sizeof(buf)-1] = '\0';
+
+  // reset the whole text to have a "fresh" GetRect()
+  txt_ = sf::Text(buf, res_.font);
+  txt_.SetColor(sf::Color::White);
+  sf::FloatRect txt_rect = txt_.GetRect();
+  float txt_sx = 0.8*res_.bk_size / txt_rect.Width;
+  float txt_sy = 0.8*res_.bk_size / txt_rect.Height;
+  if( txt_sx > txt_sy ) {
+    txt_sx = txt_sy; // stretch Y, not X
+  }
+  //XXX:hack add the baseline offset, not usually included in 'x' and digits
+  const sf::IntRect &glyph_rect = txt_.GetFont().GetGlyph('p', txt_.GetCharacterSize(), false).Bounds;
+  txt_.SetOrigin(txt_rect.Width/2, (txt_rect.Height+glyph_rect.Top+glyph_rect.Height)/2);
+  txt_.SetScale(txt_sx, txt_sy); // scale after computations (needed)
 }
 
 
