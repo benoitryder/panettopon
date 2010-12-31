@@ -214,6 +214,7 @@ bool Client::onPacketReceived(const netplay::Packet &pkt)
       return false;
     if( !match_.processInput(pl->field(), np_input) )
       return false;
+    //TODO one call per tick
     intf_.onFieldStep(pl->field());
 
   } else if( pkt.has_garbage() ) {

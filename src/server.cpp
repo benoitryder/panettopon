@@ -342,6 +342,7 @@ bool Server::processPacket(ServerPlayer *pl, const netplay::Packet &pkt)
       return false;
     if( !match_.processInput(pl, np_input) )
       return false;
+    //TODO one call per tick
     intf_.onFieldStep(fld);
     if( !match_.started() ) {
       intf_.onMatchEnd(&match_); //XXX before match_.stop()?

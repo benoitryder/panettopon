@@ -738,7 +738,7 @@ void Field::raise()
 
 void Field::setRaiseColor(int x, int y)
 {
-  // Depending on the mode, bad block the 1st or 2nd left one.
+  // Depending on the mode, bad block is the 1st or 2nd left one.
   //XXX if y>0, the method is used to fill the screen (at init) and mode
   // 'never' is always used
   const int bad_dx = ( y == 0 &&

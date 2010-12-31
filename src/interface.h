@@ -34,7 +34,6 @@ class Interface
   virtual void onMatchReady(const Match *m) = 0;
   virtual void onMatchStart(const Match *m) = 0;
   virtual void onMatchEnd(const Match *m) = 0;
-  /// Fields stepped one or several ticks.
   virtual void onFieldStep(const Field *fld) = 0;
   virtual void onFieldLost(const Field *fld) = 0;
 };
