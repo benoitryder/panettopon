@@ -27,7 +27,7 @@ class ServerPlayer: public Player, public netplay::PacketSocket
   boost::asio::ip::tcp::endpoint &peer() { return peer_; }
 
  protected:
-  virtual void onError(const char *msg, const boost::system::error_code &ec);
+  virtual void onError(const std::string &msg, const boost::system::error_code &ec);
   virtual bool onPacketReceived(const netplay::Packet &pkt);
 
  private:
@@ -130,7 +130,7 @@ class Server
   void removePlayerAfterWrites(ServerPlayer *pl);
 
   /// Send an error to the player and remove it.
-  void removePlayerWithError(ServerPlayer *pl, const char *msg);
+  void removePlayerWithError(ServerPlayer *pl, const std::string &msg);
 
   /** @brief Remove a player.
    *

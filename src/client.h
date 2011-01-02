@@ -85,7 +85,7 @@ class Client: public netplay::PacketSocket
   }
 
  protected:
-  virtual void onError(const char *msg, const boost::system::error_code &ec);
+  virtual void onError(const std::string &msg, const boost::system::error_code &ec);
   virtual bool onPacketReceived(const netplay::Packet &pkt);
   void onTimeout(const boost::system::error_code &ec);
   void onConnect(const boost::system::error_code &ec);

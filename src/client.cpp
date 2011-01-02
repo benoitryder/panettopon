@@ -186,12 +186,12 @@ void Client::sendReady()
 }
 
 
-void Client::onError(const char *msg, const boost::system::error_code &ec)
+void Client::onError(const std::string &msg, const boost::system::error_code &ec)
 {
   if( ec ) {
-    LOG("Client: %s: %s", msg, ec.message().c_str());
+    LOG("Client: %s: %s", msg.c_str(), ec.message().c_str());
   } else {
-    LOG("Client: %s", msg);
+    LOG("Client: %s", msg.c_str());
   }
   this->disconnect();
   //XXX do something else?

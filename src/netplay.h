@@ -36,8 +36,8 @@ class PacketSocket
    *
    * On error, the next read/write operation is not prepared.
    */
-  virtual void onError(const char *msg, const boost::system::error_code &ec) = 0;
-  void onError(const char *msg) { boost::system::error_code ec; onError(msg, ec); }
+  virtual void onError(const std::string &msg, const boost::system::error_code &ec) = 0;
+  void onError(const std::string &msg) { boost::system::error_code ec; onError(msg, ec); }
 
   /** @brief Received packet callback.
    * 

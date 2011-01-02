@@ -38,15 +38,15 @@ ServerPlayer::ServerPlayer(Server *server, PlId plid): Player(plid),
   this->setPktSizeMax( server->conf().pkt_size_max );
 }
 
-void ServerPlayer::onError(const char *msg, const boost::system::error_code &ec)
+void ServerPlayer::onError(const std::string &msg, const boost::system::error_code &ec)
 {
   if( has_error_ )
     return;
   has_error_ = true;
   if( ec ) {
-    LOG("ServerPlayer[%u]: %s: %s", plid(), msg, ec.message().c_str());
+    LOG("ServerPlayer[%u]: %s: %s", plid(), msg.c_str(), ec.message().c_str());
   } else {
-    LOG("ServerPlayer[%u]: %s", plid(), msg);
+    LOG("ServerPlayer[%u]: %s", plid(), msg.c_str());
   }
   server_->removePlayer(this);
 }
@@ -295,7 +295,7 @@ void Server::removePlayerAfterWrites(ServerPlayer *pl)
   }
 }
 
-void Server::removePlayerWithError(ServerPlayer *pl, const char *msg)
+void Server::removePlayerWithError(ServerPlayer *pl, const std::string &msg)
 {
   netplay::Packet pkt;
   netplay::Notification *notif = pkt.mutable_notification();
