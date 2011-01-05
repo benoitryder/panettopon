@@ -5,7 +5,6 @@
 #include <boost/asio/placeholders.hpp>
 #include "netplay.h"
 #include "netplay.pb.h"
-#include "player.h"
 #include "log.h"
 
 
@@ -193,6 +192,11 @@ void PeerSocket::processError(const std::string &msg, const boost::system::error
   this->closeAfterWrites();
 }
 
+void PeerSocket::processPacket(const netplay::Packet &pkt)
+{
+  server_.observer_.onPeerPacket(this, pkt);
+}
+
 void PeerSocket::close()
 {
   PacketSocket::close();
@@ -200,8 +204,9 @@ void PeerSocket::close()
 }
 
 
-ServerSocket::ServerSocket(asio::io_service &io_service):
-    PacketSocket(io_service), acceptor_(io_service)
+ServerSocket::ServerSocket(asio::io_service &io_service, ServerObserver &obs):
+    PacketSocket(io_service), acceptor_(io_service),
+    started_(false), observer_(obs)
 {
 }
 
@@ -245,9 +250,9 @@ void ServerSocket::onAccept(const boost::system::error_code &ec)
     } catch(const boost::exception &e) {
       // setting no delay may fail on some systems, ignore error
     }
-    //TODO call peer.readNext() ??
+    peer.readNext();
     try {
-      this->onPeerConnect(&peer);
+      observer_.onPeerConnect(&peer);
     } catch(const CallbackError &e) {
       this->processError(std::string("peer connection failed: ")+e.what());
     }
@@ -263,6 +268,7 @@ void ServerSocket::doRemovePeer(PeerSocket *peer)
   PeerSocketContainer::iterator it;
   for(it=peers_.begin(); it!=peers_.end(); ++it) {
     if( &(*it) == peer ) {
+      observer_.onPeerDisconnect(peer);
       peers_.erase(it);
       return;
     }

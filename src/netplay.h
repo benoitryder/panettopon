@@ -92,6 +92,19 @@ class PacketSocket
 };
 
 
+
+/// Observer for server events.
+struct ServerObserver
+{
+  /// Method called on client connection.
+  virtual void onPeerConnect(PeerSocket *peer) = 0;
+  /// Method called after a peer disconnection.
+  virtual void onPeerDisconnect(PeerSocket *peer) = 0;
+  /// Method called on input packet on a peer.
+  virtual void onPeerPacket(PeerSocket *peer, const netplay::Packet &pkt);
+};
+
+
 /// Socket for server peers.
 class PeerSocket: public PacketSocket
 {
@@ -113,21 +126,18 @@ class PeerSocket: public PacketSocket
 };
 
 
+/// Socket for server.
 class ServerSocket: public PacketSocket
 {
+  friend class PeerSocket;
  public:
-  ServerSocket(boost::asio::io_service &io_service);
+  ServerSocket(boost::asio::io_service &io_service, ServerObserver &obs);
   virtual ~ServerSocket();
 
   /// Start server on a given port.
   void start(int port);
   /// Return true if the server has been started.
   bool started() const { return started_; }
-
-  /// Method called on client connection.
-  virtual void onPeerConnect(PeerSocket *peer) = 0;
-  /// Method called after a peer disconnection.
-  virtual void onPeerDisconnect(PeerSocket *peer) = 0;
 
   /** @brief Remove the peer asynchronously.
    *
@@ -143,6 +153,7 @@ class ServerSocket: public PacketSocket
 
   boost::asio::ip::tcp::acceptor acceptor_;
   bool started_;
+  ServerObserver &observer_;
 
   typedef boost::ptr_vector<PeerSocket> PeerSocketContainer;
   /** @brief Sockets of connected clients.
@@ -153,6 +164,7 @@ class ServerSocket: public PacketSocket
 };
 
 
+/// Socket for client.
 class ClientSocket: public PacketSocket
 {
  public:
