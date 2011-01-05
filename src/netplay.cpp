@@ -10,6 +10,7 @@
 
 
 namespace asio = boost::asio;
+using namespace asio::ip;
 
 
 namespace netplay {
@@ -145,6 +146,87 @@ void PacketSocket::writeRaw(const std::string &s)
     this->writeNext();
   }
 }
+
+
+PeerSocket::PeerSocket(ServerSocket &server):
+    PacketSocket(server_.socket_.get_io_service()),
+    server_(server), has_error_(false)
+{
+  pkt_size_max_ = server.pkt_size_max_;
+}
+
+void PeerSocket::onError(const std::string &msg, const boost::system::error_code &ec)
+{
+  if( has_error_ ) {
+    return;
+  }
+  has_error_ = true;
+  if( ec ) {
+    LOG("PeerSocket[%p]: %s: %s", this, msg.c_str(), ec.message().c_str());
+  } else {
+    LOG("PeerSocket[%p]: %s", this, msg.c_str());
+  }
+  server_.removePeer(this);
+}
+
+
+ServerSocket::ServerSocket(asio::io_service &io_service):
+    PacketSocket(io_service), acceptor_(io_service)
+{
+}
+
+ServerSocket::~ServerSocket()
+{
+}
+
+void ServerSocket::start(int port)
+{
+  assert( started_ == false );
+  LOG("starting server on port %d", port);
+  tcp::endpoint endpoint(tcp::v4(), port);
+  acceptor_.open(endpoint.protocol());
+  acceptor_.set_option(asio::socket_base::reuse_address(true));
+  acceptor_.bind(endpoint);
+  acceptor_.listen();
+  started_ = true;
+  this->acceptNext();
+}
+
+void ServerSocket::acceptNext()
+{
+  peers_.push_back(new PeerSocket(*this));
+  PeerSocket &peer = peers_.back();
+  acceptor_.async_accept(
+      peer.socket_, peer.peer(),
+      boost::bind(&ServerSocket::onAccept, this, asio::placeholders::error));
+}
+
+void ServerSocket::onAccept(const boost::system::error_code &ec)
+{
+  PeerSocket &peer = peers_.back();
+  if( !ec ) {
+    try {
+      peer.socket_.set_option(tcp::no_delay(true));
+    } catch(const boost::exception &e) {
+      // setting no delay may fail on some systems, ignore error
+    }
+    //TODO call peer.readNext() ??
+    try {
+      this->onPeerConnect(&peer);
+    } catch(const CallbackError &e) {
+      //TODO removePlayerWithError()
+      // - array of removed players
+      // - close the socket
+      // - send out/error packets?
+      peers_.pop_back();
+    }
+  } else {
+    //TODO properly remove player
+    this->removePeer(peer);
+  }
+  this->acceptNext();
+}
+
 
 
 }
