@@ -135,7 +135,6 @@ class Server
   /** @brief Remove a player.
    *
    * Same as removePlayerAfterWrites() then force closing.
-   * write operations).
    */
   void removePlayer(ServerPlayer *pl);
 

@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
+#include "monotone_timer.hpp"
 
 
 namespace netplay {
@@ -38,18 +39,14 @@ class PacketSocket
   virtual ~PacketSocket();
 
  protected:
-  /** @brief Error callback.
+  /** @brief Send and process an error.
    *
    * On error, the next read/write operation is not prepared.
    */
-  virtual void onError(const std::string &msg, const boost::system::error_code &ec) = 0;
-  void onError(const std::string &msg) { boost::system::error_code ec; onError(msg, ec); }
-
-  /** @brief Received packet callback.
-   * 
-   * If \e false is returned, \e onError() will be called.
-   */
-  virtual bool onPacketReceived(const Packet &pkt) = 0;
+  virtual void processError(const std::string &msg, const boost::system::error_code &ec) = 0;
+  void processError(const std::string &msg) { boost::system::error_code ec; processError(msg, ec); }
+  /// Process an incoming packet.
+  virtual void processPacket(const Packet &pkt) = 0;
 
  public:
   static std::string serializePacket(const Packet &pkt);
@@ -62,13 +59,14 @@ class PacketSocket
   }
   void writeRaw(const std::string &s);
 
+  /// Close the socket.
+  virtual void close();
+
   /** @brief Do pending write operations and close.
    *
    * Further read packets will be ignored.
    */
   void closeAfterWrites();
-
-  inline bool isClosed() const { return !socket_.is_open(); }
 
  private:
   void onReadSize(const boost::system::error_code &ec);
@@ -79,8 +77,10 @@ class PacketSocket
   boost::asio::ip::tcp::socket socket_;
   uint16_t pkt_size_max_;
 
+  boost::asio::io_service &io_service() { return socket_.get_io_service(); }
+
  private:
-  bool delayed_close_;    ///< closeAfterPendingWrites() has been called
+  bool delayed_close_;    ///< closeAfterWrites() has been called
   std::queue<std::string> write_queue_;
   /** @name Attributes for packet reading. */
   //@{
@@ -99,13 +99,17 @@ class PeerSocket: public PacketSocket
   PeerSocket(ServerSocket &server);
   virtual ~PeerSocket() {}
   boost::asio::ip::tcp::endpoint &peer() { return peer_; }
+
+  /// Close the socket and remove the peer from the server.
+  virtual void close();
+
  protected:
-  virtual void onError(const std::string &msg, const boost::system::error_code &ec);
-  virtual bool onPacketReceived(const netplay::Packet &pkt);
+  virtual void processError(const std::string &msg, const boost::system::error_code &ec);
+  virtual void processPacket(const netplay::Packet &pkt);
  private:
   ServerSocket &server_;
   boost::asio::ip::tcp::endpoint peer_;
-  bool has_error_; ///< Avoid multiple onError() calls.
+  bool has_error_; ///< Avoid multiple processError() calls.
 };
 
 
@@ -117,16 +121,25 @@ class ServerSocket: public PacketSocket
 
   /// Start server on a given port.
   void start(int port);
-
   /// Return true if the server has been started.
-  bool isStarted() const { return started_; }
+  bool started() const { return started_; }
 
   /// Method called on client connection.
   virtual void onPeerConnect(PeerSocket *peer) = 0;
+  /// Method called after a peer disconnection.
+  virtual void onPeerDisconnect(PeerSocket *peer) = 0;
+
+  /** @brief Remove the peer asynchronously.
+   *
+   * Removal is delayed using io_service_.post() to make sure the peer is not
+   * deleted from a call to one of its method.
+   */
+  void removePeer(PeerSocket *peer);
 
  private:
   void acceptNext();
   void onAccept(const boost::system::error_code &ec);
+  void doRemovePeer(PeerSocket *peer);
 
   boost::asio::ip::tcp::acceptor acceptor_;
   bool started_;
@@ -139,6 +152,33 @@ class ServerSocket: public PacketSocket
   PeerSocketContainer peers_;
 };
 
+
+class ClientSocket: public PacketSocket
+{
+ public:
+  ClientSocket(boost::asio::io_service &io_service);
+  virtual ~ClientSocket();
+
+  /** @brief Connect to a server.
+   *
+   * Timeout is given in microseconds, -1 to wait indefinitely.
+   */
+  void connect(const char *host, int port, int tout);
+  /// Close connection to the server.
+  void disconnect();
+  /// Return true if the client is connected.
+  bool connected() const { return connected_; }
+
+ protected:
+  virtual void processError(const std::string &msg, const boost::system::error_code &ec);
+  virtual void processPacket(const netplay::Packet &pkt);
+  void onTimeout(const boost::system::error_code &ec);
+  void onConnect(const boost::system::error_code &ec);
+
+ private:
+  boost::asio::monotone_timer timer_; ///< for timeouts
+  bool connected_;
+};
 
 
 }
