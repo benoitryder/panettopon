@@ -40,7 +40,7 @@ class Client
 
   enum State {
     STATE_NONE = 0,  ///< not started
-    STATE_ROOM,
+    STATE_LOBBY,
     STATE_INIT,
     STATE_READY,
     STATE_GAME,

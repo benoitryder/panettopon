@@ -47,7 +47,7 @@ message Player {
 message Server {
 
   enum State {
-    ROOM  = 1; // no active match
+    LOBBY = 1; // no active match
     INIT  = 2; // match init are being sent
     READY = 3; // init done, waiting for players to be ready
     GAME  = 4; // match is running

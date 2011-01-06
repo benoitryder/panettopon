@@ -49,7 +49,7 @@ void Server::start(int port)
 {
   LOG("starting server on port %d", port);
   socket_.start(port);
-  state_ = STATE_ROOM;
+  state_ = STATE_LOBBY;
 }
 
 void Server::loadConf(const Config &cfg)
@@ -66,7 +66,7 @@ void Server::loadConf(const Config &cfg)
 
 void Server::onPeerConnect(netplay::PeerSocket *peer)
 {
-  if( state_ != STATE_ROOM ) {
+  if( state_ != STATE_LOBBY ) {
     throw netplay::CallbackError("match is running");
   } else if( players_.size() > conf_.pl_nb_max ) {
     throw netplay::CallbackError("server full");
@@ -166,7 +166,7 @@ void Server::onPeerPacket(netplay::PeerSocket *peer, const netplay::Packet &pkt)
     intf_.onFieldStep(fld);
     if( !match_.started() ) {
       intf_.onMatchEnd(&match_); //XXX before match_.stop()?
-      this->setState(STATE_ROOM);
+      this->setState(STATE_LOBBY);
     }
 
   } else if( pkt.has_garbage() ) {
@@ -200,7 +200,7 @@ void Server::onPeerPacket(netplay::PeerSocket *peer, const netplay::Packet &pkt)
       if( np_player.has_ready() && np_player.ready() != pl->ready() ) {
         // check whether change is valid
         // (silently ignore invalid changes)
-        if( state_ == STATE_ROOM || state_ == STATE_READY ) {
+        if( state_ == STATE_LOBBY || state_ == STATE_READY ) {
           pl->setReady(np_player.ready());
           intf_.onPlayerReady(pl);
           np_player_send->set_ready(pl->ready());
@@ -222,7 +222,7 @@ void Server::onPeerPacket(netplay::PeerSocket *peer, const netplay::Packet &pkt)
             nb_ready++;
         }
         if( nb_ready == conf_.pl_nb_max ) {
-          if( state_ == STATE_ROOM ) {
+          if( state_ == STATE_LOBBY ) {
             this->prepareMatch();
           } else if( state_ == STATE_READY ) {
             this->startMatch();

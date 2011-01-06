@@ -137,7 +137,7 @@ void Client::connect(const char *host, int port, int tout)
   LOG("connecting to %s:%d ...", host, port);
   socket_.connect(host, port, tout);
   LOG("connected");
-  state_ = STATE_ROOM;
+  state_ = STATE_LOBBY;
   conf_.toDefault();
 }
 
@@ -162,7 +162,7 @@ void Client::sendChat(const std::string &txt)
 void Client::sendReady()
 {
   assert( player_ != NULL );
-  assert( state_ == STATE_ROOM || state_ == STATE_READY );
+  assert( state_ == STATE_LOBBY || state_ == STATE_READY );
   if( player_->ready() )
     return; // already ready, do nothing
   netplay::Packet pkt;
@@ -281,7 +281,7 @@ bool Client::onPacketReceived(const netplay::Packet &pkt)
         intf_.onPlayerReady(pl);
       }
       //XXX:temp immediately ready
-      if( player_ != pl && (state_ == STATE_ROOM || state_ == STATE_READY)
+      if( player_ != pl && (state_ == STATE_LOBBY || state_ == STATE_READY)
          && !player_->ready() )
         this->sendReady();
     }
@@ -289,9 +289,9 @@ bool Client::onPacketReceived(const netplay::Packet &pkt)
   } else if( pkt.has_server() ) {
     const netplay::Server &np_server = pkt.server();
     if( np_server.has_conf() ) {
-      if( state_ != STATE_ROOM &&
+      if( state_ != STATE_LOBBY &&
          !(np_server.has_state() &&
-           np_server.state() == netplay::Server::ROOM) )
+           np_server.state() == netplay::Server::LOBBY) )
         return false;
       const netplay::Server::Conf &np_conf = np_server.conf();
 #define SERVER_CONF_EXPR_PKT(n,ini,t) \
@@ -323,14 +323,14 @@ bool Client::onPacketReceived(const netplay::Packet &pkt)
         timer_.expires_from_now(dt);
         timer_.async_wait(boost::bind(&Client::onInputTick, this,
                                       asio::placeholders::error));
-      } else if( state_ == STATE_ROOM && prev_state == STATE_GAME ) {
+      } else if( state_ == STATE_LOBBY && prev_state == STATE_GAME ) {
         timer_.cancel();
         match_.stop();
         intf_.onMatchEnd(&match_); //XXX before match_.stop()?
       }
 
       //XXX:temp immediately ready
-      if( player_ != NULL && (state_ == STATE_ROOM || state_ == STATE_READY) )
+      if( player_ != NULL && (state_ == STATE_LOBBY || state_ == STATE_READY) )
         this->sendReady();
     }
 
