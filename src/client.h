@@ -6,8 +6,6 @@
  */
 
 #include <boost/ptr_container/ptr_map.hpp>
-#include "monotone_timer.hpp"
-#include "netplay.pb.h"
 #include "netplay.h"
 #include "player.h"
 #include "game.h"
@@ -35,7 +33,7 @@ class ClientMatch: public Match
 };
 
 
-class Client: public netplay::PacketSocket
+class Client
 {
  protected:
   typedef boost::ptr_map<PlId, Player> PlayerContainer;
@@ -85,22 +83,19 @@ class Client: public netplay::PacketSocket
   }
 
  protected:
-  virtual void onError(const std::string &msg, const boost::system::error_code &ec);
   virtual bool onPacketReceived(const netplay::Packet &pkt);
-  void onTimeout(const boost::system::error_code &ec);
-  void onConnect(const boost::system::error_code &ec);
   void onInputTick(const boost::system::error_code &ec);
 
  private:
+  netplay::ClientSocket socket_;
   State state_;
   ClientMatch match_;
   Player *player_;
   ServerConf conf_;
   ClientInterface &intf_;
   KeyState next_input_;
-  boost::asio::io_service &io_service_;
   boost::posix_time::ptime tick_clock_;
-  boost::asio::monotone_timer timer_; ///< timer for timeouts
+  boost::asio::monotone_timer timer_; ///< timer for game ticks
  protected:
   PlayerContainer players_;
 };

@@ -26,14 +26,33 @@ class ServerSocket;
 
 
 /// Exception to be raised by callbacks.
-class CallbackError: public std::runtime_error {};
+class CallbackError: public std::runtime_error
+{
+ public:
+  CallbackError(const std::string &s): std::runtime_error(s) {}
+};
 
+
+/// Base socket for both server and clients.
+class BaseSocket
+{
+ public:
+  BaseSocket(boost::asio::io_service &io_service);
+  virtual ~BaseSocket();
+
+  /// Close the socket.
+  virtual void close();
+
+  boost::asio::io_service &io_service() { return socket_.get_io_service(); }
+
+ protected:
+  boost::asio::ip::tcp::socket socket_;
+  uint16_t pkt_size_max_;
+};
 
 /// Handle packet read/write operations.
-class PacketSocket
+class PacketSocket: public BaseSocket
 {
-  friend class PeerSocket;
-  friend class ServerSocket;
  public:
   PacketSocket(boost::asio::io_service &io_service);
   virtual ~PacketSocket();
@@ -59,9 +78,6 @@ class PacketSocket
   }
   void writeRaw(const std::string &s);
 
-  /// Close the socket.
-  virtual void close();
-
   /** @brief Do pending write operations and close.
    *
    * Further read packets will be ignored.
@@ -72,12 +88,6 @@ class PacketSocket
   void onReadSize(const boost::system::error_code &ec);
   void onReadData(const boost::system::error_code &ec);
   void onWrite(const boost::system::error_code &ec);
-
- protected:
-  boost::asio::ip::tcp::socket socket_;
-  uint16_t pkt_size_max_;
-
-  boost::asio::io_service &io_service() { return socket_.get_io_service(); }
 
  private:
   bool delayed_close_;    ///< closeAfterWrites() has been called
@@ -101,13 +111,14 @@ struct ServerObserver
   /// Method called after a peer disconnection.
   virtual void onPeerDisconnect(PeerSocket *peer) = 0;
   /// Method called on input packet on a peer.
-  virtual void onPeerPacket(PeerSocket *peer, const netplay::Packet &pkt);
+  virtual void onPeerPacket(PeerSocket *peer, const Packet &pkt) = 0;
 };
 
 
 /// Socket for server peers.
 class PeerSocket: public PacketSocket
 {
+  friend class ServerSocket;
  public:
   PeerSocket(ServerSocket &server);
   virtual ~PeerSocket() {}
@@ -115,10 +126,12 @@ class PeerSocket: public PacketSocket
 
   /// Close the socket and remove the peer from the server.
   virtual void close();
+  /// Send an error notification and close the socket.
+  void sendError(const std::string &msg) { PacketSocket::processError(msg); }
 
  protected:
   virtual void processError(const std::string &msg, const boost::system::error_code &ec);
-  virtual void processPacket(const netplay::Packet &pkt);
+  virtual void processPacket(const Packet &pkt);
  private:
   ServerSocket &server_;
   boost::asio::ip::tcp::endpoint peer_;
@@ -127,17 +140,19 @@ class PeerSocket: public PacketSocket
 
 
 /// Socket for server.
-class ServerSocket: public PacketSocket
+class ServerSocket: public BaseSocket
 {
   friend class PeerSocket;
  public:
-  ServerSocket(boost::asio::io_service &io_service, ServerObserver &obs);
+  ServerSocket(ServerObserver &obs, boost::asio::io_service &io_service);
   virtual ~ServerSocket();
 
   /// Start server on a given port.
   void start(int port);
   /// Return true if the server has been started.
   bool started() const { return started_; }
+
+  void setPktSizeMax(uint16_t v) { pkt_size_max_ = v; }
 
   /** @brief Remove the peer asynchronously.
    *
@@ -146,6 +161,9 @@ class ServerSocket: public PacketSocket
    */
   void removePeer(PeerSocket *peer);
 
+ protected:
+  virtual void processError(const std::string &msg, const boost::system::error_code &ec);
+  virtual void processPacket(const Packet &pkt);
  private:
   void acceptNext();
   void onAccept(const boost::system::error_code &ec);

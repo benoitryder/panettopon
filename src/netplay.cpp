@@ -15,23 +15,32 @@ using namespace asio::ip;
 namespace netplay {
 
 
-PacketSocket::PacketSocket(asio::io_service &io_service):
+BaseSocket::BaseSocket(asio::io_service &io_service):
     socket_(io_service),
-    pkt_size_max_(netplay::Server::Conf::default_instance().pkt_size_max()),
-    delayed_close_(false),
-    read_size_(0), read_buf_(NULL), read_buf_size_(0)
+    pkt_size_max_(netplay::Server::Conf::default_instance().pkt_size_max())
+{
+}
+
+BaseSocket::~BaseSocket()
+{
+}
+
+void BaseSocket::close()
+{
+  assert( socket_.is_open() );
+  socket_.close();
+}
+
+
+PacketSocket::PacketSocket(asio::io_service &io_service):
+    BaseSocket(io_service),
+    delayed_close_(false), read_size_(0), read_buf_(NULL), read_buf_size_(0)
 {
 }
 
 PacketSocket::~PacketSocket()
 {
   delete[] read_buf_;
-}
-
-void PacketSocket::close()
-{
-  assert( socket_.is_open() );
-  socket_.close();
 }
 
 void PacketSocket::closeAfterWrites()
@@ -204,9 +213,9 @@ void PeerSocket::close()
 }
 
 
-ServerSocket::ServerSocket(asio::io_service &io_service, ServerObserver &obs):
-    PacketSocket(io_service), acceptor_(io_service),
-    started_(false), observer_(obs)
+ServerSocket::ServerSocket(ServerObserver &obs, asio::io_service &io_service):
+    BaseSocket(io_service),
+    acceptor_(io_service), started_(false), observer_(obs)
 {
 }
 
@@ -217,7 +226,6 @@ ServerSocket::~ServerSocket()
 void ServerSocket::start(int port)
 {
   assert( started_ == false );
-  LOG("starting server on port %d", port);
   tcp::endpoint endpoint(tcp::v4(), port);
   acceptor_.open(endpoint.protocol());
   acceptor_.set_option(asio::socket_base::reuse_address(true));
@@ -254,7 +262,7 @@ void ServerSocket::onAccept(const boost::system::error_code &ec)
     try {
       observer_.onPeerConnect(&peer);
     } catch(const CallbackError &e) {
-      this->processError(std::string("peer connection failed: ")+e.what());
+      peer.PacketSocket::processError(std::string("peer connection failed: ")+e.what());
     }
   } else {
     LOG("accept error: %s", ec.message().c_str());
@@ -268,7 +276,11 @@ void ServerSocket::doRemovePeer(PeerSocket *peer)
   PeerSocketContainer::iterator it;
   for(it=peers_.begin(); it!=peers_.end(); ++it) {
     if( &(*it) == peer ) {
-      observer_.onPeerDisconnect(peer);
+      try {
+        observer_.onPeerDisconnect(peer);
+      } catch(const CallbackError &e) {
+        LOG("peer disconnect error: %s", e.what());
+      }
       peers_.erase(it);
       return;
     }
@@ -290,7 +302,6 @@ ClientSocket::~ClientSocket()
 
 void ClientSocket::connect(const char *host, int port, int tout)
 {
-  LOG("connecting to %s:%d ...", host, port); //TODO move in client
   tcp::resolver resolver(io_service());
   tcp::resolver::query query(tcp::v4(), host,
                              "0"); // port cannot be an integer :(
@@ -346,10 +357,8 @@ void ClientSocket::onTimeout(const boost::system::error_code &ec)
 
 void ClientSocket::onConnect(const boost::system::error_code &ec)
 {
-  LOG("connected");
   timer_.cancel();
   if( !ec ) {
-    //TODO don't forget conf_.toDefault() in client code.
     this->readNext();
   } else {
     this->processError("connect error", ec);

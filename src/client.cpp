@@ -127,39 +127,26 @@ bool ClientMatch::stepField(Field *fld, KeyState keys)
 
 
 Client::Client(ClientInterface &intf, asio::io_service &io_service):
-    netplay::PacketSocket(io_service), state_(STATE_NONE), match_(*this),
-    player_(NULL), intf_(intf), io_service_(io_service), timer_(io_service)
+    socket_(io_service), state_(STATE_NONE), match_(*this),
+    player_(NULL), intf_(intf), timer_(io_service)
 {
 }
 
 void Client::connect(const char *host, int port, int tout)
 {
   LOG("connecting to %s:%d ...", host, port);
-  tcp::resolver resolver(io_service_);
-  tcp::resolver::query query(tcp::v4(), host,
-                             "0"); // port cannot be an integer :(
-  tcp::endpoint ep = *resolver.resolve(query);
-  ep.port(port); // set port now
-  socket().async_connect(
-      ep, boost::bind(&Client::onConnect, this, asio::placeholders::error));
-  try {
-    socket().set_option(tcp::no_delay(true));
-  } catch(const boost::exception &e) {
-    // setting no delay may fail on some systems, ignore error
-  }
-  if( tout >= 0 ) {
-    timer_.expires_from_now(boost::posix_time::milliseconds(tout));
-    timer_.async_wait(boost::bind(&Client::onTimeout, this,
-                                  asio::placeholders::error));
-  }
+  socket_.connect(host, port, tout);
+  LOG("connected");
+  state_ = STATE_ROOM;
+  conf_.toDefault();
 }
 
 void Client::disconnect()
 {
   //XXX send a proper "quit" message
-  socket().close();
+  socket_.close();
   state_ = STATE_NONE;
-  io_service_.stop();
+  socket_.io_service().stop(); //XXX
 }
 
 void Client::sendChat(const std::string &txt)
@@ -169,7 +156,7 @@ void Client::sendChat(const std::string &txt)
   netplay::Chat *np_chat = pkt.mutable_chat();
   np_chat->set_plid(player_->plid());
   np_chat->set_txt(txt);
-  this->writePacket(pkt);
+  socket_.writePacket(pkt);
 }
 
 void Client::sendReady()
@@ -182,20 +169,9 @@ void Client::sendReady()
   netplay::Player *np_player = pkt.mutable_player();
   np_player->set_plid(player_->plid());
   np_player->set_ready(true);
-  this->writePacket(pkt);
+  socket_.writePacket(pkt);
 }
 
-
-void Client::onError(const std::string &msg, const boost::system::error_code &ec)
-{
-  if( ec ) {
-    LOG("Client: %s: %s", msg.c_str(), ec.message().c_str());
-  } else {
-    LOG("Client: %s", msg.c_str());
-  }
-  this->disconnect();
-  //XXX do something else?
-}
 
 bool Client::onPacketReceived(const netplay::Packet &pkt)
 {
@@ -377,26 +353,6 @@ bool Client::onPacketReceived(const netplay::Packet &pkt)
   return true;
 }
 
-void Client::onTimeout(const boost::system::error_code &ec)
-{
-  if( ec != asio::error::operation_aborted ) {
-    this->onError("timeout", ec);
-  }
-}
-
-void Client::onConnect(const boost::system::error_code &ec)
-{
-  LOG("connected");
-  timer_.cancel();
-  if( !ec ) {
-    state_ = STATE_ROOM;
-    conf_.toDefault();
-    this->readNext();
-  } else {
-    this->onError("connect error", ec);
-  }
-}
-
 void Client::onInputTick(const boost::system::error_code &ec)
 {
   if( ec == asio::error::operation_aborted )
@@ -412,7 +368,7 @@ void Client::onInputTick(const boost::system::error_code &ec)
       np_input->set_plid(player_->plid());
       np_input->set_tick(tk);
       np_input->add_keys(keys);
-      this->writePacket(pkt);
+      socket_.writePacket(pkt);
     }
     if( !fld->lost() ) {
       tick_clock_ += boost::posix_time::microseconds(conf_.tk_usec);
