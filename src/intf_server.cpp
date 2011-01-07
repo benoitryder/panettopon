@@ -1,6 +1,5 @@
 #include "intf_server.h"
 #include "server.h"
-#include "player.h"
 #include "config.h"
 #include "log.h"
 
@@ -10,9 +9,9 @@ namespace asio = boost::asio;
 bool BasicServerInterface::run(const Config &cfg)
 {
   asio::io_service io_service;
-  Server server(*this, io_service);
-  server.loadConf(cfg);
-  server.start( cfg.getInt("Global", "Port", 20102) );
+  ServerInstance instance(*this, io_service);
+  instance.loadConf(cfg);
+  instance.startServer( cfg.getInt("Global", "Port", 20102) );
   io_service.run();
   return true;
 }

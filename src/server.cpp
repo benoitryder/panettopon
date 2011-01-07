@@ -1,13 +1,22 @@
 #include <boost/bind.hpp>
-#include <boost/asio/placeholders.hpp>
-#include "config.h"
-#include "interface.h"
 #include "server.h"
+#include "netplay.pb.h"
+#include "config.h"
 #include "log.h"
 
-namespace asio = boost::asio;
-using namespace asio::ip;
 
+
+void ServerConf::toDefault()
+{
+  const netplay::Server::Conf &np_conf = netplay::Server::Conf::default_instance();
+#define SERVER_CONF_EXPR_INIT(n,ini,t) \
+  n = np_conf.n();
+  SERVER_CONF_APPLY(SERVER_CONF_EXPR_INIT);
+#undef SERVER_CONF_EXPR_INIT
+}
+
+
+const std::string ServerInstance::CONF_SECTION("Server");
 
 //XXX:temp
 static const FieldConf default_field_conf = {
@@ -30,29 +39,16 @@ static const FieldConf default_field_conf = {
 };
 
 
-
-const std::string Server::CONF_SECTION("Server");
-
-
-Server::Server(ServerInterface &intf, asio::io_service &io_service):
-    socket_(*this, io_service), state_(STATE_NONE), match_(*this), intf_(intf),
-    current_plid_(0)
+ServerInstance::ServerInstance(boost::asio::io_service &io_service):
+    socket_(*this, io_service), current_plid_(0)
 {
 }
 
-Server::~Server()
+ServerInstance::~ServerInstance()
 {
 }
 
-
-void Server::start(int port)
-{
-  LOG("starting server on port %d", port);
-  socket_.start(port);
-  state_ = STATE_LOBBY;
-}
-
-void Server::loadConf(const Config &cfg)
+void ServerInstance::loadConf(const Config &cfg)
 {
   assert( ! socket_.started() );
   //XXX signed/unsigned not checked
@@ -63,183 +59,60 @@ void Server::loadConf(const Config &cfg)
   socket_.setPktSizeMax(conf_.pkt_size_max);
 }
 
+void ServerInstance::startServer(int port)
+{
+  LOG("starting server on port %d", port);
+  socket_.start(port);
+  state_ = STATE_LOBBY;
+}
 
-void Server::onPeerConnect(netplay::PeerSocket *peer)
+
+Player *ServerInstance::newLocalPlayer()
+{
+  return this->newPlayer(NULL);
+}
+
+
+void ServerInstance::onPeerConnect(netplay::PeerSocket *peer)
 {
   if( state_ != STATE_LOBBY ) {
     throw netplay::CallbackError("match is running");
   } else if( players_.size() > conf_.pl_nb_max ) {
     throw netplay::CallbackError("server full");
   }
-
-  //TODO protected pointer
-  Player *pl = new Player(this->nextPlayerId());
-  LOG("init player: %d", pl->plid());
-  //XXX better default nick handling (or don't use default at all?)
-  pl->setNick("Player");
-  intf_.onPlayerJoined(pl);
-
-  // send init to the new player
-
-  // send server info
-  netplay::Packet pkt;
-  netplay::Server *np_server = pkt.mutable_server();
-  np_server->set_state( static_cast<netplay::Server::State>(state_) );
-  netplay::Server::Conf *np_conf = np_server->mutable_conf();
-#define SERVER_CONF_EXPR_PKT(n,ini,t) \
-  np_conf->set_##n(conf_.n);
-  SERVER_CONF_APPLY(SERVER_CONF_EXPR_PKT);
-#undef SERVER_CONF_EXPR_PKT
-  pl->writePacket(pkt);
-  pkt.clear_server();
-
-  // inform the new player about his ID
-  // tell others about their new friend
-  netplay::Player *np_player = pkt.mutable_player();
-  np_player->set_plid(pl->plid());
-  np_player->set_nick(pl->nick());
-  pl->writePacket(pkt);
-  this->broadcastPacket(pkt);
-  // player field not cleared (overwritten just below)
-
-  // send information on other players to the new one
-  PlayerContainer::const_iterator it;
-  for( it=players_.begin(); it!=players_.end(); ++it ) {
-    np_player->set_plid( (*it).second->plid() );
-    np_player->set_nick( (*it).second->nick() );
-    np_player->set_ready( (*it).second->ready() );
-    pl->writePacket(pkt);
-  }
-
-  // set read handler
-  peer->readNext();
-
-  // put accepted player with his friends
-  PlId plid = pl->plid(); // use a temporary value to help g++
-  players_.insert(plid, pl);
+  this->newPlayer(peer);
 }
 
-void Server::onPeerDisconnect(netplay::PeerSocket *peer)
+
+void ServerInstance::onPeerDisconnect(netplay::PeerSocket *peer)
 {
-  Player *pl = this->peer2player(peer);
-  assert( pl != NULL );
-  if( pl == NULL ) {
-    throw netplay::CallbackError("no player associated to the peer");
-  }
-
-  intf_.onPlayerQuit(pl);
-  // tell other players
-  netplay::Packet pkt;
-  netplay::Player *np_player = pkt.mutable_player();
-  np_player->set_plid(pl->plid());
-  np_player->set_out(true);
-  this->broadcastPacket(pkt);
-  //TODO remove from internal player maps
-}
-
-void Server::onPeerPacket(netplay::PeerSocket *peer, const netplay::Packet &pkt)
-{
-  Player *pl = this->peer2player(peer);
-  assert( pl != NULL );
-  if( pl == NULL ) {
-    throw netplay::CallbackError("no player associated to the peer");
-  }
-
-  //TODO
-  if( pkt.has_input() ) {
-    const netplay::Input &np_input = pkt.input();
-    if( state_ != STATE_GAME ) {
-      throw netplay::CallbackError("game is not running");
-    }
-    if( np_input.plid() != pl->plid() ) {
-      throw netplay::CallbackError("player mismatch");
-    }
-    Field *fld = pl->field();
-    if( fld == NULL ) {
-      throw netplay::CallbackError("player without a field");
-    }
-    if( !match_.processInput(pl, np_input) ) {
-      //TODO ??
-      throw netplay::CallbackError("input processing failed");
-    }
-    //TODO one call per tick
-    intf_.onFieldStep(fld);
-    if( !match_.started() ) {
-      intf_.onMatchEnd(&match_); //XXX before match_.stop()?
-      this->setState(STATE_LOBBY);
-    }
-
-  } else if( pkt.has_garbage() ) {
-    if( state_ != STATE_GAME ) {
-      throw netplay::CallbackError("game is not running");
-    }
-    if( !match_.processGarbage(pl, pkt.garbage()) ) {
-      throw netplay::CallbackError("garbage processing failed");
-    }
-
-  } else if( pkt.has_player() ) {
-    const netplay::Player &np_player = pkt.player();
-    if( np_player.plid() != pl->plid() ) {
-      throw netplay::CallbackError("player mismatch");
-    }
-    if( np_player.has_out() && np_player.out() ) {
-      // player out, ignore all other fields
-      socket_.removePeer(pl);
+  PeerContainer::const_iterator it;
+  for(it=peers_.begin(); it!=peers_.end(); ) {
+    if( (*it).second == peer ) {
+      PlId plid = (*it).first;
+      ++it; // increment to avoid invalidated iterator
+      this->removePlayer(plid);
     } else {
-      netplay::Packet pkt_send;
-      netplay::Player *np_player_send = pkt_send.mutable_player();
-      bool do_send = false;
-      bool become_ready = false;
-      if( np_player.has_nick() && np_player.nick() != pl->nick() ) {
-        const std::string old_nick = pl->nick();
-        pl->setNick( np_player.nick() );
-        intf_.onPlayerSetNick(pl, old_nick);
-        np_player_send->set_nick( np_player.nick() );
-        do_send = true;
-      }
-      if( np_player.has_ready() && np_player.ready() != pl->ready() ) {
-        // check whether change is valid
-        // (silently ignore invalid changes)
-        if( state_ == STATE_LOBBY || state_ == STATE_READY ) {
-          pl->setReady(np_player.ready());
-          intf_.onPlayerReady(pl);
-          np_player_send->set_ready(pl->ready());
-          become_ready = pl->ready();
-          do_send = true;
-        }
-      }
-      if( do_send ) {
-        np_player_send->set_plid( np_player.plid() );
-        this->broadcastPacket(pkt_send);
-      }
-
-      // another player is ready, check if all are
-      if( become_ready ) {
-        unsigned int nb_ready = 0;
-        PlayerContainer::const_iterator it;
-        for( it=players_.begin(); it!=players_.end(); ++it ) {
-          if( (*it).second->ready() )
-            nb_ready++;
-        }
-        if( nb_ready == conf_.pl_nb_max ) {
-          if( state_ == STATE_LOBBY ) {
-            this->prepareMatch();
-          } else if( state_ == STATE_READY ) {
-            this->startMatch();
-          }
-        }
-      }
+      ++it;
     }
+  }
+}
 
+void ServerInstance::onPeerPacket(netplay::PeerSocket *peer, const netplay::Packet &pkt)
+{
+  if( pkt.has_input() ) {
+    this->processPacketInput(peer, pkt.input());
+  } else if( pkt.has_garbage() ) {
+    this->processPacketGarbage(peer, pkt.garbage());
+  } else if( pkt.has_player() ) {
+    this->processPacketPlayer(peer, pkt.player());
   } else if( pkt.has_chat() ) {
     const netplay::Chat &np_chat = pkt.chat();
-    if( np_chat.plid() != pl->plid() ) {
-      throw netplay::CallbackError("player mismatch");
-    }
-    intf_.onChat(pl, np_chat.txt());
+    Player *pl = this->checkPeerPlayer(np_chat.plid(), peer);
+    //TODO intf_.onChat(pl, np_chat.txt());
     netplay::Packet pkt_send;
     pkt_send.mutable_chat()->MergeFrom( np_chat );
-    this->broadcastPacket(pkt_send);
+    socket_.broadcastPacket(pkt_send);
 
   } else {
     throw netplay::CallbackError("invalid packet field");
@@ -247,22 +120,221 @@ void Server::onPeerPacket(netplay::PeerSocket *peer, const netplay::Packet &pkt)
 }
 
 
-Player *Server::peer2player(netplay::PeerSocket *peer) const
+Player *ServerInstance::newPlayer(netplay::PeerSocket *peer)
 {
-  //TODO
+  //TODO protected pointer
+  Player *pl = new Player(this->nextPlayerId());
+  LOG("init player: %d", pl->plid());
+  //XXX better default nick handling (or don't use default at all?)
+  pl->setNick("Player");
+  //TODO intf_.onPlayerJoined(pl);
+
+  // packet reused
+  netplay::Packet pkt;
+
+  if( peer != NULL ) {
+    // send init to the new player (server info)
+    netplay::Server *np_server = pkt.mutable_server();
+    np_server->set_state( static_cast<netplay::Server::State>(state_) );
+    netplay::Server::Conf *np_conf = np_server->mutable_conf();
+#define SERVER_CONF_EXPR_PKT(n,ini,t) \
+    np_conf->set_##n(conf_.n);
+    SERVER_CONF_APPLY(SERVER_CONF_EXPR_PKT);
+#undef SERVER_CONF_EXPR_PKT
+    peer->writePacket(pkt);
+    pkt.clear_server();
+  }
+
+  // inform the new player about his ID (if remote)
+  // tell others about their new friend
+  netplay::Player *np_player = pkt.mutable_player();
+  np_player->set_plid(pl->plid());
+  np_player->set_nick(pl->nick());
+  if( peer != NULL ) {
+    peer->writePacket(pkt);
+  }
+  socket_.broadcastPacket(pkt);
+  // player field not cleared (overwritten just below)
+
+  if( peer != NULL ) {
+    // send information on other players to the new one
+    PlayerContainer::const_iterator it;
+    for( it=players_.begin(); it!=players_.end(); ++it ) {
+      np_player->set_plid( (*it).second->plid() );
+      np_player->set_nick( (*it).second->nick() );
+      np_player->set_ready( (*it).second->ready() );
+      peer->writePacket(pkt);
+    }
+
+    // set read handler
+    peer->readNext();
+  }
+
+  // put accepted player with his friends
+  PlId plid = pl->plid(); // use a temporary value to help g++
+  players_.insert(plid, pl);
+  if( peer != NULL ) {
+    peers_[plid] = peer; // associated player to its peer
+  }
+
+  return pl;
+}
+
+void ServerInstance::removePlayer(PlId plid)
+{
+  //TODO intf_.onPlayerQuit(pl);
+  players_.erase(plid);
+  peers_.erase(plid);
+  // tell other players
+  netplay::Packet pkt;
+  netplay::Player *np_player = pkt.mutable_player();
+  np_player->set_plid(plid);
+  np_player->set_out(true);
+  socket_.broadcastPacket(pkt);
 }
 
 
-void Server::setState(State state)
+void ServerInstance::processPacketInput(netplay::PeerSocket *peer, const netplay::Input &pkt_input)
+{
+  if( state_ != STATE_GAME ) {
+    throw netplay::CallbackError("game is not running");
+  }
+  Player *pl = this->checkPeerPlayer(pkt_input.plid(), peer);
+  //XXX:check field may have win without player knowing it
+  // this must not trigger an error
+  Field *fld = pl->field();
+  if( fld == NULL ) {
+    throw netplay::CallbackError("player without a field");
+  }
+
+  Tick tick = pkt_input.tick();
+  if( tick < fld->tick() ) {
+    throw netplay::CallbackError("input tick in the past");
+  }
+  //XXX return earlier if match ended
+  // skipped frames
+  while( fld->tick() < tick ) {
+    //TODO throw exceptions on error in stepField()
+    this->stepField(pl, 0);
+    //TODO intf_.onFieldStep(fld);
+  }
+  // given frames
+  const int keys_nb = pkt_input.keys_size();
+  for( int i=0; i<keys_nb; i++ ) {
+    this->stepField(pl, pkt_input.keys(i));
+    //TODO intf_.onFieldStep(fld);
+  }
+
+  if( !match_.started() ) {
+    this->stopMatch();
+  }
+}
+
+void ServerInstance::processPacketGarbage(netplay::PeerSocket *peer, const netplay::Garbage &pkt_gb)
+{
+  if( state_ != STATE_GAME ) {
+    throw netplay::CallbackError("game is not running");
+  }
+  if( !pkt_gb.drop() ) {
+    throw netplay::CallbackError("garbage drop expected");
+  }
+
+  GbWaitingMap::iterator it = gbs_wait_.find(pkt_gb.gbid());
+  if( it == gbs_wait_.end() ) {
+    throw netplay::CallbackError("garbage not found");
+  }
+  //TODO check peer agains pkt_gb.something()
+  //Player *pl = this->checkPeerPlayer(pkt_gb.plid(), peer);
+  if( (*it).second->to != pl->field() ) {
+    throw netplay::CallbackError("garbage destination mismatch");
+  }
+
+  netplay::Packet pkt_send;
+  netplay::Garbage *np_garbage_send = pkt_send.mutable_garbage();
+  np_garbage_send->set_gbid( (*it).second->gbid );
+  np_garbage_send->set_drop(true);
+  assert( pl->field()->waitingGarbage(0).gbid == (*it).second->gbid );
+  gbs_wait_.erase(it);
+  pl->field()->dropNextGarbage();
+  socket_.broadcastPacket(pkt_send);
+}
+
+void ServerInstance::processPacketPlayer(netplay::PeerSocket *peer, const netplay::Player &pkt_pl)
+{
+  Player *pl = this->checkPeerPlayer(pkt_pl.plid(), peer);
+  if( pkt_pl.has_out() && pkt_pl.out() ) {
+    // player out, ignore all other fields
+    this->removePlayer(pl->plid()); // note: don't disconnect the peer
+    return;
+  }
+
+  netplay::Packet pkt_send;
+  netplay::Player *np_player = pkt_send.mutable_player();
+  bool do_send = false;
+  bool become_ready = false;
+  if( pkt_pl.has_nick() && pkt_pl.nick() != pl->nick() ) {
+    //TODO intf_.onPlayerChangeNick(pl, pkt_pl.nick());
+    pl->setNick( pkt_pl.nick() );
+    np_player->set_nick( pkt_pl.nick() );
+    do_send = true;
+  }
+  if( pkt_pl.has_ready() && pkt_pl.ready() != pl->ready() ) {
+    // check whether change is valid
+    // (silently ignore invalid changes)
+    if( state_ == STATE_LOBBY || state_ == STATE_READY ) {
+      pl->setReady(pkt_pl.ready());
+      //TODO intf_.onPlayerReady(pl);
+      np_player->set_ready(pl->ready());
+      become_ready = pl->ready();
+      do_send = true;
+    }
+  }
+  if( do_send ) {
+    np_player->set_plid( pkt_pl.plid() );
+    socket_.broadcastPacket(pkt_send);
+  }
+
+  // another player is ready, check if all are
+  if( become_ready ) {
+    unsigned int nb_ready = 0;
+    PlayerContainer::const_iterator it;
+    for( it=players_.begin(); it!=players_.end(); ++it ) {
+      if( (*it).second->ready() )
+        nb_ready++;
+    }
+    if( nb_ready == conf_.pl_nb_max ) {
+      if( state_ == STATE_LOBBY ) {
+        this->prepareMatch();
+      } else if( state_ == STATE_READY ) {
+        this->startMatch();
+      }
+    }
+  }
+}
+
+
+Player *ServerInstance::checkPeerPlayer(PlId plid, const netplay::PeerSocket *peer)
+{
+  PeerContainer::const_iterator peer_it = peers_.find(plid);
+  if( peer_it == peers_.end() || (*peer_it).second != peer ) {
+    throw netplay::CallbackError("invalid player");
+  }
+  PlayerContainer::iterator pl_it = players_.find(plid);
+  assert( pl_it != players_.end() );
+  return (*pl_it).second;
+}
+
+
+void ServerInstance::setState(State state)
 {
   netplay::Packet pkt;
   netplay::Server *np_server = pkt.mutable_server();
   np_server->set_state( static_cast<netplay::Server::State>(state) );
-  this->broadcastPacket(pkt);
+  socket_.broadcastPacket(pkt);
 
   if( state != STATE_INIT ) {
     // ready_ flag is needed in prepareMatch(), don't reset it now
-    // this should change
+    //TODO always needed?
     PlayerContainer::iterator it;
     for( it=players_.begin(); it!=players_.end(); ++it )
       (*it).second->setReady(false);
@@ -270,25 +342,27 @@ void Server::setState(State state)
   state_ = state;
 }
 
-
-void Server::prepareMatch()
+void ServerInstance::prepareMatch()
 {
   LOG("prepare match");
   //XXX check ready player count (there should be at least 1 player)
 
   this->setState(STATE_INIT);
-  intf_.onMatchInit(&match_);
+  //TODO intf_.onMatchInit(&match_);
 
   int seed = ::rand(); // common seed for all fields
   netplay::Packet pkt;
 
+  //TODO recheck this part
   PlayerContainer::iterator it;
   for( it=players_.begin(); it!=players_.end(); ++it ) {
     Player *pl = (*it).second;
     assert( pl != NULL );
-    if( ! pl->ready() )
+    if( ! pl->ready() ) {
       continue;
-    Field *fld = match_.addField(pl, seed);
+    }
+    Field *fld = match_.newField(seed);
+    pl->setField(fld);
     fld->setConf( default_field_conf ); //XXX:temp
     assert( fld->conf().gb_wait_tk > conf_.tk_lag_max );
     fld->fillRandom(6);
@@ -308,128 +382,67 @@ void Server::prepareMatch()
     np_conf->set_raise_adjacent( static_cast<netplay::Field_Conf_RaiseAdjacent>(fld->conf().raise_adjacent) );
     // grid
     fld->setGridContentToPacket(np_field->mutable_blocks());
-    this->broadcastPacket(pkt);
+    socket_.broadcastPacket(pkt);
   }
 
   this->setState(STATE_READY);
-  intf_.onMatchReady(&match_);
+  //TODO intf_.onMatchReady(&match_);
 }
 
-void Server::startMatch()
+void ServerInstance::startMatch()
 {
   LOG("start match");
 
   match_.start();
-  this->setState(STATE_GAME);
-  intf_.onMatchStart(&match_);
-}
-
-PlId Server::nextPlayerId()
-{
-  for(;;) {
-    current_plid_++;
-    if( current_plid_ <= 0 ) // overflow
-      current_plid_ = 1;
-    if( players_.find(current_plid_) == players_.end() )
-      break; // not already in use
-  }
-  return current_plid_;
-}
-
-void Server::broadcastPacket(const netplay::Packet &pkt)
-{
-  const std::string s = netplay::PacketSocket::serializePacket(pkt);
-  PlayerContainer::iterator it;
-  for( it=players_.begin(); it!=players_.end(); ++it ) {
-    (*it).second->writeRaw(s);
-  }
-}
-
-
-
-ServerMatch::ServerMatch(Server &server):
-    server_(server), current_gbid_(0)
-{
-}
-
-void ServerMatch::start()
-{
-  Match::start();
+  /*TODO
   FieldContainer::iterator it;
   for( it=fields_.begin(); it!=fields_.end(); ++it ) {
     targets_chain_[&(*it)] = it;
     targets_combo_[&(*it)] = it;
   }
+  */
+  this->setState(STATE_GAME);
+  //TODO intf_.onMatchStart(&match_);
 }
 
-void ServerMatch::stop()
+void ServerInstance::stopMatch()
 {
+  LOG("stop match");
+
+  PlayerContainer::iterator it;
+  for(it=players_.begin(); it!=players_.end(); ++it) {
+    (*it).second->setField(NULL);
+  }
+  match_.stop();
+  /*TODO
   targets_chain_.clear();
   targets_combo_.clear();
-  Match::stop();
+  */
+  this->setState(STATE_LOBBY);
+  //TODO intf_.onMatchEnd(&match_);
 }
 
 
-bool ServerMatch::processInput(Player *pl, const netplay::Input &np_input)
+void ServerInstance::stepField(Player *pl, KeyState keys)
 {
-  //XXX:check field may have win without player knowing it
-  // this must not trigger an error
-  Field *fld = pl->field();
-  assert( fld != NULL );
-  Tick tick = np_input.tick();
-  if( tick < fld->tick() )
-    return false;
-
-  //XXX return earlier if match ended
-  // skipped frames
-  while( fld->tick() < tick ) {
-    if( !this->stepField(pl, 0) )
-      return false;
+  if( !match_.started() ) {
+    return;  //XXX:check match ended
   }
-  // given frames
-  const int keys_nb = np_input.keys_size();
-  for( int i=0; i<keys_nb; i++ ) {
-    if( !this->stepField(pl, np_input.keys(i)) )
-      return false;
-  }
-  return true;
-}
-
-bool ServerMatch::processGarbage(Player *pl, const netplay::Garbage &np_garbage)
-{
-  if( !np_garbage.drop() )
-    return false;
-  GbWaitingMap::iterator it = gbs_wait_.find(np_garbage.gbid());
-  if( it == gbs_wait_.end() || (*it).second->to != pl->field() )
-    return false;
-  netplay::Packet pkt_send;
-  netplay::Garbage *np_garbage_send = pkt_send.mutable_garbage();
-  np_garbage_send->set_gbid( (*it).second->gbid );
-  np_garbage_send->set_drop(true);
-  assert( pl->field()->waitingGarbage(0).gbid == (*it).second->gbid );
-  gbs_wait_.erase(it);
-  pl->field()->dropNextGarbage();
-  server_.broadcastPacket(pkt_send);
-  return true;
-}
-
-
-bool ServerMatch::stepField(Player *pl, KeyState keys)
-{
-  if( !this->started() )
-    return true; // match ended XXX:check
   //XXX Current implementation does not group Input packets.
   Field *fld = pl->field();
-  if( fld->lost() )
-    return false;
+  if( fld->lost() ) {
+    throw netplay::CallbackError("field lost, cannot step");
+  }
   Tick prev_tick = fld->tick();
-  if( prev_tick+1 >= this->tick() + server_.conf().tk_lag_max )
-    return false;
+  if( prev_tick+1 >= match_.tick() + conf_.tk_lag_max ) {
+    throw netplay::CallbackError("maximum lag exceeded");
+  }
 
   fld->step(keys);
-  if( prev_tick == this->tick() ) {
+  if( prev_tick == match_.tick() ) {
     // don't update tick_ when it will obviously not be modified
-    this->updateTick();
+    //XXX:check condition
+    match_.updateTick();
   }
 
   netplay::Packet pkt_send;
@@ -437,7 +450,7 @@ bool ServerMatch::stepField(Player *pl, KeyState keys)
   np_input_send->set_plid(pl->plid());
   np_input_send->set_tick(prev_tick);
   np_input_send->add_keys(keys);
-  server_.broadcastPacket(pkt_send);
+  socket_.broadcastPacket(pkt_send);
   pkt_send.clear_input(); // packet reused for ranking
 
   // cancel chain garbage
@@ -457,13 +470,13 @@ bool ServerMatch::stepField(Player *pl, KeyState keys)
   std::vector<Field *> to_rank;
   to_rank.reserve(fields_.size());
   unsigned int no_rank_nb = 0;
-  FieldContainer::iterator it;
+  Match::FieldContainer::iterator it;
   for( it=fields_.begin(); it!=fields_.end(); ++it ) {
     if( it->rank() != 0 )
       continue;
     no_rank_nb++;
     //XXX rank aborted fields in Match::removeField() ?
-    if( it->lost() && it->tick() <= this->tick() )
+    if( it->lost() && it->tick() <= match_.tick() )
       to_rank.push_back(&(*it));
   }
 
@@ -484,7 +497,7 @@ bool ServerMatch::stepField(Player *pl, KeyState keys)
       if( (*it)->player() != NULL ) {
         np_field_send->set_plid((*it)->player()->plid());
         np_field_send->set_rank( (*it)->rank() );
-        server_.broadcastPacket(pkt_send);
+        socket_.broadcastPacket(pkt_send);
       }
       rank++;
       no_rank_nb--;
@@ -494,7 +507,7 @@ bool ServerMatch::stepField(Player *pl, KeyState keys)
   // one (or no) remaining player: end of match
   if( no_rank_nb < 2 ) {
     netplay::Field *np_field_send = pkt_send.mutable_field();
-    FieldContainer::iterator it;
+    Match::FieldContainer::iterator it;
     for( it=fields_.begin(); it!=fields_.end(); ++it ) {
       if( (*it).rank() == 0 )
         continue;
@@ -503,15 +516,36 @@ bool ServerMatch::stepField(Player *pl, KeyState keys)
       if( it->player() != NULL ) {
         np_field_send->set_plid(it->player()->plid());
         np_field_send->set_rank( it->rank() );
-        server_.broadcastPacket(pkt_send);
+        socket_.broadcastPacket(pkt_send);
       }
       break;
     }
 
-    this->stop(); //XXX is this a good idea to do it here?
+    this->stopMatch(); //XXX is this a good idea to do it here?
   }
+}
 
-  return true;
+
+
+PlId ServerInstance::nextPlayerId()
+{
+  for(;;) {
+    current_plid_++;
+    if( current_plid_ <= 0 ) // overflow
+      current_plid_ = 1;
+    if( players_.find(current_plid_) == players_.end() )
+      break; // not already in use
+  }
+  return current_plid_;
+}
+
+
+//TODO below: obsolete
+
+
+ServerMatch::ServerMatch():
+    current_gbid_(0)
+{
 }
 
 

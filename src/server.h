@@ -1,18 +1,95 @@
 #ifndef SERVER_H_
 #define SERVER_H_
 
-/** @file
- * @brief Server API.
- */
-
+#include <map>
 #include <boost/ptr_container/ptr_map.hpp>
+#include "instance.h"
 #include "netplay.h"
-#include "player.h"
 #include "game.h"
 
+
 class Config;
-class Server;
-class ServerInterface;
+
+
+/// Instance for hosted games.
+class ServerInstance: public GameInstance, netplay::ServerObserver
+{
+  static const std::string CONF_SECTION;
+
+ public:
+  ServerInstance(boost::asio::io_service &io_service);
+  virtual ~ServerInstance();
+
+  /// Set configuration values from a config file.
+  void loadConf(const Config &cfg);
+
+  /// Start server on a given port.
+  void startServer(int port);
+
+  /// Create and return a new local player.
+  Player *newLocalPlayer();
+
+  /** @name Observer interface. */
+  //@{
+  virtual void onPeerConnect(netplay::PeerSocket *peer);
+  virtual void onPeerDisconnect(netplay::PeerSocket *peer);
+  virtual void onPeerPacket(netplay::PeerSocket *peer, const netplay::Packet &pkt);
+  //@}
+
+ private:
+  /// Return next player ID to use.
+  PlId nextPlayerId();
+
+  /** @brief Initialize a new player.
+   *
+   * If peer is \e NULL, a local player is created.
+   */
+  Player *newPlayer(netplay::PeerSocket *peer);
+  /// Remove a player.
+  void removePlayer(PlId plid);
+
+  /** @name Packet processing.
+   *
+   * Methods called from onPeerPacket().
+   * netplay::Callback exceptions are thrown on error.
+   */
+  //@{
+
+  /** @brief Retrieve and check a player from an ID and peer.
+   *
+   * If player is not found or is not associated to the peer, it is an error.
+   */
+  Player *checkPeerPlayer(PlId plid, const netplay::PeerSocket *peer);
+
+  void processPacketInput(netplay::PeerSocket *peer, const netplay::Input &pkt_input);
+  void processPacketGarbage(netplay::PeerSocket *peer, const netplay::Garbage &pkt_gb);
+  void processPacketPlayer(netplay::PeerSocket *peer, const netplay::Player &pkt_pl);
+
+  //@}
+
+  /// Change state, reset ready flags if needed, send packets.
+  void setState(State state);
+
+  void prepareMatch();
+  void startMatch();
+  void stopMatch();
+
+  /// Step one player's field, process garbages, send Input packets.
+  void stepField(Player *pl, KeyState keys);
+
+  typedef boost::ptr_map<PlId, Player> PlayerContainer;
+  typedef std::map<PlId, netplay::PeerSocket *> PeerContainer;
+
+  netplay::ServerSocket socket_;
+  PlayerContainer players_;
+  PeerContainer peers_;
+  ServerConf conf_;
+  PlId current_plid_;
+};
+
+
+
+//TODO below: obsolete
 
 
 /** @brief Match used by server.
@@ -22,17 +99,11 @@ class ServerInterface;
 class ServerMatch: public Match
 {
  public:
-  ServerMatch(Server &server);
+  ServerMatch();
   virtual ~ServerMatch() {}
 
   virtual void start();
   virtual void stop();
-
-  /// Process an Input packet.
-  bool processInput(Player *pl, const netplay::Input &np_input);
-
-  /// Process a Garbage packet.
-  bool processGarbage(Player *pl, const netplay::Garbage &np_garbage);
 
  protected:
   /// Step one field, process garbages, send Input packets.
@@ -54,8 +125,6 @@ class ServerMatch: public Match
 
  private:
 
-  Server &server_;
-
   /// Store garbages of active chains.
   typedef std::map<Field *, Garbage *> GbChainMap;
   GbChainMap gbs_chain_;
@@ -66,71 +135,6 @@ class ServerMatch: public Match
   GbTargetMap targets_combo_;
 
   GbId current_gbid_;
-};
-
-
-/// Game server
-class Server: public netplay::ServerObserver
-{
- protected:
-  typedef boost::ptr_map<PlId, Player> PlayerContainer;
-
-  static const std::string CONF_SECTION;
-
-  enum State {
-    STATE_NONE = 0,  ///< not started
-    STATE_LOBBY,
-    STATE_INIT,
-    STATE_READY,
-    STATE_GAME,
-  };
-
- public:
-
-  Server(ServerInterface &intf, boost::asio::io_service &io_service);
-  ~Server();
-
-  /// Start server on a given port.
-  void start(int port);
-
-  /// Set configuration values from a config file.
-  void loadConf(const Config &cfg);
-
-  /** @name Observer interface. */
-  //@{
-  virtual void onPeerConnect(netplay::PeerSocket *peer);
-  virtual void onPeerDisconnect(netplay::PeerSocket *peer);
-  virtual void onPeerPacket(netplay::PeerSocket *peer, const netplay::Packet &pkt);
-  //@}
-
-  const ServerConf &conf() const { return conf_; }
-
-  /// Send a packet to all players.
-  void broadcastPacket(const netplay::Packet &pkt);
-
- private:
-
-  /** @brief Retrieve a player from a peer.
-   * @return The Player, \e NULL if not found.
-   */
-  Player *peer2player(netplay::PeerSocket *peer) const;
-
-  /// Change state, reset ready flags if needed, send packet.
-  void setState(State state);
-
-  void prepareMatch();
-  void startMatch();
-
-  /// Return next player ID to use.
-  PlId nextPlayerId();
-
-  netplay::ServerSocket socket_;
-  State state_;
-  ServerMatch match_;
-  PlayerContainer players_;
-  ServerConf conf_;
-  ServerInterface &intf_;
-  PlId current_plid_;
 };
 
 

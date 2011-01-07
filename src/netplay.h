@@ -2,7 +2,7 @@
 #define NETPLAY_H_
 
 /** @file
- * @brief Netplay protocol handling.
+ * @brief Netplay protocol handling and sockets.
  *
  * Messages are serialized using protocol buffers and prefixed by their size
  * (16-bit, network order).
@@ -106,11 +106,11 @@ class PacketSocket: public BaseSocket
 /// Observer for server events.
 struct ServerObserver
 {
-  /// Method called on client connection.
+  /// Called on client connection.
   virtual void onPeerConnect(PeerSocket *peer) = 0;
-  /// Method called after a peer disconnection.
+  /// Called after a peer disconnection.
   virtual void onPeerDisconnect(PeerSocket *peer) = 0;
-  /// Method called on input packet on a peer.
+  /// Called on input packet on a peer.
   virtual void onPeerPacket(PeerSocket *peer, const Packet &pkt) = 0;
 };
 
@@ -160,6 +160,9 @@ class ServerSocket: public BaseSocket
    * deleted from a call to one of its method.
    */
   void removePeer(PeerSocket *peer);
+
+  /// Send a packet to all peers.
+  void broadcastPacket(const netplay::Packet &pkt);
 
  protected:
   virtual void processError(const std::string &msg, const boost::system::error_code &ec);

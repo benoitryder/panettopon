@@ -7,8 +7,7 @@
 
 #include <boost/ptr_container/ptr_map.hpp>
 #include "netplay.h"
-#include "player.h"
-#include "game.h"
+#include "instance.h"
 
 class Client;
 class ClientInterface;

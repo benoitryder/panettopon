@@ -175,9 +175,6 @@ void Client::sendReady()
 
 bool Client::onPacketReceived(const netplay::Packet &pkt)
 {
-  if( !pkt.IsInitialized() )
-    return false;
-
   if( pkt.has_input() ) {
     if( state_ != STATE_GAME )
       return false;
@@ -208,7 +205,8 @@ bool Client::onPacketReceived(const netplay::Packet &pkt)
     if( state_ == STATE_INIT ) {
       if( pl->field() != NULL || np_field.has_tick() || !np_field.has_seed() )
         return false; //XXX should rank be invalid too?
-      Field *fld = match_.addField(pl, np_field.seed());
+      Field *fld = match_.newField(np_field.seed());
+      pl->setField(fld);
       // conf
       const netplay::Field::Conf &np_conf = np_field.conf();
       FieldConf conf;
@@ -265,8 +263,10 @@ bool Client::onPacketReceived(const netplay::Packet &pkt)
         this->disconnect();
       } else {
         intf_.onPlayerQuit(pl);
-        if( pl->field() != NULL )
+        if( pl->field() != NULL ) {
           match_.removeField(pl->field());
+          pl->setField(NULL);
+        }
         players_.erase(pl->plid());
       }
     } else {
@@ -309,8 +309,10 @@ bool Client::onPacketReceived(const netplay::Packet &pkt)
         (*it).second->setReady(false);
 
       if( state_ == STATE_INIT ) {
-        if( match_.started() ) 
+        if( match_.started() ) {
+          //TODO remove fields from players
           match_.stop(); // prepare for init
+        }
         intf_.onMatchInit(&match_);
       } else if( state_ == STATE_READY ) {
         // init fields for match
@@ -325,6 +327,7 @@ bool Client::onPacketReceived(const netplay::Packet &pkt)
                                       asio::placeholders::error));
       } else if( state_ == STATE_LOBBY && prev_state == STATE_GAME ) {
         timer_.cancel();
+        //TODO remove fields from players
         match_.stop();
         intf_.onMatchEnd(&match_); //XXX before match_.stop()?
       }

@@ -15,7 +15,6 @@
 
 class Field;
 class Match;
-class Player;
 
 
 /// Field configuration.
@@ -194,10 +193,9 @@ class Field
     bool raised;  ///< Field lifted up.
   };
 
-  Field(Player *pl, uint32_t seed);
+  Field( uint32_t seed);
   ~Field();
 
-  const Player *player() const { return player_; }
   Tick tick() const { return tick_; }
   bool lost() const { return lost_; }
   int32_t seed() const { return seed_; }
@@ -264,7 +262,7 @@ class Field
    */
   void fillRandom(int n);
 
-  /// Detach from player, flag as lost.
+  /// Flag as lost.
   void abort();
   void setRank(unsigned int rank)
   {
@@ -342,7 +340,6 @@ class Field
    */
   uint32_t rand();
 
-  Player *player_; // not const only set/reset field_ on it
   /// Cursor position (left block).
   FieldPos cursor_;
   /// Current swap (left block), if swapping
@@ -354,7 +351,7 @@ class Field
   Tick tick_;           ///< Current frame (don't change after losing)
   int32_t seed_;        ///< Current random seed
 
-  bool lost_;           ///< True if player lost
+  bool lost_;           ///< True if field lost
   Tick lost_dt_;        ///< Time with screen full before losing, or 0
   unsigned int rank_;   ///< Rank (1 is 1st), 0 if didn't lost yet
 
@@ -407,21 +404,20 @@ class Match
   typedef boost::ptr_vector<Field> FieldContainer;
 
   Match(): started_(false), tick_(0) {}
-  virtual ~Match() {}
+  ~Match() {}
 
   bool started() const { return started_; }
   const FieldContainer &fields() const { return fields_; }
 
   /// Start the match, init fields.
-  virtual void start();
+  void start();
   /// Stop the match, remove fields.
-  virtual void stop();
-  /// Add a field and return it.
-  Field *addField(Player *pl, uint32_t seed);
+  void stop();
+  /// Create and return a new field.
+  Field *newField(uint32_t seed);
   /** @brief Make a field abort.
    *
-   * The field is detached from its player.
-   * However it is not destroyed not ranked.
+   * Remove the field but don't destroy nor rank it.
    */
   void removeField(Field *fld);
 
@@ -431,17 +427,19 @@ class Match
    * lost, it is the tick at which game stopped (max tick value).
    */
   Tick tick() const { return tick_; }
-
- protected:
+  /** @brief Update match tick.
+   *
+   * Should be called after stepping a field.
+   */
   void updateTick();
 
+ private:
   FieldContainer fields_;
 
   /// Map of all waiting garbages.
   typedef std::map<GbId, Garbage *> GbWaitingMap;
   GbWaitingMap gbs_wait_;
 
- private:
   bool started_;
   Tick tick_;
 

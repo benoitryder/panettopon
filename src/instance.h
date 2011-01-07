@@ -1,17 +1,10 @@
-#ifndef PLAYER_H_
-#define PLAYER_H_
+#ifndef INSTANCE_H_
+#define INSTANCE_H_
 
-/** @file
- * @brief Player info and server environment.
- *
- * @todo move server env. from here.
- */
+#include "game.h"
 
-#include <string>
-#include <vector>
-#include "util.h"
-
-class Field;
+// undef Windows conflicting macro
+#undef SEVERITY_ERROR
 
 
 /** @brief Server configuration values.
@@ -51,7 +44,6 @@ struct ServerConf
 }
 
 
-
 /** @brief Player.
  *
  * A player is a client connected to the server.
@@ -77,6 +69,29 @@ class Player
   std::string nick_;
   bool ready_;  ///< ready for server state change
   Field *field_;
+};
+
+
+
+/// Manage a game instance.
+class GameInstance
+{
+ protected:
+  enum State {
+    STATE_NONE = 0,  ///< not started
+    STATE_LOBBY,
+    STATE_INIT,
+    STATE_READY,
+    STATE_GAME,
+  };
+
+ public:
+  GameInstance();
+  virtual ~GameInstance();
+
+ protected:
+  Match match_;
+  State state_;
 };
 
 

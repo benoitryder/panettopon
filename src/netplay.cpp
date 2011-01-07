@@ -240,6 +240,17 @@ void ServerSocket::removePeer(PeerSocket *peer)
   io_service().post(boost::bind(&ServerSocket::doRemovePeer, this, peer));
 }
 
+
+void ServerSocket::broadcastPacket(const netplay::Packet &pkt)
+{
+  const std::string s = PacketSocket::serializePacket(pkt);
+  PeerSocketContainer::iterator it;
+  for( it=peers_.begin(); it!=peers_.end(); ++it ) {
+    (*it).writeRaw(s);
+  }
+}
+
+
 void ServerSocket::acceptNext()
 {
   peers_.push_back(new PeerSocket(*this));

@@ -20,7 +20,7 @@ INKSCAPE = inkscape
 src_dir = src
 
 CFLAGS += -I$(src_dir)
-cxx_names = main player game netplay config log optget
+cxx_names = main instance game netplay config log optget
 PROTOBUF_NAME = netplay
 TARGET = panettopon
 

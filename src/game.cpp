@@ -1,5 +1,4 @@
 #include "game.h"
-#include "player.h"
 #include "log.h"
 
 
@@ -21,18 +20,14 @@ bool FieldConf::isValid() const
 }
 
 
-Field::Field(Player *pl, uint32_t seed):
-    player_(pl), seed_(seed), rank_(0)
+Field::Field(uint32_t seed):
+    seed_(seed), rank_(0)
 {
-  assert( player_ != NULL );
-  player_->setField(this);
   ::memset(grid_, 0, sizeof(grid_));
 }
 
 Field::~Field()
 {
-  if( player_ != NULL )
-    player_->setField(NULL);
 }
 
 
@@ -68,7 +63,6 @@ Field::StepInfo::StepInfo():
 
 void Field::step(KeyState keys)
 {
-  assert( player_ != NULL );
   assert( !lost_ );
 
   step_info_ = StepInfo();
@@ -379,13 +373,13 @@ void Field::step(KeyState keys)
     if( chained ) {
       step_info_.chain = ++chain_;
     }
-    LOG("[%u|%u] match +%d x%d", player_->plid(), tick_, step_info_.combo, step_info_.chain);
+    LOG("[%p|%u] match +%d x%d", tick_, step_info_.combo, step_info_.chain);
   }
 
 
   // Process dropping garbages
   if( !gbs_drop_.empty() && !full && raise ) {
-    LOG("[%u|%u] gb: dropping", player_->plid(), tick_);
+    LOG("[%p|%u] gb: dropping", tick_);
     //TODO drop condition: no drop when flashing/chain
     Garbage *gb = gbs_drop_.pop_front().release();
     gbs_field_.push_back(gb);
@@ -421,7 +415,7 @@ void Field::step(KeyState keys)
   }
 
 
-  // player lost?
+  // field lost?
   //TODO decrease while raising is disabled?
   if( full && raise && stop_dt_ == 0 ) {
     if( lost_dt_ == 0 ) {
@@ -555,7 +549,7 @@ void Field::step(KeyState keys)
       }
     }
     if( cancel ) {
-      LOG("[%u|%u] end of chain", player_->plid(), tick_);
+      LOG("[%p|%u] end of chain", this, tick_);
       chain_ = 1;
     }
   }
@@ -579,7 +573,7 @@ void Field::step(KeyState keys)
   } else if( !full && raise && stop_dt_ == 0 && raise_dt_ != 0 ) {
     if( raise_dt_ < 0 || --raise_dt_ == 0 ) {
       if( --raise_step_ == 0 ) {
-        LOG("[%u|%u] raise (%s)", player_->plid(), tick_, raise_dt_<0 ? "manual" : "auto");
+        LOG("[%p|%u] raise (%s)", tick_, raise_dt_<0 ? "manual" : "auto");
         this->raise();
       } else if( raise_dt_ == 0 ) {
         this->resetAutoRaise();
@@ -631,10 +625,6 @@ void Field::fillRandom(int n)
 
 void Field::abort()
 {
-  if( player_ != NULL ) {
-    player_->setField(NULL);
-    player_ = NULL;
-  }
   lost_ = true;
 }
 
@@ -928,10 +918,10 @@ void Match::stop()
   fields_.clear();
 }
 
-Field *Match::addField(Player *pl, uint32_t seed)
+Field *Match::newField(uint32_t seed)
 {
   assert( !started_ );
-  Field *fld = new Field(pl, seed);
+  Field *fld = new Field(seed);
   fields_.push_back(fld);
   return fld;
 }
@@ -940,7 +930,7 @@ void Match::removeField(Field *fld)
 {
   // assert( fld in fields_ );
   fld->abort();
-  this->updateTick(); // player lost, tick must be updated
+  this->updateTick(); // field lost, tick must be updated
 }
 
 void Match::updateTick()
@@ -954,7 +944,7 @@ void Match::updateTick()
     if( ret == 0 || it->tick() < ret )
       ret = it->tick();
   }
-  // all players lost, match tick is the max tick
+  // all fields lost, match tick is the max tick
   // it MUST be set to handle draw games
   if( ret == 0 ) {
     for( it=fields_.begin(); it!=fields_.end(); ++it ) {
