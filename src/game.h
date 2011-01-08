@@ -478,6 +478,9 @@ class GarbageDistributor
   GarbageDistributor(Match &match, Observer &obs);
   ~GarbageDistributor() {}
 
+  /// Clear state for a new match.
+  void reset();
+
   /** @brief Update and distribute garbages after a field step.
    *
    * This method uses combo/chain data of the last step.

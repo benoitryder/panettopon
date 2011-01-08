@@ -980,6 +980,13 @@ GarbageDistributor::GarbageDistributor(Match &match, Observer &obs):
 {
 }
 
+void GarbageDistributor::reset()
+{
+  gbs_chain_.clear();
+  targets_chain_.clear();
+  targets_combo_.clear();
+  drop_ticks_.clear();
+}
 
 void GarbageDistributor::updateGarbages(Field *fld)
 {

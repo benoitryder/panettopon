@@ -444,14 +444,8 @@ void ServerInstance::startMatch()
 {
   LOG("start match");
 
+  gb_distributor_.reset();
   match_.start();
-  /*TODO
-  FieldContainer::iterator it;
-  for( it=fields_.begin(); it!=fields_.end(); ++it ) {
-    targets_chain_[&(*it)] = it;
-    targets_combo_[&(*it)] = it;
-  }
-  */
   this->setState(STATE_GAME);
   //TODO intf_.onMatchStart(&match_);
 }
@@ -465,10 +459,6 @@ void ServerInstance::stopMatch()
     (*it).second->setField(NULL);
   }
   match_.stop();
-  /*TODO
-  targets_chain_.clear();
-  targets_combo_.clear();
-  */
   this->setState(STATE_LOBBY);
   //TODO intf_.onMatchEnd(&match_);
 }
