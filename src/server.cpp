@@ -261,15 +261,12 @@ void ServerInstance::processPacketInput(netplay::PeerSocket *peer, const netplay
   //XXX return earlier if match ended
   // skipped frames
   while( fld->tick() < tick ) {
-    //TODO throw exceptions on error in stepField()
     this->stepField(pl, 0);
-    //TODO intf_.onFieldStep(fld);
   }
   // given frames
   const int keys_nb = pkt_input.keys_size();
   for( int i=0; i<keys_nb; i++ ) {
     this->stepField(pl, pkt_input.keys(i));
-    //TODO intf_.onFieldStep(fld);
   }
 
   if( !match_.started() ) {
@@ -385,7 +382,6 @@ void ServerInstance::setState(State state)
 
   if( state != STATE_INIT ) {
     // ready_ flag is needed in prepareMatch(), don't reset it now
-    //TODO always needed?
     PlayerContainer::iterator it;
     for( it=players_.begin(); it!=players_.end(); ++it )
       (*it).second->setReady(false);
@@ -404,7 +400,6 @@ void ServerInstance::prepareMatch()
   int seed = ::rand(); // common seed for all fields
   netplay::Packet pkt;
 
-  //TODO recheck this part
   PlayerContainer::iterator it;
   for( it=players_.begin(); it!=players_.end(); ++it ) {
     Player *pl = (*it).second;
@@ -466,9 +461,6 @@ void ServerInstance::stopMatch()
 
 void ServerInstance::stepField(Player *pl, KeyState keys)
 {
-  if( !match_.started() ) {
-    return;  //XXX:check match ended
-  }
   //XXX Current implementation does not group Input packets.
   Field *fld = pl->field();
   if( fld->lost() ) {
@@ -485,6 +477,7 @@ void ServerInstance::stepField(Player *pl, KeyState keys)
     //XXX:check condition
     match_.updateTick();
   }
+  //TODO intf_.onFieldStep(fld);
 
   netplay::Packet pkt_send;
   netplay::Input *np_input_send = pkt_send.mutable_input();
