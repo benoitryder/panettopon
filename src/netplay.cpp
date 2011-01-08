@@ -213,7 +213,7 @@ void PeerSocket::close()
 }
 
 
-ServerSocket::ServerSocket(ServerObserver &obs, asio::io_service &io_service):
+ServerSocket::ServerSocket(Observer &obs, asio::io_service &io_service):
     BaseSocket(io_service),
     acceptor_(io_service), started_(false), observer_(obs)
 {

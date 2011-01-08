@@ -13,7 +13,7 @@ class Config;
 
 /// Instance for hosted games.
 class ServerInstance: public GameInstance,
-    public netplay::ServerObserver,
+    public netplay::ServerSocket::Observer,
     public GarbageDistributor::Observer
 {
   static const std::string CONF_SECTION;
@@ -31,7 +31,7 @@ class ServerInstance: public GameInstance,
   /// Create and return a new local player.
   Player *newLocalPlayer();
 
-  /** @name ServerObserver interface. */
+  /** @name ServerSocket::Observer interface. */
   //@{
   virtual void onPeerConnect(netplay::PeerSocket *peer);
   virtual void onPeerDisconnect(netplay::PeerSocket *peer);

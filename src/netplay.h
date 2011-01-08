@@ -103,18 +103,6 @@ class PacketSocket: public BaseSocket
 
 
 
-/// Observer for server events.
-struct ServerObserver
-{
-  /// Called on client connection.
-  virtual void onPeerConnect(PeerSocket *peer) = 0;
-  /// Called after a peer disconnection.
-  virtual void onPeerDisconnect(PeerSocket *peer) = 0;
-  /// Called on input packet on a peer.
-  virtual void onPeerPacket(PeerSocket *peer, const Packet &pkt) = 0;
-};
-
-
 /// Socket for server peers.
 class PeerSocket: public PacketSocket
 {
@@ -144,7 +132,17 @@ class ServerSocket: public BaseSocket
 {
   friend class PeerSocket;
  public:
-  ServerSocket(ServerObserver &obs, boost::asio::io_service &io_service);
+  struct Observer
+  {
+    /// Called on client connection.
+    virtual void onPeerConnect(PeerSocket *peer) = 0;
+    /// Called after a peer disconnection.
+    virtual void onPeerDisconnect(PeerSocket *peer) = 0;
+    /// Called on input packet on a peer.
+    virtual void onPeerPacket(PeerSocket *peer, const Packet &pkt) = 0;
+  };
+
+  ServerSocket(Observer &obs, boost::asio::io_service &io_service);
   virtual ~ServerSocket();
 
   /// Start server on a given port.
@@ -174,7 +172,7 @@ class ServerSocket: public BaseSocket
 
   boost::asio::ip::tcp::acceptor acceptor_;
   bool started_;
-  ServerObserver &observer_;
+  Observer &observer_;
 
   typedef boost::ptr_vector<PeerSocket> PeerSocketContainer;
   /** @brief Sockets of connected clients.
