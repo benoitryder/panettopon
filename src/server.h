@@ -12,7 +12,9 @@ class Config;
 
 
 /// Instance for hosted games.
-class ServerInstance: public GameInstance, netplay::ServerObserver
+class ServerInstance: public GameInstance,
+    public netplay::ServerObserver,
+    public GarbageDistributor::Observer
 {
   static const std::string CONF_SECTION;
 
@@ -29,16 +31,26 @@ class ServerInstance: public GameInstance, netplay::ServerObserver
   /// Create and return a new local player.
   Player *newLocalPlayer();
 
-  /** @name Observer interface. */
+  /** @name ServerObserver interface. */
   //@{
   virtual void onPeerConnect(netplay::PeerSocket *peer);
   virtual void onPeerDisconnect(netplay::PeerSocket *peer);
   virtual void onPeerPacket(netplay::PeerSocket *peer, const netplay::Packet &pkt);
   //@}
 
+  /** @name GarbageDistributor::Observer interface. */
+  //@{
+  virtual void onGarbageAdd(const Garbage *gb, unsigned int pos);
+  virtual void onGarbageUpdateSize(const Garbage *gb);
+  virtual void onGarbageDrop(const Garbage *gb);
+  //@}
+
  private:
   /// Return next player ID to use.
   PlId nextPlayerId();
+
+  /// Return the player associated to a given field, or \e NULL.
+  Player *field2player(const Field *fld);
 
   /** @brief Initialize a new player.
    *
@@ -81,60 +93,11 @@ class ServerInstance: public GameInstance, netplay::ServerObserver
   typedef std::map<PlId, netplay::PeerSocket *> PeerContainer;
 
   netplay::ServerSocket socket_;
+  GarbageDistributor gb_distributor_;
   PlayerContainer players_;
   PeerContainer peers_;
   ServerConf conf_;
   PlId current_plid_;
-};
-
-
-
-//TODO below: obsolete
-
-
-/** @brief Match used by server.
- * 
- * Manage garbage creation and match related packets.
- */
-class ServerMatch: public Match
-{
- public:
-  ServerMatch();
-  virtual ~ServerMatch() {}
-
-  virtual void start();
-  virtual void stop();
-
- protected:
-  /// Step one field, process garbages, send Input packets.
-  bool stepField(Player *pl, KeyState keys);
-
-  /** @brief Distribute new garbages sent by a field.
-   *
-   * This method uses combo/chain data of the last step.
-   */
-  void distributeGarbages(Player *pl);
-
-  /// Drop the next garbage, if needed.
-  void dropGarbages(Player *pl);
-
-  /// Add and send a new garbage, update chain garbage if needed.
-  void addGarbage(Field *from, Field *to, Garbage::Type type, int size);
-  /// Increase chain garbage of field and send it.
-  void increaseChainGarbage(Field *from);
-
- private:
-
-  /// Store garbages of active chains.
-  typedef std::map<Field *, Garbage *> GbChainMap;
-  GbChainMap gbs_chain_;
-
-  /// Store last garbage field for each field.
-  typedef std::map<Field *, FieldContainer::iterator> GbTargetMap;
-  GbTargetMap targets_chain_;
-  GbTargetMap targets_combo_;
-
-  GbId current_gbid_;
 };
 
 

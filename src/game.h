@@ -96,10 +96,6 @@ struct Garbage
   Type type;
   FieldPos pos;    ///< position on the field, if significant
   FieldPos size;   ///< width and height
-  /** @brief Tick of the next state change, or 0.
-   * @note Only used by the server, for dropping timing.
-   */
-  Tick ntick;
 };
 
 
@@ -246,7 +242,7 @@ class Field
    * If \e pos is -1, push at the end.
    * The garbage will be owned by the field.
    */
-  void insertWaitingGarbage(Garbage *gb, int pos);
+  void insertWaitingGarbage(Garbage *gb, unsigned int pos);
 
   /** @brief Remove a given waiting garbage.
    *
@@ -402,8 +398,9 @@ class Match
 {
  public:
   typedef boost::ptr_vector<Field> FieldContainer;
+  typedef std::map<GbId, Garbage *> GbWaitingMap;
 
-  Match(): started_(false), tick_(0) {}
+  Match();
   ~Match() {}
 
   bool started() const { return started_; }
@@ -433,16 +430,90 @@ class Match
    */
   void updateTick();
 
- private:
+  const GbWaitingMap &waitingGarbages() const { return gbs_wait_; }
+
+  /** @brief Add a new (waiting) garbage.
+   *
+   * The garbage is added to the \e to field, which must not be \e NULL.
+   */
+  void addGarbage(Garbage *gb, unsigned int pos);
+  /// Drop a (waiting) garbage.
+  void dropGarbage(Garbage *gb);
+
+ protected:
   FieldContainer fields_;
 
   /// Map of all waiting garbages.
-  typedef std::map<GbId, Garbage *> GbWaitingMap;
   GbWaitingMap gbs_wait_;
 
   bool started_;
   Tick tick_;
-
 };
+
+
+
+/** @brief Create and distribute garbages to fields.
+ *
+ * This class decides how new garbages are distributed among players on
+ * chain/combo. It is responsible for using unique garbage IDs.
+ *
+ * It is intended to be used by a server.
+ */
+class GarbageDistributor
+{
+  typedef Match::FieldContainer FieldContainer;
+
+ public:
+  /// Observer for distributed garbage
+  struct Observer
+  {
+    /// Called on new garbage.
+    virtual void onGarbageAdd(const Garbage *gb, unsigned int pos) = 0;
+    /// Called on garbage size change.
+    virtual void onGarbageUpdateSize(const Garbage *gb) = 0;
+    /// Called on garbage (scheduled) drop.
+    virtual void onGarbageDrop(const Garbage *gb) = 0;
+  };
+
+  GarbageDistributor(Match &match, Observer &obs);
+  ~GarbageDistributor() {}
+
+  /** @brief Update and distribute garbages after a field step.
+   *
+   * This method uses combo/chain data of the last step.
+   * The match is updated too.
+   */
+  void updateGarbages(Field *fld);
+
+ private:
+  /** @brief Create, add and return a new (waiting) garbage.
+   *
+   * The garbage is added to the match.
+   * The \e to field must not be \e NULL.
+   */
+  void newGarbage(Field *from, Field *to, Garbage::Type type, int size);
+
+  /// Return next garbage ID to use.
+  GbId nextGarbageId();
+
+  Match &match_;
+  Observer &observer_;
+
+  /// Store garbages of active chains.
+  typedef std::map<Field *, Garbage *> GbChainMap;
+  GbChainMap gbs_chain_;
+
+  /// Store last garbage field for each field.
+  typedef std::map<Field *, FieldContainer::const_iterator> GbTargetMap;
+  GbTargetMap targets_chain_;
+  GbTargetMap targets_combo_;
+
+  /// Store drop tick of waiting garbages.
+  typedef std::map<const Garbage *, Tick> GbDropTickMap;
+  GbDropTickMap drop_ticks_;
+
+  GbId current_gbid_;
+};
+
 
 #endif

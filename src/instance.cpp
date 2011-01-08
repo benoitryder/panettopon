@@ -13,7 +13,6 @@ Player::~Player()
 }
 
 
-
 GameInstance::GameInstance():
     state_(STATE_NONE)
 {

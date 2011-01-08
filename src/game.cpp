@@ -591,13 +591,9 @@ void Field::dropNextGarbage()
   gbs_drop_.push_back( gb );
 }
 
-void Field::insertWaitingGarbage(Garbage *gb, int pos)
+void Field::insertWaitingGarbage(Garbage *gb, unsigned int pos)
 {
-  if( pos < 0 ) {
-    gbs_wait_.push_back(gb);
-  } else {
-    gbs_wait_.insert( gbs_wait_.begin()+pos, gb );
-  }
+  gbs_wait_.insert( gbs_wait_.begin()+pos, gb );
 }
 
 void Field::removeWaitingGarbage(Garbage *gb)
@@ -897,6 +893,10 @@ uint32_t Field::rand()
 }
 
 
+Match::Match():
+    started_(false), tick_(0)
+{
+}
 
 void Match::start()
 {
@@ -955,4 +955,237 @@ void Match::updateTick()
 
   tick_ = ret;
 }
+
+
+void Match::addGarbage(Garbage *gb, unsigned int pos)
+{
+  assert( gb->to != NULL );
+
+  gb->to->insertWaitingGarbage(gb, pos);
+  gbs_wait_[gb->gbid] = gb;
+}
+
+void Match::dropGarbage(Garbage *gb)
+{
+  assert( gb->to != NULL );
+
+  gbs_wait_.erase(gb->gbid);
+  assert( gb->to->waitingGarbage(0).gbid == gb->gbid );
+  gb->to->dropNextGarbage();
+}
+
+
+GarbageDistributor::GarbageDistributor(Match &match, Observer &obs):
+    match_(match), observer_(obs), current_gbid_(0)
+{
+}
+
+
+void GarbageDistributor::updateGarbages(Field *fld)
+{
+  // cancel chain garbage
+  if( fld->chain() < 2 ) {
+    gbs_chain_.erase(fld);
+  }
+
+  // check whether a garbage should be dropped
+  const size_t n = fld->waitingGarbageCount();
+  for( size_t i=0; i<n; i++ ) {
+    const Garbage &gb = fld->waitingGarbage(i);
+    GbDropTickMap::iterator it = drop_ticks_.find(&gb);
+    if( it == drop_ticks_.end() ) {
+      continue; // already being dropped
+    }
+    if( (*it).second <= fld->tick() ) {
+      drop_ticks_.erase(it);
+      observer_.onGarbageDrop(&gb);
+    }
+    break; // drop at most one garbage per step
+  }
+
+  const Field::StepInfo info = fld->stepInfo();
+  if( info.combo == 0 ) {
+    return; // no match, no new garbages
+  }
+  const FieldContainer &fields = match_.fields();
+
+  // check if there is an opponent
+  // if there is only one, keep it (faster target choice for 2-player game)
+  Field *single_opponent = NULL;
+  FieldContainer::const_iterator it;
+  for( it=fields.begin(); it!=fields.end(); ++it ) {
+    //XXX:hack
+    // const_iterator return a pointer to a const
+    // but we only need the container to be constant, not values
+    // so we use ptr_container's base which returns a void** from an iterator
+    Field *it_fld = static_cast<Field*>(*(it.base()));
+    if( it_fld == fld || it->lost() ) {
+      continue;
+    }
+    if( single_opponent == NULL ) {
+      single_opponent = it_fld;
+    } else {
+      single_opponent = NULL;
+      break;
+    }
+  }
+  if( single_opponent == NULL && it==fields.end() )
+    return; // no opponent, no target
+
+  // note: opponent count will never increase, we don't have to update targets
+
+  void updateTick();
+  // maps it if there is only one opponent
+
+  if( info.chain == 2 ) {
+    Field *target_fld = single_opponent;
+    if( target_fld == NULL ) {
+      // get player with the least chain garbages
+      GbTargetMap::iterator targets_it = targets_chain_.find(fld);
+      assert( targets_it != targets_chain_.end() );
+      FieldContainer::const_iterator it = (*targets_it).second;
+      unsigned int min = -1; // overflow: max value
+      FieldContainer::const_iterator it_min = fields.end();
+      do {
+        if( it == fields.end() ) {
+          it = fields.begin();
+        }
+        //XXX:hack see static_cast above
+        Field *fld2 = static_cast<Field*>(*(it.base()));
+        if( fld2 == fld || fld2->lost() ) {
+          continue;
+        }
+        size_t nb_chain = 0;
+        const size_t nb_gb = fld2->waitingGarbageCount();
+        for( nb_chain=0; nb_chain<nb_gb; nb_chain++ ) {
+          // chain garbages are put at the beginning
+          if( fld2->waitingGarbage(nb_chain).type != Garbage::TYPE_CHAIN ) {
+            break;
+          }
+        }
+        if( nb_chain < min ) {
+          min = nb_chain;
+          target_fld = fld2;
+          it_min = it;
+          if( min == 0 ) {
+            break; // 0 is the least we can found
+          }
+        }
+      } while( it != (*targets_it).second );
+      assert( target_fld != NULL );
+      (*targets_it).second = it_min;
+    }
+    this->newGarbage(fld, target_fld, Garbage::TYPE_CHAIN, 1);
+
+  } else if( info.chain > 2 ) {
+    // increase chain garbage
+    GbChainMap::iterator it = gbs_chain_.find(fld);
+    assert( it != gbs_chain_.end() );
+    Garbage *gb = (*it).second;
+    assert( gb->type == Garbage::TYPE_CHAIN );
+    gb->size.y++;
+    drop_ticks_[gb] = fld->tick() + fld->conf().gb_wait_tk;
+    observer_.onGarbageUpdateSize(gb);
+  }
+
+  // combo garbage
+  // with a width of 6, values match the original PdP rules
+  if( info.combo > 3 ) {
+    Field *target_fld = single_opponent;
+    if( target_fld == NULL ) {
+      // get the next target player
+      GbTargetMap::iterator targets_it = targets_combo_.find(fld);
+      assert( targets_it != targets_combo_.end() );
+      FieldContainer::const_iterator it;
+      for( it=++(*targets_it).second; ; ++it ) {
+        if( it == fields.end() ) {
+          it = fields.begin();
+        }
+        //XXX:hack see static_cast above
+        target_fld = static_cast<Field*>(*(it.base()));
+        if( target_fld == fld || target_fld->lost() ) {
+          continue;
+        }
+        (*targets_it).second = it;
+        break;
+      }
+      assert( target_fld != NULL );
+    }
+
+    if( info.combo-1 <= FIELD_WIDTH ) {
+      // one block
+      this->newGarbage(fld, target_fld, Garbage::TYPE_COMBO, info.combo-1);
+    } else if( info.combo <= 2*FIELD_WIDTH ) {
+      // two blocks
+      unsigned int n = (info.combo > FIELD_WIDTH*3/2) ? info.combo : info.combo-1;
+      this->newGarbage(fld, target_fld, Garbage::TYPE_COMBO, n/2);
+      this->newGarbage(fld, target_fld, Garbage::TYPE_COMBO, n/2+n%2);
+    } else {
+      // n blocks
+      unsigned int n;
+      if( info.combo == 2*FIELD_WIDTH+1 ) {
+        n = 3;
+      } else if( info.combo <= 3*FIELD_WIDTH+1 ) {
+        n = 4;
+      } else if( info.combo <= 4*FIELD_WIDTH+2 ) {
+        n = 6;
+      } else {
+        n = 8;
+      }
+      while( n-- > 0 ) {
+        this->newGarbage(fld, target_fld, Garbage::TYPE_COMBO, FIELD_WIDTH);
+      }
+    }
+  }
+}
+
+
+void GarbageDistributor::newGarbage(Field *from, Field *to, Garbage::Type type, int size)
+{
+  assert( to != NULL );
+
+  Garbage *gb = new Garbage;
+  gb->gbid = this->nextGarbageId();
+  gb->from = from;
+  gb->to = to;
+  gb->type = type;
+
+  unsigned int pos;
+  if( type == Garbage::TYPE_CHAIN ) {
+    gb->size = FieldPos(FIELD_WIDTH, size);
+    const unsigned int n = to->waitingGarbageCount();
+    for( pos=0; pos<n; pos++ ) {
+      if( to->waitingGarbage(pos).type == Garbage::TYPE_CHAIN )
+        break;
+    }
+  } else if( type == Garbage::TYPE_COMBO ) {
+    gb->size = FieldPos(size, 1);
+    pos = to->waitingGarbageCount(); // push back
+  } else {
+    assert( !"not supported yet" );
+  }
+  drop_ticks_[gb] = to->tick() + to->conf().gb_wait_tk;
+
+  match_.addGarbage(gb, pos);
+  if( type == Garbage::TYPE_CHAIN ) {
+    gbs_chain_[from] = gb;
+  }
+
+  observer_.onGarbageAdd(gb, pos);
+}
+
+
+GbId GarbageDistributor::nextGarbageId()
+{
+  const Match::GbWaitingMap gbs_wait = match_.waitingGarbages();
+  for(;;) {
+    current_gbid_++;
+    if( current_gbid_ <= 0 ) // overflow
+      current_gbid_ = 1;
+    if( gbs_wait.find(current_gbid_) == gbs_wait.end() )
+      break; // not already in use
+  }
+  return current_gbid_;
+}
+
 

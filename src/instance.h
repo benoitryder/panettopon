@@ -73,6 +73,24 @@ class Player
 
 
 
+/// Observer for instance events.
+struct InstanceObserver
+{
+  virtual void onChat(const Player *pl, const std::string &msg) = 0;
+  virtual void onPlayerJoined(const Player *pl) = 0;
+  /// Called before player's nick change.
+  virtual void onPlayerChangeNick(const Player *pl, const std::string &nick) = 0;
+  virtual void onPlayerReady(const Player *pl) = 0;
+  virtual void onPlayerQuit(const Player *pl) = 0;
+  virtual void onMatchInit(const Match *m) = 0;
+  virtual void onMatchReady(const Match *m) = 0;
+  virtual void onMatchStart(const Match *m) = 0;
+  virtual void onMatchEnd(const Match *m) = 0;
+  virtual void onFieldStep(const Player *pl) = 0;
+  virtual void onFieldLost(const Player *pl) = 0;
+};
+
+
 /// Manage a game instance.
 class GameInstance
 {

@@ -179,8 +179,7 @@ message Garbage {
   required uint32 gbid = 1;
   optional uint32 plid_to = 2;   // garbage target (must be set at creation)
   optional uint32 plid_from = 3; // garbage sender (or 0)
-  // zero-based position in waiting list, -1 for the end
-  optional sint32 pos = 4;
+  optional uint32 pos = 4;       // zero-based position in waiting list
   optional Type   type = 5;
   optional uint32 size = 6;
   optional bool   drop = 7 [default = false]; // if set, other fields should be unset

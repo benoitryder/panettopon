@@ -40,7 +40,8 @@ static const FieldConf default_field_conf = {
 
 
 ServerInstance::ServerInstance(boost::asio::io_service &io_service):
-    socket_(*this, io_service), current_plid_(0)
+    socket_(*this, io_service), gb_distributor_(match_, *this),
+    current_plid_(0)
 {
 }
 
@@ -108,7 +109,7 @@ void ServerInstance::onPeerPacket(netplay::PeerSocket *peer, const netplay::Pack
     this->processPacketPlayer(peer, pkt.player());
   } else if( pkt.has_chat() ) {
     const netplay::Chat &np_chat = pkt.chat();
-    Player *pl = this->checkPeerPlayer(np_chat.plid(), peer);
+    /*TODO Player *pl =*/ this->checkPeerPlayer(np_chat.plid(), peer);
     //TODO intf_.onChat(pl, np_chat.txt());
     netplay::Packet pkt_send;
     pkt_send.mutable_chat()->MergeFrom( np_chat );
@@ -116,6 +117,52 @@ void ServerInstance::onPeerPacket(netplay::PeerSocket *peer, const netplay::Pack
 
   } else {
     throw netplay::CallbackError("invalid packet field");
+  }
+}
+
+
+void ServerInstance::onGarbageAdd(const Garbage *gb, unsigned int pos)
+{
+  Player *pl_to = this->field2player(gb->to);
+  Player *pl_from = this->field2player(gb->from);
+  assert( pl_to != NULL );
+
+  netplay::Packet pkt;
+  netplay::Garbage *np_garbage = pkt.mutable_garbage();
+  np_garbage->set_gbid( gb->gbid );
+  np_garbage->set_pos( pos );
+  np_garbage->set_plid_to( pl_to->plid() );
+  np_garbage->set_plid_from( pl_from == NULL ? 0 : pl_from->plid() );
+  np_garbage->set_type( static_cast<netplay::Garbage_Type>(gb->type) );
+  np_garbage->set_size( gb->type == Garbage::TYPE_COMBO ? gb->size.x : gb->size.y );
+  socket_.broadcastPacket(pkt);
+}
+
+void ServerInstance::onGarbageUpdateSize(const Garbage *gb)
+{
+  netplay::Packet pkt;
+  netplay::Garbage *np_garbage = pkt.mutable_garbage();
+  np_garbage->set_gbid( gb->gbid );
+  np_garbage->set_size( gb->type == Garbage::TYPE_COMBO ? gb->size.x : gb->size.y );
+  socket_.broadcastPacket(pkt);
+}
+
+void ServerInstance::onGarbageDrop(const Garbage *gb)
+{
+  Player *pl_to = this->field2player(gb->to);
+  assert( pl_to != NULL );
+  PeerContainer::const_iterator peer_it = peers_.find(pl_to->plid());
+
+  netplay::Packet pkt;
+  netplay::Garbage *np_garbage = pkt.mutable_garbage();
+  np_garbage->set_gbid( gb->gbid );
+  np_garbage->set_drop( true );
+  // local player: drop immediately
+  if( peer_it == peers_.end() ) {
+    gb->to->dropNextGarbage();
+    socket_.broadcastPacket(pkt);
+  } else {
+    (*peer_it).second->writePacket(pkt);
   }
 }
 
@@ -239,24 +286,28 @@ void ServerInstance::processPacketGarbage(netplay::PeerSocket *peer, const netpl
     throw netplay::CallbackError("garbage drop expected");
   }
 
-  GbWaitingMap::iterator it = gbs_wait_.find(pkt_gb.gbid());
-  if( it == gbs_wait_.end() ) {
+  const Match::GbWaitingMap gbs_wait = match_.waitingGarbages();
+  Match::GbWaitingMap::const_iterator it = gbs_wait.find(pkt_gb.gbid());
+  if( it == gbs_wait.end() ) {
     throw netplay::CallbackError("garbage not found");
   }
-  //TODO check peer agains pkt_gb.something()
-  //Player *pl = this->checkPeerPlayer(pkt_gb.plid(), peer);
-  if( (*it).second->to != pl->field() ) {
-    throw netplay::CallbackError("garbage destination mismatch");
+  Garbage *gb = (*it).second;
+
+  Player *pl = this->field2player(gb->to);
+  assert( pl != NULL );
+  this->checkPeerPlayer(pl->plid(), peer);
+  if( gb->to->waitingGarbage(0).gbid == gb->gbid ) {
+    throw netplay::CallbackError("unexpected dropped garbage");
   }
+  assert( gb->to->waitingGarbage(0).gbid == gb->gbid );
 
   netplay::Packet pkt_send;
   netplay::Garbage *np_garbage_send = pkt_send.mutable_garbage();
-  np_garbage_send->set_gbid( (*it).second->gbid );
+  np_garbage_send->set_gbid( gb->gbid );
   np_garbage_send->set_drop(true);
-  assert( pl->field()->waitingGarbage(0).gbid == (*it).second->gbid );
-  gbs_wait_.erase(it);
-  pl->field()->dropNextGarbage();
   socket_.broadcastPacket(pkt_send);
+
+  match_.dropGarbage(gb);
 }
 
 void ServerInstance::processPacketPlayer(netplay::PeerSocket *peer, const netplay::Player &pkt_pl)
@@ -451,19 +502,13 @@ void ServerInstance::stepField(Player *pl, KeyState keys)
   np_input_send->set_tick(prev_tick);
   np_input_send->add_keys(keys);
   socket_.broadcastPacket(pkt_send);
-  pkt_send.clear_input(); // packet reused for ranking
+  pkt_send.clear_input(); // packet reused below
 
-  // cancel chain garbage
-  if( fld->chain() < 2 ) {
-    GbChainMap::iterator it = gbs_chain_.find(fld);
-    if( it != gbs_chain_.end() )
-      gbs_chain_.erase(it);
-  }
-
-  this->distributeGarbages(pl);
+  // update garbages
   //TODO check for clients which never send back the drop packets
-  this->dropGarbages(pl);
+  gb_distributor_.updateGarbages(fld);
 
+  //TODO do ranking in match
   // compute ranks, check for end of match
   // common case: no draw, no simultaneous death, 1 tick at a time
   // ranking algorithm does not have to be optimized for special cases
@@ -526,7 +571,6 @@ void ServerInstance::stepField(Player *pl, KeyState keys)
 }
 
 
-
 PlId ServerInstance::nextPlayerId()
 {
   for(;;) {
@@ -539,215 +583,15 @@ PlId ServerInstance::nextPlayerId()
   return current_plid_;
 }
 
-
-//TODO below: obsolete
-
-
-ServerMatch::ServerMatch():
-    current_gbid_(0)
+Player *ServerInstance::field2player(const Field *fld)
 {
-}
-
-
-void ServerMatch::distributeGarbages(Player *pl)
-{
-  Field *fld = pl->field();
-  const Field::StepInfo info = fld->stepInfo();
-
-  if( info.combo == 0 )
-    return; // no match, no new garbages
-  // check if there is an opponent
-  // if there is only one, keep it (faster target choice for 2-player game)
-  Field *single_opponent = NULL;
-  FieldContainer::iterator it;
-  for( it=fields_.begin(); it!=fields_.end(); ++it ) {
-    if( &(*it) == fld || it->lost() )
-      continue;
-    if( single_opponent == NULL ) {
-      single_opponent = &(*it);
-    } else {
-      single_opponent = NULL;
-      break;
-    }
-  }
-  if( single_opponent == NULL && it==fields_.end() )
-    return; // no opponent, no target
-
-  // note: opponent count will never increase, we don't have to update targets
-
-  void updateTick();
-  // maps it if there is only one opponent
-
-  if( info.chain == 2 ) {
-    Field *target_fld = single_opponent;
-    if( target_fld == NULL ) {
-      // get player with the least chain garbages
-      GbTargetMap::iterator targets_it = targets_chain_.find(fld);
-      assert( targets_it != targets_chain_.end() );
-      FieldContainer::iterator it = (*targets_it).second;
-      unsigned int min = -1; // overflow: max value
-      FieldContainer::iterator it_min = fields_.end();
-      do {
-        if( it == fields_.end() )
-          it = fields_.begin();
-        Field *fld2 = &(*it);
-        if( fld2 == fld || fld2->lost() )
-          continue;
-        size_t nb_chain = 0;
-        const size_t nb_gb = fld2->waitingGarbageCount();
-        for( nb_chain=0; nb_chain<nb_gb; nb_chain++ ) {
-          // chain garbages are put at the beginning
-          if( fld2->waitingGarbage(nb_chain).type != Garbage::TYPE_CHAIN )
-            break;
-        }
-        if( nb_chain < min ) {
-          min = nb_chain;
-          target_fld = fld2;
-          it_min = it;
-          if( min == 0 )
-            break; // 0 is the least we can found
-        }
-      } while( it != (*targets_it).second );
-      assert( target_fld != NULL );
-      (*targets_it).second = it_min;
-    }
-    this->addGarbage(fld, target_fld, Garbage::TYPE_CHAIN, 1);
-
-  } else if( info.chain > 2 ) {
-    this->increaseChainGarbage(fld);
-  }
-
-  // combo garbage
-  // with a width of 6, values match the original PdP rules
-  if( info.combo > 3 ) {
-    Field *target_fld = single_opponent;
-    if( target_fld == NULL ) {
-      // get the next target player
-      GbTargetMap::iterator targets_it = targets_combo_.find(fld);
-      assert( targets_it != targets_combo_.end() );
-      FieldContainer::iterator it;
-      for( it=++(*targets_it).second; ; ++it ) {
-        if( it == fields_.end() )
-          it = fields_.begin();
-        target_fld = &(*it);
-        if( target_fld == fld || target_fld->lost() )
-          continue;
-        (*targets_it).second = it;
-        break;
-      }
-      assert( target_fld != NULL );
-    }
-
-    if( info.combo-1 <= FIELD_WIDTH ) {
-      // one block
-      this->addGarbage(fld, target_fld, Garbage::TYPE_COMBO, info.combo-1);
-    } else if( info.combo <= 2*FIELD_WIDTH ) {
-      // two blocks
-      unsigned int n = (info.combo > FIELD_WIDTH*3/2) ? info.combo : info.combo-1;
-      this->addGarbage(fld, target_fld, Garbage::TYPE_COMBO, n/2);
-      this->addGarbage(fld, target_fld, Garbage::TYPE_COMBO, n/2+n%2);
-    } else {
-      // n blocks
-      unsigned int n;
-      if( info.combo == 2*FIELD_WIDTH+1 )
-        n = 3;
-      else if( info.combo <= 3*FIELD_WIDTH+1 )
-        n = 4;
-      else if( info.combo <= 4*FIELD_WIDTH+2 )
-        n = 6;
-      else
-        n = 8;
-      while( n-- > 0 )
-        this->addGarbage(fld, target_fld, Garbage::TYPE_COMBO, FIELD_WIDTH);
+  //XXX use a map on the instance to optimize?
+  PlayerContainer::iterator it;
+  for(it=players_.begin(); it!=players_.end(); ++it) {
+    if( fld == (*it).second->field() ) {
+      return (*it).second;
     }
   }
 }
 
-void ServerMatch::dropGarbages(Player *pl)
-{
-  const Field *fld = pl->field();
-  const size_t n = fld->waitingGarbageCount();
-  for( size_t i=0; i<n; i++ ) {
-    const Garbage &gb = fld->waitingGarbage(i);
-    if( gb.ntick == 0 )
-      continue; // already being dropped
-    if( gb.ntick <= fld->tick() ) {
-      GbWaitingMap::iterator it = gbs_wait_.find(gb.gbid);
-      assert( it != gbs_wait_.end() );
-      (*it).second->ntick = 0;
-      netplay::Packet pkt_send;
-      netplay::Garbage *np_garbage = pkt_send.mutable_garbage();
-      np_garbage->set_gbid(gb.gbid);
-      np_garbage->set_drop(true);
-      pl->writePacket(pkt_send);
-    }
-    break;
-  }
-}
-
-
-void ServerMatch::addGarbage(Field *from, Field *to, Garbage::Type type, int size)
-{
-  // get next garbage ID
-  for(;;) {
-    current_gbid_++;
-    if( current_gbid_ <= 0 ) // overflow
-      current_gbid_ = 1;
-    if( gbs_wait_.find(current_gbid_) == gbs_wait_.end() )
-      break; // not already in use
-  }
-
-  assert( to != NULL );
-
-  Garbage *gb = new Garbage;
-  gb->gbid = current_gbid_;
-  gb->from = from;
-  gb->to = to;
-  gb->type = type;
-  int pos;
-  if( type == Garbage::TYPE_CHAIN ) {
-    gb->size = FieldPos(FIELD_WIDTH, size);
-    const int n = to->waitingGarbageCount();
-    for( pos=0; pos<n; pos++ ) {
-      if( to->waitingGarbage(pos).type == Garbage::TYPE_CHAIN )
-        break;
-    }
-    gbs_chain_[from] = gb;
-  } else if( type == Garbage::TYPE_COMBO ) {
-    gb->size = FieldPos(size, 1);
-    pos = -1; // push back
-  } else {
-    assert( !"not supported yet" );
-  }
-  gb->ntick = to->tick() + to->conf().gb_wait_tk;
-
-  to->insertWaitingGarbage(gb, pos);
-  gbs_wait_[gb->gbid] = gb;
-
-  netplay::Packet pkt_send;
-  netplay::Garbage *np_garbage = pkt_send.mutable_garbage();
-  np_garbage->set_gbid(gb->gbid);
-  np_garbage->set_plid_to( to->player()->plid() );
-  np_garbage->set_plid_from( from == NULL ? 0 : from->player()->plid() );
-  np_garbage->set_pos( pos );
-  np_garbage->set_type( static_cast<netplay::Garbage_Type>(type) );
-  np_garbage->set_size( size );
-  server_.broadcastPacket(pkt_send);
-}
-
-void ServerMatch::increaseChainGarbage(Field *from)
-{
-  GbChainMap::iterator it = gbs_chain_.find(from);
-  assert( it != gbs_chain_.end() );
-  Garbage *gb = (*it).second;
-  assert( gb->type == Garbage::TYPE_CHAIN );
-  gb->size.y++;
-  gb->ntick = gb->to->tick() + gb->to->conf().gb_wait_tk;
-
-  netplay::Packet pkt_send;
-  netplay::Garbage *np_garbage = pkt_send.mutable_garbage();
-  np_garbage->set_gbid( gb->gbid );
-  np_garbage->set_size( gb->size.y );
-  server_.broadcastPacket(pkt_send);
-}
 
