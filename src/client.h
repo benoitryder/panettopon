@@ -1,54 +1,17 @@
 #ifndef CLIENT_H_
 #define CLIENT_H_
 
-/** @file
- * @brief Client API.
- */
-
-#include <boost/ptr_container/ptr_map.hpp>
-#include "netplay.h"
 #include "instance.h"
-
-class Client;
-class ClientInterface;
+#include "netplay.h"
 
 
-/** @brief Match used by client.
- */
-class ClientMatch: public Match
+/// Instance for remote games.
+class ClientInstance: public GameInstance,
+    public netplay::ClientSocket::Observer
 {
  public:
-  ClientMatch(Client &client): client_(client) {}
-  virtual ~ClientMatch() {}
-
-  /// Process an Input packet.
-  bool processInput(Field *fld, const netplay::Input &np_input);
-  /// Process a Garbage packet.
-  bool processGarbage(const netplay::Garbage &np_garbage);
-  bool stepField(Field *fld, KeyState keys);
-
- private:
-  Client &client_;
-};
-
-
-class Client
-{
- protected:
-  typedef boost::ptr_map<PlId, Player> PlayerContainer;
-
-  enum State {
-    STATE_NONE = 0,  ///< not started
-    STATE_LOBBY,
-    STATE_INIT,
-    STATE_READY,
-    STATE_GAME,
-  };
-
- public:
-
-  Client(ClientInterface &intf, boost::asio::io_service &io_service);
-  virtual ~Client() {}
+  ClientInstance(boost::asio::io_service &io_service);
+  virtual ~ClientInstance();
 
   /** @brief Connect to a server.
    *
@@ -59,44 +22,40 @@ class Client
   /// Close connection to the server.
   void disconnect();
 
+#if 0
   /// Send a chat message.
   void sendChat(const std::string &txt);
   /// Tell the server we are ready.
   void sendReady();
+#endif
 
-  const ServerConf &conf() const { return conf_; }
-
-  /// Return the client's player.
-  Player *player() const { return player_; }
-
-  /// Retrieve a player by ID.
-  Player *player(PlId plid)
-  {
-    PlayerContainer::iterator it = players_.find(plid);
-    return it == players_.end() ? NULL : it->second;
-  }
-  const Player *player(PlId plid) const
-  {
-    PlayerContainer::const_iterator it = players_.find(plid);
-    return it == players_.end() ? NULL : it->second;
-  }
-
- protected:
-  virtual bool onPacketReceived(const netplay::Packet &pkt);
-  void onInputTick(const boost::system::error_code &ec);
+  /** @name ClientSocket::Observer interface. */
+  //@{
+  virtual void onClientPacket(const netplay::Packet &pkt);
+  //@}
 
  private:
+  /** @name Packet processing.
+   *
+   * Methods called from onClientPacket().
+   * netplay::Callback exceptions are thrown on error.
+   */
+  //@{
+  void processPacketInput(const netplay::Input &pkt_input);
+  void processPacketGarbage(const netplay::Garbage &pkt_gb);
+  void processPacketField(const netplay::Field &pkt_fld);
+  void processPacketPlayer(const netplay::Player &pkt_pl);
+  void processPacketServer(const netplay::Server &pkt_server);
+  //@}
+
+  void onInputTick(const boost::system::error_code &ec);
+
+  void stopMatch();
+
   netplay::ClientSocket socket_;
-  State state_;
-  ClientMatch match_;
-  Player *player_;
-  ServerConf conf_;
-  ClientInterface &intf_;
   KeyState next_input_;
   boost::posix_time::ptime tick_clock_;
   boost::asio::monotone_timer timer_; ///< timer for game ticks
- protected:
-  PlayerContainer players_;
 };
 
 #endif

@@ -1,6 +1,7 @@
 #ifndef INSTANCE_H_
 #define INSTANCE_H_
 
+#include <boost/ptr_container/ptr_map.hpp>
 #include "game.h"
 
 // undef Windows conflicting macro
@@ -52,10 +53,11 @@ struct ServerConf
 class Player
 {
  public:
-  Player(PlId plid);
+  Player(PlId plid, bool local);
   virtual ~Player();
 
   PlId plid() const { return plid_; }
+  bool local() const { return local_; }
   const std::string &nick() const { return nick_; }
   void setNick(const std::string &v) { nick_ = v; }
   bool ready() const { return ready_; }
@@ -66,6 +68,7 @@ class Player
 
  private:
   PlId plid_;   ///< Player ID
+  bool local_;  ///< \e true for local players
   std::string nick_;
   bool ready_;  ///< ready for server state change
   Field *field_;
@@ -107,9 +110,25 @@ class GameInstance
   GameInstance();
   virtual ~GameInstance();
 
+  const ServerConf &conf() const { return conf_; }
+
  protected:
+  /// Return the player with a given PlId or \e NULL.
+  Player *player(PlId plid);
+  /// Return the player associated to a given field, or \e NULL.
+  Player *player(const Field *fld);
+
+  /** @brief Step a remote player field.
+   *
+   * netplay::Callback exceptions are thrown on error.
+   */
+  void stepRemoteField(Player *pl, KeyState keys);
+
+  typedef boost::ptr_map<PlId, Player> PlayerContainer;
+  PlayerContainer players_;
   Match match_;
   State state_;
+  ServerConf conf_;
 };
 
 

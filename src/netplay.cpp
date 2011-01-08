@@ -241,12 +241,14 @@ void ServerSocket::removePeer(PeerSocket *peer)
 }
 
 
-void ServerSocket::broadcastPacket(const netplay::Packet &pkt)
+void ServerSocket::broadcastPacket(const netplay::Packet &pkt, const PeerSocket *except/*=NULL*/)
 {
   const std::string s = PacketSocket::serializePacket(pkt);
   PeerSocketContainer::iterator it;
   for( it=peers_.begin(); it!=peers_.end(); ++it ) {
-    (*it).writeRaw(s);
+    if( &(*it) != except ) {
+      (*it).writeRaw(s);
+    }
   }
 }
 
@@ -300,9 +302,9 @@ void ServerSocket::doRemovePeer(PeerSocket *peer)
 }
 
 
-ClientSocket::ClientSocket(asio::io_service &io_service):
+ClientSocket::ClientSocket(Observer &obs, asio::io_service &io_service):
     PacketSocket(io_service),
-    timer_(io_service), connected_(false)
+    observer_(obs), timer_(io_service), connected_(false)
 {
 }
 

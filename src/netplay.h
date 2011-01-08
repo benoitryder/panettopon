@@ -159,8 +159,8 @@ class ServerSocket: public BaseSocket
    */
   void removePeer(PeerSocket *peer);
 
-  /// Send a packet to all peers.
-  void broadcastPacket(const netplay::Packet &pkt);
+  /// Send a packet to all peers, excepting \e except.
+  void broadcastPacket(const netplay::Packet &pkt, const PeerSocket *except=NULL);
 
  protected:
   virtual void processError(const std::string &msg, const boost::system::error_code &ec);
@@ -187,7 +187,13 @@ class ServerSocket: public BaseSocket
 class ClientSocket: public PacketSocket
 {
  public:
-  ClientSocket(boost::asio::io_service &io_service);
+  struct Observer
+  {
+    /// Called on input packet.
+    virtual void onClientPacket(const Packet &pkt) = 0;
+  };
+
+  ClientSocket(Observer &obs, boost::asio::io_service &io_service);
   virtual ~ClientSocket();
 
   /** @brief Connect to a server.
@@ -203,10 +209,11 @@ class ClientSocket: public PacketSocket
  protected:
   virtual void processError(const std::string &msg, const boost::system::error_code &ec);
   virtual void processPacket(const netplay::Packet &pkt);
+ private:
   void onTimeout(const boost::system::error_code &ec);
   void onConnect(const boost::system::error_code &ec);
 
- private:
+  Observer &observer_;
   boost::asio::monotone_timer timer_; ///< for timeouts
   bool connected_;
 };

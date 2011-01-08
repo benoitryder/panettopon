@@ -36,11 +36,15 @@ message Notification {
 
 // Player informations.
 // The ready flag must be automatically reset when server state changes.
+// The join flag is set by the client to join the server (along with plid set
+// to 0). It is set in the server's reply to distinguish from new players of
+// other clients.
 message Player {
   required uint32 plid = 1;
   optional bool ready = 2;
   optional string nick = 3;
-  optional bool out = 11; // disconnected
+  optional bool out = 11 [default = true]; // disconnected
+  optional bool join = 12 [default = false]; // new registered player
 }
 
 // Server informations.

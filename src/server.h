@@ -2,7 +2,6 @@
 #define SERVER_H_
 
 #include <map>
-#include <boost/ptr_container/ptr_map.hpp>
 #include "instance.h"
 #include "netplay.h"
 #include "game.h"
@@ -29,7 +28,7 @@ class ServerInstance: public GameInstance,
   void startServer(int port);
 
   /// Create and return a new local player.
-  Player *newLocalPlayer();
+  Player *newLocalPlayer(const std::string &nick);
 
   /** @name ServerSocket::Observer interface. */
   //@{
@@ -49,14 +48,11 @@ class ServerInstance: public GameInstance,
   /// Return next player ID to use.
   PlId nextPlayerId();
 
-  /// Return the player associated to a given field, or \e NULL.
-  Player *field2player(const Field *fld);
-
   /** @brief Initialize a new player.
    *
    * If peer is \e NULL, a local player is created.
    */
-  Player *newPlayer(netplay::PeerSocket *peer);
+  Player *newPlayer(netplay::PeerSocket *peer, const std::string &nick);
   /// Remove a player.
   void removePlayer(PlId plid);
 
@@ -77,6 +73,9 @@ class ServerInstance: public GameInstance,
   void processPacketGarbage(netplay::PeerSocket *peer, const netplay::Garbage &pkt_gb);
   void processPacketPlayer(netplay::PeerSocket *peer, const netplay::Player &pkt_pl);
 
+  /// Step a remote player field, process garbages, send Input packets.
+  void stepRemoteField(Player *pl, KeyState keys);
+
   //@}
 
   /// Change state, reset ready flags if needed, send packets.
@@ -86,17 +85,11 @@ class ServerInstance: public GameInstance,
   void startMatch();
   void stopMatch();
 
-  /// Step one player's field, process garbages, send Input packets.
-  void stepField(Player *pl, KeyState keys);
-
-  typedef boost::ptr_map<PlId, Player> PlayerContainer;
   typedef std::map<PlId, netplay::PeerSocket *> PeerContainer;
 
   netplay::ServerSocket socket_;
   GarbageDistributor gb_distributor_;
-  PlayerContainer players_;
   PeerContainer peers_;
-  ServerConf conf_;
   PlId current_plid_;
 };
 

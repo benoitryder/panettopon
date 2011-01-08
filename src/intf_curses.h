@@ -45,7 +45,7 @@ class CursesInterface: public ClientInterface
   void endCurses();
 
   boost::asio::io_service io_service_;
-  Client client_;
+  ClientInstance client_;
   /// Window for messages.
   WINDOW *wmsg_;
 
