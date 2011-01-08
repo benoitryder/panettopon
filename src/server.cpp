@@ -1,4 +1,3 @@
-#include <boost/bind.hpp>
 #include "server.h"
 #include "netplay.pb.h"
 #include "config.h"
@@ -491,65 +490,22 @@ void ServerInstance::stepField(Player *pl, KeyState keys)
   //TODO check for clients which never send back the drop packets
   gb_distributor_.updateGarbages(fld);
 
-  //TODO do ranking in match
-  // compute ranks, check for end of match
-  // common case: no draw, no simultaneous death, 1 tick at a time
-  // ranking algorithm does not have to be optimized for special cases
-  std::vector<Field *> to_rank;
-  to_rank.reserve(fields_.size());
-  unsigned int no_rank_nb = 0;
-  Match::FieldContainer::iterator it;
-  for( it=fields_.begin(); it!=fields_.end(); ++it ) {
-    if( it->rank() != 0 )
-      continue;
-    no_rank_nb++;
-    //XXX rank aborted fields in Match::removeField() ?
-    if( it->lost() && it->tick() <= match_.tick() )
-      to_rank.push_back(&(*it));
-  }
-
-  if( !to_rank.empty() ) {
-    // best player first (lowest tick)
-    std::sort(to_rank.begin(), to_rank.end(),
-              boost::bind(&Field::tick, _1) <
-              boost::bind(&Field::tick, _2));
-    unsigned int rank = no_rank_nb - to_rank.size() + 1;
-    netplay::Field *np_field_send = pkt_send.mutable_field();
-    std::vector<Field *>::iterator it;
-    for( it=to_rank.begin(); it!=to_rank.end(); ++it ) {
-      if( it!=to_rank.begin() && (*it)->tick() == (*(it-1))->tick() )
-        (*it)->setRank( (*(it-1))->rank() );
-      else
-        (*it)->setRank( rank );
-      // don't send packet for aborted fields (no player)
-      if( (*it)->player() != NULL ) {
-        np_field_send->set_plid((*it)->player()->plid());
-        np_field_send->set_rank( (*it)->rank() );
-        socket_.broadcastPacket(pkt_send);
-      }
-      rank++;
-      no_rank_nb--;
+  // ranking
+  std::vector<const Field *> ranked;
+  bool end_of_match = match_.updateRanks(ranked);
+  netplay::Field *np_field_send = pkt_send.mutable_field();
+  std::vector<const Field *>::iterator it;
+  for(it=ranked.begin(); it!=ranked.end(); ++it) {
+    Player *pl = this->field2player(*it);
+    // don't send packet for aborted fields (no player)
+    if( pl != NULL ) {
+      np_field_send->set_plid( pl->plid() );
+      np_field_send->set_rank( (*it)->rank() );
+      socket_.broadcastPacket(pkt_send);
     }
   }
-
-  // one (or no) remaining player: end of match
-  if( no_rank_nb < 2 ) {
-    netplay::Field *np_field_send = pkt_send.mutable_field();
-    Match::FieldContainer::iterator it;
-    for( it=fields_.begin(); it!=fields_.end(); ++it ) {
-      if( (*it).rank() == 0 )
-        continue;
-      it->setRank(1);
-      // don't send packet for aborted fields (no player)
-      if( it->player() != NULL ) {
-        np_field_send->set_plid(it->player()->plid());
-        np_field_send->set_rank( it->rank() );
-        socket_.broadcastPacket(pkt_send);
-      }
-      break;
-    }
-
-    this->stopMatch(); //XXX is this a good idea to do it here?
+  if( end_of_match ) {
+    this->stopMatch();
   }
 }
 
@@ -575,6 +531,7 @@ Player *ServerInstance::field2player(const Field *fld)
       return (*it).second;
     }
   }
+  return NULL;
 }
 
 

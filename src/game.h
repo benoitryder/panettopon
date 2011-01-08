@@ -430,6 +430,15 @@ class Match
    */
   void updateTick();
 
+  /** @brief Rank fields.
+   *
+   * Updated fields are pushed to \e ranked.
+   *
+   * @return \e true if all fields have been ranked (end of match),
+   * \e false otherwise.
+   */
+  bool updateRanks(std::vector<const Field *> &ranked);
+
   const GbWaitingMap &waitingGarbages() const { return gbs_wait_; }
 
   /** @brief Add a new (waiting) garbage.

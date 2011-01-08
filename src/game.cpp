@@ -1,3 +1,4 @@
+#include <boost/bind.hpp>
 #include "game.h"
 #include "log.h"
 
@@ -954,6 +955,61 @@ void Match::updateTick()
   }
 
   tick_ = ret;
+}
+
+bool Match::updateRanks(std::vector<const Field *> &ranked)
+{
+  // common case: no draw, no simultaneous death, 1 tick at a time
+  // ranking algorithm does not have to be optimized for special cases
+  std::vector<Field *> to_rank;
+  to_rank.reserve(fields_.size());
+  unsigned int no_rank_nb = 0;
+  FieldContainer::iterator it;
+  for( it=fields_.begin(); it!=fields_.end(); ++it ) {
+    if( it->rank() != 0 ) {
+      continue;
+    }
+    no_rank_nb++;
+    //XXX rank aborted fields in Match::removeField() ?
+    if( it->lost() && it->tick() <= tick_ ) {
+      to_rank.push_back(&(*it));
+    }
+  }
+
+  if( !to_rank.empty() ) {
+    // best player first (lowest tick)
+    std::sort(to_rank.begin(), to_rank.end(),
+              boost::bind(&Field::tick, _1) <
+              boost::bind(&Field::tick, _2));
+    unsigned int rank = no_rank_nb - to_rank.size() + 1;
+    std::vector<Field *>::iterator it;
+    for( it=to_rank.begin(); it!=to_rank.end(); ++it ) {
+      if( it!=to_rank.begin() && (*it)->tick() == (*(it-1))->tick() ) {
+        (*it)->setRank( (*(it-1))->rank() );
+      } else {
+        (*it)->setRank( rank );
+      }
+      ranked.push_back(*it);
+      rank++;
+      no_rank_nb--;
+    }
+  }
+
+  // one (or no) remaining player: end of match
+  if( no_rank_nb < 2 ) {
+    FieldContainer::iterator it;
+    for( it=fields_.begin(); it!=fields_.end(); ++it ) {
+      if( (*it).rank() == 0 ) {
+        continue;
+      }
+      it->setRank(1);
+      ranked.push_back(&(*it));
+      break;
+    }
+    return true;
+  }
+
+  return false;
 }
 
 
