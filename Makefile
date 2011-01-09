@@ -4,7 +4,7 @@ WITHOUT_INTF_GUI =
 
 
 CXX = g++
-CFLAGS = -g -O3 -Wall -Wextra -Werror
+CFLAGS = -g -Wall -Wextra -Werror
 CFLAGS_WIN += -D_WIN32_WINNT=0x0501
 # avoid to define the ERROR macro
 CFLAGS_WIN += -DNOGDI

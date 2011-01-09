@@ -10,12 +10,22 @@ class ClientInstance: public GameInstance,
     public netplay::ClientSocket::Observer
 {
  public:
-  ClientInstance(GameInstance::Observer &obs, boost::asio::io_service &io_service);
+  struct Observer: GameInstance::Observer
+  {
+    /// Called on server notification.
+    virtual void onNotification(Severity sev, const std::string &msg) = 0;
+    /// Called on server disconnection.
+    virtual void onServerDisconnect() = 0;
+  };
+
+  ClientInstance(Observer &obs, boost::asio::io_service &io_service);
   virtual ~ClientInstance();
 
   /** @brief Connect to a server.
    *
    * Timeout is given in microseconds, -1 to wait indefinitely.
+   * Once the method returned the client still have to wait for server
+   * configuration (or to be rejected).
    */
   void connect(const char *host, int port, int tout);
 
@@ -41,9 +51,15 @@ class ClientInstance: public GameInstance,
   /** @name ClientSocket::Observer interface. */
   //@{
   virtual void onClientPacket(const netplay::Packet &pkt);
+  virtual void onServerDisconnect();
   //@}
 
+ protected:
+  GameInstance::Observer &observer() const { return observer_; }
+
  private:
+  Observer &observer_;
+
   /** @name Packet processing.
    *
    * Methods called from onClientPacket().

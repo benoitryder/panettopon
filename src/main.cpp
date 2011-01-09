@@ -177,25 +177,26 @@ int main(int /*argc*/, char **argv)
   ::srand( game_time() );
 
   const std::string intfstr = cfg.get("Global", "Interface", "server");
-  Interface *intf = NULL;
   if( intfstr == "server" ) {
-    intf = new BasicServerInterface();
+    BasicServerInterface intf;
+    ret = intf.run(cfg);
   } else
 #ifndef WITHOUT_INTF_CURSES
   if( intfstr == "curses" ) {
-    intf = new curses::CursesInterface();
+    curses::CursesInterface intf;
+    ret = intf.run(cfg);
   } else
 #endif
 #ifndef WITHOUT_INTF_GUI
   if( intfstr == "gui" ) {
-    intf = new gui::GuiInterface();
+    gui::GuiInterface intf;
+    ret = intf.run(cfg);
   } else
 #endif
   {
     LOG("invalid interface: '%s'", intfstr.c_str());
     return 2;
   }
-  boost::scoped_ptr<Interface> intf_ptr(intf);
-  return intf_ptr->run(cfg) ? 0 : 1;
+  return ret ? 0 : 1;
 }
 

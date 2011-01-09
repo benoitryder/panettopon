@@ -7,9 +7,8 @@ namespace asio = boost::asio;
 using namespace asio::ip;
 
 
-ClientInstance::ClientInstance(GameInstance::Observer &obs, asio::io_service &io_service):
-    GameInstance(obs),
-    socket_(*this, io_service)
+ClientInstance::ClientInstance(Observer &obs, asio::io_service &io_service):
+    observer_(obs), socket_(*this, io_service)
 {
 }
 
@@ -29,9 +28,8 @@ void ClientInstance::connect(const char *host, int port, int tout)
 void ClientInstance::disconnect()
 {
   //XXX send a proper "quit" message
-  socket_.close();
   state_ = STATE_NONE;
-  socket_.io_service().stop(); //XXX
+  socket_.close();
 }
 
 void ClientInstance::newLocalPlayer(const std::string &nick)
@@ -136,14 +134,18 @@ void ClientInstance::onClientPacket(const netplay::Packet &pkt)
     observer_.onChat(pl, np_chat.txt());
 
   } else if( pkt.has_notification() ) {
-    /*TODO
     const netplay::Notification &np_notification = pkt.notification();
-    intf_.onNotification(static_cast<Interface::Severity>(np_notification.severity()), np_notification.txt());
-    */
+    observer_.onNotification(static_cast<GameInstance::Severity>(np_notification.severity()), np_notification.txt());
 
   } else {
     throw netplay::CallbackError("invalid packet field");
   }
+}
+
+void ClientInstance::onServerDisconnect()
+{
+  LOG("disconnected");
+  observer_.onServerDisconnect();
 }
 
 
@@ -357,14 +359,16 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
   Player *pl = this->player(pkt_pl.plid());
   if( pl == NULL ) {
     // new player
-    if( !pkt_pl.has_nick() || pkt_pl.has_ready() ) {
+    if( !pkt_pl.has_nick() ) {
       throw netplay::CallbackError("invalid fields");
     }
     //TODO check we asked for a new local player
     pl = new Player(pkt_pl.plid(), pkt_pl.join());
     PlId plid = pl->plid(); // use a temporary value to help g++
     players_.insert(plid, pl);
-
+    if( pkt_pl.has_ready() ) {
+      pl->setReady(pkt_pl.ready());
+    }
     observer_.onPlayerJoined(pl);
 
   } else if( pkt_pl.out() ) {
@@ -420,15 +424,15 @@ void ClientInstance::processPacketServer(const netplay::Server &pkt_server)
         this->stopMatch();
       }
       state_ = new_state;
-      observer_.onMatchState(&match_);
+      observer_.onStateChange();
     } else if( new_state == STATE_READY ) {
       state_ = new_state;
       // init fields for match
       match_.start();
-      observer_.onMatchState(&match_);
+      observer_.onStateChange();
     } else if( new_state == STATE_GAME ) {
       state_ = new_state;
-      observer_.onMatchState(&match_);
+      observer_.onStateChange();
     } else if( new_state == STATE_LOBBY ) {
       this->stopMatch();
     }
@@ -446,6 +450,6 @@ void ClientInstance::stopMatch()
   }
   match_.stop();
   state_ = STATE_LOBBY;
-  observer_.onMatchState(&match_);
+  observer_.onStateChange();
 }
 

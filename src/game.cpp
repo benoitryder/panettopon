@@ -374,13 +374,13 @@ void Field::step(KeyState keys)
     if( chained ) {
       step_info_.chain = ++chain_;
     }
-    LOG("[%p|%u] match +%d x%d", tick_, step_info_.combo, step_info_.chain);
+    LOG("[%p|%u] match +%d x%d", this, tick_, step_info_.combo, step_info_.chain);
   }
 
 
   // Process dropping garbages
   if( !gbs_drop_.empty() && !full && raise ) {
-    LOG("[%p|%u] gb: dropping", tick_);
+    LOG("[%p|%u] gb: dropping", this, tick_);
     //TODO drop condition: no drop when flashing/chain
     Garbage *gb = gbs_drop_.pop_front().release();
     gbs_field_.push_back(gb);
@@ -574,7 +574,7 @@ void Field::step(KeyState keys)
   } else if( !full && raise && stop_dt_ == 0 && raise_dt_ != 0 ) {
     if( raise_dt_ < 0 || --raise_dt_ == 0 ) {
       if( --raise_step_ == 0 ) {
-        LOG("[%p|%u] raise (%s)", tick_, raise_dt_<0 ? "manual" : "auto");
+        LOG("[%p|%u] raise (%s)", this, tick_, raise_dt_<0 ? "manual" : "auto");
         this->raise();
       } else if( raise_dt_ == 0 ) {
         this->resetAutoRaise();

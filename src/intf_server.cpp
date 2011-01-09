@@ -3,55 +3,72 @@
 #include "config.h"
 #include "log.h"
 
-namespace asio = boost::asio;
+
+BasicServerInterface::BasicServerInterface():
+    instance_(NULL)
+{
+}
 
 
 bool BasicServerInterface::run(const Config &cfg)
 {
-  asio::io_service io_service;
+  boost::asio::io_service io_service;
   ServerInstance instance(*this, io_service);
+  instance_ = &instance;
   instance.loadConf(cfg);
   instance.startServer( cfg.getInt("Global", "Port", 20102) );
   io_service.run();
+  instance_ = NULL;
   return true;
 }
 
-void BasicServerInterface::onChat(const Player *pl, const std::string &msg)
+void BasicServerInterface::onChat(Player *pl, const std::string &msg)
 {
   LOG("%s(%u): %s", pl->nick().c_str(), pl->plid(), msg.c_str());
 }
 
-void BasicServerInterface::onPlayerJoined(const Player *pl)
+void BasicServerInterface::onPlayerJoined(Player *pl)
 {
   LOG("%s(%u) joined", pl->nick().c_str(), pl->plid());
 }
 
-void BasicServerInterface::onPlayerSetNick(const Player *pl, const std::string &old_nick)
+void BasicServerInterface::onPlayerChangeNick(Player *pl, const std::string &old_nick)
 {
   LOG("%s(%u) is now known as %s", old_nick.c_str(), pl->plid(),
       pl->nick().c_str());
 }
 
-void BasicServerInterface::onPlayerReady(const Player *pl)
+void BasicServerInterface::onPlayerReady(Player *pl)
 {
-  if( pl->ready() )
+  if( pl->ready() ) {
     LOG("%s(%u) is ready", pl->nick().c_str(), pl->plid());
-  else
+  } else {
     LOG("%s(%u) is not ready anymore", pl->nick().c_str(), pl->plid());
+  }
 }
 
-void BasicServerInterface::onPlayerQuit(const Player *pl)
+void BasicServerInterface::onPlayerQuit(Player *pl)
 {
   LOG("%s(%u) has quit", pl->nick().c_str(), pl->plid());
 }
 
-void BasicServerInterface::onMatchInit(const Match *)  { LOG("match init"); }
-void BasicServerInterface::onMatchReady(const Match *) { LOG("match ready"); }
-void BasicServerInterface::onMatchStart(const Match *) { LOG("match start"); }
-void BasicServerInterface::onMatchEnd(const Match *)   { LOG("match end"); }
-void BasicServerInterface::onFieldStep(const Field *)  {}
-void BasicServerInterface::onFieldLost(const Field *fld)
+void BasicServerInterface::onStateChange()
 {
-  LOG("field(%u) lost", fld->player() != NULL ? 0 : fld->player()->plid());
+  if( instance_->state() == GameInstance::STATE_LOBBY ) {
+    LOG("match end");
+  } else if( instance_->state() == GameInstance::STATE_INIT ) {
+    LOG("match init");
+  } else if( instance_->state() == GameInstance::STATE_READY ) {
+    LOG("match ready");
+  } else if( instance_->state() == GameInstance::STATE_GAME ) {
+    LOG("match start");
+  }
+}
+
+void BasicServerInterface::onPlayerStep(Player *pl)
+{
+  if( pl->field()->lost() ) {
+    LOG("player(%u) lost", pl->plid());
+  }
 }
 

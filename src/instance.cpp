@@ -2,6 +2,18 @@
 #include <boost/asio/placeholders.hpp>
 #include "instance.h"
 #include "netplay.h"
+#include "log.h"
+
+
+void ServerConf::toDefault()
+{
+  const netplay::Server::Conf &np_conf = netplay::Server::Conf::default_instance();
+#define SERVER_CONF_EXPR_INIT(n,ini,t) \
+  n = np_conf.n();
+  SERVER_CONF_APPLY(SERVER_CONF_EXPR_INIT);
+#undef SERVER_CONF_EXPR_INIT
+}
+
 
 
 Player::Player(PlId plid, bool local):
@@ -15,8 +27,8 @@ Player::~Player()
 }
 
 
-GameInstance::GameInstance(Observer &obs):
-    observer_(obs), state_(STATE_NONE)
+GameInstance::GameInstance():
+    state_(STATE_NONE)
 {
 }
 
@@ -57,7 +69,7 @@ void GameInstance::doStepPlayer(Player *pl, KeyState keys)
     //XXX:check condition
     match_.updateTick();
   }
-  observer_.onPlayerStep(pl);
+  observer().onPlayerStep(pl);
 }
 
 void GameInstance::stepRemotePlayer(Player *pl, KeyState keys)
@@ -74,16 +86,21 @@ void GameInstance::stepRemotePlayer(Player *pl, KeyState keys)
 }
 
 
-GameInputScheduler::GameInputScheduler(GameInstance &instance, boost::asio::io_service &io_service):
-    instance_(instance), timer_(io_service)
+GameInputScheduler::GameInputScheduler(GameInstance &instance, InputProvider &input, boost::asio::io_service &io_service):
+    instance_(instance), input_(input), timer_(io_service)
 {
+}
+
+GameInputScheduler::~GameInputScheduler()
+{
+  this->stop();
 }
 
 void GameInputScheduler::start()
 {
   // get local players
   players_.clear();
-  GameInstance::PlayerContainer all_players = instance_.players();
+  GameInstance::PlayerContainer &all_players = instance_.players();
   GameInstance::PlayerContainer::iterator it;
   for(it=all_players.begin(); it!=all_players.end(); ++it) {
     Player *pl = (*it).second;
@@ -104,6 +121,7 @@ void GameInputScheduler::stop()
 {
   timer_.cancel();
   players_.clear();
+  timer_.get_io_service().poll();
 }
 
 
@@ -112,6 +130,7 @@ void GameInputScheduler::onInputTick(const boost::system::error_code &ec)
   if( ec == boost::asio::error::operation_aborted ) {
     return;
   }
+  assert( !ec );
 
   for(;;) {
     PlayerContainer::iterator it;
@@ -127,10 +146,10 @@ void GameInputScheduler::onInputTick(const boost::system::error_code &ec)
       if( tk+1 >= instance_.match().tick() + instance_.conf().tk_lag_max ) {
         break;
       }
-      instance_.playerStep(pl, this->getNextInput(pl));
+      instance_.playerStep(pl, input_.getNextInput(pl));
 
       if( fld->lost() ) {
-        players_.erase(it++);
+        it = players_.erase(it);
       } else {
         ++it;
       }

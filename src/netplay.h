@@ -40,7 +40,10 @@ class BaseSocket
   BaseSocket(boost::asio::io_service &io_service);
   virtual ~BaseSocket();
 
-  /// Close the socket.
+  /** @brief Close the socket.
+   *
+   * Closing a socket already closed or being closed has no effect.
+   */
   virtual void close();
 
   boost::asio::io_service &io_service() { return socket_.get_io_service(); }
@@ -152,22 +155,13 @@ class ServerSocket: public BaseSocket
 
   void setPktSizeMax(uint16_t v) { pkt_size_max_ = v; }
 
-  /** @brief Remove the peer asynchronously.
-   *
-   * Removal is delayed using io_service_.post() to make sure the peer is not
-   * deleted from a call to one of its method.
-   */
-  void removePeer(PeerSocket *peer);
-
   /// Send a packet to all peers, excepting \e except.
   void broadcastPacket(const netplay::Packet &pkt, const PeerSocket *except=NULL);
 
- protected:
-  virtual void processError(const std::string &msg, const boost::system::error_code &ec);
-  virtual void processPacket(const Packet &pkt);
  private:
   void acceptNext();
   void onAccept(const boost::system::error_code &ec);
+  /// Method called asynchronously to delete a peer safely.
   void doRemovePeer(PeerSocket *peer);
 
   boost::asio::ip::tcp::acceptor acceptor_;
@@ -175,11 +169,10 @@ class ServerSocket: public BaseSocket
   Observer &observer_;
 
   typedef boost::ptr_vector<PeerSocket> PeerSocketContainer;
-  /** @brief Sockets of connected clients.
-   *
-   * Peers are pushed back. Thus a peer being accepted is always at the back.
-   */
+  /// Sockets of connected accepted clients.
   PeerSocketContainer peers_;
+  std::auto_ptr<PeerSocket> peer_accept_; ///< currently accepted peer
+  PeerSocketContainer peers_del_; ///< Peers planned for deletion
 };
 
 
@@ -191,6 +184,8 @@ class ClientSocket: public PacketSocket
   {
     /// Called on input packet.
     virtual void onClientPacket(const Packet &pkt) = 0;
+    /// Called on server disconnection.
+    virtual void onServerDisconnect() = 0;
   };
 
   ClientSocket(Observer &obs, boost::asio::io_service &io_service);
@@ -201,10 +196,11 @@ class ClientSocket: public PacketSocket
    * Timeout is given in microseconds, -1 to wait indefinitely.
    */
   void connect(const char *host, int port, int tout);
-  /// Close connection to the server.
-  void disconnect();
   /// Return true if the client is connected.
   bool connected() const { return connected_; }
+
+  /// Close the socket.
+  virtual void close();
 
  protected:
   virtual void processError(const std::string &msg, const boost::system::error_code &ec);

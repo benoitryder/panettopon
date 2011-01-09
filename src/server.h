@@ -18,6 +18,8 @@ class ServerInstance: public GameInstance,
   static const std::string CONF_SECTION;
 
  public:
+  typedef GameInstance::Observer Observer;
+
   ServerInstance(GameInstance::Observer &obs, boost::asio::io_service &io_service);
   virtual ~ServerInstance();
 
@@ -26,6 +28,8 @@ class ServerInstance: public GameInstance,
 
   /// Start server on a given port.
   void startServer(int port);
+  /// Stop the server.
+  void stopServer();
 
   /// Create and return a new local player.
   Player *newLocalPlayer(const std::string &nick);
@@ -53,7 +57,12 @@ class ServerInstance: public GameInstance,
   virtual void onGarbageDrop(const Garbage *gb);
   //@}
 
+ protected:
+  GameInstance::Observer &observer() const { return observer_; }
+
  private:
+  Observer &observer_;
+
   /// Return next player ID to use.
   PlId nextPlayerId();
 

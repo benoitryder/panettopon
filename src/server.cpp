@@ -5,16 +5,6 @@
 
 
 
-void ServerConf::toDefault()
-{
-  const netplay::Server::Conf &np_conf = netplay::Server::Conf::default_instance();
-#define SERVER_CONF_EXPR_INIT(n,ini,t) \
-  n = np_conf.n();
-  SERVER_CONF_APPLY(SERVER_CONF_EXPR_INIT);
-#undef SERVER_CONF_EXPR_INIT
-}
-
-
 const std::string ServerInstance::CONF_SECTION("Server");
 
 //XXX:temp
@@ -38,9 +28,8 @@ static const FieldConf default_field_conf = {
 };
 
 
-ServerInstance::ServerInstance(GameInstance::Observer &obs, boost::asio::io_service &io_service):
-    GameInstance(obs),
-    socket_(*this, io_service), gb_distributor_(match_, *this),
+ServerInstance::ServerInstance(Observer &obs, boost::asio::io_service &io_service):
+    observer_(obs), socket_(*this, io_service), gb_distributor_(match_, *this),
     current_plid_(0)
 {
 }
@@ -62,9 +51,16 @@ void ServerInstance::loadConf(const Config &cfg)
 
 void ServerInstance::startServer(int port)
 {
+  assert( state_ == STATE_NONE );
   LOG("starting server on port %d", port);
   socket_.start(port);
   state_ = STATE_LOBBY;
+}
+
+void ServerInstance::stopServer()
+{
+  state_ = STATE_NONE;
+  socket_.close();
 }
 
 
@@ -137,7 +133,7 @@ void ServerInstance::onPeerConnect(netplay::PeerSocket *peer)
 {
   if( state_ != STATE_LOBBY ) {
     throw netplay::CallbackError("match is running");
-  } else if( players_.size() > conf_.pl_nb_max ) {
+  } else if( players_.size() >= conf_.pl_nb_max ) {
     //TODO difference between player max en peer max
     throw netplay::CallbackError("server full");
   }
@@ -295,13 +291,17 @@ void ServerInstance::removePlayer(PlId plid)
   np_player->set_plid(plid);
   np_player->set_out(true);
   socket_.broadcastPacket(pkt);
+  // only one player left: abort the game
+  if( players_.size() < 2 ) {
+    this->stopMatch();
+  }
 }
 
 
 void ServerInstance::processPacketInput(netplay::PeerSocket *peer, const netplay::Input &pkt_input)
 {
   if( state_ != STATE_GAME ) {
-    throw netplay::CallbackError("match is not running");
+    return;  // ignore remains of the previous match
   }
   Player *pl = this->checkPeerPlayer(pkt_input.plid(), peer);
   //XXX:check field may have win without player knowing it
@@ -351,10 +351,9 @@ void ServerInstance::processPacketGarbage(netplay::PeerSocket *peer, const netpl
   Player *pl = this->player(gb->to);
   assert( pl != NULL );
   this->checkPeerPlayer(pl->plid(), peer);
-  if( gb->to->waitingGarbage(0).gbid == gb->gbid ) {
+  if( gb->to->waitingGarbage(0).gbid != gb->gbid ) {
     throw netplay::CallbackError("unexpected dropped garbage");
   }
-  assert( gb->to->waitingGarbage(0).gbid == gb->gbid );
 
   netplay::Packet pkt_send;
   netplay::Garbage *np_garbage_send = pkt_send.mutable_garbage();
@@ -459,6 +458,7 @@ void ServerInstance::setState(State state)
       (*it).second->setReady(false);
   }
   state_ = state;
+  observer_.onStateChange();
 }
 
 void ServerInstance::prepareMatch()
@@ -467,7 +467,6 @@ void ServerInstance::prepareMatch()
   //XXX check ready player count (there should be at least 1 player)
 
   this->setState(STATE_INIT);
-  observer_.onMatchState(&match_);
 
   int seed = ::rand(); // common seed for all fields
   netplay::Packet pkt;
@@ -503,7 +502,6 @@ void ServerInstance::prepareMatch()
   }
 
   this->setState(STATE_READY);
-  observer_.onMatchState(&match_);
 }
 
 void ServerInstance::startMatch()
@@ -513,11 +511,14 @@ void ServerInstance::startMatch()
   gb_distributor_.reset();
   match_.start();
   this->setState(STATE_GAME);
-  observer_.onMatchState(&match_);
 }
 
 void ServerInstance::stopMatch()
 {
+  // ignore if match is already being stopped
+  if( state_ == STATE_LOBBY ) {
+    return;
+  }
   LOG("stop match");
 
   PlayerContainer::iterator it;
@@ -526,7 +527,6 @@ void ServerInstance::stopMatch()
   }
   match_.stop();
   this->setState(STATE_LOBBY);
-  observer_.onMatchState(&match_);
 }
 
 

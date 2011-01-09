@@ -27,8 +27,12 @@ BaseSocket::~BaseSocket()
 
 void BaseSocket::close()
 {
-  assert( socket_.is_open() );
-  socket_.close();
+  // socket may be closed due to the error, but we still have to trigger events
+  if( socket_.is_open() ) {
+    socket_.close();
+  }
+  // make sure to remove pending aborted handlers
+  io_service().poll();
 }
 
 
@@ -45,7 +49,6 @@ PacketSocket::~PacketSocket()
 
 void PacketSocket::closeAfterWrites()
 {
-  assert( socket_.is_open() );
   delayed_close_ = true;
   if( write_queue_.empty() ) {
     this->close();
@@ -137,19 +140,21 @@ void PacketSocket::readNext()
 
 void PacketSocket::onWrite(const boost::system::error_code &ec)
 {
-  write_queue_.pop();
   if( ec == asio::error::operation_aborted )
     return;
   if( !ec ) {
+    write_queue_.pop();
     if( ! write_queue_.empty() ) {
       this->writeNext();
     } else if( delayed_close_ ) {
-      if( socket_.is_open() ) {
-        this->close();
-      }
+      this->close();
     }
   } else {
-    this->processError("write error", ec);
+    if( delayed_close_ ) {
+      this->close();
+    } else {
+      this->processError("write error", ec);
+    }
   }
 }
 
@@ -172,7 +177,7 @@ void PacketSocket::writeRaw(const std::string &s)
 
 
 PeerSocket::PeerSocket(ServerSocket &server):
-    PacketSocket(server_.io_service()),
+    PacketSocket(server.io_service()),
     server_(server), has_error_(false)
 {
   pkt_size_max_ = server.pkt_size_max_;
@@ -209,7 +214,16 @@ void PeerSocket::processPacket(const netplay::Packet &pkt)
 void PeerSocket::close()
 {
   PacketSocket::close();
-  server_.removePeer(this);
+  ServerSocket::PeerSocketContainer &peers = server_.peers_;
+  ServerSocket::PeerSocketContainer::iterator it;
+  for(it=peers.begin(); it!=peers.end(); ++it) {
+    if( &(*it) == this ) {
+      server_.peers_del_.push_back(peers.release(it).release());
+      io_service().post(boost::bind(&ServerSocket::doRemovePeer, &server_, this));
+      return;
+    }
+  }
+  assert( !"peer not found" );
 }
 
 
@@ -235,11 +249,6 @@ void ServerSocket::start(int port)
   this->acceptNext();
 }
 
-void ServerSocket::removePeer(PeerSocket *peer)
-{
-  io_service().post(boost::bind(&ServerSocket::doRemovePeer, this, peer));
-}
-
 
 void ServerSocket::broadcastPacket(const netplay::Packet &pkt, const PeerSocket *except/*=NULL*/)
 {
@@ -255,23 +264,23 @@ void ServerSocket::broadcastPacket(const netplay::Packet &pkt, const PeerSocket 
 
 void ServerSocket::acceptNext()
 {
-  peers_.push_back(new PeerSocket(*this));
-  PeerSocket &peer = peers_.back();
+  assert( peer_accept_.get() == NULL );
+  peer_accept_ = std::auto_ptr<PeerSocket>(new PeerSocket(*this));
   acceptor_.async_accept(
-      peer.socket_, peer.peer(),
+      peer_accept_->socket_, peer_accept_->peer(),
       boost::bind(&ServerSocket::onAccept, this, asio::placeholders::error));
 }
 
 void ServerSocket::onAccept(const boost::system::error_code &ec)
 {
-  PeerSocket &peer = peers_.back();
   if( !ec ) {
+    peers_.push_back(peer_accept_);
+    PeerSocket &peer = peers_.back();
     try {
       peer.socket_.set_option(tcp::no_delay(true));
     } catch(const boost::exception &e) {
       // setting no delay may fail on some systems, ignore error
     }
-    peer.readNext();
     try {
       observer_.onPeerConnect(&peer);
     } catch(const CallbackError &e) {
@@ -279,7 +288,8 @@ void ServerSocket::onAccept(const boost::system::error_code &ec)
     }
   } else {
     LOG("accept error: %s", ec.message().c_str());
-    peer.close();
+    peer_accept_->close();
+    peer_accept_.reset();
   }
   this->acceptNext();
 }
@@ -287,14 +297,14 @@ void ServerSocket::onAccept(const boost::system::error_code &ec)
 void ServerSocket::doRemovePeer(PeerSocket *peer)
 {
   PeerSocketContainer::iterator it;
-  for(it=peers_.begin(); it!=peers_.end(); ++it) {
+  for(it=peers_del_.begin(); it!=peers_del_.end(); ++it) {
     if( &(*it) == peer ) {
       try {
         observer_.onPeerDisconnect(peer);
       } catch(const CallbackError &e) {
         LOG("peer disconnect error: %s", e.what());
       }
-      peers_.erase(it);
+      peers_del_.erase(it);
       return;
     }
   }
@@ -336,29 +346,33 @@ void ClientSocket::connect(const char *host, int port, int tout)
   connected_ = true;
 }
 
-void ClientSocket::disconnect()
+void ClientSocket::close()
 {
-  assert( connected_ );
-  this->close();
+  if( !connected_ ) {
+    return; // already closed/closing
+  }
   connected_ = false;
+  PacketSocket::close();
+  observer_.onServerDisconnect();
 }
 
 
 void ClientSocket::processPacket(const netplay::Packet &pkt)
 {
-  //TODO
-  (void)pkt;
-  assert( false );
+  observer_.onClientPacket(pkt);
 }
 
 void ClientSocket::processError(const std::string &msg, const boost::system::error_code &ec)
 {
+  if( !connected_ ) {
+    return; // disconnected by a previous error
+  }
   if( ec ) {
     LOG("Client: %s: %s", msg.c_str(), ec.message().c_str());
   } else {
     LOG("Client: %s", msg.c_str());
   }
-  this->disconnect();
+  this->close();
 }
 
 void ClientSocket::onTimeout(const boost::system::error_code &ec)

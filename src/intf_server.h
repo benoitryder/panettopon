@@ -1,21 +1,28 @@
 #ifndef INTF_SERVER_H_
 #define INTF_SERVER_H_
 
-class BasicServerInterface: public ServerInterface
+#include "server.h"
+
+
+class BasicServerInterface: public ServerInstance::Observer
 {
  public:
+  BasicServerInterface();
   virtual bool run(const Config &cfg);
-  virtual void onChat(const Player *pl, const std::string &msg);
-  virtual void onPlayerJoined(const Player *pl);
-  virtual void onPlayerSetNick(const Player *pl, const std::string &old_nick);
-  virtual void onPlayerReady(const Player *pl);
-  virtual void onPlayerQuit(const Player *pl);
-  virtual void onMatchInit(const Match *m);
-  virtual void onMatchReady(const Match *m);
-  virtual void onMatchStart(const Match *m);
-  virtual void onMatchEnd(const Match *m);
-  virtual void onFieldStep(const Field *fld);
-  virtual void onFieldLost(const Field *fld);
+
+  /** @name ServerInstance::Observer methods. */
+  //@{
+  virtual void onChat(Player *pl, const std::string &msg);
+  virtual void onPlayerJoined(Player *pl);
+  virtual void onPlayerChangeNick(Player *pl, const std::string &nick);
+  virtual void onPlayerReady(Player *pl);
+  virtual void onPlayerQuit(Player *pl);
+  virtual void onStateChange();
+  virtual void onPlayerStep(Player *pl);
+  //@}
+
+ private:
+  ServerInstance *instance_;
 };
 
 #endif

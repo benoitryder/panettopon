@@ -43,7 +43,7 @@ message Player {
   required uint32 plid = 1;
   optional bool ready = 2;
   optional string nick = 3;
-  optional bool out = 11 [default = true]; // disconnected
+  optional bool out = 11 [default = false]; // disconnected
   optional bool join = 12 [default = false]; // new registered player
 }
 

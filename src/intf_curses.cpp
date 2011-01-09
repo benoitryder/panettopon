@@ -8,7 +8,9 @@ namespace curses {
 const std::string CursesInterface::CONF_SECTION("Curses");
 
 
-CursesInterface::CursesInterface(): client_(*this, io_service_), wmsg_(NULL)
+CursesInterface::CursesInterface(): instance_(*this, io_service_),
+    input_scheduler_(instance_, *this, io_service_),
+    player_(NULL), wmsg_(NULL)
 {
   keys_.up    = KEY_UP;
   keys_.down  = KEY_DOWN;
@@ -52,7 +54,9 @@ bool CursesInterface::run(const Config &cfg)
     LOG("terminal initialization failed");
     return false;
   }
-  client_.connect(host.c_str(), port, 3000);
+  instance_.connect(host.c_str(), port, 3000);
+  instance_.newLocalPlayer(cfg.get("Client", "Nick", "Player"));
+
   io_service_.run();
   return true;
 }
@@ -159,133 +163,149 @@ int CursesInterface::str2key(const std::string &s)
 }
 
 
-void CursesInterface::onChat(const Player *pl, const std::string &msg)
+void CursesInterface::onChat(Player *pl, const std::string &msg)
 {
   this->addMessage(0, "%s(%u): %s", pl->nick().c_str(), pl->plid(), msg.c_str());
 }
 
-void CursesInterface::onNotification(Severity sev, const std::string &msg)
+void CursesInterface::onNotification(GameInstance::Severity sev, const std::string &msg)
 {
   int c = 0;
   switch( sev ) {
-    case SEVERITY_MESSAGE: c = 2; break;
-    case SEVERITY_NOTICE:  c = 3; break;
-    case SEVERITY_WARNING: c = 7; break;
-    case SEVERITY_ERROR:   c = 8; break;
+    case GameInstance::SEVERITY_MESSAGE: c = 2; break;
+    case GameInstance::SEVERITY_NOTICE:  c = 3; break;
+    case GameInstance::SEVERITY_WARNING: c = 7; break;
+    case GameInstance::SEVERITY_ERROR:   c = 8; break;
   }
   this->addMessage(c, ">> %s", msg.c_str());
 }
 
-void CursesInterface::onPlayerJoined(const Player *pl)
+void CursesInterface::onServerDisconnect()
 {
-  this->addMessage(2, "%s(%u) joined", pl->nick().c_str(), pl->plid());
+  io_service_.stop();
 }
 
-void CursesInterface::onPlayerSetNick(const Player *pl, const std::string &old_nick)
+void CursesInterface::onPlayerJoined(Player *pl)
+{
+  this->addMessage(2, "%s(%u) joined", pl->nick().c_str(), pl->plid());
+  if( pl->local() ) {
+    assert( player_ == NULL );
+    player_ = pl;
+    instance_.playerSetReady(player_, true);
+  }
+}
+
+void CursesInterface::onPlayerChangeNick(Player *pl, const std::string &old_nick)
 {
   this->addMessage(2, "%s(%u) is now known as %s", old_nick.c_str(),
                    pl->plid(), pl->nick().c_str());
 }
 
-void CursesInterface::onPlayerReady(const Player *pl)
+void CursesInterface::onPlayerReady(Player *pl)
 {
-  if( pl->ready() )
+  if( pl->ready() ) {
     this->addMessage(2, "%s(%u) is ready", pl->nick().c_str(), pl->plid());
-  else
+  } else {
     this->addMessage(2, "%s(%u) is not ready anymore", pl->nick().c_str(), pl->plid());
+  }
 }
 
-void CursesInterface::onPlayerQuit(const Player *pl)
+void CursesInterface::onPlayerQuit(Player *pl)
 {
   this->addMessage(2, "%s(%u) has quit", pl->nick().c_str(), pl->plid());
-}
-
-void CursesInterface::onMatchInit(const Match *)
-{
-  this->addMessage(2, "match init");
-}
-
-void CursesInterface::onMatchReady(const Match *m)
-{
-  assert( fdisplays_.empty() );
-
-  ::clear();
-
-  assert( wmsg_ != NULL );
-  ::delwin(wmsg_);
-  wmsg_ = NULL;
-  wmsg_ = ::subwin(stdscr, LINES-FIELD_HEIGHT-5, 0, FIELD_HEIGHT+5, 0);
-  assert( wmsg_ != NULL ); //XXX error
-  ::scrollok(wmsg_, TRUE);
-
-  Match::FieldContainer::const_iterator it;
-  for( it=m->fields().begin(); it!=m->fields().end(); ++it ) {
-    FieldDisplay *fdp = new FieldDisplay(*it, fdisplays_.size());
-    const Field *fld = &(*it);
-    fdisplays_.insert(fld, fdp);
-    fdp->draw();
+  if( pl == player_ ) {
+    player_ = NULL;
+    io_service_.stop();
   }
-
-  ::redrawwin(stdscr);
-  ::refresh();
 }
 
-void CursesInterface::onMatchStart(const Match *)
+void CursesInterface::onStateChange()
 {
-  this->addMessage(2, "START");
+  if( instance_.state() == GameInstance::STATE_LOBBY ) {
+    input_scheduler_.stop();
+    this->addMessage(2, "match end");
+    fdisplays_.clear();
+    if( player_ != NULL ) {
+      instance_.playerSetReady(player_, true);
+    }
+  } else if( instance_.state() == GameInstance::STATE_INIT ) {
+    this->addMessage(2, "match init");
+
+  } else if( instance_.state() == GameInstance::STATE_READY ) {
+    this->addMessage(2, "match ready");
+    assert( fdisplays_.empty() );
+    ::clear();
+    assert( wmsg_ != NULL );
+    ::delwin(wmsg_);
+    wmsg_ = NULL;
+    wmsg_ = ::subwin(stdscr, LINES-FIELD_HEIGHT-5, 0, FIELD_HEIGHT+5, 0);
+    assert( wmsg_ != NULL ); //XXX error
+    ::scrollok(wmsg_, TRUE);
+
+    GameInstance::PlayerContainer::const_iterator it;
+    for( it=instance_.players().begin(); it!=instance_.players().end(); ++it ) {
+      const Field *fld = (*it).second->field();
+      if( fld == NULL ) {
+        continue;
+      }
+      FieldDisplay *fdp = new FieldDisplay(*this, *fld, fdisplays_.size());
+      fdisplays_.insert(fld, fdp);
+      fdp->draw();
+    }
+    ::redrawwin(stdscr);
+    ::refresh();
+    if( player_ != NULL ) {
+      instance_.playerSetReady(player_, true);
+    }
+
+  } else if( instance_.state() == GameInstance::STATE_GAME ) {
+    LOG("START");
+    input_scheduler_.start();
+  }
 }
 
-void CursesInterface::onMatchEnd(const Match *)
+void CursesInterface::onPlayerStep(Player *pl)
 {
-  this->addMessage(2, "END");
-  fdisplays_.clear();
-}
-
-void CursesInterface::onFieldStep(const Field *fld)
-{
-  FieldDisplayMap::iterator it = fdisplays_.find(fld);
+  FieldDisplayMap::iterator it = fdisplays_.find(pl->field());
   assert( it != fdisplays_.end() );
   (*it).second->step();
   (*it).second->draw();
   ::refresh();
-}
-
-void CursesInterface::onFieldLost(const Field *fld)
-{
-  const Player *pl = fld->player();
-  if( pl != NULL ) {
+  if( pl->field()->lost() ) {
     this->addMessage(2, "%s(%u) lost", pl->nick().c_str(), pl->plid());
   }
 }
 
-KeyState CursesInterface::getNextInput()
+KeyState CursesInterface::getNextInput(Player *)
 {
   GameKey key = GAME_KEY_NONE;
   for(;;) {
     int c = ::getch();
-    if( c == keys_.quit )
+    if( c == keys_.quit ) {
       io_service_.stop(); //XXX
-
-    if( c == ERR )
+    }
+    if( c == ERR ) {
       break;
-    else if( c == keys_.up )
+    } else if( c == keys_.up ) {
       key = GAME_KEY_UP;
-    else if( c == keys_.down )
+    } else if( c == keys_.down ) {
       key = GAME_KEY_DOWN;
-    else if( c == keys_.left )
+    } else if( c == keys_.left ) {
       key = GAME_KEY_LEFT;
-    else if( c == keys_.right)
+    } else if( c == keys_.right) {
       key = GAME_KEY_RIGHT;
-    else if( c == keys_.swap )
+    } else if( c == keys_.swap ) {
       key = GAME_KEY_SWAP;
-    else if( c == keys_.raise )
+    } else if( c == keys_.raise ) {
       key = GAME_KEY_RAISE;
+    }
   }
   return key;
 }
 
 
-FieldDisplay::FieldDisplay(const Field &fld, int slot): field_(fld)
+FieldDisplay::FieldDisplay(CursesInterface &intf, const Field &fld, int slot):
+    intf_(intf), field_(fld)
 {
   assert( slot >= 0 );
 
@@ -328,9 +348,14 @@ void FieldDisplay::draw()
     for( y=1; y<=FIELD_HEIGHT; y++ )
       this->drawBlock(x, y);
 
-  // player nick
+  // player nick (if available)
   ::wcolor_set(wfield_, field_.lost() ? 1 : 2, NULL);
-  mvwaddnstr(wfield_, FIELD_HEIGHT+3, 0, field_.player()->nick().c_str(), FIELD_WIDTH+2);
+  Player *pl = intf_.instance_.player(&field_);
+  const char *nick = "???";
+  if( pl != NULL ) {
+    nick = pl->nick().c_str();
+  }
+  mvwaddnstr(wfield_, FIELD_HEIGHT+3, 0, nick, FIELD_WIDTH+2);
 
   // waiting garbages
 

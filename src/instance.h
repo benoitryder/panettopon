@@ -92,21 +92,19 @@ class GameInstance
   struct Observer
   {
     /// Called on chat message.
-    virtual void onChat(const Player *pl, const std::string &msg) = 0;
+    virtual void onChat(Player *pl, const std::string &msg) = 0;
     /// Called on new player (even local).
-    virtual void onPlayerJoined(const Player *pl) = 0;
+    virtual void onPlayerJoined(Player *pl) = 0;
     /// Called before player's nick change.
-    virtual void onPlayerChangeNick(const Player *pl, const std::string &nick) = 0;
+    virtual void onPlayerChangeNick(Player *pl, const std::string &nick) = 0;
     /// Called after player's ready state change.
-    virtual void onPlayerReady(const Player *pl) = 0;
+    virtual void onPlayerReady(Player *pl) = 0;
     /// Called when a player quit.
-    virtual void onPlayerQuit(const Player *pl) = 0;
-    /// Called on match state update.
-    virtual void onMatchState(const Match *m) = 0;
+    virtual void onPlayerQuit(Player *pl) = 0;
+    /// Called on state update.
+    virtual void onStateChange() = 0;
     /// Called after a player field step.
-    virtual void onPlayerStep(const Player *pl) = 0;
-    /// Called on server notification.
-    virtual void onNotification(Severity sev, const std::string &msg) = 0;
+    virtual void onPlayerStep(Player *pl) = 0;
   };
 
   enum State {
@@ -119,7 +117,7 @@ class GameInstance
 
   typedef boost::ptr_map<PlId, Player> PlayerContainer;
 
-  GameInstance(Observer &obs);
+  GameInstance();
   virtual ~GameInstance();
 
   const PlayerContainer &players() const { return players_; }
@@ -140,18 +138,23 @@ class GameInstance
   virtual void playerQuit(Player *pl) = 0;
   //@}
 
- protected:
   /// Return the player with a given PlId or \e NULL.
   Player *player(PlId plid);
   /// Return the player associated to a given field, or \e NULL.
   Player *player(const Field *fld);
 
+ protected:
   /// Step a player field, update match tick.
   virtual void doStepPlayer(Player *pl, KeyState keys);
   /// Like doStepPlayer() but throw netplay::CallbackError.
   void stepRemotePlayer(Player *pl, KeyState keys);
 
-  Observer &observer_;
+  /**@ brief Observer accessor.
+   *
+   * Virtual to allow subclassed observers with additional callbacks.
+   */
+  virtual Observer &observer() const = 0;
+
   PlayerContainer players_;
   Match match_;
   State state_;
@@ -163,25 +166,26 @@ class GameInstance
  *
  * When running, send appropriate calls to GameInstance::playerStep().
  * Local players are assumed to not change when the game is running.
- *
- * This class must be subclassed to define getNextInput().
  */
 class GameInputScheduler
 {
  public:
-  GameInputScheduler(GameInstance &instance, boost::asio::io_service &io_service);
-  virtual ~GameInputScheduler() {}
+  struct InputProvider {
+    /// Return next input for a given player.
+    virtual KeyState getNextInput(Player *pl) = 0;
+  };
+
+  GameInputScheduler(GameInstance &instance, InputProvider &input_, boost::asio::io_service &io_service);
+  ~GameInputScheduler();
+
+  GameInstance &instance() const { return instance_; }
 
   void start();
   void stop();
 
-  /// Return next input for a given player.
-  virtual KeyState getNextInput(Player *pl) = 0;
-
- protected:
-  GameInstance &instance_;
-
  private:
+  GameInstance &instance_;
+  InputProvider &input_;
   void onInputTick(const boost::system::error_code &ec);
 
   typedef std::vector<Player *> PlayerContainer;
