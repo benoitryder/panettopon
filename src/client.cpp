@@ -1,4 +1,3 @@
-#include <boost/bind.hpp>
 #include <boost/asio/placeholders.hpp>
 #include "client.h"
 #include "game.h"
@@ -8,8 +7,9 @@ namespace asio = boost::asio;
 using namespace asio::ip;
 
 
-ClientInstance::ClientInstance(asio::io_service &io_service):
-    socket_(*this, io_service), timer_(io_service)
+ClientInstance::ClientInstance(GameInstance::Observer &obs, asio::io_service &io_service):
+    GameInstance(obs),
+    socket_(*this, io_service)
 {
 }
 
@@ -34,30 +34,85 @@ void ClientInstance::disconnect()
   socket_.io_service().stop(); //XXX
 }
 
-#if 0
-void ClientInstance::sendChat(const std::string &txt)
+void ClientInstance::newLocalPlayer(const std::string &nick)
 {
-  assert( player_ != NULL );
   netplay::Packet pkt;
-  netplay::Chat *np_chat = pkt.mutable_chat();
-  np_chat->set_plid(player_->plid());
-  np_chat->set_txt(txt);
+  netplay::Player *np_player = pkt.mutable_player();
+  np_player->set_plid(0);
+  np_player->set_join(true);
+  np_player->set_nick(nick);
   socket_.writePacket(pkt);
 }
 
-void ClientInstance::sendReady()
+
+void ClientInstance::playerSetNick(Player *pl, const std::string &nick)
 {
-  assert( player_ != NULL );
-  assert( state_ == STATE_LOBBY || state_ == STATE_READY );
-  if( player_->ready() )
-    return; // already ready, do nothing
+  assert( pl->local() );
+  if( nick == pl->nick() ) {
+    return; // nothing to do
+  }
+  pl->setNick(nick);
+
   netplay::Packet pkt;
   netplay::Player *np_player = pkt.mutable_player();
-  np_player->set_plid(player_->plid());
-  np_player->set_ready(true);
+  np_player->set_plid(pl->plid());
+  np_player->set_nick(nick);
   socket_.writePacket(pkt);
 }
-#endif
+
+void ClientInstance::playerSetReady(Player *pl, bool ready)
+{
+  assert( pl->local() );
+  assert( state_ == STATE_LOBBY || state_ == STATE_READY );
+  assert( ready ); //TODO false not supported yet
+  if( pl->ready() == ready ) {
+    return; // already ready, do nothing
+  }
+  pl->setReady(ready);
+
+  netplay::Packet pkt;
+  netplay::Player *np_player = pkt.mutable_player();
+  np_player->set_plid(pl->plid());
+  np_player->set_ready(ready);
+  socket_.writePacket(pkt);
+}
+
+void ClientInstance::playerSendChat(Player *pl, const std::string &msg)
+{
+  assert( pl->local() );
+
+  netplay::Packet pkt;
+  netplay::Chat *np_chat = pkt.mutable_chat();
+  np_chat->set_plid(pl->plid());
+  np_chat->set_txt(msg);
+  socket_.writePacket(pkt);
+}
+
+void ClientInstance::playerStep(Player *pl, KeyState keys)
+{
+  assert( pl->local() && pl->field() != NULL );
+  Tick tk = pl->field()->tick();
+  this->doStepPlayer(pl, keys);
+
+  // send packet
+  netplay::Packet pkt;
+  netplay::Input *np_input = pkt.mutable_input();
+  np_input->set_plid(pl->plid());
+  np_input->set_tick(tk);
+  np_input->add_keys(keys);
+  socket_.writePacket(pkt);
+}
+
+void ClientInstance::playerQuit(Player *pl)
+{
+  assert( pl->local() );
+
+  netplay::Packet pkt;
+  netplay::Player *np_player = pkt.mutable_player();
+  np_player->set_plid(pl->plid());
+  np_player->set_out(true);
+  socket_.writePacket(pkt);
+}
 
 
 void ClientInstance::onClientPacket(const netplay::Packet &pkt)
@@ -78,7 +133,7 @@ void ClientInstance::onClientPacket(const netplay::Packet &pkt)
     if( pl == NULL ) {
       throw netplay::CallbackError("invalid player");
     }
-    //TODO intf_.onChat(pl, np_chat.txt());
+    observer_.onChat(pl, np_chat.txt());
 
   } else if( pkt.has_notification() ) {
     /*TODO
@@ -88,67 +143,6 @@ void ClientInstance::onClientPacket(const netplay::Packet &pkt)
 
   } else {
     throw netplay::CallbackError("invalid packet field");
-  }
-}
-
-void ClientInstance::onInputTick(const boost::system::error_code &ec)
-{
-  if( ec == asio::error::operation_aborted ) {
-    return;
-  }
-
-  netplay::Packet pkt;
-  netplay::Input *np_input = pkt.mutable_input();
-
-  for(;;) {
-    //XXX optimize the loop on local players with a field to avoid to iterate
-    //on all players?
-    bool more_steps = false;
-    PlayerContainer::iterator it;
-    for(it=players_.begin(); it!=players_.end(); ++it) {
-      Player *pl = (*it).second;
-      Field *fld = pl->field();
-      if( !pl->local() || fld == NULL ) {
-        continue;
-      }
-      // note: all local players still playing should have the same tick
-      // thus, break instead of continue
-      Tick tk = fld->tick();
-      if( tk+1 >= match_.tick() + conf_.tk_lag_max ) {
-        break;
-      }
-      //TODO KeyState keys = intf_.getNextInput();
-
-      // step
-      fld->step(keys);
-      if( tk == match_.tick() ) {
-        // don't update tick_ when it will obviously not be modified
-        //XXX:check condition
-        match_.updateTick();
-      }
-      //TODO intf_.onFieldStep(fld);
-
-      // send packet
-      np_input->set_plid(pl->plid());
-      np_input->set_tick(tk);
-      np_input->add_keys(keys);
-      socket_.writePacket(pkt);
-
-      if( !fld->lost() ) {
-        more_steps = true;
-      }
-    }
-
-    if( more_steps ) {
-      tick_clock_ += boost::posix_time::microseconds(conf_.tk_usec);
-      boost::posix_time::ptime now = boost::posix_time::microsec_clock::universal_time();
-      if( tick_clock_ < now )
-        continue; // loop
-      timer_.expires_from_now(tick_clock_ - now);
-      timer_.async_wait(boost::bind(&ClientInstance::onInputTick, this,
-                                    asio::placeholders::error));
-    }
-    break;
   }
 }
 
@@ -171,12 +165,12 @@ void ClientInstance::processPacketInput(const netplay::Input &pkt_input)
   }
   // skipped frames
   while( fld->tick() < tick ) {
-    this->stepRemoteField(pl, 0);
+    this->stepRemotePlayer(pl, 0);
   }
   // provided frames
   const int keys_nb = pkt_input.keys_size();
   for( int i=0; i<keys_nb; i++ ) {
-    this->stepRemoteField(pl, pkt_input.keys(i));
+    this->stepRemotePlayer(pl, pkt_input.keys(i));
   }
 }
 
@@ -371,10 +365,10 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
     PlId plid = pl->plid(); // use a temporary value to help g++
     players_.insert(plid, pl);
 
-    //TODO intf_.onPlayerJoined(pl);
+    observer_.onPlayerJoined(pl);
 
   } else if( pkt_pl.out() ) {
-    //TODO intf_.onPlayerQuit(pl);
+    observer_.onPlayerQuit(pl);
     if( pl->field() != NULL ) {
       match_.removeField(pl->field());
       pl->setField(NULL);
@@ -383,13 +377,13 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
 
   } else {
     if( pkt_pl.has_nick() ) {
-      //TODO intf_.onPlayerSetNick(pl, pl->nick());
+      observer_.onPlayerChangeNick(pl, pkt_pl.nick());
       pl->setNick( pkt_pl.nick() );
     }
     if( pkt_pl.has_ready() ) {
       //XXX check whether change is valid?
       pl->setReady(pkt_pl.ready());
-      //TODO intf_.onPlayerReady(pl);
+      observer_.onPlayerReady(pl);
     }
   }
 }
@@ -426,20 +420,15 @@ void ClientInstance::processPacketServer(const netplay::Server &pkt_server)
         this->stopMatch();
       }
       state_ = new_state;
-      //TODO intf_.onMatchInit(&match_);
+      observer_.onMatchState(&match_);
     } else if( new_state == STATE_READY ) {
       state_ = new_state;
       // init fields for match
       match_.start();
-      //TODO intf_.onMatchReady(&match_);
+      observer_.onMatchState(&match_);
     } else if( new_state == STATE_GAME ) {
       state_ = new_state;
-      //TODO intf_.onMatchStart(&match_);
-      boost::posix_time::time_duration dt = boost::posix_time::microseconds(conf_.tk_usec);
-      tick_clock_ = boost::posix_time::microsec_clock::universal_time() + dt;
-      timer_.expires_from_now(dt);
-      timer_.async_wait(boost::bind(&ClientInstance::onInputTick, this,
-                                    asio::placeholders::error));
+      observer_.onMatchState(&match_);
     } else if( new_state == STATE_LOBBY ) {
       this->stopMatch();
     }
@@ -451,13 +440,12 @@ void ClientInstance::stopMatch()
 {
   LOG("stop match");
 
-  timer_.cancel();
   PlayerContainer::iterator it;
   for(it=players_.begin(); it!=players_.end(); ++it) {
     (*it).second->setField(NULL);
   }
   match_.stop();
   state_ = STATE_LOBBY;
-  //TODO intf_.onMatchEnd(&match_);
+  observer_.onMatchState(&match_);
 }
 

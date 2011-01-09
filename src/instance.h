@@ -1,7 +1,9 @@
 #ifndef INSTANCE_H_
 #define INSTANCE_H_
 
+#include <boost/asio/io_service.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
+#include "monotone_timer.hpp"
 #include "game.h"
 
 // undef Windows conflicting macro
@@ -76,28 +78,37 @@ class Player
 
 
 
-/// Observer for instance events.
-struct InstanceObserver
-{
-  virtual void onChat(const Player *pl, const std::string &msg) = 0;
-  virtual void onPlayerJoined(const Player *pl) = 0;
-  /// Called before player's nick change.
-  virtual void onPlayerChangeNick(const Player *pl, const std::string &nick) = 0;
-  virtual void onPlayerReady(const Player *pl) = 0;
-  virtual void onPlayerQuit(const Player *pl) = 0;
-  virtual void onMatchInit(const Match *m) = 0;
-  virtual void onMatchReady(const Match *m) = 0;
-  virtual void onMatchStart(const Match *m) = 0;
-  virtual void onMatchEnd(const Match *m) = 0;
-  virtual void onFieldStep(const Player *pl) = 0;
-  virtual void onFieldLost(const Player *pl) = 0;
-};
-
-
 /// Manage a game instance.
 class GameInstance
 {
- protected:
+ public:
+  enum Severity {
+    SEVERITY_MESSAGE = 1,
+    SEVERITY_NOTICE,
+    SEVERITY_WARNING,
+    SEVERITY_ERROR,
+  };
+
+  struct Observer
+  {
+    /// Called on chat message.
+    virtual void onChat(const Player *pl, const std::string &msg) = 0;
+    /// Called on new player (even local).
+    virtual void onPlayerJoined(const Player *pl) = 0;
+    /// Called before player's nick change.
+    virtual void onPlayerChangeNick(const Player *pl, const std::string &nick) = 0;
+    /// Called after player's ready state change.
+    virtual void onPlayerReady(const Player *pl) = 0;
+    /// Called when a player quit.
+    virtual void onPlayerQuit(const Player *pl) = 0;
+    /// Called on match state update.
+    virtual void onMatchState(const Match *m) = 0;
+    /// Called after a player field step.
+    virtual void onPlayerStep(const Player *pl) = 0;
+    /// Called on server notification.
+    virtual void onNotification(Severity sev, const std::string &msg) = 0;
+  };
+
   enum State {
     STATE_NONE = 0,  ///< not started
     STATE_LOBBY,
@@ -106,11 +117,28 @@ class GameInstance
     STATE_GAME,
   };
 
- public:
-  GameInstance();
+  typedef boost::ptr_map<PlId, Player> PlayerContainer;
+
+  GameInstance(Observer &obs);
   virtual ~GameInstance();
 
+  const PlayerContainer &players() const { return players_; }
+  PlayerContainer &players() { return players_; }
+  const Match &match() const { return match_; }
+  State state() const { return state_; }
   const ServerConf &conf() const { return conf_; }
+
+  /** @name Local player operations.
+   *
+   * Modify the player and send packets, if needed.
+   */
+  //@{
+  virtual void playerSetNick(Player *pl, const std::string &nick) = 0;
+  virtual void playerSetReady(Player *pl, bool ready) = 0;
+  virtual void playerSendChat(Player *pl, const std::string &msg) = 0;
+  virtual void playerStep(Player *pl, KeyState keys) = 0;
+  virtual void playerQuit(Player *pl) = 0;
+  //@}
 
  protected:
   /// Return the player with a given PlId or \e NULL.
@@ -118,17 +146,48 @@ class GameInstance
   /// Return the player associated to a given field, or \e NULL.
   Player *player(const Field *fld);
 
-  /** @brief Step a remote player field.
-   *
-   * netplay::Callback exceptions are thrown on error.
-   */
-  void stepRemoteField(Player *pl, KeyState keys);
+  /// Step a player field, update match tick.
+  virtual void doStepPlayer(Player *pl, KeyState keys);
+  /// Like doStepPlayer() but throw netplay::CallbackError.
+  void stepRemotePlayer(Player *pl, KeyState keys);
 
-  typedef boost::ptr_map<PlId, Player> PlayerContainer;
+  Observer &observer_;
   PlayerContainer players_;
   Match match_;
   State state_;
   ServerConf conf_;
+};
+
+
+/** @brief Input tick scheduler.
+ *
+ * When running, send appropriate calls to GameInstance::playerStep().
+ * Local players are assumed to not change when the game is running.
+ *
+ * This class must be subclassed to define getNextInput().
+ */
+class GameInputScheduler
+{
+ public:
+  GameInputScheduler(GameInstance &instance, boost::asio::io_service &io_service);
+  virtual ~GameInputScheduler() {}
+
+  void start();
+  void stop();
+
+  /// Return next input for a given player.
+  virtual KeyState getNextInput(Player *pl) = 0;
+
+ protected:
+  GameInstance &instance_;
+
+ private:
+  void onInputTick(const boost::system::error_code &ec);
+
+  typedef std::vector<Player *> PlayerContainer;
+  PlayerContainer players_;  ///< Local players still playing.
+  boost::posix_time::ptime tick_clock_;
+  boost::asio::monotone_timer timer_;
 };
 
 

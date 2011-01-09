@@ -1,6 +1,5 @@
 #include <unistd.h>
 #include <cstdio>
-#include "interface.h"
 #include "config.h"
 #include "log.h"
 #include "optget.h"

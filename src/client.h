@@ -10,7 +10,7 @@ class ClientInstance: public GameInstance,
     public netplay::ClientSocket::Observer
 {
  public:
-  ClientInstance(boost::asio::io_service &io_service);
+  ClientInstance(GameInstance::Observer &obs, boost::asio::io_service &io_service);
   virtual ~ClientInstance();
 
   /** @brief Connect to a server.
@@ -22,12 +22,21 @@ class ClientInstance: public GameInstance,
   /// Close connection to the server.
   void disconnect();
 
-#if 0
-  /// Send a chat message.
-  void sendChat(const std::string &txt);
-  /// Tell the server we are ready.
-  void sendReady();
-#endif
+  /** @brief Create a new local player.
+   *
+   * The player will not be actually created until the server replies. Events
+   * should be observed to known when player creation is completed.
+   */
+  void newLocalPlayer(const std::string &nick);
+
+  /** @name Local player operations. */
+  //@{
+  virtual void playerSetNick(Player *pl, const std::string &nick);
+  virtual void playerSetReady(Player *pl, bool ready);
+  virtual void playerSendChat(Player *pl, const std::string &msg);
+  virtual void playerStep(Player *pl, KeyState keys);
+  virtual void playerQuit(Player *pl);
+  //@}
 
   /** @name ClientSocket::Observer interface. */
   //@{
@@ -48,14 +57,9 @@ class ClientInstance: public GameInstance,
   void processPacketServer(const netplay::Server &pkt_server);
   //@}
 
-  void onInputTick(const boost::system::error_code &ec);
-
   void stopMatch();
 
   netplay::ClientSocket socket_;
-  KeyState next_input_;
-  boost::posix_time::ptime tick_clock_;
-  boost::asio::monotone_timer timer_; ///< timer for game ticks
 };
 
 #endif

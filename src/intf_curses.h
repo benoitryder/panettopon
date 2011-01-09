@@ -1,7 +1,6 @@
 #ifndef INTF_CURSES_H_
 #define INTF_CURSES_H_
 
-#include "interface.h"
 #include "client.h"
 
 // curses last to avoid naming conflicts due to bloody curses macros

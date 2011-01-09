@@ -18,7 +18,7 @@ class ServerInstance: public GameInstance,
   static const std::string CONF_SECTION;
 
  public:
-  ServerInstance(boost::asio::io_service &io_service);
+  ServerInstance(GameInstance::Observer &obs, boost::asio::io_service &io_service);
   virtual ~ServerInstance();
 
   /// Set configuration values from a config file.
@@ -29,6 +29,15 @@ class ServerInstance: public GameInstance,
 
   /// Create and return a new local player.
   Player *newLocalPlayer(const std::string &nick);
+
+  /** @name Local player operations. */
+  //@{
+  virtual void playerSetNick(Player *pl, const std::string &nick);
+  virtual void playerSetReady(Player *pl, bool ready);
+  virtual void playerSendChat(Player *pl, const std::string &msg);
+  virtual void playerStep(Player *pl, KeyState keys);
+  virtual void playerQuit(Player *pl);
+  //@}
 
   /** @name ServerSocket::Observer interface. */
   //@{
@@ -72,11 +81,10 @@ class ServerInstance: public GameInstance,
   void processPacketInput(netplay::PeerSocket *peer, const netplay::Input &pkt_input);
   void processPacketGarbage(netplay::PeerSocket *peer, const netplay::Garbage &pkt_gb);
   void processPacketPlayer(netplay::PeerSocket *peer, const netplay::Player &pkt_pl);
-
-  /// Step a remote player field, process garbages, send Input packets.
-  void stepRemoteField(Player *pl, KeyState keys);
-
   //@}
+
+  /// Step a player field, process garbages, send Input packets.
+  virtual void doStepPlayer(Player *pl, KeyState keys);
 
   /// Change state, reset ready flags if needed, send packets.
   void setState(State state);

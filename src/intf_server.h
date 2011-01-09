@@ -1,8 +1,6 @@
 #ifndef INTF_SERVER_H_
 #define INTF_SERVER_H_
 
-#include "interface.h"
-
 class BasicServerInterface: public ServerInterface
 {
  public:
