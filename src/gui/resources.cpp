@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include "util.h"
 #include "gui/resources.h"
 
@@ -53,9 +54,13 @@ DisplayRes::DisplayRes():
 void DisplayRes::load(const std::string &res_path)
 {
   //TODO check number of available colors
+#define LOAD_FROM_FILE(img,name) \
+  if( !(img).LoadFromFile(res_path+"/" name ".png") ) { \
+    throw std::runtime_error("Failed to load " name); \
+  }
 
   // Block tiles (and block size)
-  img_bk_color_.LoadFromFile(res_path+"/BkColor-map.png");
+  LOAD_FROM_FILE(img_bk_color_, "BkColor-map");
   bk_size = img_bk_color_.GetHeight()/5;
   int nb_colors = img_bk_color_.GetWidth()/bk_size;
   tiles_bk_color.resize(nb_colors); // create sprites, uninitialized
@@ -69,7 +74,7 @@ void DisplayRes::load(const std::string &res_path)
   }
 
   // Garbages
-  img_bk_gb_.LoadFromFile(res_path+"/BkGarbage-map.png");
+  LOAD_FROM_FILE(img_bk_gb_, "BkGarbage-map");
   for(int x=0; x<4; x++) {
     for(int y=0; y<4; y++) {
       tiles_gb.tiles[x][y].create(img_bk_gb_, 8, 4, x, y);
@@ -85,20 +90,20 @@ void DisplayRes::load(const std::string &res_path)
   tiles_gb.flash .create(img_bk_gb_, 4, 2, 3, 1);
 
   // Frame
-  img_field_frame.LoadFromFile(res_path+"/Field-Frame.png");
+  LOAD_FROM_FILE(img_field_frame, "Field-Frame");
 
   // Cursor
-  img_cursor_.LoadFromFile(res_path+"/SwapCursor.png");
+  LOAD_FROM_FILE(img_cursor_, "SwapCursor");
   tiles_cursor[0].create(img_cursor_, 1, 2, 0, 0);
   tiles_cursor[1].create(img_cursor_, 1, 2, 0, 1);
 
   // Labels
-  img_labels_.LoadFromFile(res_path+"/Labels.png");
+  LOAD_FROM_FILE(img_labels_, "Labels");
   tiles_labels.combo.create(img_labels_, 2, 1, 0, 0);
   tiles_labels.chain.create(img_labels_, 2, 1, 1, 0);
 
   // Waiting garbages
-  img_gb_waiting_.LoadFromFile(res_path+"/GbWaiting-map.png");
+  LOAD_FROM_FILE(img_gb_waiting_, "GbWaiting-map");
   const size_t gb_waiting_sx = FIELD_WIDTH/2; // on 2 rows
   for(int i=0; i<FIELD_WIDTH; i++) {
     tiles_gb_waiting.blocks[i].create(img_gb_waiting_, gb_waiting_sx+1, 2, i%gb_waiting_sx, i/gb_waiting_sx);

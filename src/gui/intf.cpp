@@ -13,7 +13,7 @@ namespace gui {
 const std::string GuiInterface::CONF_SECTION("GUI");
 
 
-GuiInterface::GuiInterface(): client_(*this, io_service_),
+GuiInterface::GuiInterface(): instance_(*this, io_service_),
     redraw_timer_(io_service_)
 {
   keys_.up    = sf::Key::Up;
@@ -98,7 +98,8 @@ bool GuiInterface::run(const Config &cfg)
   redraw_timer_.async_wait(boost::bind(&GuiInterface::onRedrawTick, this,
                                        asio::placeholders::error));
 
-  client_.connect(host.c_str(), port, 3000);
+  instance_.connect(host.c_str(), port, 3000);
+  instance_.newLocalPlayer(cfg.get("Client", "Nick", "Player"));
   io_service_.run();
   return true;
 }
@@ -213,92 +214,104 @@ sf::Key::Code GuiInterface::str2key(const std::string &s)
 }
 
 
-void GuiInterface::onChat(const Player *pl, const std::string &msg)
+void GuiInterface::onChat(Player *pl, const std::string &msg)
 {
   this->addMessage(0, "%s(%u): %s", pl->nick().c_str(), pl->plid(), msg.c_str());
 }
 
-void GuiInterface::onNotification(Severity sev, const std::string &msg)
+void GuiInterface::onNotification(GameInstance::Severity sev, const std::string &msg)
 {
   int c = 0;
   switch( sev ) {
-    case SEVERITY_MESSAGE: c = 2; break;
-    case SEVERITY_NOTICE:  c = 3; break;
-    case SEVERITY_WARNING: c = 7; break;
-    case SEVERITY_ERROR:   c = 8; break;
+    case GameInstance::SEVERITY_MESSAGE: c = 2; break;
+    case GameInstance::SEVERITY_NOTICE:  c = 3; break;
+    case GameInstance::SEVERITY_WARNING: c = 7; break;
+    case GameInstance::SEVERITY_ERROR:   c = 8; break;
   }
   this->addMessage(c, ">> %s", msg.c_str());
 }
 
-void GuiInterface::onPlayerJoined(const Player *pl)
+void GuiInterface::onServerDisconnect()
+{
+  io_service_.stop();
+}
+
+void GuiInterface::onPlayerJoined(Player *pl)
 {
   this->addMessage(2, "%s(%u) joined", pl->nick().c_str(), pl->plid());
 }
 
-void GuiInterface::onPlayerSetNick(const Player *pl, const std::string &old_nick)
+void GuiInterface::onPlayerChangeNick(Player *pl, const std::string &nick)
 {
-  this->addMessage(2, "%s(%u) is now known as %s", old_nick.c_str(),
-                   pl->plid(), pl->nick().c_str());
+  this->addMessage(2, "%s(%u) is now known as %s",
+                   pl->nick().c_str(), pl->plid(), nick.c_str());
 }
 
-void GuiInterface::onPlayerReady(const Player *pl)
+void GuiInterface::onPlayerReady(Player *pl)
 {
-  if( pl->ready() )
+  if( pl->ready() ) {
     this->addMessage(2, "%s(%u) is ready", pl->nick().c_str(), pl->plid());
-  else
+  } else {
     this->addMessage(2, "%s(%u) is not ready anymore", pl->nick().c_str(), pl->plid());
-}
-
-void GuiInterface::onPlayerQuit(const Player *pl)
-{
-  this->addMessage(2, "%s(%u) has quit", pl->nick().c_str(), pl->plid());
-}
-
-void GuiInterface::onMatchInit(const Match *)
-{
-  this->addMessage(2, "match init");
-}
-
-void GuiInterface::onMatchReady(const Match *m)
-{
-  assert( fdisplays_.empty() );
-
-  Match::FieldContainer::const_iterator it;
-  for( it=m->fields().begin(); it!=m->fields().end(); ++it ) {
-    FieldDisplay *fdp = new FieldDisplay(*it, res_, fdisplays_.size());
-    const Field *fld = &(*it);
-    fdisplays_.insert(fld, fdp);
   }
 }
 
-void GuiInterface::onMatchStart(const Match *)
+void GuiInterface::onPlayerQuit(Player *pl)
 {
-  this->addMessage(2, "START");
+  this->addMessage(2, "%s(%u) has quit", pl->nick().c_str(), pl->plid());
+  /*TODO
+  if( pl == player_ ) {
+    player_ = NULL;
+    io_service_.stop();
+  }
+  */
 }
 
-void GuiInterface::onMatchEnd(const Match *)
+void GuiInterface::onStateChange()
 {
-  this->addMessage(2, "END");
-  fdisplays_.clear();
+  if( instance_.state() == GameInstance::STATE_LOBBY ) {
+    //TODO input_scheduler_.stop();
+    this->addMessage(2, "match end");
+    fdisplays_.clear();
+    /*TODO
+    if( player_ != NULL ) {
+      instance_.playerSetReady(player_, true);
+    }
+    */
+  } else if( instance_.state() == GameInstance::STATE_INIT ) {
+    this->addMessage(2, "match init");
+
+  } else if( instance_.state() == GameInstance::STATE_READY ) {
+    assert( fdisplays_.empty() );
+
+    GameInstance::PlayerContainer::const_iterator it;
+    for( it=instance_.players().begin(); it!=instance_.players().end(); ++it ) {
+      const Field *fld = (*it).second->field();
+      if( fld == NULL ) {
+        continue;
+      }
+      FieldDisplay *fdp = new FieldDisplay(*fld, res_, fdisplays_.size());
+      fdisplays_.insert(fld, fdp);
+    }
+
+  } else if( instance_.state() == GameInstance::STATE_GAME ) {
+    LOG("START");
+    //TODO input_scheduler_.start();
+  }
 }
 
-void GuiInterface::onFieldStep(const Field *fld)
+void GuiInterface::onPlayerStep(Player *pl)
 {
-  FieldDisplayMap::iterator it = fdisplays_.find(fld);
+  FieldDisplayMap::iterator it = fdisplays_.find(pl->field());
   assert( it != fdisplays_.end() );
   (*it).second->step();
-}
-
-void GuiInterface::onFieldLost(const Field *fld)
-{
-  const Player *pl = fld->player();
-  if( pl != NULL ) {
+  if( pl->field()->lost() ) {
     this->addMessage(2, "%s(%u) lost", pl->nick().c_str(), pl->plid());
   }
 }
 
 
-KeyState GuiInterface::getNextInput()
+KeyState GuiInterface::getNextInput(Player *)
 {
   const sf::Input &input = window_.GetInput();
   int key = GAME_KEY_NONE;

@@ -71,7 +71,7 @@ inline int64_t game_time(void)
   return 1000000*t.QuadPart/freq.QuadPart;
 #else
   struct timeval tv;
-  gettimeofday(&tv, NULL);
+  gettimeofday(&tv, 0);
   return tv.tv_sec*1000000 + tv.tv_usec;
 #endif
 }

@@ -2,7 +2,6 @@
 #define GUI_INTF_H_
 
 #include "monotone_timer.hpp"
-#include "interface.h"
 #include "client.h"
 #include "gui/resources.h"
 
@@ -14,7 +13,8 @@ namespace gui {
 class FieldDisplay;
 
 
-class GuiInterface: public ClientInterface
+class GuiInterface: public ClientInstance::Observer,
+    public GameInputScheduler::InputProvider
 {
  protected:
   static const std::string CONF_SECTION;
@@ -23,19 +23,20 @@ class GuiInterface: public ClientInterface
   GuiInterface();
   virtual ~GuiInterface();
   virtual bool run(const Config &cfg);
-  virtual void onChat(const Player *pl, const std::string &msg);
-  virtual void onNotification(Severity sev, const std::string &msg);
-  virtual void onPlayerJoined(const Player *pl);
-  virtual void onPlayerSetNick(const Player *pl, const std::string &old_nick);
-  virtual void onPlayerReady(const Player *pl);
-  virtual void onPlayerQuit(const Player *pl);
-  virtual void onMatchInit(const Match *m);
-  virtual void onMatchReady(const Match *m);
-  virtual void onMatchStart(const Match *m);
-  virtual void onMatchEnd(const Match *m);
-  virtual void onFieldStep(const Field *fld);
-  virtual void onFieldLost(const Field *fld);
-  virtual KeyState getNextInput();
+
+  /** @name ClientInstance::Observer methods. */
+  //@{
+  virtual void onChat(Player *pl, const std::string &msg);
+  virtual void onPlayerJoined(Player *pl);
+  virtual void onPlayerChangeNick(Player *pl, const std::string &nick);
+  virtual void onPlayerReady(Player *pl);
+  virtual void onPlayerQuit(Player *pl);
+  virtual void onStateChange();
+  virtual void onPlayerStep(Player *pl);
+  virtual void onNotification(GameInstance::Severity, const std::string &);
+  virtual void onServerDisconnect();
+  //@}
+  virtual KeyState getNextInput(Player *pl);
 
   /// Add a message in given color.
   void addMessage(int color, const char *fmt, ...);
@@ -43,7 +44,7 @@ class GuiInterface: public ClientInterface
  private:
 
   boost::asio::io_service io_service_;
-  Client client_;
+  ClientInstance instance_;
   sf::RenderWindow window_;
 
   typedef boost::ptr_map<const Field *, FieldDisplay> FieldDisplayMap;

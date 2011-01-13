@@ -195,10 +195,10 @@ void CursesInterface::onPlayerJoined(Player *pl)
   }
 }
 
-void CursesInterface::onPlayerChangeNick(Player *pl, const std::string &old_nick)
+void CursesInterface::onPlayerChangeNick(Player *pl, const std::string &nick)
 {
-  this->addMessage(2, "%s(%u) is now known as %s", old_nick.c_str(),
-                   pl->plid(), pl->nick().c_str());
+  this->addMessage(2, "%s(%u) is now known as %s",
+                   pl->nick().c_str(), pl->plid(), nick.c_str());
 }
 
 void CursesInterface::onPlayerReady(Player *pl)
