@@ -5,7 +5,9 @@
 #include "optget.h"
 #include "util.h"
 
+#ifndef WITHOUT_INTF_SERVER
 #include "intf_server.h"
+#endif
 #ifndef WITHOUT_INTF_CURSES
 #include "intf_curses.h"
 #endif
@@ -41,7 +43,9 @@ void usage(void)
       "\n"
       " -c  --conf       configuration file\n"
       " -i  --interface  interface type, from the following\n"
+#ifndef WITHOUT_INTF_SERVER
       "                      server  simple server runner\n"
+#endif
 #ifndef WITHOUT_INTF_GUI
       "                      gui     graphic interface\n"
 #endif
@@ -177,10 +181,12 @@ int main(int /*argc*/, char **argv)
   ::srand( game_time() );
 
   const std::string intfstr = cfg.get("Global", "Interface", "server");
+#ifndef WITHOUT_INTF_SERVER
   if( intfstr == "server" ) {
     BasicServerInterface intf;
     ret = intf.run(cfg);
   } else
+#endif
 #ifndef WITHOUT_INTF_CURSES
   if( intfstr == "curses" ) {
     curses::CursesInterface intf;
