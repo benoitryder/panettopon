@@ -94,18 +94,35 @@ endif()
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS netplay.proto)
 
+# Windows: .rc/.res for the .exe icon
+if(WIN32)
+  set(ICON_OBJ panettopon.rc)
+  if(MINGW)
+    set(CMAKE_RC_COMPILER_INIT windres)
+    enable_language(RC)
+    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
+  endif(MINGW)
+  set_source_files_properties(${ICON_OBJ} PROPERTIES
+    OBJECT_DEPENDS ${CMAKE_BINARY_DIR}/res/panettopon.ico
+    )
+else()
+  set(ICON_OBJ)
+endif()
+
 add_executable(panettopon
   main.cpp
   instance.cpp client.cpp server.cpp netplay.cpp game.cpp
   config.cpp log.cpp optget.cpp
   ${PNP_INTF_SRCS}
   ${PROTO_SRCS} ${PROTO_HDRS}
+  ${ICON_OBJ}
   )
 target_link_libraries(panettopon ${PNP_LIBS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})  # for *.pb.h
 
 if(WIN32)
+  add_dependencies(panettopon icon)
   target_link_libraries(panettopon ws2_32 mswsock)
 endif()
 

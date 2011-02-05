@@ -4,7 +4,6 @@
 #include "config.h"
 #include "log.h"
 #include "gui/intf.h"
-#include "gui/icon.h"
 
 namespace asio = boost::asio;
 
@@ -113,8 +112,15 @@ bool GuiInterface::initDisplay()
       "Panettopon",
       conf_.fullscreen ? sf::Style::Fullscreen : sf::Style::Resize|sf::Style::Close
       );
-  window_.SetIcon(icon.width, icon.height, icon.data);
   window_.EnableKeyRepeat(false);
+
+  // load icon
+  sf::Image icon;
+  if( icon.LoadFromFile(conf_.res_path+"/icon-32.png") ) {
+    window_.SetIcon(icon.GetWidth(), icon.GetHeight(), icon.GetPixelsPtr());
+  } else {
+    // ignore error (not fatal)
+  }
 
   sf::View view = window_.GetDefaultView();
   view.Zoom(conf_.zoom);
