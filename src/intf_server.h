@@ -8,7 +8,7 @@ class BasicServerInterface: public ServerInstance::Observer
 {
  public:
   BasicServerInterface();
-  virtual bool run(const Config &cfg);
+  bool run(const Config &cfg);
 
   /** @name ServerInstance::Observer methods. */
   //@{

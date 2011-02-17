@@ -22,7 +22,7 @@ class GuiInterface: public ClientInstance::Observer,
  public:
   GuiInterface();
   virtual ~GuiInterface();
-  virtual bool run(const Config &cfg);
+  bool run(const Config &cfg);
 
   /** @name ClientInstance::Observer methods. */
   //@{
