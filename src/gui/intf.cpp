@@ -1,9 +1,9 @@
 #include <cstdio>
 #include <boost/bind.hpp>
 #include <boost/asio/placeholders.hpp>
-#include "config.h"
-#include "log.h"
-#include "gui/intf.h"
+#include "../config.h"
+#include "../log.h"
+#include "intf.h"
 
 namespace asio = boost::asio;
 

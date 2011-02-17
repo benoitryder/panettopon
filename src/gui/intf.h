@@ -1,9 +1,9 @@
 #ifndef GUI_INTF_H_
 #define GUI_INTF_H_
 
-#include "monotone_timer.hpp"
-#include "client.h"
-#include "gui/resources.h"
+#include "../monotone_timer.hpp"
+#include "../client.h"
+#include "resources.h"
 
 
 class Config;

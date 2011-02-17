@@ -1,6 +1,6 @@
 #include <stdexcept>
-#include "util.h"
-#include "gui/resources.h"
+#include "../util.h"
+#include "resources.h"
 
 namespace gui {
 
