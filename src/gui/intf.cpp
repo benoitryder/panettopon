@@ -170,6 +170,12 @@ void GuiInterface::onRedrawTick(const boost::system::error_code &ec)
     return;
   }
 
+  // compute time of next redraw now, to not add up redraw processing time to
+  // redraw period
+  boost::posix_time::ptime next_redraw =
+      boost::posix_time::microsec_clock::universal_time()
+      + boost::posix_time::milliseconds(conf_.redraw_dt);
+
   sf::Event event;
   while(window_.GetEvent(event)) {
     if( event.Type == sf::Event::Closed ||
@@ -182,9 +188,7 @@ void GuiInterface::onRedrawTick(const boost::system::error_code &ec)
 
   this->redraw();
 
-  //TODO use a thread and SFML timing methods
-  boost::posix_time::time_duration dt = boost::posix_time::milliseconds(conf_.redraw_dt);
-  redraw_timer_.expires_from_now(dt);
+  redraw_timer_.expires_from_now(next_redraw - boost::posix_time::microsec_clock::universal_time());
   redraw_timer_.async_wait(boost::bind(&GuiInterface::onRedrawTick, this,
                                        asio::placeholders::error));
 }
