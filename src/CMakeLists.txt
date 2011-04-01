@@ -24,6 +24,27 @@ include_directories(${PROTOBUF_INCLUDE_DIRS})
 link_directories(${PROTOBUF_LIBRARY_DIRS})
 list(APPEND PNP_LIBS ${PROTOBUF_LIBRARIES})
 
+# DSO linking changes may require to link with some "extra" libraries
+include(CheckFunctionExists)
+include(CheckLibraryExists)
+
+check_function_exists("clock_gettime" HAVE_CLOCK_GETTIME)
+if(NOT HAVE_CLOCK_GETTIME)
+  check_library_exists("rt" "clock_gettime" "" HAVE_RT_CLOCK_GETTIME)
+  if(HAVE_RT_CLOCK_GETTIME)
+    list(APPEND PNP_LIBS "-lrt")
+  endif()
+endif()
+
+check_function_exists("pthread_getspecific" HAVE_PTHREAD_GETSPECIFIC)
+if(NOT HAVE_PTHREAD_GETSPECIFIC)
+  check_library_exists("pthread" "pthread_getspecific" "" HAVE_PTHREAD_PTHREAD_GETSPECIFIC)
+  if(HAVE_PTHREAD_PTHREAD_GETSPECIFIC)
+    list(APPEND PNP_LIBS "-lpthread")
+  endif()
+endif()
+
+
 
 ##
 ##  Interfaces
