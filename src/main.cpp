@@ -12,7 +12,7 @@
 #include "intf_curses.h"
 #endif
 #ifndef WITHOUT_INTF_GUI
-#include "gui/intf.h"
+#include "gui/interface.h"
 #endif
 
 /// Default config file.
