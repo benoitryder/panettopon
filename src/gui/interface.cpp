@@ -1,7 +1,7 @@
 #include <boost/bind.hpp>
 #include <boost/asio/placeholders.hpp>
 #include "interface.h"
-#include "screen.h"
+#include "screen_start.h"
 #include "../config.h"
 #include "../log.h"
 
@@ -45,7 +45,7 @@ bool GuiInterface::run(const Config &cfg)
   res_mgr_.init(cfg.get(CONF_SECTION, "ResPath", "./res"));
 
   // create the first screen
-  this->swapScreen(/*TODO*/NULL);
+  this->swapScreen(new ScreenStart(*this));
 
   // start display loop
   if( !this->initDisplay() ) {

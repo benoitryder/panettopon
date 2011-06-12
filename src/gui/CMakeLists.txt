@@ -13,6 +13,7 @@ endif()
 set(PNP_INTF_GUI_SRCS
   interface.cpp resources.cpp screen.cpp widget.cpp
   wcontainer.cpp wbutton.cpp
+  screen_start.cpp
   PARENT_SCOPE
   )
 
