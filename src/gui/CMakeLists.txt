@@ -12,7 +12,7 @@ endif()
 
 set(PNP_INTF_GUI_SRCS
   interface.cpp resources.cpp screen.cpp widget.cpp
-  wcontainer.cpp
+  wcontainer.cpp wbutton.cpp
   PARENT_SCOPE
   )
 
