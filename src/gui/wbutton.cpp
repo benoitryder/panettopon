@@ -22,16 +22,16 @@ void WButton::setColor(const sf::Color &color)
   bg_.SetColor(color);
 }
 
-void WButton::setPosition(float x, float y)
-{
-  caption_.SetPosition(x, y);
-  bg_.SetPosition(x, y);
-}
-
 void WButton::draw(sf::RenderTarget &target)
 {
   target.Draw(bg_);
   target.Draw(caption_);
+}
+
+void WButton::setPosition(float x, float y)
+{
+  caption_.SetPosition(x, y);
+  bg_.SetPosition(x, y);
 }
 
 
