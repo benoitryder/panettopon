@@ -94,6 +94,24 @@ class WLabel: public Widget
 };
 
 
+class WEntry: public Widget
+{
+ public:
+  WEntry(float width, float height); //XXX:temp
+  void setText(const std::string &caption);
+  virtual void draw(sf::RenderTarget &target);
+  virtual void setPosition(float x, float y);
+  virtual bool onInputEvent(const sf::Event &);
+  std::string text() const { return text_.GetString(); }
+
+ private:
+  sf::Text text_;
+  sf::Shape bg_;
+  sf::Shape cursor_;
+  unsigned int cursor_pos_;
+};
+
+
 }
 
 #endif
