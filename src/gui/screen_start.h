@@ -2,8 +2,7 @@
 #define GUI_SCREEN_START_H_
 
 #include "screen_menu.h"
-#include "wcontainer.h"
-#include "wbutton.h"
+#include "widget.h"
 
 namespace gui {
 

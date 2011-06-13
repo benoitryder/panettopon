@@ -3,7 +3,7 @@
 
 #include <map>
 #include "screen.h"
-#include "wcontainer.h"
+#include "widget.h"
 
 namespace gui {
 

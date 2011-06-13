@@ -1,6 +1,5 @@
 #include "screen_start.h"
 #include "interface.h"
-#include "wbutton.h"
 
 namespace gui {
 
