@@ -1,6 +1,7 @@
 #ifndef GUI_SCREEN_MENU_H_
 #define GUI_SCREEN_MENU_H_
 
+#include <map>
 #include "screen.h"
 #include "wcontainer.h"
 
