@@ -3,6 +3,7 @@
 
 #include "screen_menu.h"
 #include "wcontainer.h"
+#include "wbutton.h"
 
 namespace gui {
 
@@ -16,6 +17,9 @@ class ScreenStart: public ScreenMenu
   ScreenStart(GuiInterface &intf);
   virtual void enter();
   virtual bool onInputEvent(const sf::Event &ev);
+
+ protected:
+  WButton *button_exit_;
 };
 
 
