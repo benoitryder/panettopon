@@ -1,8 +1,7 @@
 #ifndef GUI_SCREEN_START_H_
 #define GUI_SCREEN_START_H_
 
-#include "screen_menu.h"
-#include "widget.h"
+#include "screen.h"
 
 namespace gui {
 

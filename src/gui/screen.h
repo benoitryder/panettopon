@@ -1,8 +1,10 @@
 #ifndef GUI_SCREEN_H_
 #define GUI_SCREEN_H_
 
+#include <map>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
+#include "widget.h"
 
 namespace gui {
 
@@ -25,6 +27,21 @@ class Screen
 
  protected:
   GuiInterface &intf_;
+};
+
+
+/// Screen with widgets, used for menus.
+class ScreenMenu: public Screen
+{
+ public:
+  ScreenMenu(GuiInterface &intf);
+  virtual void redraw();
+  virtual bool onInputEvent(const sf::Event &ev);
+  void focus(Widget *w);
+
+ protected:
+  WContainer container_;
+  Widget *focused_;
 };
 
 
