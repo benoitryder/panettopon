@@ -77,6 +77,7 @@ void WButton::setPosition(float x, float y)
 
 void WButton::focus(bool focused)
 {
+  Widget::focus(focused);
   //XXX:temp bad behavior: override user's setColor()
   this->setColor(focused ? sf::Color::Red : sf::Color::White);
 }
