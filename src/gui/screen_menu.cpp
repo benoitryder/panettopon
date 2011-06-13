@@ -5,7 +5,7 @@ namespace gui {
 
 
 ScreenMenu::ScreenMenu(GuiInterface &intf):
-    Screen(intf)
+    Screen(intf), focused_(NULL)
 {
 }
 
@@ -18,8 +18,23 @@ void ScreenMenu::redraw()
 
 bool ScreenMenu::onInputEvent(const sf::Event &ev)
 {
-  (void)ev;
+  if( focused_ ) {
+    if( focused_->onInputEvent(ev) ) {
+      return true;
+    }
+  }
   return false;
+}
+
+void ScreenMenu::focus(Widget *w)
+{
+  if( focused_ ) {
+    focused_->focus(false);
+  }
+  focused_ = w;
+  if( focused_ ) {
+    focused_->focus(true);
+  }
 }
 
 

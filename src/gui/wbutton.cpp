@@ -34,6 +34,12 @@ void WButton::setPosition(float x, float y)
   bg_.SetPosition(x, y);
 }
 
+void WButton::focus(bool focused)
+{
+  //XXX:temp bad behavior: override user's setColor()
+  this->setColor(focused ? sf::Color::Red : sf::Color::White);
+}
+
 
 }
 

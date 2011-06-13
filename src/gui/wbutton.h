@@ -16,6 +16,7 @@ class WButton: public Widget
   void setColor(const sf::Color &color);
   virtual void draw(sf::RenderTarget &target);
   virtual void setPosition(float x, float y);
+  virtual void focus(bool focused);
 
  private:
   sf::Text caption_;  ///< Button caption

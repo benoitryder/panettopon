@@ -16,9 +16,11 @@ class ScreenMenu: public Screen
   ScreenMenu(GuiInterface &intf);
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event &ev);
+  void focus(Widget *w);
 
  protected:
   WContainer container_;
+  Widget *focused_;
 };
 
 

@@ -3,7 +3,11 @@
 namespace gui {
 
 
-Widget::Widget() {}
+Widget::Widget():
+    focused_(false)
+{
+}
+
 Widget::~Widget() {}
 
 

@@ -15,6 +15,11 @@ class Widget
   virtual void draw(sf::RenderTarget &target) = 0;
   virtual void setPosition(float x, float y) = 0;
   virtual bool onInputEvent(const sf::Event &) { return false; }
+  bool focused() const { return focused_; }
+  virtual void focus(bool focused) { focused_ = focused; }
+
+ private:
+  bool focused_;
 };
 
 
