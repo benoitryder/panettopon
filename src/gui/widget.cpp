@@ -83,5 +83,42 @@ void WButton::focus(bool focused)
 }
 
 
+WLabel::WLabel(): align_(0)
+{
+  text_.SetColor(sf::Color::White);
+}
+
+void WLabel::setText(const std::string &text)
+{
+  text_.SetString(text);
+  this->setTextAlign(align_); // recompute origin
+}
+
+void WLabel::draw(sf::RenderTarget &target)
+{
+  target.Draw(text_);
+}
+
+void WLabel::setPosition(float x, float y)
+{
+  text_.SetPosition(x, y);
+}
+
+void WLabel::setTextAlign(int align)
+{
+  sf::FloatRect r = text_.GetRect();
+  float x;
+  if( align == 0 ) {
+    x = r.Width / 2;
+  } else if( align < 0 ) {
+    x = 0;
+  } else if( align > 0 ) {
+    x = r.Width;
+  }
+  text_.SetOrigin(x, r.Height/2);
+  align_ = align;
+}
+
+
 }
 

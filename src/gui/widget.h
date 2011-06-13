@@ -79,6 +79,21 @@ class WButton: public Widget
 };
 
 
+class WLabel: public Widget
+{
+ public:
+  WLabel();
+  void setText(const std::string &caption);
+  virtual void draw(sf::RenderTarget &target);
+  virtual void setPosition(float x, float y);
+  void setTextAlign(int align);
+
+ private:
+  sf::Text text_;
+  int align_;  ///< Text alignement (-1, 0, 1).
+};
+
+
 }
 
 #endif
