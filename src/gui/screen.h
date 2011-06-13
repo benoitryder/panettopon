@@ -18,7 +18,10 @@ class Screen
   virtual void enter();
   virtual void exit();
   virtual void redraw();
-  virtual void onInputEvent(const sf::Event &ev) = 0;
+  /** @brief Process an event.
+   * @return true if processed, false otherwise.
+   */
+  virtual bool onInputEvent(const sf::Event &ev) = 0;
 
  protected:
   GuiInterface &intf_;
