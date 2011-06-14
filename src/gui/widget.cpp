@@ -46,7 +46,8 @@ void WContainer::Drawable::Render(sf::RenderTarget &target, sf::Renderer &) cons
 
 
 WButton::WButton(float width, float height):
-    bg_(sf::Shape::Rectangle(-width/2,-height/2,width,height, sf::Color::Black, 2, sf::Color::White))
+    bg_(sf::Shape::Rectangle(-width/2,-height/2,width,height, sf::Color::Black, 2, sf::Color::White)),
+    callback_(NULL)
 {
   this->setColor(sf::Color::White);
 }
@@ -74,6 +75,19 @@ void WButton::setPosition(float x, float y)
 {
   caption_.SetPosition(x, y);
   bg_.SetPosition(x, y);
+}
+
+bool WButton::onInputEvent(const sf::Event &ev)
+{
+  if( ev.Type == sf::Event::KeyPressed ) {
+    if( ev.Key.Code == sf::Key::Return ) {
+      if( callback_ ) {
+        callback_();
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 void WButton::focus(bool focused)

@@ -2,6 +2,7 @@
 #define GUI_WIDGET_H_
 
 #include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/function.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/Text.hpp>
@@ -71,11 +72,15 @@ class WButton: public Widget
   void setColor(const sf::Color &color);
   virtual void draw(sf::RenderTarget &target);
   virtual void setPosition(float x, float y);
+  virtual bool onInputEvent(const sf::Event &);
   virtual void focus(bool focused);
+  typedef boost::function<void()> Callback;
+  void setCallback(Callback cb) { callback_ = cb; }
 
  private:
   sf::Text caption_;  ///< Button caption
   sf::Shape bg_;  ///< Background shape
+  Callback callback_;
 };
 
 
