@@ -20,6 +20,20 @@ class ScreenStart: public ScreenMenu
   WButton *button_exit_;
 };
 
+/// Server creation (choose port).
+class ScreenCreateServer: public ScreenMenu
+{
+ public:
+  ScreenCreateServer(GuiInterface &intf);
+  virtual void enter();
+  virtual bool onInputEvent(const sf::Event &ev);
+
+  void submit();
+
+ private:
+  WEntry *entry_port_;
+};
+
 
 }
 

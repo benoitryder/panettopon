@@ -35,8 +35,9 @@ void ScreenStart::enter()
         buttons[ i+1>=button_nb ? 0 : i+1 ],
         NULL, NULL );
   }
-
   button_exit_ = buttons[button_nb-1];
+
+  buttons[1]->setCallback(boost::bind(&GuiInterface::swapScreen, &intf_, new ScreenCreateServer(intf_)));
   button_exit_->setCallback(boost::bind(&GuiInterface::swapScreen, &intf_, (gui::Screen*)NULL));
 
   this->focus(buttons[0]);
@@ -58,6 +59,58 @@ bool ScreenStart::onInputEvent(const sf::Event &ev)
     }
   }
   return false;
+}
+
+
+ScreenCreateServer::ScreenCreateServer(GuiInterface &intf):
+    ScreenMenu(intf)
+{
+}
+
+void ScreenCreateServer::enter()
+{
+  WLabel *label = new WLabel();
+  label->setText("Port");
+  label->setTextAlign(1);
+  label->setPosition(-20, -30);
+
+  entry_port_ = new WEntry(100, 40);
+  entry_port_->setText("2426"); //XXX define default value in a macro
+  entry_port_->setPosition(50, -30);
+
+  WButton *button = new WButton(200, 50);
+  button->setCaption("Create");
+  button->setPosition(0, 30);
+
+  container_.widgets.push_back(label);
+  container_.widgets.push_back(entry_port_);
+  container_.widgets.push_back(button);
+
+  entry_port_->setNeighbors(button, button, NULL, NULL);
+  button->setNeighbors(entry_port_, entry_port_, NULL, NULL);
+
+  this->focus(entry_port_);
+}
+
+bool ScreenCreateServer::onInputEvent(const sf::Event &ev)
+{
+  if( ScreenMenu::onInputEvent(ev) ) {
+    return true;
+  }
+  if( ev.Type == sf::Event::KeyPressed ) {
+    if( ev.Key.Code == sf::Key::Escape ) {
+      intf_.swapScreen(new ScreenStart(intf_));
+      return true;
+    } else if( ev.Key.Code == sf::Key::Return ) {
+      this->submit();
+    }
+  }
+  return false;
+}
+
+void ScreenCreateServer::submit()
+{
+  //TODO create the ServerInstance
 }
 
 
