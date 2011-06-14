@@ -1,3 +1,4 @@
+#include <boost/bind.hpp>
 #include "screen_start.h"
 #include "interface.h"
 
@@ -36,6 +37,8 @@ void ScreenStart::enter()
   }
 
   button_exit_ = buttons[button_nb-1];
+  button_exit_->setCallback(boost::bind(&GuiInterface::swapScreen, &intf_, (gui::Screen*)NULL));
+
   this->focus(buttons[0]);
 }
 
