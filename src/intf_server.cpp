@@ -16,7 +16,7 @@ bool BasicServerInterface::run(const Config &cfg)
   ServerInstance instance(*this, io_service);
   instance_ = &instance;
   instance.loadConf(cfg);
-  instance.startServer( cfg.getInt("Global", "Port", 20102) );
+  instance.startServer( cfg.getInt("Global", "Port", 2426) );
   io_service.run();
   instance_ = NULL;
   return true;
