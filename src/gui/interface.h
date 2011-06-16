@@ -5,6 +5,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include "resources.h"
+#include "../client.h"
 #include "../monotone_timer.hpp"
 
 class Config;
@@ -14,7 +15,7 @@ namespace gui {
 class Screen;
 
 
-class GuiInterface
+class GuiInterface: public ClientInstance::Observer
 {
  protected:
   static const std::string CONF_SECTION;
@@ -33,6 +34,19 @@ class GuiInterface
   void swapScreen(Screen *screen);
 
   sf::RenderWindow &window() { return window_; }
+
+  /** @name Instance observer methods. */
+  //@{
+  virtual void onChat(Player *pl, const std::string &msg);
+  virtual void onPlayerJoined(Player *pl);
+  virtual void onPlayerChangeNick(Player *pl, const std::string &nick);
+  virtual void onPlayerReady(Player *pl);
+  virtual void onPlayerQuit(Player *pl);
+  virtual void onStateChange();
+  virtual void onPlayerStep(Player *pl);
+  virtual void onNotification(GameInstance::Severity, const std::string &);
+  virtual void onServerDisconnect();
+  //@}
 
  private:
   boost::asio::io_service io_service_;

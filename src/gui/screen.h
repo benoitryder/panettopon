@@ -5,6 +5,7 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 #include "widget.h"
+#include "../instance.h"
 
 namespace gui {
 
@@ -24,6 +25,19 @@ class Screen
    * @return true if processed, false otherwise.
    */
   virtual bool onInputEvent(const sf::Event &ev) = 0;
+
+  /** @name Instance observer methods. */
+  //@{
+  virtual void onChat(Player *, const std::string &) {}
+  virtual void onPlayerJoined(Player *) {}
+  virtual void onPlayerChangeNick(Player *, const std::string &) {}
+  virtual void onPlayerReady(Player *) {}
+  virtual void onPlayerQuit(Player *) {}
+  virtual void onStateChange() {}
+  virtual void onPlayerStep(Player *) {}
+  virtual void onNotification(GameInstance::Severity, const std::string &) {}
+  virtual void onServerDisconnect() {}
+  //@}
 
  protected:
   GuiInterface &intf_;

@@ -78,6 +78,53 @@ void GuiInterface::swapScreen(Screen *screen)
 }
 
 
+void GuiInterface::onChat(Player *pl, const std::string &msg)
+{
+  screen_->onChat(pl, msg);
+}
+
+void GuiInterface::onPlayerJoined(Player *pl)
+{
+  screen_->onPlayerJoined(pl);
+}
+
+void GuiInterface::onPlayerChangeNick(Player *pl, const std::string &nick)
+{
+  screen_->onPlayerChangeNick(pl, nick);
+}
+
+void GuiInterface::onPlayerReady(Player *pl)
+{
+  screen_->onPlayerReady(pl);
+}
+
+void GuiInterface::onPlayerQuit(Player *pl)
+{
+  screen_->onPlayerQuit(pl);
+}
+
+void GuiInterface::onStateChange()
+{
+  screen_->onStateChange();
+}
+
+void GuiInterface::onPlayerStep(Player *pl)
+{
+  screen_->onPlayerStep(pl);
+}
+
+void GuiInterface::onNotification(GameInstance::Severity sev, const std::string &msg)
+{
+  screen_->onNotification(sev, msg);
+}
+
+void GuiInterface::onServerDisconnect()
+{
+  screen_->onServerDisconnect();
+}
+
+
+
 bool GuiInterface::initDisplay()
 {
   //TODO handle errors/exceptions
