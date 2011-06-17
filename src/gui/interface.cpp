@@ -135,6 +135,21 @@ void GuiInterface::startServer(int port)
   server_instance_->startServer(port);
 }
 
+void GuiInterface::stopInstance()
+{
+  if( instance_.get() == NULL ) {
+    return; // nothing to do
+  }
+  if( server_instance_ ) {
+    server_instance_->stopServer();
+    server_instance_ = NULL;
+  } else if( client_instance_ ) {
+    client_instance_->disconnect();
+    client_instance_ = NULL;
+  }
+  instance_.reset();
+}
+
 
 
 bool GuiInterface::initDisplay()

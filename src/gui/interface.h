@@ -52,6 +52,11 @@ class GuiInterface: public ClientInstance::Observer
 
   /// Create and start a server.
   void startServer(int port);
+  /** @brief Destroy current GameInstance, if any.
+   *
+   * Running server or client is closed and freed.
+   */
+  void stopInstance();
 
  private:
   boost::asio::io_service io_service_;
