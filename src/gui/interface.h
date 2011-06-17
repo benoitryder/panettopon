@@ -9,6 +9,8 @@
 #include "../monotone_timer.hpp"
 
 class Config;
+class ServerInstance;
+class ClientInstance;
 
 namespace gui {
 
@@ -48,6 +50,9 @@ class GuiInterface: public ClientInstance::Observer
   virtual void onServerDisconnect();
   //@}
 
+  /// Create and start a server.
+  void startServer(int port);
+
  private:
   boost::asio::io_service io_service_;
 
@@ -67,6 +72,10 @@ class GuiInterface: public ClientInstance::Observer
   boost::scoped_ptr<Screen> screen_;
   boost::scoped_ptr<Screen> prev_screen_;
   boost::asio::monotone_timer redraw_timer_;
+
+  std::auto_ptr<GameInstance> instance_;
+  ServerInstance *server_instance_;
+  ClientInstance *client_instance_;
 };
 
 

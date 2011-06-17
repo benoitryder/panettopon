@@ -3,6 +3,8 @@
 #include "interface.h"
 #include "screen_menus.h"
 #include "../config.h"
+#include "../server.h"
+#include "../client.h"
 #include "../log.h"
 
 namespace asio = boost::asio;
@@ -13,7 +15,8 @@ namespace gui {
 const std::string GuiInterface::CONF_SECTION("GUI");
 
 GuiInterface::GuiInterface():
-    redraw_timer_(io_service_)
+    redraw_timer_(io_service_),
+    instance_(NULL), server_instance_(NULL), client_instance_(NULL)
 {
   conf_.redraw_dt = (1000.0/60.0);
   conf_.fullscreen = false;
@@ -121,6 +124,15 @@ void GuiInterface::onNotification(GameInstance::Severity sev, const std::string 
 void GuiInterface::onServerDisconnect()
 {
   screen_->onServerDisconnect();
+}
+
+
+void GuiInterface::startServer(int port)
+{
+  assert( instance_.get() == NULL );
+  server_instance_ = new ServerInstance(*this, io_service_);
+  instance_.reset(server_instance_);
+  server_instance_->startServer(port);
 }
 
 
