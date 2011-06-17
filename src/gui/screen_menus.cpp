@@ -13,6 +13,8 @@ ScreenStart::ScreenStart(GuiInterface &intf):
 
 void ScreenStart::enter()
 {
+  intf_.stopInstance();
+
   // create buttons
   const char *labels[] = {
     "Join server",
