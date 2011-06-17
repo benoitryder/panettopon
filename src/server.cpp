@@ -458,7 +458,7 @@ void ServerInstance::setState(State state)
       (*it).second->setReady(false);
   }
   state_ = state;
-  observer_.onStateChange();
+  observer_.onStateChange(state);
 }
 
 void ServerInstance::prepareMatch()

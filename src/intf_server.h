@@ -17,7 +17,7 @@ class BasicServerInterface: public ServerInstance::Observer
   virtual void onPlayerChangeNick(Player *pl, const std::string &nick);
   virtual void onPlayerReady(Player *pl);
   virtual void onPlayerQuit(Player *pl);
-  virtual void onStateChange();
+  virtual void onStateChange(GameInstance::State state);
   virtual void onPlayerStep(Player *pl);
   //@}
 

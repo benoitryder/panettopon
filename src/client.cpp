@@ -424,15 +424,15 @@ void ClientInstance::processPacketServer(const netplay::Server &pkt_server)
         this->stopMatch();
       }
       state_ = new_state;
-      observer_.onStateChange();
+      observer_.onStateChange(state_);
     } else if( new_state == STATE_READY ) {
       state_ = new_state;
       // init fields for match
       match_.start();
-      observer_.onStateChange();
+      observer_.onStateChange(state_);
     } else if( new_state == STATE_GAME ) {
       state_ = new_state;
-      observer_.onStateChange();
+      observer_.onStateChange(state_);
     } else if( new_state == STATE_LOBBY ) {
       this->stopMatch();
     }
@@ -450,6 +450,6 @@ void ClientInstance::stopMatch()
   }
   match_.stop();
   state_ = STATE_LOBBY;
-  observer_.onStateChange();
+  observer_.onStateChange(state_);
 }
 

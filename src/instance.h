@@ -82,6 +82,14 @@ class Player
 class GameInstance
 {
  public:
+  enum State {
+    STATE_NONE = 0,  ///< not started
+    STATE_LOBBY,
+    STATE_INIT,
+    STATE_READY,
+    STATE_GAME,
+  };
+
   enum Severity {
     SEVERITY_MESSAGE = 1,
     SEVERITY_NOTICE,
@@ -102,17 +110,9 @@ class GameInstance
     /// Called when a player quit.
     virtual void onPlayerQuit(Player *pl) = 0;
     /// Called on state update.
-    virtual void onStateChange() = 0;
+    virtual void onStateChange(State state) = 0;
     /// Called after a player field step.
     virtual void onPlayerStep(Player *pl) = 0;
-  };
-
-  enum State {
-    STATE_NONE = 0,  ///< not started
-    STATE_LOBBY,
-    STATE_INIT,
-    STATE_READY,
-    STATE_GAME,
   };
 
   typedef boost::ptr_map<PlId, Player> PlayerContainer;

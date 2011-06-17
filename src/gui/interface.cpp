@@ -103,9 +103,9 @@ void GuiInterface::onPlayerQuit(Player *pl)
   screen_->onPlayerQuit(pl);
 }
 
-void GuiInterface::onStateChange()
+void GuiInterface::onStateChange(GameInstance::State state)
 {
-  screen_->onStateChange();
+  screen_->onStateChange(state);
 }
 
 void GuiInterface::onPlayerStep(Player *pl)

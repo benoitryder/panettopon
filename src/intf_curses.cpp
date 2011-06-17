@@ -219,19 +219,19 @@ void CursesInterface::onPlayerQuit(Player *pl)
   }
 }
 
-void CursesInterface::onStateChange()
+void CursesInterface::onStateChange(GameInstance::State state)
 {
-  if( instance_.state() == GameInstance::STATE_LOBBY ) {
+  if( state == GameInstance::STATE_LOBBY ) {
     input_scheduler_.stop();
     this->addMessage(2, "match end");
     fdisplays_.clear();
     if( player_ != NULL ) {
       instance_.playerSetReady(player_, true);
     }
-  } else if( instance_.state() == GameInstance::STATE_INIT ) {
+  } else if( state == GameInstance::STATE_INIT ) {
     this->addMessage(2, "match init");
 
-  } else if( instance_.state() == GameInstance::STATE_READY ) {
+  } else if( state == GameInstance::STATE_READY ) {
     this->addMessage(2, "match ready");
     assert( fdisplays_.empty() );
     ::clear();
@@ -258,7 +258,7 @@ void CursesInterface::onStateChange()
       instance_.playerSetReady(player_, true);
     }
 
-  } else if( instance_.state() == GameInstance::STATE_GAME ) {
+  } else if( state == GameInstance::STATE_GAME ) {
     LOG("START");
     input_scheduler_.start();
   }

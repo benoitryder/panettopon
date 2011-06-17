@@ -52,15 +52,15 @@ void BasicServerInterface::onPlayerQuit(Player *pl)
   LOG("%s(%u) has quit", pl->nick().c_str(), pl->plid());
 }
 
-void BasicServerInterface::onStateChange()
+void BasicServerInterface::onStateChange(GameInstance::State state)
 {
-  if( instance_->state() == GameInstance::STATE_LOBBY ) {
+  if( state == GameInstance::STATE_LOBBY ) {
     LOG("match end");
-  } else if( instance_->state() == GameInstance::STATE_INIT ) {
+  } else if( state == GameInstance::STATE_INIT ) {
     LOG("match init");
-  } else if( instance_->state() == GameInstance::STATE_READY ) {
+  } else if( state == GameInstance::STATE_READY ) {
     LOG("match ready");
-  } else if( instance_->state() == GameInstance::STATE_GAME ) {
+  } else if( state == GameInstance::STATE_GAME ) {
     LOG("match start");
   }
 }

@@ -33,7 +33,7 @@ class Screen
   virtual void onPlayerChangeNick(Player *, const std::string &) {}
   virtual void onPlayerReady(Player *) {}
   virtual void onPlayerQuit(Player *) {}
-  virtual void onStateChange() {}
+  virtual void onStateChange(GameInstance::State) {}
   virtual void onPlayerStep(Player *) {}
   virtual void onNotification(GameInstance::Severity, const std::string &) {}
   virtual void onServerDisconnect() {}
