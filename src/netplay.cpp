@@ -273,7 +273,9 @@ void ServerSocket::acceptNext()
 
 void ServerSocket::onAccept(const boost::system::error_code &ec)
 {
-  if( !ec ) {
+  if( ec == asio::error::operation_aborted ) {
+    return;
+  } else if( !ec ) {
     peers_.push_back(peer_accept_);
     PeerSocket &peer = peers_.back();
     try {
