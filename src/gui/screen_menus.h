@@ -28,10 +28,20 @@ class ScreenCreateServer: public ScreenMenu
   virtual void enter();
   virtual bool onInputEvent(const sf::Event &ev);
 
+ protected:
   void submit();
 
  private:
   WEntry *entry_port_;
+};
+
+/// Lobby (game preparation).
+class ScreenLobby: public ScreenMenu
+{
+ public:
+  ScreenLobby(GuiInterface &intf);
+  virtual void enter();
+  virtual bool onInputEvent(const sf::Event &ev);
 };
 
 

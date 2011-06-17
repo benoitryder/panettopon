@@ -1,6 +1,7 @@
 #include <boost/bind.hpp>
 #include "screen_menus.h"
 #include "interface.h"
+#include "../log.h"
 
 namespace gui {
 
@@ -110,7 +111,40 @@ bool ScreenCreateServer::onInputEvent(const sf::Event &ev)
 
 void ScreenCreateServer::submit()
 {
-  //TODO create the ServerInstance
+  std::string port_str = entry_port_->text();
+  char *port_end;
+  long port = strtol(port_str.c_str(), &port_end, 0);
+  if( port_end != port_str.c_str()+port_str.size() || port <= 0 || port > 65535 ) {
+    LOG("invalid port value: %s", port_str.c_str());
+  } else {
+    intf_.startServer(port);
+    intf_.swapScreen(new ScreenLobby(intf_));
+  }
+}
+
+
+ScreenLobby::ScreenLobby(GuiInterface &intf):
+    ScreenMenu(intf)
+{
+}
+
+void ScreenLobby::enter()
+{
+  //TODO
+}
+
+bool ScreenLobby::onInputEvent(const sf::Event &ev)
+{
+  if( ScreenMenu::onInputEvent(ev) ) {
+    return true;
+  }
+  if( ev.Type == sf::Event::KeyPressed ) {
+    if( ev.Key.Code == sf::Key::Escape ) {
+      intf_.swapScreen(new ScreenStart(intf_));
+      return true;
+    }
+  }
+  return false;
 }
 
 
