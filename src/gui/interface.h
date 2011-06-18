@@ -26,6 +26,7 @@ class GuiInterface: public ClientInstance::Observer
   GuiInterface();
   virtual ~GuiInterface();
   bool run(const Config &cfg);
+  boost::asio::io_service &io_service() { return io_service_; }
 
   /** @brief Change the active screen.
    *
