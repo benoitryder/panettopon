@@ -39,9 +39,12 @@ class ScreenCreateServer: public ScreenMenu
 class ScreenLobby: public ScreenMenu
 {
  public:
-  ScreenLobby(GuiInterface &intf);
+  ScreenLobby(GuiInterface &intf, Player *pl);
   virtual void enter();
   virtual bool onInputEvent(const sf::Event &ev);
+
+ private:
+  Player *player_; ///< Controlled player
 };
 
 

@@ -6,8 +6,9 @@
 namespace gui {
 
 
-ScreenGame::ScreenGame(GuiInterface &intf):
+ScreenGame::ScreenGame(GuiInterface &intf, Player *pl):
     Screen(intf),
+    player_(pl),
     input_scheduler_(*intf.instance(), *this, intf.io_service())
 {
   keys_.up    = sf::Key::Up;
@@ -20,16 +21,6 @@ ScreenGame::ScreenGame(GuiInterface &intf):
 
 void ScreenGame::enter()
 {
-  GameInstance *instance = intf_.instance();
-  //XXX:temp
-  // retrieve the first local player as the controlled one
-  GameInstance::PlayerContainer::iterator it;
-  for( it=instance->players().begin(); it!=instance->players().end(); ++it ) {
-    if( (*it).second->local() ) {
-      player_ = (*it).second;
-      break;
-    }
-  }
   assert( player_ );
 }
 

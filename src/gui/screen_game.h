@@ -11,7 +11,7 @@ class GuiInterface;
 class ScreenGame: public Screen, public GameInputScheduler::InputProvider
 {
  public:
-  ScreenGame(GuiInterface &intf);
+  ScreenGame(GuiInterface &intf, Player *pl);
   virtual void enter();
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event &ev);
@@ -20,7 +20,7 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
   virtual KeyState getNextInput(Player *pl);
 
  private:
-  Player *player_;      // local controlled player
+  Player *player_;  ///< Local controlled player
   GameInputScheduler input_scheduler_;
 
   /// Key bindings.

@@ -122,21 +122,25 @@ void ScreenCreateServer::submit()
     LOG("invalid port value: %s", port_str.c_str());
   } else {
     intf_.startServer(port);
-    intf_.server()->newLocalPlayer("Server"); //XXX temporary player name
-    intf_.swapScreen(new ScreenLobby(intf_));
+    Player *pl = intf_.server()->newLocalPlayer("Server"); //XXX temporary player name
+    intf_.swapScreen(new ScreenLobby(intf_, pl));
   }
 }
 
 
-ScreenLobby::ScreenLobby(GuiInterface &intf):
-    ScreenMenu(intf)
+ScreenLobby::ScreenLobby(GuiInterface &intf, Player *pl):
+    ScreenMenu(intf),
+    player_(pl)
 {
 }
 
 void ScreenLobby::enter()
 {
-  intf_.swapScreen(new ScreenGame(intf_));
-  //TODO
+  assert( player_ );
+  GameInstance *instance = intf_.instance();
+  assert( instance );
+  instance->playerSetReady(player_, true);
+  intf_.swapScreen(new ScreenGame(intf_, player_));
 }
 
 bool ScreenLobby::onInputEvent(const sf::Event &ev)
