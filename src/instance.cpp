@@ -138,6 +138,7 @@ void GameInputScheduler::onInputTick(const boost::system::error_code &ec)
       Player *pl = (*it);
       Field *fld = pl->field();
       if( !pl->local() || fld == NULL ) {
+        ++it;
         continue;
       }
       // note: all local players still playing should have the same tick
