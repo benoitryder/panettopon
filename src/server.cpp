@@ -102,6 +102,8 @@ void ServerInstance::playerSetReady(Player *pl, bool ready)
   np_player->set_plid(pl->plid());
   np_player->set_ready(ready);
   socket_.broadcastPacket(pkt);
+
+  this->checkAllPlayersReady();
 }
 
 void ServerInstance::playerSendChat(Player *pl, const std::string &msg)
@@ -414,21 +416,8 @@ void ServerInstance::processPacketPlayer(netplay::PeerSocket *peer, const netpla
       socket_.broadcastPacket(pkt_send);
     }
 
-    // another player is ready, check if all are
     if( become_ready ) {
-      unsigned int nb_ready = 0;
-      PlayerContainer::const_iterator it;
-      for( it=players_.begin(); it!=players_.end(); ++it ) {
-        if( (*it).second->ready() )
-          nb_ready++;
-      }
-      if( nb_ready == conf_.pl_nb_max ) {
-        if( state_ == STATE_LOBBY ) {
-          this->prepareMatch();
-        } else if( state_ == STATE_READY ) {
-          this->startMatch();
-        }
-      }
+      this->checkAllPlayersReady();
     }
   }
 }
@@ -441,6 +430,24 @@ Player *ServerInstance::checkPeerPlayer(PlId plid, const netplay::PeerSocket *pe
     throw netplay::CallbackError("invalid player");
   }
   return this->player(plid);
+}
+
+
+void ServerInstance::checkAllPlayersReady()
+{
+  unsigned int nb_ready = 0;
+  PlayerContainer::const_iterator it;
+  for( it=players_.begin(); it!=players_.end(); ++it ) {
+    if( (*it).second->ready() )
+      nb_ready++;
+  }
+  if( nb_ready == conf_.pl_nb_max ) {
+    if( state_ == STATE_LOBBY ) {
+      this->prepareMatch();
+    } else if( state_ == STATE_READY ) {
+      this->startMatch();
+    }
+  }
 }
 
 

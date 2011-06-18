@@ -92,6 +92,9 @@ class ServerInstance: public GameInstance,
   void processPacketPlayer(netplay::PeerSocket *peer, const netplay::Player &pkt_pl);
   //@}
 
+  /// Check if all players are ready and take actions
+  void checkAllPlayersReady();
+
   /// Step a player field, process garbages, send Input packets.
   virtual void doStepPlayer(Player *pl, KeyState keys);
 
