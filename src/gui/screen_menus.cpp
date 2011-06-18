@@ -105,10 +105,10 @@ bool ScreenCreateServer::onInputEvent(const sf::Event &ev)
   if( ev.Type == sf::Event::KeyPressed ) {
     if( ev.Key.Code == sf::Key::Escape ) {
       intf_.swapScreen(new ScreenStart(intf_));
-      return true;
     } else if( ev.Key.Code == sf::Key::Return ) {
       this->submit();
     }
+    return true;
   }
   return false;
 }
