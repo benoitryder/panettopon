@@ -24,6 +24,11 @@ void ScreenGame::enter()
   assert( player_ );
 }
 
+void ScreenGame::exit()
+{
+  input_scheduler_.stop();
+}
+
 void ScreenGame::redraw()
 {
   sf::RenderWindow &w = intf_.window();
@@ -46,7 +51,6 @@ bool ScreenGame::onInputEvent(const sf::Event &ev)
 void ScreenGame::onStateChange(GameInstance::State state)
 {
   if( state == GameInstance::STATE_LOBBY ) {
-    input_scheduler_.stop();
     intf_.swapScreen(new ScreenLobby(intf_, player_));
   } else if( state == GameInstance::STATE_READY ) {
     intf_.instance()->playerSetReady(player_, true);

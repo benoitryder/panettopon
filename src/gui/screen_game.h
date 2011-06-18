@@ -13,6 +13,7 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
  public:
   ScreenGame(GuiInterface &intf, Player *pl);
   virtual void enter();
+  virtual void exit();
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event &ev);
   virtual void onStateChange(GameInstance::State state);
