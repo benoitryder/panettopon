@@ -136,29 +136,33 @@ void GameInputScheduler::onInputTick(const boost::system::error_code &ec)
     PlayerContainer::iterator it;
     for(it=players_.begin(); it!=players_.end(); ) {
       Player *pl = (*it);
-      Field *fld = pl->field();
-      if( !pl->local() || fld == NULL ) {
+      if( !pl->local() || pl->field() == NULL ) {
         ++it;
         continue;
       }
       // note: all local players still playing should have the same tick
       // thus, break instead of continue
-      Tick tk = fld->tick();
+      Tick tk = pl->field()->tick();
       if( tk+1 >= instance_.match().tick() + instance_.conf().tk_lag_max ) {
         break;
       }
+      // note: if this step ends the match, a lot of things may happen
+      // be careful when checking/using current state
       instance_.playerStep(pl, input_.getNextInput(pl));
+      if( players_.empty() ) {
+        return; // scheduler and/or match stopped
+      }
 
-      if( fld->lost() ) {
+      if( pl->field()->lost() ) {
         it = players_.erase(it);
       } else {
         ++it;
       }
     }
-
     if( players_.empty() ) {
-      break;
+      return;
     }
+
     tick_clock_ += boost::posix_time::microseconds(instance_.conf().tk_usec);
     boost::posix_time::ptime now = boost::posix_time::microsec_clock::universal_time();
     if( tick_clock_ >= now ) {
