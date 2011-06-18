@@ -16,6 +16,8 @@ class ScreenStart: public ScreenMenu
   virtual void enter();
   virtual bool onInputEvent(const sf::Event &ev);
 
+  void onCreateServer();
+
  protected:
   WButton *button_exit_;
 };

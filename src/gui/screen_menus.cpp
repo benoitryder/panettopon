@@ -42,7 +42,7 @@ void ScreenStart::enter()
   }
   button_exit_ = buttons[button_nb-1];
 
-  buttons[1]->setCallback(boost::bind(&GuiInterface::swapScreen, &intf_, new ScreenCreateServer(intf_)));
+  buttons[1]->setCallback(boost::bind(&ScreenStart::onCreateServer, this));
   button_exit_->setCallback(boost::bind(&GuiInterface::swapScreen, &intf_, (gui::Screen*)NULL));
 
   this->focus(buttons[0]);
@@ -64,6 +64,11 @@ bool ScreenStart::onInputEvent(const sf::Event &ev)
     }
   }
   return false;
+}
+
+void ScreenStart::onCreateServer()
+{
+  intf_.swapScreen(new ScreenCreateServer(intf_));
 }
 
 
