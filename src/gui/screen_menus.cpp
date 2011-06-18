@@ -1,6 +1,7 @@
 #include <boost/bind.hpp>
 #include "screen_menus.h"
 #include "interface.h"
+#include "../server.h"
 #include "../log.h"
 
 namespace gui {
@@ -120,6 +121,7 @@ void ScreenCreateServer::submit()
     LOG("invalid port value: %s", port_str.c_str());
   } else {
     intf_.startServer(port);
+    intf_.server()->newLocalPlayer("Server"); //XXX temporary player name
     intf_.swapScreen(new ScreenLobby(intf_));
   }
 }

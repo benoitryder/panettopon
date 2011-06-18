@@ -57,6 +57,12 @@ class GuiInterface: public ClientInstance::Observer
    * Running server or client is closed and freed.
    */
   void stopInstance();
+  /// Return current instance.
+  GameInstance *instance() const { return instance_.get(); }
+  /// Return current ServerInstance, or NULL.
+  ServerInstance *server() const { return server_instance_; }
+  /// Return current ClientInstance, or NULL.
+  ClientInstance *client() const { return client_instance_; }
 
  private:
   boost::asio::io_service io_service_;
