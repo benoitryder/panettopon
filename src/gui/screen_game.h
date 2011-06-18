@@ -15,6 +15,7 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
   virtual void enter();
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event &ev);
+  virtual void onStateChange(GameInstance::State state);
 
   /// InputProvider interface.
   virtual KeyState getNextInput(Player *pl);

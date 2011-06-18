@@ -139,8 +139,9 @@ void ScreenLobby::enter()
   assert( player_ );
   GameInstance *instance = intf_.instance();
   assert( instance );
-  instance->playerSetReady(player_, true);
-  intf_.swapScreen(new ScreenGame(intf_, player_));
+  if( instance->state() == GameInstance::STATE_LOBBY ) {
+    instance->playerSetReady(player_, true);
+  }
 }
 
 bool ScreenLobby::onInputEvent(const sf::Event &ev)
@@ -155,6 +156,15 @@ bool ScreenLobby::onInputEvent(const sf::Event &ev)
     }
   }
   return false;
+}
+
+void ScreenLobby::onStateChange(GameInstance::State state)
+{
+  if( state == GameInstance::STATE_LOBBY ) {
+    intf_.instance()->playerSetReady(player_, true);
+  } else if( state == GameInstance::STATE_INIT ) {
+    intf_.swapScreen(new ScreenGame(intf_, player_));
+  }
 }
 
 

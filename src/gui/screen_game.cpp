@@ -43,6 +43,19 @@ bool ScreenGame::onInputEvent(const sf::Event &ev)
   return false;
 }
 
+void ScreenGame::onStateChange(GameInstance::State state)
+{
+  if( state == GameInstance::STATE_LOBBY ) {
+    input_scheduler_.stop();
+    intf_.swapScreen(new ScreenLobby(intf_, player_));
+  } else if( state == GameInstance::STATE_READY ) {
+    intf_.instance()->playerSetReady(player_, true);
+  } else if( state == GameInstance::STATE_GAME ) {
+    LOG("match start");
+    input_scheduler_.start();
+  }
+}
+
 
 KeyState ScreenGame::getNextInput(Player *pl)
 {

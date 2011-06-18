@@ -42,6 +42,7 @@ class ScreenLobby: public ScreenMenu
   ScreenLobby(GuiInterface &intf, Player *pl);
   virtual void enter();
   virtual bool onInputEvent(const sf::Event &ev);
+  virtual void onStateChange(GameInstance::State state);
 
  private:
   Player *player_; ///< Controlled player
