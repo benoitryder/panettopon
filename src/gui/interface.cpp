@@ -68,15 +68,15 @@ bool GuiInterface::run(const Config &cfg)
 
 void GuiInterface::swapScreen(Screen *screen)
 {
-  if( screen_ != NULL ) {
+  if( screen_.get() ) {
     screen_->exit();
-    prev_screen_.swap(screen_);
+    prev_screens_.push_back(screen_.release());
   }
   screen_.reset(screen);
-  if( screen_ == NULL ) {
+  if( ! screen_.get() ) {
     this->endDisplay();
   } else {
-    screen->enter();
+    screen_->enter();
   }
 }
 
@@ -207,8 +207,8 @@ void GuiInterface::onRedrawTick(const boost::system::error_code &ec)
     }
   }
 
-  prev_screen_.reset();
-  if( screen_ ) {  // screen may have been removed by a swapScreen()
+  prev_screens_.clear();
+  if( screen_.get() ) {  // screen may have been removed by a swapScreen()
     screen_->redraw();
     window_.Display();
   }

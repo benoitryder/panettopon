@@ -2,7 +2,7 @@
 #define GUI_INTERFACE_H_
 
 #include <string>
-#include <boost/scoped_ptr.hpp>
+#include <boost/ptr_container/ptr_vector.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include "resources.h"
 #include "../client.h"
@@ -81,8 +81,8 @@ class GuiInterface: public ClientInstance::Observer
 
   sf::RenderWindow window_;
   ResourceManager res_mgr_;
-  boost::scoped_ptr<Screen> screen_;
-  boost::scoped_ptr<Screen> prev_screen_;
+  std::auto_ptr<Screen> screen_;
+  boost::ptr_vector<Screen> prev_screens_;
   boost::asio::monotone_timer redraw_timer_;
 
   std::auto_ptr<GameInstance> instance_;
