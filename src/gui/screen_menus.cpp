@@ -1,5 +1,6 @@
 #include <boost/bind.hpp>
 #include "screen_menus.h"
+#include "screen_game.h"
 #include "interface.h"
 #include "../server.h"
 #include "../log.h"
@@ -134,6 +135,7 @@ ScreenLobby::ScreenLobby(GuiInterface &intf):
 
 void ScreenLobby::enter()
 {
+  intf_.swapScreen(new ScreenGame(intf_));
   //TODO
 }
 
