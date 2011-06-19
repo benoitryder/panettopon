@@ -39,20 +39,31 @@ bool ScreenMenu::onInputEvent(const sf::Event &ev)
   if( ev.Type == sf::Event::KeyPressed ) {
     // move focus
     if( focused_ ) {
-      Widget::Neighbor n;
-      switch( ev.Key.Code ) {
-        case sf::Key::Up:    n = Widget::NEIGHBOR_UP;    break;
-        case sf::Key::Down:  n = Widget::NEIGHBOR_DOWN;  break;
-        case sf::Key::Left:  n = Widget::NEIGHBOR_LEFT;  break;
-        case sf::Key::Right: n = Widget::NEIGHBOR_RIGHT; break;
-        default: n = Widget::NEIGHBOR_NONE; break;
-      }
-      if( n != Widget::NEIGHBOR_NONE ) {
-        Widget *next_focused = focused_->neighbor(n);
-        if( next_focused ) {
-          this->focus(next_focused);
-          return true;
+      Widget *next_focused = NULL;
+      if( ev.Key.Code == sf::Key::Up ) {
+        next_focused = focused_->neighbor(Widget::NEIGHBOR_UP);
+      } else if( ev.Key.Code == sf::Key::Down ) {
+        next_focused = focused_->neighbor(Widget::NEIGHBOR_DOWN);
+      } else if( ev.Key.Code == sf::Key::Left ) {
+        next_focused = focused_->neighbor(Widget::NEIGHBOR_LEFT);
+      } else if( ev.Key.Code == sf::Key::Right ) {
+        next_focused = focused_->neighbor(Widget::NEIGHBOR_RIGHT);
+      } else if( ev.Key.Code == sf::Key::Tab ) {
+        if( ev.Key.Shift ) {
+          next_focused = focused_->neighbor(Widget::NEIGHBOR_LEFT);
+          if( ! next_focused ) {
+            next_focused = focused_->neighbor(Widget::NEIGHBOR_UP);
+          }
+        } else {
+          next_focused = focused_->neighbor(Widget::NEIGHBOR_RIGHT);
+          if( ! next_focused ) {
+            next_focused = focused_->neighbor(Widget::NEIGHBOR_DOWN);
+          }
         }
+      }
+      if( next_focused ) {
+        this->focus(next_focused);
+        return true;
       }
     }
   }
