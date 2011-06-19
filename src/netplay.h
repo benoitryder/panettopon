@@ -193,7 +193,7 @@ class ClientSocket: public PacketSocket
 
   /** @brief Connect to a server.
    *
-   * Timeout is given in microseconds, -1 to wait indefinitely.
+   * Timeout is given in milliseconds, -1 to wait indefinitely.
    */
   void connect(const char *host, int port, int tout);
   /// Return true if the client is connected.

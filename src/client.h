@@ -23,7 +23,7 @@ class ClientInstance: public GameInstance,
 
   /** @brief Connect to a server.
    *
-   * Timeout is given in microseconds, -1 to wait indefinitely.
+   * Timeout is given in milliseconds, -1 to wait indefinitely.
    * Once the method returned the client still have to wait for server
    * configuration (or to be rejected).
    */
