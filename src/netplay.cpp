@@ -5,6 +5,7 @@
 #include <boost/asio/placeholders.hpp>
 #include "netplay.h"
 #include "netplay.pb.h"
+#include "deletion_handler.h"
 #include "log.h"
 
 
@@ -31,8 +32,6 @@ void BaseSocket::close()
   if( socket_.is_open() ) {
     socket_.close();
   }
-  // make sure to remove pending aborted handlers
-  io_service().poll();
 }
 
 
@@ -291,7 +290,7 @@ void ServerSocket::onAccept(const boost::system::error_code &ec)
   } else {
     LOG("accept error: %s", ec.message().c_str());
     peer_accept_->close();
-    peer_accept_.reset();
+    io_service().post(deletion_handler<PeerSocket>(peer_accept_));
   }
   this->acceptNext();
 }
@@ -306,7 +305,7 @@ void ServerSocket::doRemovePeer(PeerSocket *peer)
       } catch(const CallbackError &e) {
         LOG("peer disconnect error: %s", e.what());
       }
-      peers_del_.erase(it);
+      io_service().post(deletion_handler<PeerSocket>(peers_del_.release(it).release()));
       return;
     }
   }
