@@ -148,7 +148,7 @@ void GuiInterface::stopInstance()
     client_instance_->disconnect();
     client_instance_ = NULL;
   }
-  instance_.reset();
+  io_service_.post(deletion_handler<GameInstance>(instance_.release()));
 }
 
 
