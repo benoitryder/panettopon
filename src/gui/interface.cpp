@@ -136,6 +136,14 @@ void GuiInterface::startServer(int port)
   server_instance_->startServer(port);
 }
 
+void GuiInterface::startClient(const std::string &host, int port)
+{
+  assert( instance_.get() == NULL );
+  client_instance_ = new ClientInstance(*this, io_service_);
+  instance_.reset(client_instance_);
+  client_instance_->connect(host.c_str(), port, 3000);
+}
+
 void GuiInterface::stopInstance()
 {
   if( instance_.get() == NULL ) {

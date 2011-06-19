@@ -42,6 +42,7 @@ void ScreenStart::enter()
   }
   button_exit_ = buttons[button_nb-1];
 
+  buttons[0]->setCallback(boost::bind(&ScreenStart::onJoinServer, this));
   buttons[1]->setCallback(boost::bind(&ScreenStart::onCreateServer, this));
   button_exit_->setCallback(boost::bind(&GuiInterface::swapScreen, &intf_, (gui::Screen*)NULL));
 
@@ -66,9 +67,99 @@ bool ScreenStart::onInputEvent(const sf::Event &ev)
   return false;
 }
 
+void ScreenStart::onJoinServer()
+{
+  intf_.swapScreen(new ScreenJoinServer(intf_));
+}
+
 void ScreenStart::onCreateServer()
 {
   intf_.swapScreen(new ScreenCreateServer(intf_));
+}
+
+
+ScreenJoinServer::ScreenJoinServer(GuiInterface &intf):
+    ScreenMenu(intf),
+    submitting_(false)
+{
+}
+
+void ScreenJoinServer::enter()
+{
+  WLabel *label = new WLabel();
+  label->setText("Enter host and port");
+  label->setTextAlign(0);
+  label->setPosition(0, -60);
+
+  entry_host_ = new WEntry(300, 40);
+  entry_host_->setText("localhost");
+  entry_host_->setPosition(-55, 0);
+
+  entry_port_ = new WEntry(100, 40);
+  entry_port_->setText("2426"); //XXX define default value in a macro
+  entry_port_->setPosition(155, 0);
+
+  WButton *button = new WButton(200, 50);
+  button->setCaption("Join");
+  button->setPosition(0, 60);
+
+  container_.widgets.push_back(label);
+  container_.widgets.push_back(entry_host_);
+  container_.widgets.push_back(entry_port_);
+  container_.widgets.push_back(button);
+
+  entry_host_->setNeighbors(button, button, entry_port_, entry_port_);
+  entry_port_->setNeighbors(button, button, entry_host_, entry_host_);
+  button->setNeighbors(entry_host_, entry_host_, NULL, NULL);
+
+  this->focus(entry_host_);
+}
+
+bool ScreenJoinServer::onInputEvent(const sf::Event &ev)
+{
+  if( submitting_ ) {
+    return true;  // ignore input
+  }
+  if( ScreenMenu::onInputEvent(ev) ) {
+    return true;
+  }
+  if( ev.Type == sf::Event::KeyPressed ) {
+    if( ev.Key.Code == sf::Key::Escape ) {
+      intf_.swapScreen(new ScreenStart(intf_));
+    } else if( ev.Key.Code == sf::Key::Return ) {
+      this->submit();
+    }
+    return true;
+  }
+  return false;
+}
+
+void ScreenJoinServer::onPlayerJoined(Player *pl)
+{
+  if( pl->local() ) {
+    intf_.swapScreen(new ScreenLobby(intf_, pl));
+  }
+}
+
+void ScreenJoinServer::onServerDisconnect()
+{
+  submitting_ = false;
+  intf_.stopInstance();
+}
+
+void ScreenJoinServer::submit()
+{
+  assert( !submitting_ );
+  std::string port_str = entry_port_->text();
+  char *port_end;
+  long port = strtol(port_str.c_str(), &port_end, 0);
+  if( port_end != port_str.c_str()+port_str.size() || port <= 0 || port > 65535 ) {
+    LOG("invalid port value: %s", port_str.c_str());
+  } else {
+    intf_.startClient(entry_host_->text().c_str(), port);
+    intf_.client()->newLocalPlayer("Client"); //XXX temporary player name
+    submitting_ = true;
+  }
 }
 
 

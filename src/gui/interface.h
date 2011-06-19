@@ -52,6 +52,9 @@ class GuiInterface: public ClientInstance::Observer
 
   /// Create and start a server.
   void startServer(int port);
+  /// Create a client and connect to a server.
+  void startClient(const std::string &host, int port);
+
   /** @brief Destroy current GameInstance, if any.
    *
    * Running server or client is closed and freed.

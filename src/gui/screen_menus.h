@@ -16,10 +16,30 @@ class ScreenStart: public ScreenMenu
   virtual void enter();
   virtual bool onInputEvent(const sf::Event &ev);
 
+  void onJoinServer();
   void onCreateServer();
 
  protected:
   WButton *button_exit_;
+};
+
+/// Join server (choose host and port).
+class ScreenJoinServer: public ScreenMenu
+{
+ public:
+  ScreenJoinServer(GuiInterface &intf);
+  virtual void enter();
+  virtual bool onInputEvent(const sf::Event &ev);
+  virtual void onPlayerJoined(Player *);
+  virtual void onServerDisconnect();
+
+ protected:
+  void submit();
+
+ private:
+  WEntry *entry_host_;
+  WEntry *entry_port_;
+  bool submitting_;
 };
 
 /// Server creation (choose port).
