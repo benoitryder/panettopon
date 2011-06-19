@@ -5,6 +5,7 @@
 #include "../config.h"
 #include "../server.h"
 #include "../client.h"
+#include "../deletion_handler.h"
 #include "../log.h"
 
 namespace asio = boost::asio;
@@ -70,7 +71,7 @@ void GuiInterface::swapScreen(Screen *screen)
 {
   if( screen_.get() ) {
     screen_->exit();
-    prev_screens_.push_back(screen_.release());
+    io_service_.post(deletion_handler<Screen>(screen_.release()));
   }
   screen_.reset(screen);
   if( ! screen_.get() ) {
@@ -207,7 +208,6 @@ void GuiInterface::onRedrawTick(const boost::system::error_code &ec)
     }
   }
 
-  prev_screens_.clear();
   if( screen_.get() ) {  // screen may have been removed by a swapScreen()
     screen_->redraw();
     window_.Display();

@@ -121,7 +121,6 @@ void GameInputScheduler::stop()
 {
   timer_.cancel();
   players_.clear();
-  timer_.get_io_service().poll();
 }
 
 
