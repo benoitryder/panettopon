@@ -96,7 +96,7 @@ void ScreenJoinServer::enter()
   entry_host_->setPosition(-55, 0);
 
   entry_port_ = new WEntry(100, 40);
-  entry_port_->setText("2426"); //XXX define default value in a macro
+  entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
   entry_port_->setPosition(155, 0);
 
   WButton *button = new WButton(200, 50);
@@ -176,7 +176,7 @@ void ScreenCreateServer::enter()
   label->setPosition(-20, -30);
 
   entry_port_ = new WEntry(100, 40);
-  entry_port_->setText("2426"); //XXX define default value in a macro
+  entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
   entry_port_->setPosition(50, -30);
 
   WButton *button = new WButton(200, 50);

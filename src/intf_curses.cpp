@@ -47,7 +47,7 @@ bool CursesInterface::run(const Config &cfg)
   CONF_LOAD_KEY(quit,  KeyQuit );
 #undef CONF_LOAD_KEY
 
-  int port = cfg.getInt("Global", "Port", 2426);
+  int port = cfg.getInt("Global", "Port", DEFAULT_PNP_PORT);
   const std::string host = cfg.get("Client", "Hostname", "localhost");
 
   if( !this->initCurses() ) {
