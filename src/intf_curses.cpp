@@ -124,6 +124,7 @@ void CursesInterface::addMessage(int color, const char *fmt, ...)
   int x, y;
   y = x = 0; // initialize x and y to avoid a warning
   getyx(wmsg_, y, x);
+  (void)y;
 
   // For unknown reasons, with the curses implementation, using wcolor_set
   // for color 0 does not work. We have to switch off a color to reset the
