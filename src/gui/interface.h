@@ -36,6 +36,7 @@ class GuiInterface: public ClientInstance::Observer
   void swapScreen(Screen *screen);
 
   sf::RenderWindow &window() { return window_; }
+  ResourceManager &res_mgr() { return res_mgr_; }
 
   /** @name Instance observer methods. */
   //@{
