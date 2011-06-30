@@ -9,7 +9,8 @@ namespace gui {
 ScreenGame::ScreenGame(GuiInterface &intf, Player *pl):
     Screen(intf),
     player_(pl),
-    input_scheduler_(*intf.instance(), *this, intf.io_service())
+    input_scheduler_(*intf.instance(), *this, intf.io_service()),
+    fdp_player_(NULL)
 {
   keys_.up    = sf::Key::Up;
   keys_.down  = sf::Key::Down;
@@ -21,12 +22,14 @@ ScreenGame::ScreenGame(GuiInterface &intf, Player *pl):
 
 void ScreenGame::enter()
 {
+  res_field_.load(&intf_.res_mgr());
   assert( player_ );
 }
 
 void ScreenGame::exit()
 {
   input_scheduler_.stop();
+  fdp_player_.reset();
 }
 
 void ScreenGame::redraw()
@@ -34,6 +37,9 @@ void ScreenGame::redraw()
   sf::RenderWindow &w = intf_.window();
   w.Clear(sf::Color(48,48,48)); //XXX:tmp
   //TODO
+  if( fdp_player_.get() ) {
+    w.Draw(*fdp_player_);
+  }
 }
 
 bool ScreenGame::onInputEvent(const sf::Event &ev)
@@ -48,11 +54,21 @@ bool ScreenGame::onInputEvent(const sf::Event &ev)
   return false;
 }
 
+void ScreenGame::onPlayerStep(Player *pl)
+{
+  if( pl == player_ ) {
+    fdp_player_->step();
+  }
+}
+
 void ScreenGame::onStateChange(GameInstance::State state)
 {
   if( state == GameInstance::STATE_LOBBY ) {
     intf_.swapScreen(new ScreenLobby(intf_, player_));
   } else if( state == GameInstance::STATE_READY ) {
+    assert( player_->field() );
+    fdp_player_.reset(new FieldDisplay(*player_->field(), res_field_));
+    fdp_player_->SetScale(0.5, 0.5);
     intf_.instance()->playerSetReady(player_, true);
   } else if( state == GameInstance::STATE_GAME ) {
     LOG("match start");
@@ -93,6 +109,7 @@ FieldDisplay::FieldDisplay(const Field &fld, const ResField &res):
   ::memset(crouch_dt_, 0, sizeof(crouch_dt_));
   //TODO:recup
   //this->SetPosition( slot * 2*res.img_field_frame.GetWidth(), 0 );
+  this->SetOrigin(res_.bk_size*FIELD_WIDTH/2, res_.bk_size*FIELD_HEIGHT/2);
 
   spr_frame_.SetImage(*res_.img_field_frame);
   spr_frame_.SetOrigin(

@@ -3,11 +3,12 @@
 
 #include <SFML/Graphics/Sprite.hpp>
 #include "screen.h"
+#include "resources.h"
 
 namespace gui {
 
 class GuiInterface;
-class ResField;
+class FieldDisplay;
 
 
 class ScreenGame: public Screen, public GameInputScheduler::InputProvider
@@ -18,6 +19,7 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
   virtual void exit();
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event &ev);
+  virtual void onPlayerStep(Player *pl);
   virtual void onStateChange(GameInstance::State state);
 
   /// InputProvider interface.
@@ -26,6 +28,8 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
  private:
   Player *player_;  ///< Local controlled player
   GameInputScheduler input_scheduler_;
+  ResField res_field_;
+  std::auto_ptr<FieldDisplay> fdp_player_; ///< Field display of the local player
 
   /// Key bindings.
   struct {
