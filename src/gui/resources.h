@@ -96,11 +96,11 @@ class ResField
     ImageTile combo, chain;
   } tiles_labels;
 
-  /// Waiting garbages
-  struct TilesGbWaiting {
+  /// Hanging garbages
+  struct TilesGbHanging {
     ImageTile blocks[FIELD_WIDTH];
     ImageTile line;
-  } tiles_gb_waiting;
+  } tiles_gb_hanging;
 };
 
 

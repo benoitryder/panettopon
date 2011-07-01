@@ -182,9 +182,9 @@ void ClientInstance::processPacketGarbage(const netplay::Garbage &pkt_gb)
     throw netplay::CallbackError("match is not running");
   }
 
-  const Match::GbWaitingMap gbs_wait = match_.waitingGarbages();
-  Match::GbWaitingMap::const_iterator it = gbs_wait.find(pkt_gb.gbid());
-  Garbage *gb = it == gbs_wait.end() ? NULL : (*it).second;
+  const Match::GbHangingMap gbs_hang = match_.hangingGarbages();
+  Match::GbHangingMap::const_iterator it = gbs_hang.find(pkt_gb.gbid());
+  Garbage *gb = it == gbs_hang.end() ? NULL : (*it).second;
 
   if( pkt_gb.drop() ) {
     // drop garbage
@@ -239,7 +239,7 @@ void ClientInstance::processPacketGarbage(const netplay::Garbage &pkt_gb)
       assert( !"not supported yet" );
     }
 
-    if( pkt_gb.pos() > gb->to->waitingGarbageCount() ) {
+    if( pkt_gb.pos() > gb->to->hangingGarbageCount() ) {
       throw netplay::CallbackError("invalid garbage position");
     }
     agb.release();
@@ -261,12 +261,12 @@ void ClientInstance::processPacketGarbage(const netplay::Garbage &pkt_gb)
           throw netplay::CallbackError("garbage position missing");
         }
       }
-      if( pkt_gb.pos() > pl_to->field()->waitingGarbageCount() ) {
+      if( pkt_gb.pos() > pl_to->field()->hangingGarbageCount() ) {
         throw netplay::CallbackError("invalid garbage position");
       }
-      gb->to->removeWaitingGarbage(gb);
+      gb->to->removeHangingGarbage(gb);
       gb->to = pl_to->field();
-      gb->to->insertWaitingGarbage(gb, pkt_gb.pos());
+      gb->to->insertHangingGarbage(gb, pkt_gb.pos());
     }
 
     if( pkt_gb.has_type() ) {
@@ -323,8 +323,8 @@ void ClientInstance::processPacketField(const netplay::Field &pkt_fld)
       throw netplay::CallbackError("invalid configuration");
     }
     // check client conf against server conf
-    if( conf.gb_wait_tk <= conf_.tk_lag_max ) {
-      LOG("garbage waiting time must be greater than lag limit");
+    if( conf.gb_hang_tk <= conf_.tk_lag_max ) {
+      LOG("garbage hanging time must be greater than lag limit");
       throw netplay::CallbackError("unsupported configuration");
     }
     fld->setConf(conf);

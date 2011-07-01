@@ -98,7 +98,7 @@ message Field {
     optional uint32 stop_chain_0 = 6;
     optional uint32 stop_chain_k = 7;
     optional uint32 lost_tk = 8;
-    optional uint32 gb_wait_tk = 9;
+    optional uint32 gb_hang_tk = 9;
     optional uint32 flash_tk = 10;
     optional uint32 levitate_tk = 11;
     optional uint32 pop_tk = 12;
@@ -183,7 +183,7 @@ message Garbage {
   required uint32 gbid = 1;
   optional uint32 plid_to = 2;   // garbage target (must be set at creation)
   optional uint32 plid_from = 3; // garbage sender (or 0)
-  optional uint32 pos = 4;       // zero-based position in waiting list
+  optional uint32 pos = 4;       // zero-based position in hanging list
   optional Type   type = 5;
   optional uint32 size = 6;
   optional bool   drop = 7 [default = false]; // if set, other fields should be unset

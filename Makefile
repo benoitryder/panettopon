@@ -115,7 +115,7 @@ $(eval $(call svg2png_rule,BkColor-map))
 $(eval $(call svg2png_rule,BkGarbage-map))
 $(eval $(call svg2png_rule,SwapCursor))
 $(eval $(call svg2png_rule,Labels))
-$(eval $(call svg2png_rule,GbWaiting-map))
+$(eval $(call svg2png_rule,GbHanging-map))
 $(eval $(call svg2png_rule,Field-Frame))
 
 

@@ -148,9 +148,9 @@ void FieldDisplay::Render(sf::RenderTarget &target, sf::Renderer &renderer) cons
 
   target.Draw(spr_frame_);
 
-  // waiting garbages
+  // hanging garbages
   renderer.SetColor(sf::Color(204,102,25)); //XXX:temp
-  GbWaitingList::const_iterator gb_it;
+  GbHangingList::const_iterator gb_it;
   unsigned gb_i;  // avoid display "overflow", max: FIELD_WIDTH*2/3
   for(gb_it=gbw_drbs_.begin(), gb_i=0;
       gb_it != gbw_drbs_.end() && gb_i<FIELD_HEIGHT*2/3;
@@ -237,22 +237,22 @@ void FieldDisplay::step()
     }
   }
 
-  // waiting garbages
+  // hanging garbages
   /* XXX
    * Current implementation is a bit rough.
    * It would be better to keep track of garbage changes through events
    * and find a way to do nothing when nothing has changed.
    */
 
-  size_t gb_nb = field_.waitingGarbageCount();
+  size_t gb_nb = field_.hangingGarbageCount();
   size_t gb_i;
-  GbWaitingList::iterator gbd_it;
+  GbHangingList::iterator gbd_it;
 
   // normal case: no changes, only update garbages
   for(gb_i=0, gbd_it=gbw_drbs_.begin();
       gb_i<gb_nb && gbd_it!=gbw_drbs_.end();
       gb_i++, ++gbd_it) {
-    const Garbage &gb = field_.waitingGarbage(gb_i);
+    const Garbage &gb = field_.hangingGarbage(gb_i);
     if( gb.gbid != gbd_it->gbid() ) {
       break;
     }
@@ -260,13 +260,13 @@ void FieldDisplay::step()
   }
   // move/insert other garbages
   for( ; gb_i<gb_nb; gb_i++ ) {
-    const Garbage &gb = field_.waitingGarbage(gb_i);
+    const Garbage &gb = field_.hangingGarbage(gb_i);
     // find an already existing drawable
-    GbWaitingList::iterator gbd_it2;
+    GbHangingList::iterator gbd_it2;
     for( gbd_it2=gbd_it; gbd_it2!=gbw_drbs_.end() && gb.gbid != gbd_it2->gbid(); ++gbd_it2 ) ;
     if( gbd_it2 == gbw_drbs_.end() ) {
       // not found: create and insert at the new position
-      gbd_it = gbw_drbs_.insert(gbd_it, new GbWaiting(res_, gb));
+      gbd_it = gbw_drbs_.insert(gbd_it, new GbHanging(res_, gb));
     } else if( gbd_it != gbd_it2 ) {
       // found: move it at the right position (swap)
       //note: do the '.release()' "by hand" to help the compiler
@@ -496,14 +496,14 @@ FieldPos FieldDisplay::matchLabelPos()
 
 
 
-FieldDisplay::GbWaiting::GbWaiting(const ResField &res, const Garbage &gb):
+FieldDisplay::GbHanging::GbHanging(const ResField &res, const Garbage &gb):
   res_(res), gb_(gb), txt_size_(0)
 {
   // initialize sprite
   if( gb.type == Garbage::TYPE_CHAIN ) {
-    res_.tiles_gb_waiting.line.setToSprite(&bg_, true);
+    res_.tiles_gb_hanging.line.setToSprite(&bg_, true);
   } else if( gb.type == Garbage::TYPE_COMBO ) {
-    res_.tiles_gb_waiting.blocks[gb.size.x-1].setToSprite(&bg_, true);
+    res_.tiles_gb_hanging.blocks[gb.size.x-1].setToSprite(&bg_, true);
   } else {
     //TODO not handled yet
   }
@@ -511,7 +511,7 @@ FieldDisplay::GbWaiting::GbWaiting(const ResField &res, const Garbage &gb):
   this->updateText();
 }
 
-void FieldDisplay::GbWaiting::Render(sf::RenderTarget &target, sf::Renderer &) const
+void FieldDisplay::GbHanging::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
   target.Draw(bg_);
   if( txt_size_ != 0 ) {
@@ -519,17 +519,17 @@ void FieldDisplay::GbWaiting::Render(sf::RenderTarget &target, sf::Renderer &) c
   }
 }
 
-void FieldDisplay::GbWaiting::setPosition(int i)
+void FieldDisplay::GbHanging::setPosition(int i)
 {
   this->SetPosition((0.75+1.5*i)*res_.bk_size, -0.5*res_.bk_size);
 }
 
-void FieldDisplay::GbWaiting::step()
+void FieldDisplay::GbHanging::step()
 {
   this->updateText();
 }
 
-void FieldDisplay::GbWaiting::updateText()
+void FieldDisplay::GbHanging::updateText()
 {
   // text for >x1 chain garbages only
   if( gb_.type != Garbage::TYPE_CHAIN || gb_.size.y < 2 ) {

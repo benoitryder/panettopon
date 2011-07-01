@@ -11,7 +11,7 @@ bool FieldConf::isValid() const
       && (stop_combo_0 > 0 || stop_combo_k > 0)
       && (stop_chain_0 > 0 || stop_chain_k > 0)
       && lost_tk > 0
-      && gb_wait_tk > 0
+      && gb_hang_tk > 0
       && flash_tk > 0
       && levitate_tk > 0
       && pop_tk > 0
@@ -587,22 +587,22 @@ void Field::step(KeyState keys)
 void Field::dropNextGarbage()
 {
   // id is not meaningful anymore, it could be reused
-  Garbage *gb = gbs_wait_.pop_front().release();
+  Garbage *gb = gbs_hang_.pop_front().release();
   gb->gbid = 0;
   gbs_drop_.push_back( gb );
 }
 
-void Field::insertWaitingGarbage(Garbage *gb, unsigned int pos)
+void Field::insertHangingGarbage(Garbage *gb, unsigned int pos)
 {
-  gbs_wait_.insert( gbs_wait_.begin()+pos, gb );
+  gbs_hang_.insert( gbs_hang_.begin()+pos, gb );
 }
 
-void Field::removeWaitingGarbage(Garbage *gb)
+void Field::removeHangingGarbage(Garbage *gb)
 {
   GarbageList::iterator it;
-  for( it=gbs_wait_.begin(); it!=gbs_wait_.end(); ++it ) {
+  for( it=gbs_hang_.begin(); it!=gbs_hang_.end(); ++it ) {
     if( &(*it) == gb ) {
-      gbs_wait_.release(it).release();
+      gbs_hang_.release(it).release();
       return;
     }
   }
@@ -915,7 +915,7 @@ void Match::stop()
 {
   assert( started_ );
   started_ = false;
-  gbs_wait_.clear();
+  gbs_hang_.clear();
   fields_.clear();
 }
 
@@ -1017,16 +1017,16 @@ void Match::addGarbage(Garbage *gb, unsigned int pos)
 {
   assert( gb->to != NULL );
 
-  gb->to->insertWaitingGarbage(gb, pos);
-  gbs_wait_[gb->gbid] = gb;
+  gb->to->insertHangingGarbage(gb, pos);
+  gbs_hang_[gb->gbid] = gb;
 }
 
 void Match::dropGarbage(Garbage *gb)
 {
   assert( gb->to != NULL );
 
-  gbs_wait_.erase(gb->gbid);
-  assert( gb->to->waitingGarbage(0).gbid == gb->gbid );
+  gbs_hang_.erase(gb->gbid);
+  assert( gb->to->hangingGarbage(0).gbid == gb->gbid );
   gb->to->dropNextGarbage();
 }
 
@@ -1052,9 +1052,9 @@ void GarbageDistributor::updateGarbages(Field *fld)
   }
 
   // check whether a garbage should be dropped
-  const size_t n = fld->waitingGarbageCount();
+  const size_t n = fld->hangingGarbageCount();
   for( size_t i=0; i<n; i++ ) {
-    const Garbage &gb = fld->waitingGarbage(i);
+    const Garbage &gb = fld->hangingGarbage(i);
     GbDropTickMap::iterator it = drop_ticks_.find(&gb);
     if( it == drop_ticks_.end() ) {
       continue; // already being dropped
@@ -1119,10 +1119,10 @@ void GarbageDistributor::updateGarbages(Field *fld)
           continue;
         }
         size_t nb_chain = 0;
-        const size_t nb_gb = fld2->waitingGarbageCount();
+        const size_t nb_gb = fld2->hangingGarbageCount();
         for( nb_chain=0; nb_chain<nb_gb; nb_chain++ ) {
           // chain garbages are put at the beginning
-          if( fld2->waitingGarbage(nb_chain).type != Garbage::TYPE_CHAIN ) {
+          if( fld2->hangingGarbage(nb_chain).type != Garbage::TYPE_CHAIN ) {
             break;
           }
         }
@@ -1147,7 +1147,7 @@ void GarbageDistributor::updateGarbages(Field *fld)
     Garbage *gb = (*it).second;
     assert( gb->type == Garbage::TYPE_CHAIN );
     gb->size.y++;
-    drop_ticks_[gb] = fld->tick() + fld->conf().gb_wait_tk;
+    drop_ticks_[gb] = fld->tick() + fld->conf().gb_hang_tk;
     observer_.onGarbageUpdateSize(gb);
   }
 
@@ -1216,18 +1216,18 @@ void GarbageDistributor::newGarbage(Field *from, Field *to, Garbage::Type type, 
   unsigned int pos;
   if( type == Garbage::TYPE_CHAIN ) {
     gb->size = FieldPos(FIELD_WIDTH, size);
-    const unsigned int n = to->waitingGarbageCount();
+    const unsigned int n = to->hangingGarbageCount();
     for( pos=0; pos<n; pos++ ) {
-      if( to->waitingGarbage(pos).type == Garbage::TYPE_CHAIN )
+      if( to->hangingGarbage(pos).type == Garbage::TYPE_CHAIN )
         break;
     }
   } else if( type == Garbage::TYPE_COMBO ) {
     gb->size = FieldPos(size, 1);
-    pos = to->waitingGarbageCount(); // push back
+    pos = to->hangingGarbageCount(); // push back
   } else {
     assert( !"not supported yet" );
   }
-  drop_ticks_[gb] = to->tick() + to->conf().gb_wait_tk;
+  drop_ticks_[gb] = to->tick() + to->conf().gb_hang_tk;
 
   match_.addGarbage(gb, pos);
   if( type == Garbage::TYPE_CHAIN ) {
@@ -1240,12 +1240,12 @@ void GarbageDistributor::newGarbage(Field *from, Field *to, Garbage::Type type, 
 
 GbId GarbageDistributor::nextGarbageId()
 {
-  const Match::GbWaitingMap gbs_wait = match_.waitingGarbages();
+  const Match::GbHangingMap gbs_hang = match_.hangingGarbages();
   for(;;) {
     current_gbid_++;
     if( current_gbid_ <= 0 ) // overflow
       current_gbid_ = 1;
-    if( gbs_wait.find(current_gbid_) == gbs_wait.end() )
+    if( gbs_hang.find(current_gbid_) == gbs_hang.end() )
       break; // not already in use
   }
   return current_gbid_;

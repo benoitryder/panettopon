@@ -115,14 +115,14 @@ class FieldDisplay: public sf::Drawable
 
   //@}
 
-  /** @name Waiting garbages */
+  /** @name Hanging garbages */
   //@{
 
-  /// Drawable for waiting garbages
-  class GbWaiting: public sf::Drawable
+  /// Drawable for hanging garbages
+  class GbHanging: public sf::Drawable
   {
    public:
-    GbWaiting(const ResField &res, const Garbage &gb);
+    GbHanging(const ResField &res, const Garbage &gb);
     virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
     /// Step and update the garbage.
     void step();
@@ -141,9 +141,9 @@ class FieldDisplay: public sf::Drawable
     int txt_size_;
   };
 
-  /// List of waiting garbage drawables
-  typedef boost::ptr_list<GbWaiting> GbWaitingList;
-  GbWaitingList gbw_drbs_;
+  /// List of hanging garbage drawables
+  typedef boost::ptr_list<GbHanging> GbHangingList;
+  GbHangingList gbw_drbs_;
 
   //@}
 };

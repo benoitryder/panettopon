@@ -32,7 +32,7 @@ struct FieldConf
   uint16_t stop_chain_k;
   //@}
   uint16_t lost_tk;      ///< respite from death (at least 1)
-  uint16_t gb_wait_tk;   ///< garbage waiting time
+  uint16_t gb_hang_tk;   ///< garbage hanging time
   uint16_t flash_tk;     ///< flashing duration
   uint16_t levitate_tk;  ///< levitating duration
   uint16_t pop_tk;       ///< popping period (per block)
@@ -69,7 +69,7 @@ struct FieldConf
   expr(stop_chain_0); \
   expr(stop_chain_k); \
   expr(lost_tk); \
-  expr(gb_wait_tk); \
+  expr(gb_hang_tk); \
   expr(flash_tk); \
   expr(levitate_tk); \
   expr(pop_tk); \
@@ -214,9 +214,9 @@ class Field
   }
   const Block &block(const FieldPos &pos) const { return this->block(pos.x, pos.y); }
 
-  /// Return waiting garbage at given position.
-  const Garbage &waitingGarbage(size_t pos) const { return gbs_wait_[pos]; }
-  size_t waitingGarbageCount() const { return gbs_wait_.size(); }
+  /// Return hanging garbage at given position.
+  const Garbage &hangingGarbage(size_t pos) const { return gbs_hang_[pos]; }
+  size_t hangingGarbageCount() const { return gbs_hang_.size(); }
 
   /** @brief Init for match.
    *
@@ -231,24 +231,24 @@ class Field
    */
   void step(KeyState keys);
 
-  /** @brief Drop the next waiting garbage.
+  /** @brief Drop the next hanging garbage.
    *
    * Garbage will fall on the field as soon as possible.
    */
   void dropNextGarbage();
 
-  /** @brief Insert a waiting garbage at a given position.
+  /** @brief Insert a hanging garbage at a given position.
    *
    * If \e pos is -1, push at the end.
    * The garbage will be owned by the field.
    */
-  void insertWaitingGarbage(Garbage *gb, unsigned int pos);
+  void insertHangingGarbage(Garbage *gb, unsigned int pos);
 
-  /** @brief Remove a given waiting garbage.
+  /** @brief Remove a given hanging garbage.
    *
    * The garbage is released but not destroyed.
    */
-  void removeWaitingGarbage(Garbage *gb);
+  void removeHangingGarbage(Garbage *gb);
 
   /** @brief Fill field with random blocks.
    *
@@ -381,7 +381,7 @@ class Field
 
   typedef boost::ptr_deque<Garbage> GarbageList;
   /// Garbages before they are dropped (first to be dropped at front).
-  GarbageList gbs_wait_;
+  GarbageList gbs_hang_;
   /// Queue of dropped garbages, waiting to fall.
   GarbageList gbs_drop_;
   /// Dropped garbages, on field.
@@ -398,7 +398,7 @@ class Match
 {
  public:
   typedef boost::ptr_vector<Field> FieldContainer;
-  typedef std::map<GbId, Garbage *> GbWaitingMap;
+  typedef std::map<GbId, Garbage *> GbHangingMap;
 
   Match();
   ~Match() {}
@@ -439,21 +439,21 @@ class Match
    */
   bool updateRanks(std::vector<const Field *> &ranked);
 
-  const GbWaitingMap &waitingGarbages() const { return gbs_wait_; }
+  const GbHangingMap &hangingGarbages() const { return gbs_hang_; }
 
-  /** @brief Add a new (waiting) garbage.
+  /** @brief Add a new (hanging) garbage.
    *
    * The garbage is added to the \e to field, which must not be \e NULL.
    */
   void addGarbage(Garbage *gb, unsigned int pos);
-  /// Drop a (waiting) garbage.
+  /// Drop a (hanging) garbage.
   void dropGarbage(Garbage *gb);
 
  protected:
   FieldContainer fields_;
 
-  /// Map of all waiting garbages.
-  GbWaitingMap gbs_wait_;
+  /// Map of all hanging garbages.
+  GbHangingMap gbs_hang_;
 
   bool started_;
   Tick tick_;
@@ -498,7 +498,7 @@ class GarbageDistributor
   void updateGarbages(Field *fld);
 
  private:
-  /** @brief Create, add and return a new (waiting) garbage.
+  /** @brief Create, add and return a new (hanging) garbage.
    *
    * The garbage is added to the match.
    * The \e to field must not be \e NULL.
@@ -520,7 +520,7 @@ class GarbageDistributor
   GbTargetMap targets_chain_;
   GbTargetMap targets_combo_;
 
-  /// Store drop tick of waiting garbages.
+  /// Store drop tick of hanging garbages.
   typedef std::map<const Garbage *, Tick> GbDropTickMap;
   GbDropTickMap drop_ticks_;
 

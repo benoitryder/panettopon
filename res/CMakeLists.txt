@@ -6,7 +6,7 @@ INKSCAPE_CONVERT_SVG2PNG(GAME_PNGS res.svg
   DPI 45
   BkColor-map BkGarbage-map
   SwapCursor Labels
-  GbWaiting-map Field-Frame
+  GbHanging-map Field-Frame
   )
 
 # icon

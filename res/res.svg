@@ -160,8 +160,8 @@
         />
     </symbol>
 
-    <!-- Waiting garbages -->
-    <symbol id="GbWaiting-large"
+    <!-- Hanging garbages -->
+    <symbol id="GbHanging-large"
       class="bk-gb bk-mutate">
       <rect class="bk-bg"
         x="-96" y="-64"
@@ -174,7 +174,7 @@
         rx="8" ry="8"
         />
     </symbol>
-    <symbol id="GbWaiting-small"
+    <symbol id="GbHanging-small"
       class="bk-gb bk-mutate" transform="scale(0.5)">
       <use class="bk-bg" xlink:href="#BkColor-bg" />
       <use class="bk-fg" xlink:href="#BkColor-fg" />
@@ -663,55 +663,55 @@
     </g>
   </g>
 
-  <g id="GbWaiting-map"
+  <g id="GbHanging-map"
     transform="translate(16,700)">
     <!-- force the bounding box for the export -->
-    <rect id="GbWaiting-container"
+    <rect id="GbHanging-container"
       width="768" height="256"
       style="stroke: none; fill: none;"
       />
-    <g id="GbWaiting-1"
+    <g id="GbHanging-1"
       transform="translate(96,64) scale(0.8)">
-      <use xlink:href="#GbWaiting-small" transform="translate(  0,0)" />
+      <use xlink:href="#GbHanging-small" transform="translate(  0,0)" />
     </g>
-    <g id="GbWaiting-2"
+    <g id="GbHanging-2"
       transform="translate(288,64) scale(0.8)">
-      <use xlink:href="#GbWaiting-small" transform="translate(-32,0)" />
-      <use xlink:href="#GbWaiting-small" transform="translate( 32,0)" />
+      <use xlink:href="#GbHanging-small" transform="translate(-32,0)" />
+      <use xlink:href="#GbHanging-small" transform="translate( 32,0)" />
     </g>
-    <g id="GbWaiting-3"
+    <g id="GbHanging-3"
       transform="translate(480,64) scale(0.8)">
-      <use xlink:href="#GbWaiting-small" transform="translate(-64,0)" />
-      <use xlink:href="#GbWaiting-small" transform="translate(  0,0)" />
-      <use xlink:href="#GbWaiting-small" transform="translate( 64,0)" />
+      <use xlink:href="#GbHanging-small" transform="translate(-64,0)" />
+      <use xlink:href="#GbHanging-small" transform="translate(  0,0)" />
+      <use xlink:href="#GbHanging-small" transform="translate( 64,0)" />
     </g>
-    <g id="GbWaiting-4"
+    <g id="GbHanging-4"
       transform="translate(96,192) scale(0.8)">
-      <use xlink:href="#GbWaiting-small" transform="translate(-32,-32)" />
-      <use xlink:href="#GbWaiting-small" transform="translate( 32,-32)" />
-      <use xlink:href="#GbWaiting-small" transform="translate(-32, 32)" />
-      <use xlink:href="#GbWaiting-small" transform="translate( 32, 32)" />
+      <use xlink:href="#GbHanging-small" transform="translate(-32,-32)" />
+      <use xlink:href="#GbHanging-small" transform="translate( 32,-32)" />
+      <use xlink:href="#GbHanging-small" transform="translate(-32, 32)" />
+      <use xlink:href="#GbHanging-small" transform="translate( 32, 32)" />
     </g>
-    <g id="GbWaiting-5"
+    <g id="GbHanging-5"
       transform="translate(288,192) scale(0.8)">
-      <use xlink:href="#GbWaiting-small" transform="translate(-32,-32)" />
-      <use xlink:href="#GbWaiting-small" transform="translate( 32,-32)" />
-      <use xlink:href="#GbWaiting-small" transform="translate(-64, 32)" />
-      <use xlink:href="#GbWaiting-small" transform="translate(  0, 32)" />
-      <use xlink:href="#GbWaiting-small" transform="translate( 64, 32)" />
+      <use xlink:href="#GbHanging-small" transform="translate(-32,-32)" />
+      <use xlink:href="#GbHanging-small" transform="translate( 32,-32)" />
+      <use xlink:href="#GbHanging-small" transform="translate(-64, 32)" />
+      <use xlink:href="#GbHanging-small" transform="translate(  0, 32)" />
+      <use xlink:href="#GbHanging-small" transform="translate( 64, 32)" />
     </g>
-    <g id="GbWaiting-6"
+    <g id="GbHanging-6"
       transform="translate(480,192) scale(0.8)">
-      <use xlink:href="#GbWaiting-small" transform="translate(-64,-32)" />
-      <use xlink:href="#GbWaiting-small" transform="translate(  0,-32)" />
-      <use xlink:href="#GbWaiting-small" transform="translate( 64,-32)" />
-      <use xlink:href="#GbWaiting-small" transform="translate(-64, 32)" />
-      <use xlink:href="#GbWaiting-small" transform="translate(  0, 32)" />
-      <use xlink:href="#GbWaiting-small" transform="translate( 64, 32)" />
+      <use xlink:href="#GbHanging-small" transform="translate(-64,-32)" />
+      <use xlink:href="#GbHanging-small" transform="translate(  0,-32)" />
+      <use xlink:href="#GbHanging-small" transform="translate( 64,-32)" />
+      <use xlink:href="#GbHanging-small" transform="translate(-64, 32)" />
+      <use xlink:href="#GbHanging-small" transform="translate(  0, 32)" />
+      <use xlink:href="#GbHanging-small" transform="translate( 64, 32)" />
     </g>
-    <g id="GbWaiting-Line"
+    <g id="GbHanging-Line"
       transform="translate(672,64) scale(0.8)">
-      <use xlink:href="#GbWaiting-large" />
+      <use xlink:href="#GbHanging-large" />
     </g>
   </g>
 

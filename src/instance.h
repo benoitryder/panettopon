@@ -29,7 +29,7 @@ struct ServerConf
    * Client should not sent frames until all information on the n-th previous
    * frame have been received. Invalid frames will be dropped by the server.
    *
-   * Value must be lower than the \e gb_wait_tk field configuration value.
+   * Value must be lower than the \e gb_hang_tk field configuration value.
    */
   uint32_t tk_lag_max;
 };

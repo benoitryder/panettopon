@@ -155,13 +155,13 @@ void ResField::load(ResourceManager *res_mgr)
   tiles_labels.combo.create(img, 2, 1, 0, 0);
   tiles_labels.chain.create(img, 2, 1, 1, 0);
 
-  // Waiting garbages
-  img = res_mgr->getImage("GbWaiting-map");
-  const size_t gb_waiting_sx = FIELD_WIDTH/2; // on 2 rows
+  // Hanging garbages
+  img = res_mgr->getImage("GbHanging-map");
+  const size_t gb_hanging_sx = FIELD_WIDTH/2; // on 2 rows
   for(int i=0; i<FIELD_WIDTH; i++) {
-    tiles_gb_waiting.blocks[i].create(img, gb_waiting_sx+1, 2, i%gb_waiting_sx, i/gb_waiting_sx);
+    tiles_gb_hanging.blocks[i].create(img, gb_hanging_sx+1, 2, i%gb_hanging_sx, i/gb_hanging_sx);
   }
-  tiles_gb_waiting.line.create(img, gb_waiting_sx+1, 2, gb_waiting_sx, 0);
+  tiles_gb_hanging.line.create(img, gb_hanging_sx+1, 2, gb_hanging_sx, 0);
 }
 
 

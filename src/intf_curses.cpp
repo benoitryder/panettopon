@@ -358,14 +358,14 @@ void FieldDisplay::draw()
   }
   mvwaddnstr(wfield_, FIELD_HEIGHT+3, 0, nick, FIELD_WIDTH+2);
 
-  // waiting garbages
+  // hanging garbages
 
   wcolor_set(wfield_, 0, NULL); // required, don't know why
   char buf[2*FIELD_WIDTH]; // unformatted string
-  const size_t gb_nb = field_.waitingGarbageCount();
+  const size_t gb_nb = field_.hangingGarbageCount();
   size_t gb_i=0;
   for( gb_i=0, x=0; gb_i<gb_nb && x<FIELD_WIDTH; gb_i++ ) {
-    const Garbage &gb = field_.waitingGarbage(gb_i);
+    const Garbage &gb = field_.hangingGarbage(gb_i);
     if( gb.type == Garbage::TYPE_CHAIN )
       x += snprintf(buf+x, sizeof(buf-x), "x%u", gb.size.y);
     else if( gb.type == Garbage::TYPE_COMBO )

@@ -17,7 +17,7 @@ static const FieldConf default_field_conf = {
   /* stop_chain_0   */  85,
   /* stop_chain_k   */  10,
   /* lost_tk        */  60,
-  /* gb_wait_tk     */  90+60,
+  /* gb_hang_tk     */  90+60,
   /* flash_tk       */  36,
   /* levitate_tk    */  12,
   /* pop_tk         */   8,
@@ -343,9 +343,9 @@ void ServerInstance::processPacketGarbage(netplay::PeerSocket *peer, const netpl
     throw netplay::CallbackError("garbage drop expected");
   }
 
-  const Match::GbWaitingMap gbs_wait = match_.waitingGarbages();
-  Match::GbWaitingMap::const_iterator it = gbs_wait.find(pkt_gb.gbid());
-  if( it == gbs_wait.end() ) {
+  const Match::GbHangingMap gbs_hang = match_.hangingGarbages();
+  Match::GbHangingMap::const_iterator it = gbs_hang.find(pkt_gb.gbid());
+  if( it == gbs_hang.end() ) {
     throw netplay::CallbackError("garbage not found");
   }
   Garbage *gb = (*it).second;
@@ -353,7 +353,7 @@ void ServerInstance::processPacketGarbage(netplay::PeerSocket *peer, const netpl
   Player *pl = this->player(gb->to);
   assert( pl != NULL );
   this->checkPeerPlayer(pl->plid(), peer);
-  if( gb->to->waitingGarbage(0).gbid != gb->gbid ) {
+  if( gb->to->hangingGarbage(0).gbid != gb->gbid ) {
     throw netplay::CallbackError("unexpected dropped garbage");
   }
 
@@ -487,7 +487,7 @@ void ServerInstance::prepareMatch()
     Field *fld = match_.newField(seed);
     pl->setField(fld);
     fld->setConf( default_field_conf ); //XXX:temp
-    assert( fld->conf().gb_wait_tk > conf_.tk_lag_max );
+    assert( fld->conf().gb_hang_tk > conf_.tk_lag_max );
     fld->fillRandom(6);
 
     netplay::Field *np_field = pkt.mutable_field();
