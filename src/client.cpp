@@ -324,7 +324,7 @@ void ClientInstance::processPacketField(const netplay::Field &pkt_fld)
     }
     // check client conf against server conf
     if( conf.gb_wait_tk <= conf_.tk_lag_max ) {
-      LOG("garbage waiting time must be lower than lag limit");
+      LOG("garbage waiting time must be greater than lag limit");
       throw netplay::CallbackError("unsupported configuration");
     }
     fld->setConf(conf);
