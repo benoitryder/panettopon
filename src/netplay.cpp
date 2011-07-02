@@ -227,8 +227,8 @@ void PeerSocket::close()
 
 
 ServerSocket::ServerSocket(Observer &obs, asio::io_service &io_service):
-    BaseSocket(io_service),
-    acceptor_(io_service), started_(false), observer_(obs)
+    acceptor_(io_service), started_(false), observer_(obs),
+    pkt_size_max_(netplay::Server::Conf::default_instance().pkt_size_max())
 {
 }
 
@@ -246,6 +246,14 @@ void ServerSocket::start(int port)
   acceptor_.listen();
   started_ = true;
   this->acceptNext();
+}
+
+void ServerSocket::close()
+{
+  // socket may be closed due to the error, but we still have to trigger events
+  if( acceptor_.is_open() ) {
+    acceptor_.close();
+  }
 }
 
 

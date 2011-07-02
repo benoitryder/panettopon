@@ -131,7 +131,7 @@ class PeerSocket: public PacketSocket
 
 
 /// Socket for server.
-class ServerSocket: public BaseSocket
+class ServerSocket
 {
   friend class PeerSocket;
  public:
@@ -146,12 +146,15 @@ class ServerSocket: public BaseSocket
   };
 
   ServerSocket(Observer &obs, boost::asio::io_service &io_service);
-  virtual ~ServerSocket();
+  ~ServerSocket();
 
   /// Start server on a given port.
   void start(int port);
   /// Return true if the server has been started.
   bool started() const { return started_; }
+  /// Close the server, if not already closed.
+  void close();
+  boost::asio::io_service &io_service() { return acceptor_.get_io_service(); }
 
   void setPktSizeMax(uint16_t v) { pkt_size_max_ = v; }
 
@@ -167,6 +170,7 @@ class ServerSocket: public BaseSocket
   boost::asio::ip::tcp::acceptor acceptor_;
   bool started_;
   Observer &observer_;
+  uint16_t pkt_size_max_;
 
   typedef boost::ptr_vector<PeerSocket> PeerSocketContainer;
   /// Sockets of connected accepted clients.
