@@ -186,20 +186,33 @@ void ClientInstance::processPacketGarbage(const netplay::Garbage &pkt_gb)
   Match::GbHangingMap::const_iterator it = gbs_hang.find(pkt_gb.gbid());
   Garbage *gb = it == gbs_hang.end() ? NULL : (*it).second;
 
-  if( pkt_gb.drop() ) {
-    // drop garbage
+  if( pkt_gb.wait() ) {
+    // garbage from hanging to wait (gbid is not significant)
     if( gb == NULL ) {
-      return; // ignore, one of our garbages, already dropped
+      throw netplay::CallbackError("garbage to wait not found");
     }
+    match_.waitGarbageDrop(gb);
     Player *pl = this->player(gb->to);
     if( pl->local() ) {
+      // one of our garbages, drop it
       netplay::Packet pkt;
       netplay::Garbage *pkt_gb = pkt.mutable_garbage();
       pkt_gb->set_gbid( gb->gbid );
+      pkt_gb->set_plid_to(pl->plid());
       pkt_gb->set_drop(true);
       socket_.writePacket(pkt);
+      gb->to->dropNextGarbage();
     }
-    match_.dropGarbage(gb);
+
+  } else if( pkt_gb.drop() ) {
+    // drop garbage
+    Player *pl = this->player(pkt_gb.plid_to());
+    if( pl == NULL || pl->field() == NULL ) {
+      throw netplay::CallbackError("invalid field for dropped garbage");
+    }
+    if( !pl->local() ) { // ignore our garbages (already dropped)
+      pl->field()->dropNextGarbage();
+    }
 
   } else if( gb == NULL ) {
     // new garbage
@@ -323,10 +336,6 @@ void ClientInstance::processPacketField(const netplay::Field &pkt_fld)
       throw netplay::CallbackError("invalid configuration");
     }
     // check client conf against server conf
-    if( conf.gb_hang_tk <= conf_.tk_lag_max ) {
-      LOG("garbage hanging time must be greater than lag limit");
-      throw netplay::CallbackError("unsupported configuration");
-    }
     fld->setConf(conf);
     // grid
     if( pkt_fld.blocks_size() > 0 ) {

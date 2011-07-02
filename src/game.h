@@ -188,6 +188,7 @@ class Field
     unsigned int chain; ///< Chain count (default: 1).
     bool raised;  ///< Field lifted up.
   };
+  typedef boost::ptr_deque<Garbage> GarbageList;
 
   Field( uint32_t seed);
   ~Field();
@@ -217,6 +218,7 @@ class Field
   /// Return hanging garbage at given position.
   const Garbage &hangingGarbage(size_t pos) const { return gbs_hang_[pos]; }
   size_t hangingGarbageCount() const { return gbs_hang_.size(); }
+  const GarbageList &waitingGarbages() const { return gbs_wait_; }
 
   /** @brief Init for match.
    *
@@ -231,7 +233,9 @@ class Field
    */
   void step(KeyState keys);
 
-  /** @brief Drop the next hanging garbage.
+  /// Move a hanging garbage to wait list.
+  void waitNextGarbageDrop();
+  /** @brief Drop the next waiting garbage.
    *
    * Garbage will fall on the field as soon as possible.
    */
@@ -379,9 +383,10 @@ class Field
   /// Drop positions for combo garbages.
   uint8_t gb_drop_pos_[FIELD_WIDTH+1];
 
-  typedef boost::ptr_deque<Garbage> GarbageList;
   /// Garbages before they are dropped (first to be dropped at front).
   GarbageList gbs_hang_;
+  /// Queue of garbages waiting to be dropped.
+  GarbageList gbs_wait_;
   /// Queue of dropped garbages, waiting to fall.
   GarbageList gbs_drop_;
   /// Dropped garbages, on field.
@@ -446,8 +451,8 @@ class Match
    * The garbage is added to the \e to field, which must not be \e NULL.
    */
   void addGarbage(Garbage *gb, unsigned int pos);
-  /// Drop a (hanging) garbage.
-  void dropGarbage(Garbage *gb);
+  /// Move a hanging garbage to wait list.
+  void waitGarbageDrop(const Garbage *gb);
 
  protected:
   FieldContainer fields_;

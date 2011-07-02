@@ -584,21 +584,30 @@ void Field::step(KeyState keys)
 }
 
 
-void Field::dropNextGarbage()
+void Field::waitNextGarbageDrop()
 {
+  LOG("[%p|%u] waitNextGarbageDrop()", this, tick_);
   // id is not meaningful anymore, it could be reused
   Garbage *gb = gbs_hang_.pop_front().release();
   gb->gbid = 0;
-  gbs_drop_.push_back( gb );
+  gbs_wait_.push_back( gb );
+}
+
+void Field::dropNextGarbage()
+{
+  LOG("[%p|%u] dropNextGarbage()", this, tick_);
+  gbs_drop_.push_back( gbs_wait_.pop_front().release() );
 }
 
 void Field::insertHangingGarbage(Garbage *gb, unsigned int pos)
 {
+  LOG("[%p|%u] insertHangingGarbage(%u, %u)", this, tick_, gb->gbid, pos);
   gbs_hang_.insert( gbs_hang_.begin()+pos, gb );
 }
 
 void Field::removeHangingGarbage(Garbage *gb)
 {
+  LOG("[%p|%u] removeHangingGarbage(%u)", this, tick_, gb->gbid);
   GarbageList::iterator it;
   for( it=gbs_hang_.begin(); it!=gbs_hang_.end(); ++it ) {
     if( &(*it) == gb ) {
@@ -1021,13 +1030,13 @@ void Match::addGarbage(Garbage *gb, unsigned int pos)
   gbs_hang_[gb->gbid] = gb;
 }
 
-void Match::dropGarbage(Garbage *gb)
+void Match::waitGarbageDrop(const Garbage *gb)
 {
   assert( gb->to != NULL );
 
   gbs_hang_.erase(gb->gbid);
   assert( gb->to->hangingGarbage(0).gbid == gb->gbid );
-  gb->to->dropNextGarbage();
+  gb->to->waitNextGarbageDrop();
 }
 
 
@@ -1051,19 +1060,19 @@ void GarbageDistributor::updateGarbages(Field *fld)
     gbs_chain_.erase(fld);
   }
 
-  // check whether a garbage should be dropped
-  const size_t n = fld->hangingGarbageCount();
-  for( size_t i=0; i<n; i++ ) {
-    const Garbage &gb = fld->hangingGarbage(i);
-    GbDropTickMap::iterator it = drop_ticks_.find(&gb);
-    if( it == drop_ticks_.end() ) {
-      continue; // already being dropped
+  // check whether a garbage should be dropped (at most one per step)
+  if( fld->hangingGarbageCount() > 0 ) {
+    const Garbage &gb = fld->hangingGarbage(0);
+    GbChainMap::iterator it = gbs_chain_.find(gb.from);
+    // don't drop garbage of an active chain
+    if( it == gbs_chain_.end() && (*it).second != &gb ) {
+      GbDropTickMap::iterator it2 = drop_ticks_.find(&gb);
+      assert( it2 != drop_ticks_.end() );
+      if( (*it2).second <= fld->tick() ) {
+        drop_ticks_.erase(it2);
+        observer_.onGarbageDrop(&gb);
+      }
     }
-    if( (*it).second <= fld->tick() ) {
-      drop_ticks_.erase(it);
-      observer_.onGarbageDrop(&gb);
-    }
-    break; // drop at most one garbage per step
   }
 
   const Field::StepInfo info = fld->stepInfo();
@@ -1149,7 +1158,7 @@ void GarbageDistributor::updateGarbages(Field *fld)
     gb->size.y++;
     drop_ticks_[gb] = fld->tick() + fld->conf().gb_hang_tk;
     observer_.onGarbageUpdateSize(gb);
-  }
+}
 
   // combo garbage
   // with a width of 6, values match the original PdP rules

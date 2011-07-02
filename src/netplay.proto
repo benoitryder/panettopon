@@ -186,6 +186,7 @@ message Garbage {
   optional uint32 pos = 4;       // zero-based position in hanging list
   optional Type   type = 5;
   optional uint32 size = 6;
-  optional bool   drop = 7 [default = false]; // if set, other fields should be unset
+  optional bool   wait = 7 [default = false]; // if set, other fields should be unset
+  optional bool   drop = 8 [default = false]; // if set, plid_to must be set, gbid is ignored
 }
 

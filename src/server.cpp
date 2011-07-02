@@ -17,7 +17,7 @@ static const FieldConf default_field_conf = {
   /* stop_chain_0   */  85,
   /* stop_chain_k   */  10,
   /* lost_tk        */  60,
-  /* gb_hang_tk     */  90+60,
+  /* gb_hang_tk     */  90,
   /* flash_tk       */  36,
   /* levitate_tk    */  12,
   /* pop_tk         */   8,
@@ -235,18 +235,22 @@ void ServerInstance::onGarbageDrop(const Garbage *gb)
 {
   Player *pl_to = this->player(gb->to);
   assert( pl_to != NULL );
-  PeerContainer::const_iterator peer_it = peers_.find(pl_to->plid());
 
   netplay::Packet pkt;
   netplay::Garbage *np_garbage = pkt.mutable_garbage();
-  np_garbage->set_gbid( gb->gbid );
-  np_garbage->set_drop( true );
+  np_garbage->set_gbid(gb->gbid);
+  np_garbage->set_wait(true);
+  match_.waitGarbageDrop(gb); // note: reset the gbid
+  socket_.broadcastPacket(pkt);
+
   // local player: drop immediately
-  if( peer_it == peers_.end() ) {
+  if( pl_to->local() ) {
     gb->to->dropNextGarbage();
+    np_garbage->Clear();
+    np_garbage->set_gbid(0);
+    np_garbage->set_plid_to(pl_to->plid());
+    np_garbage->set_drop(true);
     socket_.broadcastPacket(pkt);
-  } else {
-    (*peer_it).second->writePacket(pkt);
   }
 }
 
@@ -342,28 +346,28 @@ void ServerInstance::processPacketGarbage(netplay::PeerSocket *peer, const netpl
   if( !pkt_gb.drop() ) {
     throw netplay::CallbackError("garbage drop expected");
   }
-
-  const Match::GbHangingMap gbs_hang = match_.hangingGarbages();
-  Match::GbHangingMap::const_iterator it = gbs_hang.find(pkt_gb.gbid());
-  if( it == gbs_hang.end() ) {
-    throw netplay::CallbackError("garbage not found");
+  if( !pkt_gb.has_plid_to() ) {
+    throw netplay::CallbackError("player not set for garbage drop");
   }
-  Garbage *gb = (*it).second;
-
-  Player *pl = this->player(gb->to);
-  assert( pl != NULL );
+  Player *pl = this->player(pkt_gb.plid_to());
+  if( pl == NULL || pl->field() == NULL ) {
+    throw netplay::CallbackError("invalid player");
+  }
   this->checkPeerPlayer(pl->plid(), peer);
-  if( gb->to->hangingGarbage(0).gbid != gb->gbid ) {
-    throw netplay::CallbackError("unexpected dropped garbage");
+
+  Field *fld = pl->field();
+  if( fld->waitingGarbages().size() == 0 ) {
+    throw netplay::CallbackError("no garbage to drop");
   }
 
   netplay::Packet pkt_send;
   netplay::Garbage *np_garbage_send = pkt_send.mutable_garbage();
-  np_garbage_send->set_gbid( gb->gbid );
+  np_garbage_send->set_gbid(0);
+  np_garbage_send->set_plid_to(pl->plid());
   np_garbage_send->set_drop(true);
   socket_.broadcastPacket(pkt_send);
 
-  match_.dropGarbage(gb);
+  fld->dropNextGarbage();
 }
 
 void ServerInstance::processPacketPlayer(netplay::PeerSocket *peer, const netplay::Player &pkt_pl)
@@ -487,7 +491,6 @@ void ServerInstance::prepareMatch()
     Field *fld = match_.newField(seed);
     pl->setField(fld);
     fld->setConf( default_field_conf ); //XXX:temp
-    assert( fld->conf().gb_hang_tk > conf_.tk_lag_max );
     fld->fillRandom(6);
 
     netplay::Field *np_field = pkt.mutable_field();
