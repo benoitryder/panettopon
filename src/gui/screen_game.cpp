@@ -450,9 +450,7 @@ FieldDisplay::Label::Label(const ResField &res, const FieldPos &pos, bool chain,
   if( txt_sx > txt_sy ) {
     txt_sx = txt_sy; // stretch Y, not X
   }
-  //XXX:hack add the baseline offset, not usually included in 'x' and digits
-  const sf::IntRect &glyph_rect = txt_.GetFont().GetGlyph('p', txt_.GetCharacterSize(), false).Bounds;
-  txt_.SetOrigin(txt_rect.Width/2, (txt_rect.Height+glyph_rect.Top+glyph_rect.Height)/2);
+  txt_.SetOrigin(txt_rect.Width/2, (txt_.GetFont().GetLineSpacing(txt_.GetCharacterSize())+2)/2);
   txt_.SetScale(txt_sx, txt_sy); // scale after computations (needed for GetRect())
 
   // initialize sprite
@@ -557,9 +555,7 @@ void FieldDisplay::GbHanging::updateText()
   if( txt_sx > txt_sy ) {
     txt_sx = txt_sy; // stretch Y, not X
   }
-  //XXX:hack add the baseline offset, not usually included in 'x' and digits
-  const sf::IntRect &glyph_rect = txt_.GetFont().GetGlyph('p', txt_.GetCharacterSize(), false).Bounds;
-  txt_.SetOrigin(txt_rect.Width/2, (txt_rect.Height+glyph_rect.Top+glyph_rect.Height)/2);
+  txt_.SetOrigin(txt_rect.Width/2, (txt_.GetFont().GetLineSpacing(txt_.GetCharacterSize())+2)/2);
   txt_.SetScale(txt_sx, txt_sy); // scale after computations (needed)
 }
 

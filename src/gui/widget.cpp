@@ -56,7 +56,7 @@ void WButton::setCaption(const std::string &caption)
 {
   caption_.SetString(caption);
   sf::FloatRect r = caption_.GetRect();
-  caption_.SetOrigin(r.Width/2, r.Height/2);
+  caption_.SetOrigin(r.Width/2, (caption_.GetFont().GetLineSpacing(caption_.GetCharacterSize())+2)/2);
 }
 
 void WButton::setColor(const sf::Color &color)
@@ -130,7 +130,7 @@ void WLabel::setTextAlign(int align)
   } else if( align > 0 ) {
     x = r.Width;
   }
-  text_.SetOrigin(x, r.Height/2);
+  text_.SetOrigin(x, (text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2)/2);
   align_ = align;
 }
 
@@ -141,9 +141,7 @@ WEntry::WEntry(float width, float height):
 {
   text_.SetColor(sf::Color::White);
   bg_.SetColor(sf::Color::White);
-  //XXX hack to have correct position
-  const sf::IntRect &r = text_.GetFont().GetGlyph('p', text_.GetCharacterSize(), false).Bounds;
-  const unsigned int full_height = text_.GetCharacterSize()+r.Height+r.Top;
+  const unsigned int full_height = text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2;
   text_.SetOrigin(width/2-2, full_height/2);
   cursor_ = sf::Shape::Line(1, 0, 1, full_height, 1, text_.GetColor());
 }
