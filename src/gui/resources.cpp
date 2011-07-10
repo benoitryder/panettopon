@@ -31,6 +31,24 @@ void ResourceManager::init(const std::string &path)
   if( p != std::string::npos ) {
     res_path_ = res_path_.substr(0, p+1);
   }
+
+  // use english as default language
+  this->setLang("en");
+}
+
+
+void ResourceManager::setLang(const std::string &lang)
+{
+  if( res_path_.empty() ) {
+    throw std::runtime_error("resource path not set");
+  }
+  if( lang.empty() || lang.find_first_of("/\\.") != std::string::npos ) {
+    throw std::invalid_argument("empty resource path");
+  }
+  const std::string lang_path = res_path_+"/lang/"+lang+".ini";
+  if( !lang_.load(lang_path.c_str()) ) {
+    throw std::runtime_error("failed to load language "+lang);
+  }
 }
 
 
@@ -53,6 +71,10 @@ const sf::Image *ResourceManager::getImage(const std::string &name)
   return pimg;
 }
 
+std::string ResourceManager::getLang(const std::string &section, const std::string &key) const
+{
+  return lang_.get(section, key, "");
+}
 
 
 ImageTile::ImageTile():

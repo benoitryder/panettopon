@@ -5,6 +5,7 @@
 #include <string>
 #include <SFML/Graphics/Image.hpp>
 #include "../util.h"
+#include "../config.h"
 
 namespace sf {
   class Sprite;
@@ -19,15 +20,20 @@ class ResourceManager
   ResourceManager();
   /// Initialize resources, set the resource path.
   void init(const std::string &path);
+  /// Load language strings.
+  void setLang(const std::string &lang);
 
   /// Get an image from its name.
   const sf::Image *getImage(const std::string &name);
+  /// Get a language string from its section and name
+  std::string getLang(const std::string &section, const std::string &key) const;
 
  private:
   std::string res_path_;  ///< Path to resources.
 
   typedef std::map<std::string, sf::ResourcePtr<sf::Image> > ImageContainer;
   ImageContainer images_;  ///< Loaded images.
+  Config lang_;  ///< Language strings
 };
 
 
