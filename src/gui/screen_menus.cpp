@@ -16,12 +16,14 @@ ScreenStart::ScreenStart(GuiInterface &intf):
 void ScreenStart::enter()
 {
   intf_.stopInstance();
+  const ResourceManager &res_mgr = intf_.res_mgr();
+  const std::string lang_section("ScreenStart");
 
   // create buttons
-  const char *labels[] = {
-    "Join server",
-    "Create server",
-    "Exit",
+  const std::string labels[] = {
+    res_mgr.getLang(lang_section, "JoinServer"),
+    res_mgr.getLang(lang_section, "CreateServer"),
+    res_mgr.getLang(lang_section, "Exit"),
   };
   const int button_nb = sizeof(labels)/sizeof(*labels);
   const float button_dy = 60;
@@ -86,8 +88,11 @@ ScreenJoinServer::ScreenJoinServer(GuiInterface &intf):
 
 void ScreenJoinServer::enter()
 {
+  const ResourceManager &res_mgr = intf_.res_mgr();
+  const std::string lang_section("ScreenJoinServer");
+
   WLabel *label = new WLabel();
-  label->setText("Enter host and port");
+  label->setText(res_mgr.getLang(lang_section, "HostPort"));
   label->setTextAlign(0);
   label->setPosition(0, -60);
 
@@ -100,7 +105,7 @@ void ScreenJoinServer::enter()
   entry_port_->setPosition(155, 0);
 
   WButton *button = new WButton(200, 50);
-  button->setCaption("Join");
+  button->setCaption(res_mgr.getLang(lang_section, "Join"));
   button->setPosition(0, 60);
 
   container_.widgets.push_back(label);
@@ -170,8 +175,11 @@ ScreenCreateServer::ScreenCreateServer(GuiInterface &intf):
 
 void ScreenCreateServer::enter()
 {
+  const ResourceManager &res_mgr = intf_.res_mgr();
+  const std::string lang_section("ScreenCreateServer");
+
   WLabel *label = new WLabel();
-  label->setText("Port");
+  label->setText(res_mgr.getLang(lang_section, "Port"));
   label->setTextAlign(1);
   label->setPosition(-20, -30);
 
@@ -180,7 +188,7 @@ void ScreenCreateServer::enter()
   entry_port_->setPosition(50, -30);
 
   WButton *button = new WButton(200, 50);
-  button->setCaption("Create");
+  button->setCaption(res_mgr.getLang(lang_section, "Create"));
   button->setPosition(0, 30);
 
   container_.widgets.push_back(label);
