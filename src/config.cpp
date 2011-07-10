@@ -86,7 +86,7 @@ bool Config::load(const char *fname)
             if( line[p] == delim )
               break; // end of string
             if( line[p] == '\\' ) {
-              if( line[p]=='\\' || line[p]=='\"' || line[p] == '\'' )
+              if( line[p+1]=='\\' || line[p+1]=='\"' || line[p+1] == '\'' )
                 line.erase(p,1); // escape
             }
             p++;
