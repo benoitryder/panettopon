@@ -7,7 +7,7 @@
  * Configuration files use the INI file format.
  * This is a very simple implementation:
  *  - string quoting (with simple or double quotes)
- *  - escape sequences in strings: <tt>\\</tt>, <tt>\"</tt>, <tt>\'</tt>
+ *  - escape sequences in strings: <tt>\\</tt>, <tt>\"</tt>, <tt>\'</tt>, <tt>\n</tt>
  *  - strip whitespaces after keys and around values
  *  - comments begin with <tt>#</tt> or <tt>;</tt>
  *  - break lines with trailing <tt>\</tt>

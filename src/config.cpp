@@ -88,6 +88,10 @@ bool Config::load(const char *fname)
             if( line[p] == '\\' ) {
               if( line[p+1]=='\\' || line[p+1]=='\"' || line[p+1] == '\'' )
                 line.erase(p,1); // escape
+              else if( line[p+1] == '\n' ) {
+                line.erase(p,1);
+                line[p] = '\n';
+              }
             }
             p++;
           }
