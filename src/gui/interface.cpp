@@ -2,7 +2,7 @@
 #include <boost/asio/placeholders.hpp>
 #include "interface.h"
 #include "screen_menus.h"
-#include "../config.h"
+#include "../inifile.h"
 #include "../server.h"
 #include "../client.h"
 #include "../deletion_handler.h"
@@ -30,7 +30,7 @@ GuiInterface::~GuiInterface()
   this->endDisplay();
 }
 
-bool GuiInterface::run(const Config &cfg)
+bool GuiInterface::run(const IniFile &cfg)
 {
 #define CONF_LOAD(n,ini,t) \
   conf_.n = cfg.get##t(CONF_SECTION, #ini, conf_.n);

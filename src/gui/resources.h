@@ -5,7 +5,7 @@
 #include <string>
 #include <SFML/Graphics/Image.hpp>
 #include "../util.h"
-#include "../config.h"
+#include "../inifile.h"
 
 namespace sf {
   class Sprite;
@@ -33,7 +33,7 @@ class ResourceManager
 
   typedef std::map<std::string, sf::ResourcePtr<sf::Image> > ImageContainer;
   ImageContainer images_;  ///< Loaded images.
-  Config lang_;  ///< Language strings
+  IniFile lang_;  ///< Language strings
 };
 
 

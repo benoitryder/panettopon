@@ -133,7 +133,7 @@ endif()
 add_executable(panettopon
   main.cpp
   instance.cpp client.cpp server.cpp netplay.cpp game.cpp
-  config.cpp log.cpp optget.cpp
+  inifile.cpp log.cpp optget.cpp
   ${PNP_INTF_SRCS}
   ${PROTO_SRCS} ${PROTO_HDRS}
   ${ICON_OBJ}

@@ -1,6 +1,6 @@
 #include "server.h"
 #include "netplay.pb.h"
-#include "config.h"
+#include "inifile.h"
 #include "log.h"
 
 
@@ -38,7 +38,7 @@ ServerInstance::~ServerInstance()
 {
 }
 
-void ServerInstance::loadConf(const Config &cfg)
+void ServerInstance::loadConf(const IniFile &cfg)
 {
   assert( ! socket_.started() );
   //XXX signed/unsigned not checked

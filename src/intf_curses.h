@@ -6,7 +6,7 @@
 // curses last to avoid naming conflicts due to bloody curses macros
 #include <curses.h>
 
-class Config;
+class IniFile;
 
 namespace curses {
 
@@ -22,7 +22,7 @@ class CursesInterface: public ClientInstance::Observer,
  public:
   CursesInterface();
   virtual ~CursesInterface();
-  bool run(const Config &cfg);
+  bool run(const IniFile &cfg);
 
   /** @name ClientInstance::Observer methods. */
   //@{

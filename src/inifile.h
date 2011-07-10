@@ -1,10 +1,9 @@
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#ifndef INIFILE_H_
+#define INIFILE_H_
 
 /** @file
- * @brief Configuration file.
+ * @brief Parser for INI configuration files.
  *
- * Configuration files use the INI file format.
  * This is a very simple implementation:
  *  - string quoting (with simple or double quotes)
  *  - escape sequences in strings: <tt>\\</tt>, <tt>\"</tt>, <tt>\'</tt>, <tt>\n</tt>
@@ -20,14 +19,15 @@
 
 
 
-class Config
+/// Parse and store key/values of an INI file.
+class IniFile
 {
  private:
   static const unsigned int MAX_LINE_SIZE;
 
  public:
-  /// Create an empty config.
-  Config() {}
+  /// Create an empty INI file content.
+  IniFile() {}
   /// Load config from a file, add it to current content.
   bool load(const char *fname);
 

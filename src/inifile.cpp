@@ -1,12 +1,12 @@
 #include <cstdio>
 #include <cstdlib>
-#include "config.h"
+#include "inifile.h"
 
 
-const unsigned int Config::MAX_LINE_SIZE = 256;
+const unsigned int IniFile::MAX_LINE_SIZE = 256;
 
 
-bool Config::load(const char *fname)
+bool IniFile::load(const char *fname)
 {
   FILE *fp = fopen(fname, "r");
   if( fp == NULL )
@@ -116,7 +116,7 @@ error:
 }
 
 
-bool Config::has(const std::string &section, const std::string &key) const
+bool IniFile::has(const std::string &section, const std::string &key) const
 {
   content_type::const_iterator sec_it = content_.find(section);
   if( sec_it == content_.end() )
@@ -127,7 +127,7 @@ bool Config::has(const std::string &section, const std::string &key) const
   return true;
 }
 
-std::string Config::get(const std::string &section, const std::string &key, const std::string def) const
+std::string IniFile::get(const std::string &section, const std::string &key, const std::string def) const
 {
   content_type::const_iterator sec_it = content_.find(section);
   if( sec_it == content_.end() )
@@ -138,7 +138,7 @@ std::string Config::get(const std::string &section, const std::string &key, cons
   return val_it->second;
 }
 
-int Config::getInt(const std::string &section, const std::string &key, int def) const
+int IniFile::getInt(const std::string &section, const std::string &key, int def) const
 {
   content_type::const_iterator sec_it = content_.find(section);
   if( sec_it == content_.end() )
@@ -155,7 +155,7 @@ int Config::getInt(const std::string &section, const std::string &key, int def) 
   return ret;
 }
 
-double Config::getDouble(const std::string &section, const std::string &key, double def) const
+double IniFile::getDouble(const std::string &section, const std::string &key, double def) const
 {
   content_type::const_iterator sec_it = content_.find(section);
   if( sec_it == content_.end() )
@@ -172,7 +172,7 @@ double Config::getDouble(const std::string &section, const std::string &key, dou
   return ret;
 }
 
-bool Config::getBool(const std::string &section, const std::string &key, bool def) const
+bool IniFile::getBool(const std::string &section, const std::string &key, bool def) const
 {
   content_type::const_iterator sec_it = content_.find(section);
   if( sec_it == content_.end() )
@@ -196,7 +196,7 @@ bool Config::getBool(const std::string &section, const std::string &key, bool de
   }
 }
 
-void Config::set(const std::string &section, const std::string &key, std::string val)
+void IniFile::set(const std::string &section, const std::string &key, std::string val)
 {
   if( val.empty() )
     content_[section].erase(key);

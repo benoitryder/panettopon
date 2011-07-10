@@ -36,7 +36,7 @@ struct ServerConf
 
 /** @brief Generic macro for server configuration fields.
  *
- * Parameters are: field name, <tt>.ini</tt> name and type suffix (for Config
+ * Parameters are: field name, <tt>.ini</tt> name and type suffix (for IniFile
  * \e get methods).
  */
 #define SERVER_CONF_APPLY(expr) { \

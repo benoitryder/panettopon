@@ -7,7 +7,7 @@
 #include "game.h"
 
 
-class Config;
+class IniFile;
 
 
 /// Instance for hosted games.
@@ -24,7 +24,7 @@ class ServerInstance: public GameInstance,
   virtual ~ServerInstance();
 
   /// Set configuration values from a config file.
-  void loadConf(const Config &cfg);
+  void loadConf(const IniFile &cfg);
 
   /// Start server on a given port.
   void startServer(int port);

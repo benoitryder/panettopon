@@ -1,4 +1,4 @@
-#include "config.h"
+#include "inifile.h"
 #include "log.h"
 #include "intf_curses.h"
 
@@ -27,7 +27,7 @@ CursesInterface::~CursesInterface()
 }
 
 
-bool CursesInterface::run(const Config &cfg)
+bool CursesInterface::run(const IniFile &cfg)
 {
 #define CONF_LOAD_KEY(n,ini) do{ \
   const std::string s = cfg.get(CONF_SECTION, #ini, ""); \

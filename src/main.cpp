@@ -1,6 +1,6 @@
 #include <unistd.h>
 #include <cstdio>
-#include "config.h"
+#include "inifile.h"
 #include "log.h"
 #include "optget.h"
 #include "util.h"
@@ -158,7 +158,7 @@ int main(int /*argc*/, char **argv)
   }
 
   // load configuration
-  Config cfg;
+  IniFile cfg;
   if( conf_file == NULL && ::access(CONF_FILE_DEFAULT, R_OK) == 0 )
     conf_file = CONF_FILE_DEFAULT; // default config file
   if( conf_file != NULL ) {

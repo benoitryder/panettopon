@@ -7,7 +7,7 @@
 #include "../client.h"
 #include "../monotone_timer.hpp"
 
-class Config;
+class IniFile;
 class ServerInstance;
 class ClientInstance;
 
@@ -24,7 +24,7 @@ class GuiInterface: public ClientInstance::Observer
  public:
   GuiInterface();
   virtual ~GuiInterface();
-  bool run(const Config &cfg);
+  bool run(const IniFile &cfg);
   boost::asio::io_service &io_service() { return io_service_; }
 
   /** @brief Change the active screen.

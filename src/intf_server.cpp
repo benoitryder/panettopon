@@ -1,6 +1,6 @@
 #include "intf_server.h"
 #include "server.h"
-#include "config.h"
+#include "inifile.h"
 #include "log.h"
 
 
@@ -10,7 +10,7 @@ BasicServerInterface::BasicServerInterface():
 }
 
 
-bool BasicServerInterface::run(const Config &cfg)
+bool BasicServerInterface::run(const IniFile &cfg)
 {
   boost::asio::io_service io_service;
   ServerInstance instance(*this, io_service);
