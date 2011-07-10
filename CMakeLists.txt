@@ -29,5 +29,3 @@ endif()
 add_subdirectory(src)
 add_subdirectory(res)
 
-#TODO install panettopon.ini
-

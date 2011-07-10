@@ -147,3 +147,7 @@ if(WIN32)
   target_link_libraries(panettopon ws2_32 mswsock)
 endif()
 
+
+#TODO install in bin/ on Linux
+install(TARGETS panettopon RUNTIME DESTINATION .)
+
