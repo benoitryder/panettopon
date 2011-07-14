@@ -53,6 +53,7 @@ class ImageTile
 {
  public:
   ImageTile();
+  const sf::IntRect &rect() const { return rect_; }
 
   /// Initialize the tile using image subrect
   void create(const sf::Image *img, const sf::IntRect &rect);
