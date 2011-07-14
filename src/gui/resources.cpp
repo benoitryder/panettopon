@@ -32,6 +32,10 @@ void ResourceManager::init(const std::string &path)
     res_path_ = res_path_.substr(0, p+1);
   }
 
+  const std::string style_path = res_path_+"/style.ini";
+  if( !style_.load(style_path.c_str()) ) {
+    throw std::runtime_error("failed to load style.ini file");
+  }
   // use english as default language
   this->setLang("en");
 }

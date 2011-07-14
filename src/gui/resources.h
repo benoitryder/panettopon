@@ -25,6 +25,8 @@ class ResourceManager
 
   /// Get an image from its name.
   const sf::Image *getImage(const std::string &name);
+  /// Style accessors
+  const IniFile &style() const { return style_; }
   /// Get a language string from its section and name
   std::string getLang(const std::string &section, const std::string &key) const;
 
@@ -33,6 +35,7 @@ class ResourceManager
 
   typedef std::map<std::string, sf::ResourcePtr<sf::Image> > ImageContainer;
   ImageContainer images_;  ///< Loaded images.
+  IniFile style_;  ///< Style configuration
   IniFile lang_;  ///< Language strings
 };
 
