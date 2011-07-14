@@ -48,9 +48,6 @@ class ResourceManager
 /** @brief Image subpart with rendering capabilities
  *
  * Similar to sf::Sprite but without positioning, scaling, rotating, etc.
- *
- * Tiles are drawn using positions in blocks and assuming Y=0 is the bottom of
- * the screen. It used in particular for field blocks.
  */
 class ImageTile
 {
