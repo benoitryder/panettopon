@@ -118,6 +118,25 @@ class ResField
 };
 
 
+/// Container for WButton style
+class StyleButton
+{
+ public:
+  StyleButton();
+  void load(ResourceManager *res_mgr);
+
+  const sf::Font *font;
+  unsigned int font_size;
+  struct {
+    ImageTile left;
+    ImageTile middle;
+    ImageTile right;
+  } tiles;
+  sf::Color color;
+  sf::Color focus_color;
+};
+
+
 }
 
 #endif

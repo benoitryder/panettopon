@@ -210,5 +210,43 @@ void ResField::load(ResourceManager *res_mgr)
 }
 
 
+StyleButton::StyleButton():
+    font(NULL), font_size(0)
+{
+}
+
+void StyleButton::load(ResourceManager *res_mgr)
+{
+  const IniFile &style = res_mgr->style();
+  const std::string section("ScreenMenu.Button");
+
+  std::string s = style.get(section, "Font", "");
+  if( s.empty() ) {
+    font = &sf::Font::GetDefaultFont();
+  } else {
+    font = res_mgr->getFont(s);
+  }
+
+  int i = style.getInt(section, "FontSize", -1);
+  if( i <= 0 ) {
+    throw std::runtime_error("invalid FontSize in "+section);
+  }
+  font_size = i;
+
+  const sf::Image *img = res_mgr->getImage("Menu-map");
+  int margin = style.getInt(section, "ImageMarginX", -1);
+  if( margin < 0 || 2*margin >= (int)img->GetWidth() ) {
+    throw std::runtime_error("invalid ImageMarginX in "+section);
+  }
+  tiles.left.create(img, sf::IntRect(0, 0, margin, img->GetHeight()/2));
+  tiles.middle.create(img, sf::IntRect(margin, 0, img->GetWidth()-2*margin, img->GetHeight()/2));
+  tiles.right.create(img, sf::IntRect(img->GetWidth()-margin, 0, margin, img->GetHeight()/2));
+
+  //TODO
+  color = sf::Color::White;
+  focus_color = sf::Color::Red;
+}
+
+
 }
 
