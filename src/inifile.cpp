@@ -3,7 +3,7 @@
 #include "inifile.h"
 
 
-const unsigned int IniFile::MAX_LINE_SIZE = 256;
+const unsigned int IniFile::MAX_LINE_SIZE = 4096;
 
 
 bool IniFile::load(const char *fname)
