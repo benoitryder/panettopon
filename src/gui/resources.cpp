@@ -137,6 +137,11 @@ void ImageTile::render(sf::Renderer &renderer, float x, float y, float w, float 
   renderer.End();
 }
 
+void ImageTile::render(sf::Renderer &renderer, float x, float y) const
+{
+  this->render(renderer, x, y, rect_.Width, rect_.Height);
+}
+
 void ImageTile::setToSprite(sf::Sprite *spr, bool center) const
 {
   spr->SetImage(*image_);
