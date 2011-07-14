@@ -75,6 +75,25 @@ const sf::Image *ResourceManager::getImage(const std::string &name)
   return pimg;
 }
 
+const sf::Font *ResourceManager::getFont(const std::string &name)
+{
+  assert( ! res_path_.empty() );
+
+  FontContainer::iterator it = fonts_.find(name);
+  if( it != fonts_.end() ) {
+    return (*it).second;
+  }
+
+  sf::Font *font = new sf::Font;
+  sf::ResourcePtr<sf::Font> pfont(font);
+  if( ! font->LoadFromFile(res_path_+"/"+name+".ttf") ) {
+    throw std::runtime_error("failed to load font "+name);
+  }
+  fonts_[name] = pfont;
+
+  return pfont;
+}
+
 std::string ResourceManager::getLang(const std::string &section, const std::string &key) const
 {
   return lang_.get(section, key, "");

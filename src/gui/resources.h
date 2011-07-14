@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <SFML/Graphics/Image.hpp>
+#include <SFML/Graphics/Font.hpp>
 #include "../util.h"
 #include "../inifile.h"
 
@@ -25,6 +26,8 @@ class ResourceManager
 
   /// Get an image from its name.
   const sf::Image *getImage(const std::string &name);
+  /// Get a font from its name
+  const sf::Font *getFont(const std::string &name);
   /// Style accessors
   const IniFile &style() const { return style_; }
   /// Get a language string from its section and name
@@ -35,6 +38,8 @@ class ResourceManager
 
   typedef std::map<std::string, sf::ResourcePtr<sf::Image> > ImageContainer;
   ImageContainer images_;  ///< Loaded images.
+  typedef std::map<std::string, sf::ResourcePtr<sf::Font> > FontContainer;
+  FontContainer fonts_;  ///< Loaded fonts
   IniFile style_;  ///< Style configuration
   IniFile lang_;  ///< Language strings
 };
