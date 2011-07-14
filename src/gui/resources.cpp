@@ -68,7 +68,7 @@ const sf::Image *ResourceManager::getImage(const std::string &name)
   sf::Image *img = new sf::Image;
   sf::ResourcePtr<sf::Image> pimg(img);
   if( ! img->LoadFromFile(res_path_+"/"+name+".png") ) {
-    throw std::runtime_error("Failed to load image: "+name);
+    throw std::runtime_error("failed to load image "+name);
   }
   images_[name] = pimg;
 
