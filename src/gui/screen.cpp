@@ -25,7 +25,7 @@ void ScreenMenu::redraw()
 {
   sf::RenderWindow &w = intf_.window();
   w.Clear(sf::Color(48,48,48)); //XXX:tmp
-  container_.draw(w);
+  w.Draw(container_);
 }
 
 bool ScreenMenu::onInputEvent(const sf::Event &ev)

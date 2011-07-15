@@ -23,25 +23,14 @@ void Widget::setNeighbors(Widget *up, Widget *down, Widget *left, Widget *right)
 
 WContainer::WContainer()
 {
-  drawable_.container = this;
 }
 
-void WContainer::draw(sf::RenderTarget &target)
+void WContainer::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
-  Container::iterator it;
+  Container::const_iterator it;
   for( it=widgets.begin(); it!=widgets.end(); ++it ) {
-    it->draw(target);
+    target.Draw(*it);
   }
-}
-
-void WContainer::setPosition(float x, float y)
-{
-  drawable_.SetPosition(x, y);
-}
-
-void WContainer::Drawable::Render(sf::RenderTarget &target, sf::Renderer &) const
-{
-  container->draw(target);
 }
 
 
@@ -65,16 +54,10 @@ void WButton::setColor(const sf::Color &color)
   bg_.SetColor(color);
 }
 
-void WButton::draw(sf::RenderTarget &target)
+void WButton::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
   target.Draw(bg_);
   target.Draw(caption_);
-}
-
-void WButton::setPosition(float x, float y)
-{
-  caption_.SetPosition(x, y);
-  bg_.SetPosition(x, y);
 }
 
 bool WButton::onInputEvent(const sf::Event &ev)
@@ -109,14 +92,9 @@ void WLabel::setText(const std::string &text)
   this->setTextAlign(align_); // recompute origin
 }
 
-void WLabel::draw(sf::RenderTarget &target)
+void WLabel::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
   target.Draw(text_);
-}
-
-void WLabel::setPosition(float x, float y)
-{
-  text_.SetPosition(x, y);
 }
 
 void WLabel::setTextAlign(int align)
@@ -143,7 +121,8 @@ WEntry::WEntry(float width, float height):
   bg_.SetColor(sf::Color::White);
   const unsigned int full_height = text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2;
   text_.SetOrigin(width/2-2, full_height/2);
-  cursor_ = sf::Shape::Line(1, 0, 1, full_height, 1, text_.GetColor());
+  cursor_ = sf::Shape::Line(0, 0, 0, full_height, 1, text_.GetColor());
+  cursor_.SetOrigin(width/2-2, full_height/2);
 }
 
 void WEntry::setText(const std::string &text)
@@ -152,23 +131,17 @@ void WEntry::setText(const std::string &text)
   if( cursor_pos_ > text_.GetString().GetSize() ) {
     cursor_pos_ = text_.GetString().GetSize();
   }
+  cursor_.SetPosition(text_.GetCharacterPos(cursor_pos_));
 }
 
-void WEntry::draw(sf::RenderTarget &target)
+void WEntry::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
   //TODO handle text overflow
   target.Draw(bg_);
   target.Draw(text_);
   if( this->focused() ) {
-    cursor_.SetPosition(text_.TransformToGlobal(text_.GetCharacterPos(cursor_pos_)));
     target.Draw(cursor_);
   }
-}
-
-void WEntry::setPosition(float x, float y)
-{
-  text_.SetPosition(x, y);
-  bg_.SetPosition(x, y);
 }
 
 bool WEntry::onInputEvent(const sf::Event &ev)
@@ -212,6 +185,7 @@ bool WEntry::onInputEvent(const sf::Event &ev)
     } else {
       return false; // not processed
     }
+    cursor_.SetPosition(text_.GetCharacterPos(cursor_pos_));
     return true;
   }
   return false;

@@ -11,7 +11,7 @@
 namespace gui {
 
 
-class Widget
+class Widget: public sf::Drawable
 {
  public:
   enum Neighbor {
@@ -25,8 +25,6 @@ class Widget
 
   Widget();
   virtual ~Widget();
-  virtual void draw(sf::RenderTarget &target) = 0;
-  virtual void setPosition(float x, float y) = 0;
   virtual bool onInputEvent(const sf::Event &) { return false; }
   bool focused() const { return focused_; }
   virtual void focus(bool focused) { focused_ = focused; }
@@ -48,19 +46,11 @@ class WContainer: public Widget
 {
  public:
   WContainer();
-  virtual void draw(sf::RenderTarget &target);
-  virtual void setPosition(float x, float y);
+  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
 
  public:
   typedef boost::ptr_vector<Widget> Container;
   Container widgets;
-
- protected:
-  class Drawable: public sf::Drawable {
-   public:
-    virtual void Render(sf::RenderTarget &target, sf::Renderer &) const;
-    WContainer *container;
-  } drawable_;
 };
 
 
@@ -70,8 +60,7 @@ class WButton: public Widget
   WButton(float width, float height);
   void setCaption(const std::string &caption);
   void setColor(const sf::Color &color);
-  virtual void draw(sf::RenderTarget &target);
-  virtual void setPosition(float x, float y);
+  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   virtual bool onInputEvent(const sf::Event &);
   virtual void focus(bool focused);
   typedef boost::function<void()> Callback;
@@ -89,8 +78,7 @@ class WLabel: public Widget
  public:
   WLabel();
   void setText(const std::string &caption);
-  virtual void draw(sf::RenderTarget &target);
-  virtual void setPosition(float x, float y);
+  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   void setTextAlign(int align);
 
  private:
@@ -104,8 +92,7 @@ class WEntry: public Widget
  public:
   WEntry(float width, float height); //XXX:temp
   void setText(const std::string &caption);
-  virtual void draw(sf::RenderTarget &target);
-  virtual void setPosition(float x, float y);
+  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   virtual bool onInputEvent(const sf::Event &);
   std::string text() const { return text_.GetString(); }
 

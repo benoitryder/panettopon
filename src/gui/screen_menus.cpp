@@ -32,7 +32,7 @@ void ScreenStart::enter()
   for( i=0; i<button_nb; i++ ) {
     WButton *button = new WButton(300, 50);
     button->setCaption(labels[i]);
-    button->setPosition(0, i*button_dy-(button_nb-1)*button_dy/2);
+    button->SetPosition(0, i*button_dy-(button_nb-1)*button_dy/2);
     buttons[i] = button;
     container_.widgets.push_back(button);
   }
@@ -94,19 +94,19 @@ void ScreenJoinServer::enter()
   WLabel *label = new WLabel();
   label->setText(res_mgr.getLang(lang_section, "HostPort"));
   label->setTextAlign(0);
-  label->setPosition(0, -60);
+  label->SetPosition(0, -60);
 
   entry_host_ = new WEntry(300, 40);
   entry_host_->setText("localhost");
-  entry_host_->setPosition(-55, 0);
+  entry_host_->SetPosition(-55, 0);
 
   entry_port_ = new WEntry(100, 40);
   entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
-  entry_port_->setPosition(155, 0);
+  entry_port_->SetPosition(155, 0);
 
   WButton *button = new WButton(200, 50);
   button->setCaption(res_mgr.getLang(lang_section, "Join"));
-  button->setPosition(0, 60);
+  button->SetPosition(0, 60);
 
   container_.widgets.push_back(label);
   container_.widgets.push_back(entry_host_);
@@ -181,15 +181,15 @@ void ScreenCreateServer::enter()
   WLabel *label = new WLabel();
   label->setText(res_mgr.getLang(lang_section, "Port"));
   label->setTextAlign(1);
-  label->setPosition(-20, -30);
+  label->SetPosition(-20, -30);
 
   entry_port_ = new WEntry(100, 40);
   entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
-  entry_port_->setPosition(50, -30);
+  entry_port_->SetPosition(50, -30);
 
   WButton *button = new WButton(200, 50);
   button->setCaption(res_mgr.getLang(lang_section, "Create"));
-  button->setPosition(0, 30);
+  button->SetPosition(0, 30);
 
   container_.widgets.push_back(label);
   container_.widgets.push_back(entry_port_);
