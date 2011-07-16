@@ -2,6 +2,7 @@
 #define GUI_SCREEN_MENUS_H_
 
 #include "screen.h"
+#include "resources.h"
 
 namespace gui {
 
@@ -21,6 +22,7 @@ class ScreenStart: public ScreenMenu
   void onCreateServer();
 
  private:
+  StyleButton style_button_;
   WButton *button_exit_;
 };
 
@@ -38,6 +40,7 @@ class ScreenJoinServer: public ScreenMenu
   void submit();
 
  private:
+  StyleButton style_button_;
   WEntry *entry_host_;
   WEntry *entry_port_;
   bool submitting_;
@@ -55,6 +58,7 @@ class ScreenCreateServer: public ScreenMenu
   void submit();
 
  private:
+  StyleButton style_button_;
   WEntry *entry_port_;
 };
 

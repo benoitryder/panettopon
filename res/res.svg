@@ -772,14 +772,14 @@
       style="stroke: none; fill: none;"
       />
     <rect id="Menu-Button"
-      transform="translate(4,4)"
+      transform="translate(5,5)"
       class="widget"
       x="0" y="0"
       width="120" height="54"
       rx="16" ry="16"
       />
     <rect id="Menu-Entry"
-      transform="translate(4,66)"
+      transform="translate(5,69)"
       class="widget"
       x="0" y="0"
       width="120" height="54"

@@ -1,4 +1,5 @@
 #include "widget.h"
+#include "resources.h"
 #include "../log.h"
 
 namespace gui {
@@ -34,11 +35,10 @@ void WContainer::Render(sf::RenderTarget &target, sf::Renderer &) const
 }
 
 
-WButton::WButton(float width, float height):
-    bg_(sf::Shape::Rectangle(-width/2,-height/2,width,height, sf::Color::Black, 2, sf::Color::White)),
-    callback_(NULL)
+WButton::WButton(const StyleButton &style, float width):
+    style_(style), caption_("", *style.font, style.font_size),
+    callback_(NULL), width_(width)
 {
-  this->setColor(sf::Color::White);
 }
 
 void WButton::setCaption(const std::string &caption)
@@ -48,15 +48,19 @@ void WButton::setCaption(const std::string &caption)
   caption_.SetOrigin(r.Width/2, (caption_.GetFont().GetLineSpacing(caption_.GetCharacterSize())+2)/2);
 }
 
-void WButton::setColor(const sf::Color &color)
+void WButton::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
 {
-  caption_.SetColor(color);
-  bg_.SetColor(color);
-}
-
-void WButton::Render(sf::RenderTarget &target, sf::Renderer &) const
-{
-  target.Draw(bg_);
+  if( this->focused() ) {
+    renderer.SetColor(style_.focus_color);
+  } else {
+    renderer.SetColor(style_.color);
+  }
+  const float height = style_.tiles.left.rect().Height;
+  const float side_width = style_.tiles.left.rect().Width;
+  const float middle_width = width_ - 2*side_width;
+  style_.tiles.left.render(renderer, -width_/2, -height/2);
+  style_.tiles.right.render(renderer, middle_width/2, -height/2);
+  style_.tiles.middle.render(renderer, -middle_width/2, -height/2, middle_width, height);
   target.Draw(caption_);
 }
 
@@ -71,13 +75,6 @@ bool WButton::onInputEvent(const sf::Event &ev)
     }
   }
   return false;
-}
-
-void WButton::focus(bool focused)
-{
-  Widget::focus(focused);
-  //XXX:temp bad behavior: override user's setColor()
-  this->setColor(focused ? sf::Color::Red : sf::Color::White);
 }
 
 

@@ -16,8 +16,9 @@ ScreenStart::ScreenStart(GuiInterface &intf):
 void ScreenStart::enter()
 {
   intf_.stopInstance();
-  const ResourceManager &res_mgr = intf_.res_mgr();
+  ResourceManager &res_mgr = intf_.res_mgr();
   const std::string lang_section("ScreenStart");
+  style_button_.load(&res_mgr); //XXX:temp
 
   // create buttons
   const std::string labels[] = {
@@ -30,7 +31,7 @@ void ScreenStart::enter()
   WButton *buttons[button_nb];
   int i;
   for( i=0; i<button_nb; i++ ) {
-    WButton *button = new WButton(300, 50);
+    WButton *button = new WButton(style_button_, 300);
     button->setCaption(labels[i]);
     button->SetPosition(0, i*button_dy-(button_nb-1)*button_dy/2);
     buttons[i] = button;
@@ -88,8 +89,9 @@ ScreenJoinServer::ScreenJoinServer(GuiInterface &intf):
 
 void ScreenJoinServer::enter()
 {
-  const ResourceManager &res_mgr = intf_.res_mgr();
+  ResourceManager &res_mgr = intf_.res_mgr();
   const std::string lang_section("ScreenJoinServer");
+  style_button_.load(&res_mgr);
 
   WLabel *label = new WLabel();
   label->setText(res_mgr.getLang(lang_section, "HostPort"));
@@ -104,7 +106,7 @@ void ScreenJoinServer::enter()
   entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
   entry_port_->SetPosition(155, 0);
 
-  WButton *button = new WButton(200, 50);
+  WButton *button = new WButton(style_button_, 200);
   button->setCaption(res_mgr.getLang(lang_section, "Join"));
   button->SetPosition(0, 60);
 
@@ -175,8 +177,9 @@ ScreenCreateServer::ScreenCreateServer(GuiInterface &intf):
 
 void ScreenCreateServer::enter()
 {
-  const ResourceManager &res_mgr = intf_.res_mgr();
+  ResourceManager &res_mgr = intf_.res_mgr();
   const std::string lang_section("ScreenCreateServer");
+  style_button_.load(&res_mgr);
 
   WLabel *label = new WLabel();
   label->setText(res_mgr.getLang(lang_section, "Port"));
@@ -187,7 +190,7 @@ void ScreenCreateServer::enter()
   entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
   entry_port_->SetPosition(50, -30);
 
-  WButton *button = new WButton(200, 50);
+  WButton *button = new WButton(style_button_, 200);
   button->setCaption(res_mgr.getLang(lang_section, "Create"));
   button->SetPosition(0, 30);
 

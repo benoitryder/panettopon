@@ -10,6 +10,8 @@
 
 namespace gui {
 
+class StyleButton;
+
 
 class Widget: public sf::Drawable
 {
@@ -57,19 +59,18 @@ class WContainer: public Widget
 class WButton: public Widget
 {
  public:
-  WButton(float width, float height);
+  WButton(const StyleButton &style, float width);
   void setCaption(const std::string &caption);
-  void setColor(const sf::Color &color);
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   virtual bool onInputEvent(const sf::Event &);
-  virtual void focus(bool focused);
   typedef boost::function<void()> Callback;
   void setCallback(Callback cb) { callback_ = cb; }
 
  private:
+  const StyleButton &style_;
   sf::Text caption_;  ///< Button caption
-  sf::Shape bg_;  ///< Background shape
   Callback callback_;
+  float width_;
 };
 
 
