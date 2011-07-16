@@ -295,4 +295,18 @@ template <typename T> std::istream& operator>>(std::istream& in, sf::Rect<T>& re
   return in;
 }
 
+template <typename T> std::istream& operator>>(std::istream& in, sf::Vector2<T>& vect)
+{
+  T x, y;
+  char c;
+  in >> x >> c >> y;
+  if( in && c == ',' ) {
+    vect.x = x;
+    vect.y = y;
+    return in;
+  }
+  in.clear( in.rdstate() | std::istream::failbit );
+  return in;
+}
+
 

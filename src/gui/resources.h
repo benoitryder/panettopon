@@ -154,6 +154,7 @@ class StyleButton
 //@{
 std::istream& operator>>(std::istream& in, sf::Color& color);
 template <typename T> std::istream& operator>>(std::istream& in, sf::Rect<T>& rect);
+template <typename T> std::istream& operator>>(std::istream& in, sf::Vector2<T>& vect);
 //@}
 
 #endif
