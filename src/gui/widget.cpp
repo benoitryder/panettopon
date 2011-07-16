@@ -110,16 +110,14 @@ void WLabel::setTextAlign(int align)
 }
 
 
-WEntry::WEntry(float width, float height):
-    bg_(sf::Shape::Rectangle(-width/2,-height/2,width,height, sf::Color::Black, 2, sf::Color::White)),
-    cursor_pos_(0)
+WEntry::WEntry(const StyleButton &style, float width):
+    style_(style), text_("", *style.font, style.font_size),
+    width_(width), cursor_pos_(0)
 {
-  text_.SetColor(sf::Color::White);
-  bg_.SetColor(sf::Color::White);
   const unsigned int full_height = text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2;
-  text_.SetOrigin(width/2-2, full_height/2);
+  text_.SetOrigin(width/2-style_.margin_left, full_height/2);
   cursor_ = sf::Shape::Line(0, 0, 0, full_height, 1, text_.GetColor());
-  cursor_.SetOrigin(width/2-2, full_height/2);
+  cursor_.SetOrigin(width/2-style_.margin_left, full_height/2);
 }
 
 void WEntry::setText(const std::string &text)
@@ -131,10 +129,20 @@ void WEntry::setText(const std::string &text)
   cursor_.SetPosition(text_.GetCharacterPos(cursor_pos_));
 }
 
-void WEntry::Render(sf::RenderTarget &target, sf::Renderer &) const
+void WEntry::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
 {
+  if( this->focused() ) {
+    renderer.SetColor(style_.focus_color);
+  } else {
+    renderer.SetColor(style_.color);
+  }
+  const float height = style_.tiles.left.rect().Height;
+  const float side_width = style_.tiles.left.rect().Width;
+  const float middle_width = width_ - 2*side_width;
+  style_.tiles.left.render(renderer, -width_/2, -height/2);
+  style_.tiles.right.render(renderer, middle_width/2, -height/2);
+  style_.tiles.middle.render(renderer, -middle_width/2, -height/2, middle_width, height);
   //TODO handle text overflow
-  target.Draw(bg_);
   target.Draw(text_);
   if( this->focused() ) {
     target.Draw(cursor_);

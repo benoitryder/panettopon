@@ -216,14 +216,13 @@ void ResField::load(ResourceManager *res_mgr)
 
 
 StyleButton::StyleButton():
-    font(NULL), font_size(0)
+    font(NULL), font_size(0), margin_left(0)
 {
 }
 
-void StyleButton::load(ResourceManager *res_mgr)
+void StyleButton::load(ResourceManager *res_mgr, const std::string& section)
 {
   const IniFile &style = res_mgr->style();
-  const std::string section("ScreenMenu.Button");
 
   std::string s = style.get(section, "Font", "");
   if( s.empty() ) {
@@ -245,12 +244,14 @@ void StyleButton::load(ResourceManager *res_mgr)
   if( 2*margin >= img_rect.Width ) {
     throw std::runtime_error("invalid ImageMarginX in "+section);
   }
-  tiles.left.create(img, sf::IntRect(0, 0, margin, img_rect.Height));
-  tiles.middle.create(img, sf::IntRect(margin, 0, img_rect.Width-2*margin, img_rect.Height));
-  tiles.right.create(img, sf::IntRect(img_rect.Width-margin, 0, margin, img_rect.Height));
+  tiles.left.create(img, sf::IntRect(img_rect.Left, img_rect.Top, margin, img_rect.Height));
+  tiles.middle.create(img, sf::IntRect(img_rect.Left+margin, img_rect.Top, img_rect.Width-2*margin, img_rect.Height));
+  tiles.right.create(img, sf::IntRect(img_rect.Left+img_rect.Width-margin, img_rect.Top, margin, img_rect.Height));
 
   color = style.get<sf::Color>(section, "Color", sf::Color::White);
   focus_color = style.get<sf::Color>(section, "FocusColor", sf::Color::Green);
+
+  margin_left = style.get<unsigned int>(section, "MarginLeft", 0);
 }
 
 

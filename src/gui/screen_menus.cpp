@@ -18,7 +18,7 @@ void ScreenStart::enter()
   intf_.stopInstance();
   ResourceManager &res_mgr = intf_.res_mgr();
   const std::string lang_section("ScreenStart");
-  style_button_.load(&res_mgr); //XXX:temp
+  style_button_.load(&res_mgr, "ScreenMenu.Button"); //XXX:temp
 
   // create buttons
   const std::string labels[] = {
@@ -91,18 +91,19 @@ void ScreenJoinServer::enter()
 {
   ResourceManager &res_mgr = intf_.res_mgr();
   const std::string lang_section("ScreenJoinServer");
-  style_button_.load(&res_mgr);
+  style_button_.load(&res_mgr, "ScreenMenu.Button");
+  style_entry_.load(&res_mgr, "ScreenMenu.Entry");
 
   WLabel *label = new WLabel();
   label->setText(res_mgr.getLang(lang_section, "HostPort"));
   label->setTextAlign(0);
   label->SetPosition(0, -60);
 
-  entry_host_ = new WEntry(300, 40);
+  entry_host_ = new WEntry(style_entry_, 300);
   entry_host_->setText("localhost");
   entry_host_->SetPosition(-55, 0);
 
-  entry_port_ = new WEntry(100, 40);
+  entry_port_ = new WEntry(style_entry_, 100);
   entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
   entry_port_->SetPosition(155, 0);
 
@@ -179,14 +180,15 @@ void ScreenCreateServer::enter()
 {
   ResourceManager &res_mgr = intf_.res_mgr();
   const std::string lang_section("ScreenCreateServer");
-  style_button_.load(&res_mgr);
+  style_button_.load(&res_mgr, "ScreenMenu.Button");
+  style_entry_.load(&res_mgr, "ScreenMenu.Entry");
 
   WLabel *label = new WLabel();
   label->setText(res_mgr.getLang(lang_section, "Port"));
   label->setTextAlign(1);
   label->SetPosition(-20, -30);
 
-  entry_port_ = new WEntry(100, 40);
+  entry_port_ = new WEntry(style_entry_, 100);
   entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
   entry_port_->SetPosition(50, -30);
 

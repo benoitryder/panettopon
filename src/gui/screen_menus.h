@@ -41,6 +41,7 @@ class ScreenJoinServer: public ScreenMenu
 
  private:
   StyleButton style_button_;
+  StyleButton style_entry_;
   WEntry *entry_host_;
   WEntry *entry_port_;
   bool submitting_;
@@ -59,6 +60,7 @@ class ScreenCreateServer: public ScreenMenu
 
  private:
   StyleButton style_button_;
+  StyleButton style_entry_;
   WEntry *entry_port_;
 };
 

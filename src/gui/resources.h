@@ -119,12 +119,12 @@ class ResField
 };
 
 
-/// Container for WButton style
+/// Container for WButton or WEntry style
 class StyleButton
 {
  public:
   StyleButton();
-  void load(ResourceManager *res_mgr);
+  void load(ResourceManager *res_mgr, const std::string& section);
 
   const sf::Font *font;
   unsigned int font_size;
@@ -135,6 +135,7 @@ class StyleButton
   } tiles;
   sf::Color color;
   sf::Color focus_color;
+  unsigned int margin_left;
 };
 
 

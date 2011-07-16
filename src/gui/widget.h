@@ -91,16 +91,17 @@ class WLabel: public Widget
 class WEntry: public Widget
 {
  public:
-  WEntry(float width, float height); //XXX:temp
+  WEntry(const StyleButton &style, float width);
   void setText(const std::string &caption);
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   virtual bool onInputEvent(const sf::Event &);
   std::string text() const { return text_.GetString(); }
 
  private:
+  const StyleButton &style_;
   sf::Text text_;
-  sf::Shape bg_;
   sf::Shape cursor_;
+  float width_;
   unsigned int cursor_pos_;
 };
 
