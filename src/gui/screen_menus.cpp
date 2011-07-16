@@ -116,9 +116,9 @@ void ScreenJoinServer::enter()
   container_.widgets.push_back(entry_port_);
   container_.widgets.push_back(button);
 
-  entry_host_->setNeighbors(button, button, entry_port_, entry_port_);
-  entry_port_->setNeighbors(button, button, entry_host_, entry_host_);
-  button->setNeighbors(entry_host_, entry_host_, NULL, NULL);
+  entry_host_->setNeighbors(button, entry_port_, NULL, NULL);
+  entry_port_->setNeighbors(entry_host_, button, NULL, NULL);
+  button->setNeighbors(entry_port_, entry_host_, NULL, NULL);
 
   this->focus(entry_host_);
 }
