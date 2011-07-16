@@ -8,7 +8,7 @@
 void ServerConf::toDefault()
 {
   const netplay::Server::Conf &np_conf = netplay::Server::Conf::default_instance();
-#define SERVER_CONF_EXPR_INIT(n,ini,t) \
+#define SERVER_CONF_EXPR_INIT(n,ini) \
   n = np_conf.n();
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_INIT);
 #undef SERVER_CONF_EXPR_INIT

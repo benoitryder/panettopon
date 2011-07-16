@@ -32,13 +32,13 @@ GuiInterface::~GuiInterface()
 
 bool GuiInterface::run(const IniFile &cfg)
 {
-#define CONF_LOAD(n,ini,t) \
-  conf_.n = cfg.get##t(CONF_SECTION, #ini, conf_.n);
-  CONF_LOAD(fullscreen,    Fullscreen,   Bool);
-  CONF_LOAD(screen_width,  ScreenWidth,  Int);
-  CONF_LOAD(screen_height, ScreenHeight, Int);
+#define CONF_LOAD(n,ini) \
+  conf_.n = cfg.get(CONF_SECTION, #ini, conf_.n);
+  CONF_LOAD(fullscreen,    Fullscreen);
+  CONF_LOAD(screen_width,  ScreenWidth);
+  CONF_LOAD(screen_height, ScreenHeight);
 #undef CONF_LOAD
-  float f = cfg.getDouble(CONF_SECTION, "FPS", 60.0);
+  float f = cfg.get(CONF_SECTION, "FPS", 60.0);
   //XXX default not based on the cfg value set in constructor
   if( f <= 0 ) {
     LOG("invalid conf. value for FPS: %f", f);

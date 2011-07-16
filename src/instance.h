@@ -40,10 +40,10 @@ struct ServerConf
  * \e get methods).
  */
 #define SERVER_CONF_APPLY(expr) { \
-  expr(pkt_size_max, PacketSizeMax, Int); \
-  expr(pl_nb_max,    PlayerNumber,  Int); \
-  expr(tk_usec,      TickPeriod,    Int); \
-  expr(tk_lag_max,   LagTicksLimit, Int); \
+  expr(pkt_size_max, PacketSizeMax); \
+  expr(pl_nb_max,    PlayerNumber ); \
+  expr(tk_usec,      TickPeriod   ); \
+  expr(tk_lag_max,   LagTicksLimit); \
 }
 
 

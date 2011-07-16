@@ -410,7 +410,7 @@ void ClientInstance::processPacketServer(const netplay::Server &pkt_server)
       throw netplay::CallbackError("invalid in current state");
     }
     const netplay::Server::Conf &np_conf = pkt_server.conf();
-#define SERVER_CONF_EXPR_PKT(n,ini,t) \
+#define SERVER_CONF_EXPR_PKT(n,ini) \
     conf_.n = np_conf.n();
     SERVER_CONF_APPLY(SERVER_CONF_EXPR_PKT);
 #undef SERVER_CONF_EXPR_PKT

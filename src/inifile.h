@@ -16,6 +16,8 @@
 
 #include <map>
 #include <string>
+#include <stdexcept>
+#include <boost/lexical_cast.hpp>
 
 
 
@@ -29,26 +31,45 @@ class IniFile
   /// Create an empty INI file content.
   IniFile() {}
   /// Load config from a file, add it to current content.
-  bool load(const char *fname);
+  bool load(const std::string& fname);
 
   /// Return true if the value exists.
-  bool has(const std::string &section, const std::string &key) const;
-  /// Retrieve a value as a string.
-  std::string get(const std::string &section, const std::string &key, const std::string def) const;
-  /// Retrieve a value as an integer.
-  int getInt(const std::string &section, const std::string &key, int def) const;
-  /// Retrieve a value as an double.
-  double getDouble(const std::string &section, const std::string &key, double def) const;
-  /// Retrieve a value as an boolean.
-  bool getBool(const std::string &section, const std::string &key, bool def) const;
+  bool has(const std::string& section, const std::string& key) const;
+  /// Retrieve a value
+  template <typename T> T get(const std::string& section, const std::string& key, const T& def) const;
+  /// Convenient alias to retrieve a string value.
+  inline std::string get(const std::string& section, const std::string& key, const char *def) const;
   /// Set a value.
-  void set(const std::string &section, const std::string &key, std::string val);
+  void set(const std::string& section, const std::string& key, const std::string& val);
 
  private:
   typedef std::map<std::string, std::string> section_type;
   typedef std::map<std::string, section_type> content_type;
   content_type content_;
 };
+
+
+template <typename T> T IniFile::get(const std::string& section, const std::string& key, const T& def) const
+{
+  content_type::const_iterator sec_it = content_.find(section);
+  if( sec_it == content_.end() ) {
+    return def;
+  }
+  section_type::const_iterator val_it = sec_it->second.find(key);
+  if( val_it == sec_it->second.end() ) {
+    return def;
+  }
+  try {
+    return boost::lexical_cast<T>(val_it->second);
+  } catch(const boost::bad_lexical_cast &) {
+    throw std::runtime_error("failed to parse "+section+" / "+key+" value");
+  }
+}
+
+std::string IniFile::get(const std::string& section, const std::string& key, const char *def) const
+{
+  return get<std::string>(section, key, def);
+}
 
 
 #endif

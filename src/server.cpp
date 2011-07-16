@@ -41,9 +41,9 @@ ServerInstance::~ServerInstance()
 void ServerInstance::loadConf(const IniFile &cfg)
 {
   assert( ! socket_.started() );
-  //XXX signed/unsigned not checked
-#define SERVER_CONF_EXPR_LOAD(n,ini,t) \
-  conf_.n = cfg.get##t(CONF_SECTION, #ini, conf_.n);
+  //XXX signed/unsigned and type boundaries not checked
+#define SERVER_CONF_EXPR_LOAD(n,ini) \
+  conf_.n = cfg.get(CONF_SECTION, #ini, conf_.n);
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_LOAD);
 #undef SERVER_CONF_EXPR_LOAD
   socket_.setPktSizeMax(conf_.pkt_size_max);
@@ -147,7 +147,7 @@ void ServerInstance::onPeerConnect(netplay::PeerSocket *peer)
   netplay::Server *np_server = pkt.mutable_server();
   np_server->set_state( static_cast<netplay::Server::State>(state_) );
   netplay::Server::Conf *np_conf = np_server->mutable_conf();
-#define SERVER_CONF_EXPR_PKT(n,ini,t) \
+#define SERVER_CONF_EXPR_PKT(n,ini) \
   np_conf->set_##n(conf_.n);
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_PKT);
 #undef SERVER_CONF_EXPR_PKT

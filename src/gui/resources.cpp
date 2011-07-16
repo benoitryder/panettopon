@@ -232,15 +232,15 @@ void StyleButton::load(ResourceManager *res_mgr)
     font = res_mgr->getFont(s);
   }
 
-  int i = style.getInt(section, "FontSize", -1);
-  if( i <= 0 ) {
+  unsigned int i = style.get<unsigned int>(section, "FontSize", 0);
+  if( i == 0 ) {
     throw std::runtime_error("invalid FontSize in "+section);
   }
   font_size = i;
 
   const sf::Image *img = res_mgr->getImage("Menu-map");
-  int margin = style.getInt(section, "ImageMarginX", -1);
-  if( margin < 0 || 2*margin >= (int)img->GetWidth() ) {
+  unsigned int margin = style.get<unsigned int>(section, "ImageMarginX", 0);
+  if( 2*margin >= img->GetWidth() ) {
     throw std::runtime_error("invalid ImageMarginX in "+section);
   }
   tiles.left.create(img, sf::IntRect(0, 0, margin, img->GetHeight()/2));
