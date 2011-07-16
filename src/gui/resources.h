@@ -5,6 +5,7 @@
 #include <string>
 #include <SFML/Graphics/Image.hpp>
 #include <SFML/Graphics/Font.hpp>
+#include <istream>
 #include "../util.h"
 #include "../inifile.h"
 
@@ -138,5 +139,12 @@ class StyleButton
 
 
 }
+
+
+/** @name Conversion helpers for style.ini */
+//@{
+std::istream& operator>>(std::istream& in, sf::Color& color);
+template <typename T> std::istream& operator>>(std::istream& in, sf::Rect<T>& rect);
+//@}
 
 #endif

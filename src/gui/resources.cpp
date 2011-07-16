@@ -255,3 +255,42 @@ void StyleButton::load(ResourceManager *res_mgr)
 
 }
 
+
+std::istream& operator>>(std::istream& in, sf::Color& color)
+{
+  char c;
+  std::string s;
+  in >> c >> s;
+  if( in && c == '#' && (s.size() == 6 || s.size() == 8) ) {
+    uint32_t argb;
+    std::istringstream iss(s);
+    iss >> std::hex >> argb;
+    if( iss ) {
+      color.r = (argb>>16) & 0xff;
+      color.g = (argb>>8) & 0xff;
+      color.b = argb & 0xff;
+      color.a = s.size() == 6 ? 0xff : (argb>>24) & 0xff;
+      return in;
+    }
+  }
+  in.clear( in.rdstate() | std::istream::failbit );
+  return in;
+}
+
+template <typename T> std::istream& operator>>(std::istream& in, sf::Rect<T>& rect)
+{
+  T left, top, width, height;
+  char c1, c2, c3;
+  in >> left >> c1 >> top >> c2 >> width >> c3 >> height;
+  if( in && c1 == ',' && c2 == ',' && c3 == ',' && width >= 0 && height >= 0 ) {
+    rect.Left = left;
+    rect.Top = top;
+    rect.Width = width;
+    rect.Height = height;
+    return in;
+  }
+  in.clear( in.rdstate() | std::istream::failbit );
+  return in;
+}
+
+
