@@ -153,27 +153,35 @@ void ImageTile::setToSprite(sf::Sprite *spr, bool center) const
 
 
 
-ResField::ResField():
+StyleField::StyleField():
     bk_size(0), img_field_frame(NULL)
 {
 }
 
-void ResField::load(ResourceManager *res_mgr)
+void StyleField::load(ResourceManager *res_mgr, const std::string& section)
 {
+  const IniFile &style = res_mgr->style();
+  color_nb = style.get<unsigned int>(section, "ColorNb", 0);
+  if( color_nb < 4 ) {
+    throw std::runtime_error("ColorNb is too small, must be at least 4");
+  }
+
   const sf::Image *img;
 
   // Block tiles (and block size)
   img = res_mgr->getImage("BkColor-map");
+  if( img->GetWidth() % color_nb != 0 || img->GetHeight() % 5 != 0 ) {
+    throw std::runtime_error("block map size does not match tile count");
+  }
   bk_size = img->GetHeight()/5;
-  int nb_colors = img->GetWidth()/bk_size;
-  tiles_bk_color.resize(nb_colors); // create sprites, uninitialized
-  for(int i=0; i<nb_colors; i++ ) {
+  tiles_bk_color.resize(color_nb); // create sprites, uninitialized
+  for(unsigned int i=0; i<color_nb; i++ ) {
     TilesBkColor &tiles = tiles_bk_color[i];
-    tiles.normal.create(img, nb_colors, 5, i, 0);
-    tiles.bg    .create(img, nb_colors, 5, i, 1);
-    tiles.face  .create(img, nb_colors, 5, i, 2);
-    tiles.flash .create(img, nb_colors, 5, i, 3);
-    tiles.mutate.create(img, nb_colors, 5, i, 4);
+    tiles.normal.create(img, color_nb, 5, i, 0);
+    tiles.bg    .create(img, color_nb, 5, i, 1);
+    tiles.face  .create(img, color_nb, 5, i, 2);
+    tiles.flash .create(img, color_nb, 5, i, 3);
+    tiles.mutate.create(img, color_nb, 5, i, 4);
   }
 
   // Garbages
@@ -194,6 +202,7 @@ void ResField::load(ResourceManager *res_mgr)
 
   // Frame
   img_field_frame = res_mgr->getImage("Field-Frame");
+  frame_origin = style.get(section, "FrameOrigin", sf::Vector2f(0,0));
 
   // Cursor
   img = res_mgr->getImage("SwapCursor");

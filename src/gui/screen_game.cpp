@@ -22,7 +22,7 @@ ScreenGame::ScreenGame(GuiInterface &intf, Player *pl):
 
 void ScreenGame::enter()
 {
-  res_field_.load(&intf_.res_mgr());
+  style_field_.load(&intf_.res_mgr(), "ScreenGame.Field");
   assert( player_ );
 }
 
@@ -67,7 +67,7 @@ void ScreenGame::onStateChange(GameInstance::State state)
     intf_.swapScreen(new ScreenLobby(intf_, player_));
   } else if( state == GameInstance::STATE_READY ) {
     assert( player_->field() );
-    fdp_player_.reset(new FieldDisplay(*player_->field(), res_field_));
+    fdp_player_.reset(new FieldDisplay(*player_->field(), style_field_));
     fdp_player_->SetScale(0.5, 0.5);
     intf_.instance()->playerSetReady(player_, true);
   } else if( state == GameInstance::STATE_GAME ) {
@@ -103,22 +103,19 @@ const float FieldDisplay::BOUNCE_Y_MIN       = -48/128.;
 const float FieldDisplay::BOUNCE_Y_MAX       =  60/128.;
 
 
-FieldDisplay::FieldDisplay(const Field &fld, const ResField &res):
-    sf::Drawable(), field_(fld), res_(res)
+FieldDisplay::FieldDisplay(const Field &fld, const StyleField &style):
+    sf::Drawable(), field_(fld), style_(style)
 {
   ::memset(crouch_dt_, 0, sizeof(crouch_dt_));
   //TODO:recup
-  //this->SetPosition( slot * 2*res.img_field_frame.GetWidth(), 0 );
-  this->SetOrigin(res_.bk_size*FIELD_WIDTH/2, res_.bk_size*FIELD_HEIGHT/2);
+  //this->SetPosition( slot * 2*style.img_field_frame.GetWidth(), 0 );
+  this->SetOrigin(style_.bk_size*FIELD_WIDTH/2, style_.bk_size*FIELD_HEIGHT/2);
 
-  spr_frame_.SetImage(*res_.img_field_frame);
-  spr_frame_.SetOrigin(
-      (res_.img_field_frame->GetWidth()-res_.bk_size*FIELD_WIDTH/2)/2,
-      (res_.img_field_frame->GetHeight()-res_.bk_size*FIELD_HEIGHT/2)/2
-      );
+  spr_frame_.SetImage(*style_.img_field_frame);
+  spr_frame_.SetOrigin(style_.frame_origin.x, style_.frame_origin.y);
   spr_frame_.SetScale(2,2);
 
-  res_.tiles_cursor[0].setToSprite(&spr_cursor_, true);
+  style_.tiles_cursor[0].setToSprite(&spr_cursor_, true);
 
   this->step();  // not a step, but do the work
 }
@@ -131,8 +128,8 @@ void FieldDisplay::Render(sf::RenderTarget &target, sf::Renderer &renderer) cons
     // scale blocks, reverse Y axis
     renderer.ApplyModelView(sf::Matrix3::Transformation(
             sf::Vector2f(0,0),
-            sf::Vector2f(0, -(float)res_.bk_size*(lift_offset_-FIELD_HEIGHT-1)),
-            0, sf::Vector2f(res_.bk_size, -(float)res_.bk_size)
+            sf::Vector2f(0, -(float)style_.bk_size*(lift_offset_-FIELD_HEIGHT-1)),
+            0, sf::Vector2f(style_.bk_size, -(float)style_.bk_size)
             ));
     int x, y;
     for( x=0; x<FIELD_WIDTH; x++ ) {
@@ -179,11 +176,11 @@ void FieldDisplay::step()
 
   // cursor
   if( field_.tick() % 15 == 0 ) {
-    res_.tiles_cursor[ (field_.tick()/15) % 2 ].setToSprite(&spr_cursor_, true);
+    style_.tiles_cursor[ (field_.tick()/15) % 2 ].setToSprite(&spr_cursor_, true);
   }
   spr_cursor_.SetPosition(
-      res_.bk_size * (field_.cursor().x + 1),
-      res_.bk_size * (FIELD_HEIGHT-field_.cursor().y + 0.5 - lift_offset_)
+      style_.bk_size * (field_.cursor().x + 1),
+      style_.bk_size * (FIELD_HEIGHT-field_.cursor().y + 0.5 - lift_offset_)
       );
 
   // field raised: update crouch_dt_
@@ -229,11 +226,11 @@ void FieldDisplay::step()
       pos.y++; // display label above top matching block, if possible
     }
     if( info.chain > 1 ) {
-      labels_.push_back( Label(res_, pos, true, info.chain) );
+      labels_.push_back( Label(style_, pos, true, info.chain) );
       pos.y--;
     }
     if( info.combo > 3 ) {
-      labels_.push_back( Label(res_, pos, false, info.combo) );
+      labels_.push_back( Label(style_, pos, false, info.combo) );
     }
   }
 
@@ -266,7 +263,7 @@ void FieldDisplay::step()
     for( gbd_it2=gbd_it; gbd_it2!=gbw_drbs_.end() && gb.gbid != gbd_it2->gbid(); ++gbd_it2 ) ;
     if( gbd_it2 == gbw_drbs_.end() ) {
       // not found: create and insert at the new position
-      gbd_it = gbw_drbs_.insert(gbd_it, new GbHanging(res_, gb));
+      gbd_it = gbw_drbs_.insert(gbd_it, new GbHanging(style_, gb));
     } else if( gbd_it != gbd_it2 ) {
       // found: move it at the right position (swap)
       //note: do the '.release()' "by hand" to help the compiler
@@ -293,7 +290,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
   sf::Vector2f center( x+0.5, y+0.5 );
 
   if( bk.isColor() ) {
-    const ResField::TilesBkColor &tiles = res_.tiles_bk_color[bk.bk_color.color];
+    const StyleField::TilesBkColor &tiles = style_.tiles_bk_color[bk.bk_color.color];
 
     const ImageTile *tile = &tiles.normal; // default
     if( bk.bk_color.state == BkColor::FLASH ) {
@@ -318,7 +315,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
     }
 
   } else if( bk.isGarbage() ) {
-    const ResField::TilesGb &tiles = res_.tiles_gb;
+    const StyleField::TilesGb &tiles = style_.tiles_gb;
     renderer.SetColor(sf::Color(204,102,25)); //XXX:temp
 
     if( bk.bk_garbage.state == BkGarbage::FLASH ) {
@@ -405,7 +402,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
 
 void FieldDisplay::renderBouncingBlock(sf::Renderer &renderer, int x, int y, float bounce, unsigned int color) const
 {
-  const ResField::TilesBkColor &tiles = res_.tiles_bk_color[color];
+  const StyleField::TilesBkColor &tiles = style_.tiles_bk_color[color];
   tiles.bg.render(renderer, x, y, 1, 1);
 
   float offy, dx, dy;
@@ -425,12 +422,12 @@ void FieldDisplay::renderBouncingBlock(sf::Renderer &renderer, int x, int y, flo
 
 const unsigned int FieldDisplay::Label::DURATION = 42;
 
-FieldDisplay::Label::Label(const ResField &res, const FieldPos &pos, bool chain, unsigned int val):
-    res_(res), dt_(DURATION)
+FieldDisplay::Label::Label(const StyleField &style, const FieldPos &pos, bool chain, unsigned int val):
+    style_(style), dt_(DURATION)
 {
-  this->SetPosition((pos.x+0.5)*res_.bk_size, (FIELD_HEIGHT-pos.y+0.5)*res_.bk_size);
+  this->SetPosition((pos.x+0.5)*style_.bk_size, (FIELD_HEIGHT-pos.y+0.5)*style_.bk_size);
   //XXX:hack space between combo and chain labels for a same match
-  this->Move(0, -0.1*res_.bk_size);
+  this->Move(0, -0.1*style_.bk_size);
 
   // prepare label text
   char buf[5];
@@ -445,8 +442,8 @@ FieldDisplay::Label::Label(const ResField &res, const FieldPos &pos, bool chain,
   txt_.SetString(buf);
   txt_.SetColor(sf::Color::White);
   sf::FloatRect txt_rect = txt_.GetRect();
-  float txt_sx = 0.8*res_.bk_size / txt_rect.Width;
-  float txt_sy = 0.8*res_.bk_size / txt_rect.Height;
+  float txt_sx = 0.8*style_.bk_size / txt_rect.Width;
+  float txt_sy = 0.8*style_.bk_size / txt_rect.Height;
   if( txt_sx > txt_sy ) {
     txt_sx = txt_sy; // stretch Y, not X
   }
@@ -455,9 +452,9 @@ FieldDisplay::Label::Label(const ResField &res, const FieldPos &pos, bool chain,
 
   // initialize sprite
   if( chain ) {
-    res_.tiles_labels.chain.setToSprite(&bg_, true);
+    style_.tiles_labels.chain.setToSprite(&bg_, true);
   } else {
-    res_.tiles_labels.combo.setToSprite(&bg_, true);
+    style_.tiles_labels.combo.setToSprite(&bg_, true);
   }
 }
 
@@ -471,7 +468,7 @@ void FieldDisplay::Label::Render(sf::RenderTarget &target, sf::Renderer &) const
 void FieldDisplay::Label::step()
 {
   dt_--;
-  this->Move(0, -0.5*res_.bk_size/Label::DURATION);
+  this->Move(0, -0.5*style_.bk_size/Label::DURATION);
 }
 
 
@@ -494,14 +491,14 @@ FieldPos FieldDisplay::matchLabelPos()
 
 
 
-FieldDisplay::GbHanging::GbHanging(const ResField &res, const Garbage &gb):
-  res_(res), gb_(gb), txt_size_(0)
+FieldDisplay::GbHanging::GbHanging(const StyleField &style, const Garbage &gb):
+  style_(style), gb_(gb), txt_size_(0)
 {
   // initialize sprite
   if( gb.type == Garbage::TYPE_CHAIN ) {
-    res_.tiles_gb_hanging.line.setToSprite(&bg_, true);
+    style_.tiles_gb_hanging.line.setToSprite(&bg_, true);
   } else if( gb.type == Garbage::TYPE_COMBO ) {
-    res_.tiles_gb_hanging.blocks[gb.size.x-1].setToSprite(&bg_, true);
+    style_.tiles_gb_hanging.blocks[gb.size.x-1].setToSprite(&bg_, true);
   } else {
     //TODO not handled yet
   }
@@ -519,7 +516,7 @@ void FieldDisplay::GbHanging::Render(sf::RenderTarget &target, sf::Renderer &) c
 
 void FieldDisplay::GbHanging::setPosition(int i)
 {
-  this->SetPosition((0.75+1.5*i)*res_.bk_size, -0.5*res_.bk_size);
+  this->SetPosition((0.75+1.5*i)*style_.bk_size, -0.5*style_.bk_size);
 }
 
 void FieldDisplay::GbHanging::step()
@@ -550,8 +547,8 @@ void FieldDisplay::GbHanging::updateText()
   txt_ = sf::Text(buf);
   txt_.SetColor(sf::Color::White);
   sf::FloatRect txt_rect = txt_.GetRect();
-  float txt_sx = 0.8*res_.bk_size / txt_rect.Width;
-  float txt_sy = 0.8*res_.bk_size / txt_rect.Height;
+  float txt_sx = 0.8*style_.bk_size / txt_rect.Width;
+  float txt_sy = 0.8*style_.bk_size / txt_rect.Height;
   if( txt_sx > txt_sy ) {
     txt_sx = txt_sy; // stretch Y, not X
   }

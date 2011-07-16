@@ -723,12 +723,12 @@
     transform="translate(1400,16)">
     <!-- force the bounding box for the export -->
     <rect id="Field-Frame-container"
-      width="512" height="1024"
+      width="452" height="900"
       style="stroke: none; fill: none;"
       />
     <!-- drawn clockwise -->
     <path
-      transform="translate(256,512)"
+      transform="translate(226,450)"
       fill-rule="evenodd" stroke-width="8"
       d="
       M -196,-384 a 4,4 0,0,1  4,-4

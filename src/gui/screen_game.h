@@ -28,7 +28,7 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
  private:
   Player *player_;  ///< Local controlled player
   GameInputScheduler input_scheduler_;
-  ResField res_field_;
+  StyleField style_field_;
   std::auto_ptr<FieldDisplay> fdp_player_; ///< Field display of the local player
 
   /// Key bindings.
@@ -54,7 +54,7 @@ class FieldDisplay: public sf::Drawable
   static const float BOUNCE_Y_MAX;
 
  public:
-  FieldDisplay(const Field &fld, const ResField &res);
+  FieldDisplay(const Field &fld, const StyleField &style);
   virtual ~FieldDisplay() {}
 
   /// Update internal display after a step
@@ -79,7 +79,7 @@ class FieldDisplay: public sf::Drawable
   void renderBouncingBlock(sf::Renderer &renderer, int x, int y, float bounce, unsigned int color) const;
 
   const Field &field_;
-  const ResField &res_;
+  const StyleField &style_;
   sf::Sprite spr_frame_;
   sf::Sprite spr_cursor_;
 
@@ -94,14 +94,14 @@ class FieldDisplay: public sf::Drawable
   class Label: public sf::Drawable
   {
    public:
-    Label(const ResField &res, const FieldPos &pos, bool chain, unsigned int val);
+    Label(const StyleField &style, const FieldPos &pos, bool chain, unsigned int val);
     virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
     /// Step and update the label.
     void step();
     unsigned int dt() const { return dt_; }
    private:
     static const unsigned int DURATION;
-    const ResField &res_;
+    const StyleField &style_;
     sf::Sprite bg_;    ///< Background sprite.
     sf::Text txt_;     ///< Label text.
     unsigned int dt_;  ///< Remaining display time.
@@ -122,7 +122,7 @@ class FieldDisplay: public sf::Drawable
   class GbHanging: public sf::Drawable
   {
    public:
-    GbHanging(const ResField &res, const Garbage &gb);
+    GbHanging(const StyleField &res, const Garbage &gb);
     virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
     /// Step and update the garbage.
     void step();
@@ -133,7 +133,7 @@ class FieldDisplay: public sf::Drawable
     /// Update the text, if needed.
     void updateText();
 
-    const ResField &res_;
+    const StyleField &style_;
     const Garbage &gb_;
     sf::Sprite bg_;  ///< Background sprite.
     sf::Text txt_;   ///< Label text, not used if size_ is 0.

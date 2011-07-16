@@ -76,13 +76,20 @@ class ImageTile
 };
 
 
-/// Container for field display resources
-class ResField
+/** @brief Container for field display resources
+ *
+ * Style entries:
+ *  - ColorNb: number of colors in block map
+ *  - FrameOrigin: origin of field blocks in frame
+ */
+class StyleField
 {
  public:
-  ResField();
-  void load(ResourceManager *res_mgr);
+  StyleField();
+  void load(ResourceManager *res_mgr, const std::string& section);
 
+  /// Number of colors
+  unsigned int color_nb;
   /// Block pixel size
   unsigned int bk_size;
 
@@ -102,6 +109,8 @@ class ResField
 
   /// Field frame
   const sf::Image *img_field_frame;
+  /// Origin of field blocks in frame (top left corner)
+  sf::Vector2f frame_origin;
 
   /// Cursor (two positions)
   ImageTile tiles_cursor[2];
