@@ -119,7 +119,15 @@ class ResField
 };
 
 
-/// Container for WButton or WEntry style
+/** @brief Container for WButton or WEntry style
+ *
+ * Style entries:
+ *  - Font, FontSize: text font and size
+ *  - Image, ImageRect: background image
+ *  - ImageMarginX: width of sides in background image
+ *  - Color, FocusColor: image and text colors
+ *  - MarginLeft: image left margin, for text display
+ */
 class StyleButton
 {
  public:
