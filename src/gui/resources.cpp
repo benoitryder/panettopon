@@ -238,18 +238,19 @@ void StyleButton::load(ResourceManager *res_mgr)
   }
   font_size = i;
 
-  const sf::Image *img = res_mgr->getImage("Menu-map");
-  unsigned int margin = style.get<unsigned int>(section, "ImageMarginX", 0);
-  if( 2*margin >= img->GetWidth() ) {
+  const std::string img_name = style.get(section, "Image", "");
+  const sf::Image *img = res_mgr->getImage(img_name);
+  const sf::IntRect img_rect = style.get<sf::IntRect>(section, "ImageRect", sf::IntRect(0, 0, img->GetWidth(), img->GetHeight()));
+  int margin = style.get<int>(section, "ImageMarginX", 0);
+  if( 2*margin >= img_rect.Width ) {
     throw std::runtime_error("invalid ImageMarginX in "+section);
   }
-  tiles.left.create(img, sf::IntRect(0, 0, margin, img->GetHeight()/2));
-  tiles.middle.create(img, sf::IntRect(margin, 0, img->GetWidth()-2*margin, img->GetHeight()/2));
-  tiles.right.create(img, sf::IntRect(img->GetWidth()-margin, 0, margin, img->GetHeight()/2));
+  tiles.left.create(img, sf::IntRect(0, 0, margin, img_rect.Height));
+  tiles.middle.create(img, sf::IntRect(margin, 0, img_rect.Width-2*margin, img_rect.Height));
+  tiles.right.create(img, sf::IntRect(img_rect.Width-margin, 0, margin, img_rect.Height));
 
-  //TODO
-  color = sf::Color::White;
-  focus_color = sf::Color::Red;
+  color = style.get<sf::Color>(section, "Color", sf::Color::White);
+  focus_color = style.get<sf::Color>(section, "FocusColor", sf::Color::Green);
 }
 
 
