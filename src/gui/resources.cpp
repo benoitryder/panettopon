@@ -96,7 +96,7 @@ const sf::Font *ResourceManager::getFont(const std::string &name)
 
 std::string ResourceManager::getLang(const std::string &section, const std::string &key) const
 {
-  return lang_.get(section, key, "");
+  return lang_.get<std::string>(section, key);
 }
 
 
@@ -161,7 +161,7 @@ StyleField::StyleField():
 void StyleField::load(ResourceManager *res_mgr, const std::string& section)
 {
   const IniFile &style = res_mgr->style();
-  color_nb = style.get<unsigned int>(section, "ColorNb", 0);
+  color_nb = style.get<unsigned int>(section, "ColorNb");
   if( color_nb < 4 ) {
     throw std::runtime_error("ColorNb is too small, must be at least 4");
   }
@@ -202,7 +202,7 @@ void StyleField::load(ResourceManager *res_mgr, const std::string& section)
 
   // Frame
   img_field_frame = res_mgr->getImage("Field-Frame");
-  frame_origin = style.get(section, "FrameOrigin", sf::Vector2f(0,0));
+  frame_origin = style.get<sf::Vector2f>(section, "FrameOrigin");
 
   // Cursor
   img = res_mgr->getImage("SwapCursor");
@@ -240,13 +240,9 @@ void StyleButton::load(ResourceManager *res_mgr, const std::string& section)
     font = res_mgr->getFont(s);
   }
 
-  unsigned int i = style.get<unsigned int>(section, "FontSize", 0);
-  if( i == 0 ) {
-    throw std::runtime_error("invalid FontSize in "+section);
-  }
-  font_size = i;
+  font_size = style.get<unsigned int>(section, "FontSize");
 
-  const std::string img_name = style.get(section, "Image", "");
+  const std::string img_name = style.get<std::string>(section, "Image");
   const sf::Image *img = res_mgr->getImage(img_name);
   const sf::IntRect img_rect = style.get<sf::IntRect>(section, "ImageRect", sf::IntRect(0, 0, img->GetWidth(), img->GetHeight()));
   int margin = style.get<int>(section, "ImageMarginX", 0);
@@ -258,7 +254,7 @@ void StyleButton::load(ResourceManager *res_mgr, const std::string& section)
   tiles.right.create(img, sf::IntRect(img_rect.Left+img_rect.Width-margin, img_rect.Top, margin, img_rect.Height));
 
   color = style.get<sf::Color>(section, "Color", sf::Color::White);
-  focus_color = style.get<sf::Color>(section, "FocusColor", sf::Color::Green);
+  focus_color = style.get<sf::Color>(section, "FocusColor", color);
 
   margin_left = style.get<unsigned int>(section, "MarginLeft", 0);
 }

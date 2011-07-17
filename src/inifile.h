@@ -28,6 +28,17 @@ class IniFile
   static const unsigned int MAX_LINE_SIZE;
 
  public:
+  class NotSetError: public std::runtime_error {
+   public:
+    NotSetError(const std::string& section, const std::string& key):
+        std::runtime_error("value not set: ["+section+"] "+key) {}
+  };
+  class ParseError: public std::runtime_error {
+   public:
+    ParseError(const std::string& section, const std::string& key):
+        std::runtime_error("failed to parse value: ["+section+"] "+key) {}
+  };
+
   /// Create an empty INI file content.
   IniFile() {}
   /// Load config from a file, add it to current content.
@@ -35,7 +46,9 @@ class IniFile
 
   /// Return true if the value exists.
   bool has(const std::string& section, const std::string& key) const;
-  /// Retrieve a value
+  /// Retrieve a value, throw a NotSetError if not set
+  template <typename T> T get(const std::string& section, const std::string& key) const;
+  /// Retrieve a value, use default if not set
   template <typename T> T get(const std::string& section, const std::string& key, const T& def) const;
   /// Convenient alias to retrieve a string value.
   inline std::string get(const std::string& section, const std::string& key, const char *def) const;
@@ -49,20 +62,28 @@ class IniFile
 };
 
 
-template <typename T> T IniFile::get(const std::string& section, const std::string& key, const T& def) const
+template <typename T> T IniFile::get(const std::string& section, const std::string& key) const
 {
   content_type::const_iterator sec_it = content_.find(section);
-  if( sec_it == content_.end() ) {
-    return def;
+  if( sec_it != content_.end() ) {
+    section_type::const_iterator val_it = sec_it->second.find(key);
+    if( val_it != sec_it->second.end() ) {
+      try {
+        return boost::lexical_cast<T>(val_it->second);
+      } catch(const boost::bad_lexical_cast &) {
+        throw ParseError(section, key);
+      }
+    }
   }
-  section_type::const_iterator val_it = sec_it->second.find(key);
-  if( val_it == sec_it->second.end() ) {
-    return def;
-  }
+  throw NotSetError(section, key);
+}
+
+template <typename T> T IniFile::get(const std::string& section, const std::string& key, const T& def) const
+{
   try {
-    return boost::lexical_cast<T>(val_it->second);
-  } catch(const boost::bad_lexical_cast &) {
-    throw std::runtime_error("failed to parse "+section+" / "+key+" value");
+    return this->get<T>(section, key);
+  } catch(const NotSetError &) {
+    return def;
   }
 }
 
