@@ -112,7 +112,7 @@ void WLabel::setTextAlign(int align)
 
 WEntry::WEntry(const StyleButton &style, float width):
     style_(style), text_("", *style.font, style.font_size),
-    width_(width), cursor_pos_(0)
+    width_(width), cursor_pos_(0), display_pos_(0)
 {
   const unsigned int full_height = text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2;
   text_.SetOrigin(width/2-style_.margin_left, full_height/2);
@@ -122,11 +122,8 @@ WEntry::WEntry(const StyleButton &style, float width):
 
 void WEntry::setText(const std::string &text)
 {
-  text_.SetString(text);
-  if( cursor_pos_ > text_.GetString().GetSize() ) {
-    cursor_pos_ = text_.GetString().GetSize();
-  }
-  cursor_.SetPosition(text_.GetCharacterPos(cursor_pos_));
+  text_str_ = text;
+  this->updateTextDisplay();
 }
 
 void WEntry::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
@@ -142,7 +139,6 @@ void WEntry::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
   style_.tiles.left.render(renderer, -width_/2, -height/2);
   style_.tiles.right.render(renderer, middle_width/2, -height/2);
   style_.tiles.middle.render(renderer, -middle_width/2, -height/2, middle_width, height);
-  //TODO handle text overflow
   target.Draw(text_);
   if( this->focused() ) {
     target.Draw(cursor_);
@@ -154,9 +150,8 @@ bool WEntry::onInputEvent(const sf::Event &ev)
   if( ev.Type == sf::Event::TextEntered ) {
     sf::Uint32 c = ev.Text.Unicode;
     if( c >= ' ' && c != 127 ) {  // 127 is DEL sometimes
-      sf::String s = text_.GetString();
-      s.Insert(cursor_pos_++, c);
-      text_.SetString(s);
+      text_str_.Insert(cursor_pos_++, c);
+      this->updateTextDisplay();
       return true;
     }
   } else if( ev.Type == sf::Event::KeyPressed ) {
@@ -165,35 +160,66 @@ bool WEntry::onInputEvent(const sf::Event &ev)
     if( c == sf::Key::Home ) {
       cursor_pos_ = 0;
     } else if( c == sf::Key::End ) {
-      cursor_pos_ = text_.GetString().GetSize();
+      cursor_pos_ = text_str_.GetSize();
     } else if( c == sf::Key::Left ) {
       if( cursor_pos_ > 0 ) {
         cursor_pos_--;
       }
     } else if( c == sf::Key::Right ) {
-      if( cursor_pos_ < text_.GetString().GetSize() ) {
+      if( cursor_pos_ < text_str_.GetSize() ) {
         cursor_pos_++;
       }
     // edit
     } else if( c == sf::Key::Back ) {
       if( cursor_pos_ > 0 ) {
-        sf::String s = text_.GetString();
-        s.Erase(--cursor_pos_);
-        text_.SetString(s);
+        text_str_.Erase(--cursor_pos_);
       }
     } else if( c == sf::Key::Delete ) {
-      if( cursor_pos_ < text_.GetString().GetSize() ) {
-        sf::String s = text_.GetString();
-        s.Erase(cursor_pos_);
-        text_.SetString(s);
+      if( cursor_pos_ < text_str_.GetSize() ) {
+        text_str_.Erase(cursor_pos_);
       }
     } else {
       return false; // not processed
     }
-    cursor_.SetPosition(text_.GetCharacterPos(cursor_pos_));
+    this->updateTextDisplay();
     return true;
   }
   return false;
+}
+
+void WEntry::updateTextDisplay()
+{
+  if( cursor_pos_ > text_str_.GetSize() ) {
+    cursor_pos_ = text_str_.GetSize();
+  }
+  if( display_pos_ >= cursor_pos_ ) { // >= to let 1 "left-margin" character
+    display_pos_ = 0;
+  }
+  // set the whole string, for character position computations
+  text_.SetString(text_str_);
+
+  // recenter display if needed
+  const float display_width = width_ - 2*style_.margin_left;
+  const float cursor_pos_x = text_.GetCharacterPos(cursor_pos_).x;
+  while( cursor_pos_x - text_.GetCharacterPos(display_pos_).x > display_width ) {
+    display_pos_ = (cursor_pos_ + display_pos_)/2;
+    if( cursor_pos_ - display_pos_ < 2 ) {
+      break; // avoid infinite loop, just in case
+    }
+  }
+  // left-truncate to display_pos_
+  sf::String final_str = text_str_;
+  final_str.Erase(0, display_pos_);
+  text_.SetString(final_str);
+  // right-truncate if needed
+  for(unsigned int i=cursor_pos_; i<text_str_.GetSize(); i++ ) {
+    if( text_.GetCharacterPos(i+1-display_pos_).x > display_width ) {
+      final_str.Erase(i-display_pos_, text_str_.GetSize());
+      text_.SetString(final_str);
+    }
+  }
+
+  cursor_.SetPosition(text_.GetCharacterPos(cursor_pos_-display_pos_));
 }
 
 

@@ -96,13 +96,18 @@ class WEntry: public Widget
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   virtual bool onInputEvent(const sf::Event &);
   std::string text() const { return text_.GetString(); }
+ private:
+  /// Update text display after text input or cursor move
+  void updateTextDisplay();
 
  private:
   const StyleButton &style_;
   sf::Text text_;
   sf::Shape cursor_;
+  sf::String text_str_;
   float width_;
-  unsigned int cursor_pos_;
+  unsigned int cursor_pos_;  ///< cursor position, in the complete string
+  unsigned int display_pos_;  ///< position of the first displayed character
 };
 
 
