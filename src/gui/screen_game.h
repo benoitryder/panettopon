@@ -33,8 +33,8 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
 
   /// Key bindings.
   struct {
-    sf::Key::Code up, down, left, right;
-    sf::Key::Code swap, raise;
+    sf::Keyboard::Key up, down, left, right;
+    sf::Keyboard::Key swap, raise;
   } keys_;
 };
 

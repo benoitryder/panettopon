@@ -67,7 +67,7 @@ void WButton::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
 bool WButton::onInputEvent(const sf::Event &ev)
 {
   if( ev.Type == sf::Event::KeyPressed ) {
-    if( ev.Key.Code == sf::Key::Return ) {
+    if( ev.Key.Code == sf::Keyboard::Return ) {
       if( callback_ ) {
         callback_();
         return true;
@@ -155,26 +155,26 @@ bool WEntry::onInputEvent(const sf::Event &ev)
       return true;
     }
   } else if( ev.Type == sf::Event::KeyPressed ) {
-    sf::Key::Code c = ev.Key.Code;
+    sf::Keyboard::Key c = ev.Key.Code;
     // move
-    if( c == sf::Key::Home ) {
+    if( c == sf::Keyboard::Home ) {
       cursor_pos_ = 0;
-    } else if( c == sf::Key::End ) {
+    } else if( c == sf::Keyboard::End ) {
       cursor_pos_ = text_str_.GetSize();
-    } else if( c == sf::Key::Left ) {
+    } else if( c == sf::Keyboard::Left ) {
       if( cursor_pos_ > 0 ) {
         cursor_pos_--;
       }
-    } else if( c == sf::Key::Right ) {
+    } else if( c == sf::Keyboard::Right ) {
       if( cursor_pos_ < text_str_.GetSize() ) {
         cursor_pos_++;
       }
     // edit
-    } else if( c == sf::Key::Back ) {
+    } else if( c == sf::Keyboard::Back ) {
       if( cursor_pos_ > 0 ) {
         text_str_.Erase(--cursor_pos_);
       }
-    } else if( c == sf::Key::Delete ) {
+    } else if( c == sf::Keyboard::Delete ) {
       if( cursor_pos_ < text_str_.GetSize() ) {
         text_str_.Erase(cursor_pos_);
       }

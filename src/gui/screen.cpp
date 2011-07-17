@@ -40,15 +40,15 @@ bool ScreenMenu::onInputEvent(const sf::Event &ev)
     // move focus
     if( focused_ ) {
       Widget *next_focused = NULL;
-      if( ev.Key.Code == sf::Key::Up ) {
+      if( ev.Key.Code == sf::Keyboard::Up ) {
         next_focused = focused_->neighbor(Widget::NEIGHBOR_UP);
-      } else if( ev.Key.Code == sf::Key::Down ) {
+      } else if( ev.Key.Code == sf::Keyboard::Down ) {
         next_focused = focused_->neighbor(Widget::NEIGHBOR_DOWN);
-      } else if( ev.Key.Code == sf::Key::Left ) {
+      } else if( ev.Key.Code == sf::Keyboard::Left ) {
         next_focused = focused_->neighbor(Widget::NEIGHBOR_LEFT);
-      } else if( ev.Key.Code == sf::Key::Right ) {
+      } else if( ev.Key.Code == sf::Keyboard::Right ) {
         next_focused = focused_->neighbor(Widget::NEIGHBOR_RIGHT);
-      } else if( ev.Key.Code == sf::Key::Tab ) {
+      } else if( ev.Key.Code == sf::Keyboard::Tab ) {
         if( ev.Key.Shift ) {
           next_focused = focused_->neighbor(Widget::NEIGHBOR_LEFT);
           if( ! next_focused ) {

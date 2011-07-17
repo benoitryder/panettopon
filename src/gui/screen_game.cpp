@@ -12,12 +12,12 @@ ScreenGame::ScreenGame(GuiInterface &intf, Player *pl):
     input_scheduler_(*intf.instance(), *this, intf.io_service()),
     fdp_player_(NULL)
 {
-  keys_.up    = sf::Key::Up;
-  keys_.down  = sf::Key::Down;
-  keys_.left  = sf::Key::Left;
-  keys_.right = sf::Key::Right;
-  keys_.swap  = sf::Key::Code('d');
-  keys_.raise = sf::Key::Code('f');
+  keys_.up    = sf::Keyboard::Up;
+  keys_.down  = sf::Keyboard::Down;
+  keys_.left  = sf::Keyboard::Left;
+  keys_.right = sf::Keyboard::Right;
+  keys_.swap  = sf::Keyboard::Key('d');
+  keys_.raise = sf::Keyboard::Key('f');
 }
 
 void ScreenGame::enter()
@@ -45,7 +45,7 @@ void ScreenGame::redraw()
 bool ScreenGame::onInputEvent(const sf::Event &ev)
 {
   if( ev.Type == sf::Event::KeyPressed ) {
-    if( ev.Key.Code == sf::Key::Escape ) {
+    if( ev.Key.Code == sf::Keyboard::Escape ) {
       intf_.swapScreen(new ScreenStart(intf_));
       return true;
     }
@@ -80,14 +80,13 @@ void ScreenGame::onStateChange(GameInstance::State state)
 KeyState ScreenGame::getNextInput(Player *pl)
 {
   assert( pl == player_ );
-  const sf::Input &input = intf_.window().GetInput();
   int key = GAME_KEY_NONE;
-  if( input.IsKeyDown(keys_.up   ) ) key |= GAME_KEY_UP;
-  if( input.IsKeyDown(keys_.down ) ) key |= GAME_KEY_DOWN;
-  if( input.IsKeyDown(keys_.left ) ) key |= GAME_KEY_LEFT;
-  if( input.IsKeyDown(keys_.right) ) key |= GAME_KEY_RIGHT;
-  if( input.IsKeyDown(keys_.swap ) ) key |= GAME_KEY_SWAP;
-  if( input.IsKeyDown(keys_.raise) ) key |= GAME_KEY_RAISE;
+  if( sf::Keyboard::IsKeyPressed(keys_.up   ) ) key |= GAME_KEY_UP;
+  if( sf::Keyboard::IsKeyPressed(keys_.down ) ) key |= GAME_KEY_DOWN;
+  if( sf::Keyboard::IsKeyPressed(keys_.left ) ) key |= GAME_KEY_LEFT;
+  if( sf::Keyboard::IsKeyPressed(keys_.right) ) key |= GAME_KEY_RIGHT;
+  if( sf::Keyboard::IsKeyPressed(keys_.swap ) ) key |= GAME_KEY_SWAP;
+  if( sf::Keyboard::IsKeyPressed(keys_.raise) ) key |= GAME_KEY_RAISE;
   return key;
 }
 

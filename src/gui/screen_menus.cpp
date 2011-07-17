@@ -58,7 +58,7 @@ bool ScreenStart::onInputEvent(const sf::Event &ev)
     return true;
   }
   if( ev.Type == sf::Event::KeyPressed ) {
-    if( ev.Key.Code == sf::Key::Escape ) {
+    if( ev.Key.Code == sf::Keyboard::Escape ) {
       if( focused_ == button_exit_ ) {
         intf_.swapScreen(NULL);
       } else {
@@ -132,9 +132,9 @@ bool ScreenJoinServer::onInputEvent(const sf::Event &ev)
     return true;
   }
   if( ev.Type == sf::Event::KeyPressed ) {
-    if( ev.Key.Code == sf::Key::Escape ) {
+    if( ev.Key.Code == sf::Keyboard::Escape ) {
       intf_.swapScreen(new ScreenStart(intf_));
-    } else if( ev.Key.Code == sf::Key::Return ) {
+    } else if( ev.Key.Code == sf::Keyboard::Return ) {
       this->submit();
     }
     return true;
@@ -212,9 +212,9 @@ bool ScreenCreateServer::onInputEvent(const sf::Event &ev)
     return true;
   }
   if( ev.Type == sf::Event::KeyPressed ) {
-    if( ev.Key.Code == sf::Key::Escape ) {
+    if( ev.Key.Code == sf::Keyboard::Escape ) {
       intf_.swapScreen(new ScreenStart(intf_));
-    } else if( ev.Key.Code == sf::Key::Return ) {
+    } else if( ev.Key.Code == sf::Keyboard::Return ) {
       this->submit();
     }
     return true;
@@ -259,7 +259,7 @@ bool ScreenLobby::onInputEvent(const sf::Event &ev)
     return true;
   }
   if( ev.Type == sf::Event::KeyPressed ) {
-    if( ev.Key.Code == sf::Key::Escape ) {
+    if( ev.Key.Code == sf::Keyboard::Escape ) {
       intf_.swapScreen(new ScreenStart(intf_));
       return true;
     }
