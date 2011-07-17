@@ -162,8 +162,37 @@ class StyleButton
 /** @name Conversion helpers for style.ini */
 //@{
 std::istream& operator>>(std::istream& in, sf::Color& color);
-template <typename T> std::istream& operator>>(std::istream& in, sf::Rect<T>& rect);
-template <typename T> std::istream& operator>>(std::istream& in, sf::Vector2<T>& vect);
+
+template <typename T> std::istream& operator>>(std::istream& in, sf::Rect<T>& rect)
+{
+  T left, top, width, height;
+  char c1, c2, c3;
+  in >> left >> c1 >> top >> c2 >> width >> c3 >> height;
+  if( in && c1 == ',' && c2 == ',' && c3 == ',' && width >= 0 && height >= 0 ) {
+    rect.Left = left;
+    rect.Top = top;
+    rect.Width = width;
+    rect.Height = height;
+    return in;
+  }
+  in.clear( in.rdstate() | std::istream::failbit );
+  return in;
+}
+
+template <typename T> std::istream& operator>>(std::istream& in, sf::Vector2<T>& vect)
+{
+  T x, y;
+  char c;
+  in >> x >> c >> y;
+  if( in && c == ',' ) {
+    vect.x = x;
+    vect.y = y;
+    return in;
+  }
+  in.clear( in.rdstate() | std::istream::failbit );
+  return in;
+}
+
 //@}
 
 #endif
