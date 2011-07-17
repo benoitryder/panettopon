@@ -9,7 +9,13 @@ namespace gui {
 class GuiInterface;
 
 
-/// The very first screen.
+/** @brief The very first screen.
+ *
+ * Style entries:
+ *  - ButtonStyle: section for button style
+ *  - ButtonRect: geometry of the first button, height is used for space
+ *  between buttons
+ */
 class ScreenStart: public ScreenMenu
 {
  public:
@@ -26,7 +32,16 @@ class ScreenStart: public ScreenMenu
   WButton *button_exit_;
 };
 
-/// Join server (choose host and port).
+/** @brief Join server (choose host and port).
+ *
+ * Style entries:
+ *  - ButtonStyle: section for button style
+ *  - EntryStyle: section for entry style
+ *  - TitleLabelPos: position of title label
+ *  - HostEntryRect: geometry of the host entry (height ignored)
+ *  - PortEntryRect: geometry of the port entry (height ignored)
+ *  - JoinButtonRect: geometry of the join button (height ignored)
+ */
 class ScreenJoinServer: public ScreenMenu
 {
  public:
@@ -47,7 +62,15 @@ class ScreenJoinServer: public ScreenMenu
   bool submitting_;
 };
 
-/// Server creation (choose port).
+/** @brief Server creation (choose port).
+ *
+ * Style entries:
+ *  - ButtonStyle: section for button style
+ *  - EntryStyle: section for entry style
+ *  - PortLabelPos: position of port label
+ *  - PortEntryRect: geometry of the port entry (height ignored)
+ *  - CreateButtonRect: geometry of the create button (height ignored)
+ */
 class ScreenCreateServer: public ScreenMenu
 {
  public:
