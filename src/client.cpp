@@ -62,7 +62,6 @@ void ClientInstance::playerSetReady(Player *pl, bool ready)
 {
   assert( pl->local() );
   assert( state_ == STATE_LOBBY || state_ == STATE_READY );
-  assert( ready ); //TODO false not supported yet
   if( pl->ready() == ready ) {
     return; // already ready, do nothing
   }
