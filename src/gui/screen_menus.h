@@ -87,7 +87,13 @@ class ScreenCreateServer: public ScreenMenu
   WEntry *entry_port_;
 };
 
-/// Lobby (game preparation).
+/** @brief Lobby (game preparation).
+ *
+ * Style entries:
+ *  - ButtonStyle: section for button style
+ *  - EntryStyle: section for entry style
+ *  - ReadyButtonRect: geometry of the ready button (height ignored)
+ */
 class ScreenLobby: public ScreenMenu
 {
  public:
@@ -97,7 +103,14 @@ class ScreenLobby: public ScreenMenu
   virtual void onStateChange(GameInstance::State state);
 
  private:
+  void submit();
+  void updateReadyButtonCaption();
+
+ private:
   Player *player_; ///< Controlled player
+  StyleButton style_button_;
+  StyleButton style_entry_;
+  WButton *button_ready_;
 };
 
 

@@ -255,11 +255,23 @@ ScreenLobby::ScreenLobby(GuiInterface &intf, Player *pl):
 void ScreenLobby::enter()
 {
   assert( player_ );
-  GameInstance *instance = intf_.instance();
-  assert( instance );
-  if( instance->state() == GameInstance::STATE_LOBBY ) {
-    instance->playerSetReady(player_, true);
-  }
+  ResourceManager &res_mgr = intf_.res_mgr();
+  const IniFile &style = res_mgr.style();
+  const std::string section("ScreenLobby");
+  style_button_.load(&res_mgr, style.get<std::string>(section, "ButtonStyle", "ScreenMenu.Button"));
+  style_entry_.load(&res_mgr, style.get<std::string>(section, "EntryStyle", "ScreenMenu.Entry"));
+
+  sf::FloatRect rect = style.get<sf::FloatRect>(section, "ReadyButtonRect");
+  button_ready_ = new WButton(style_button_, rect.Width);
+  button_ready_->SetPosition(rect.Left, rect.Top);
+  button_ready_->setCallback(boost::bind(&ScreenLobby::submit, this));
+  this->updateReadyButtonCaption();
+
+  container_.widgets.push_back(button_ready_);
+
+  button_ready_->setNeighbors(NULL, NULL, NULL, NULL);
+
+  this->focus(button_ready_);
 }
 
 bool ScreenLobby::onInputEvent(const sf::Event &ev)
@@ -270,8 +282,8 @@ bool ScreenLobby::onInputEvent(const sf::Event &ev)
   if( ev.Type == sf::Event::KeyPressed ) {
     if( ev.Key.Code == sf::Keyboard::Escape ) {
       intf_.swapScreen(new ScreenStart(intf_));
-      return true;
     }
+    return true;
   }
   return false;
 }
@@ -279,10 +291,26 @@ bool ScreenLobby::onInputEvent(const sf::Event &ev)
 void ScreenLobby::onStateChange(GameInstance::State state)
 {
   if( state == GameInstance::STATE_LOBBY ) {
-    intf_.instance()->playerSetReady(player_, true);
+    this->updateReadyButtonCaption();
   } else if( state == GameInstance::STATE_INIT ) {
     intf_.swapScreen(new ScreenGame(intf_, player_));
   }
+}
+
+void ScreenLobby::submit()
+{
+  GameInstance *instance = intf_.instance();
+  assert( instance );
+  if( instance->state() == GameInstance::STATE_LOBBY ) {
+    instance->playerSetReady(player_, !player_->ready());
+    this->updateReadyButtonCaption();
+  }
+}
+
+void ScreenLobby::updateReadyButtonCaption()
+{
+  const std::string caption = player_->ready() ? "Waiting" : "Ready";
+  button_ready_->setCaption(intf_.res_mgr().getLang("ScreenLobby", caption));
 }
 
 
