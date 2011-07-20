@@ -111,19 +111,22 @@ void WLabel::setTextAlign(int align)
 
 
 WEntry::WEntry(const StyleButton &style, float width):
-    style_(style), text_("", *style.font, style.font_size),
-    width_(width), cursor_pos_(0), display_pos_(0)
+    style_(style), width_(width),
+    text_("", *style.font, style.font_size),
+    cursor_pos_(0)
 {
-  const unsigned int full_height = text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2;
-  text_.SetOrigin(width/2-style_.margin_left, full_height/2);
-  cursor_ = sf::Shape::Line(0, 0, 0, full_height, 1, text_.GetColor());
-  cursor_.SetOrigin(width/2-style_.margin_left, full_height/2);
+  unsigned int text_height = style.font->GetLineSpacing(style.font_size)+2;
+  text_img_.Create(width-2*style.margin_left, text_height);
+  text_sprite_.SetOrigin(width/2-style_.margin_left, text_height/2.);
+  text_sprite_.SetImage(text_img_.GetImage(), true);
+  cursor_ = sf::Shape::Line(0, 0, 0, text_height, 1, sf::Color::White);
+  cursor_.SetOrigin(text_sprite_.GetOrigin());
 }
 
 void WEntry::setText(const std::string &text)
 {
-  text_str_ = text;
-  this->updateTextDisplay();
+  text_.SetString(text);
+  this->updateTextDisplay(true);
 }
 
 void WEntry::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
@@ -139,7 +142,8 @@ void WEntry::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
   style_.tiles.left.render(renderer, -width_/2, -height/2);
   style_.tiles.right.render(renderer, middle_width/2, -height/2);
   style_.tiles.middle.render(renderer, -middle_width/2, -height/2, middle_width, height);
-  target.Draw(text_);
+
+  target.Draw(text_sprite_);
   if( this->focused() ) {
     target.Draw(cursor_);
   }
@@ -150,8 +154,9 @@ bool WEntry::onInputEvent(const sf::Event &ev)
   if( ev.Type == sf::Event::TextEntered ) {
     sf::Uint32 c = ev.Text.Unicode;
     if( c >= ' ' && c != 127 ) {  // 127 is DEL sometimes
-      text_str_.Insert(cursor_pos_++, c);
-      this->updateTextDisplay();
+      sf::String s = text_.GetString();
+      s.Insert(cursor_pos_++, c);
+      this->setText(s);
       return true;
     }
   } else if( ev.Type == sf::Event::KeyPressed ) {
@@ -159,67 +164,71 @@ bool WEntry::onInputEvent(const sf::Event &ev)
     // move
     if( c == sf::Keyboard::Home ) {
       cursor_pos_ = 0;
+      this->updateTextDisplay();
     } else if( c == sf::Keyboard::End ) {
-      cursor_pos_ = text_str_.GetSize();
+      cursor_pos_ = text_.GetString().GetSize();
+      this->updateTextDisplay();
     } else if( c == sf::Keyboard::Left ) {
       if( cursor_pos_ > 0 ) {
         cursor_pos_--;
+        this->updateTextDisplay();
       }
     } else if( c == sf::Keyboard::Right ) {
-      if( cursor_pos_ < text_str_.GetSize() ) {
+      if( cursor_pos_ < text_.GetString().GetSize() ) {
         cursor_pos_++;
+        this->updateTextDisplay();
       }
     // edit
     } else if( c == sf::Keyboard::Back ) {
       if( cursor_pos_ > 0 ) {
-        text_str_.Erase(--cursor_pos_);
+        sf::String s = text_.GetString();
+        s.Erase(--cursor_pos_);
+        this->setText(s);
       }
     } else if( c == sf::Keyboard::Delete ) {
-      if( cursor_pos_ < text_str_.GetSize() ) {
-        text_str_.Erase(cursor_pos_);
+      if( cursor_pos_ < text_.GetString().GetSize() ) {
+        sf::String s = text_.GetString();
+        s.Erase(cursor_pos_);
+        this->setText(s);
       }
     } else {
       return false; // not processed
     }
-    this->updateTextDisplay();
     return true;
   }
   return false;
 }
 
-void WEntry::updateTextDisplay()
+void WEntry::updateTextDisplay(bool force)
 {
-  if( cursor_pos_ > text_str_.GetSize() ) {
-    cursor_pos_ = text_str_.GetSize();
+  const size_t len = text_.GetString().GetSize();
+  if( cursor_pos_ > len ) {
+    cursor_pos_ = len;
   }
-  if( display_pos_ >= cursor_pos_ ) { // >= to let 1 "left-margin" character
-    display_pos_ = 0;
-  }
-  // set the whole string, for character position computations
-  text_.SetString(text_str_);
 
-  // recenter display if needed
-  const float display_width = width_ - 2*style_.margin_left;
+  const float text_width = text_img_.GetWidth();
   const float cursor_pos_x = text_.GetCharacterPos(cursor_pos_).x;
-  while( cursor_pos_x - text_.GetCharacterPos(display_pos_).x > display_width ) {
-    display_pos_ = (cursor_pos_ + display_pos_)/2;
-    if( cursor_pos_ - display_pos_ < 2 ) {
-      break; // avoid infinite loop, just in case
+  float x = -text_.GetPosition().x;
+
+  if( cursor_pos_x - x > text_width ) {
+    x = cursor_pos_x - text_width;
+    force = true;
+  } else if( cursor_pos_x < x ) {
+    x = cursor_pos_x - text_width/4; // 4 is an arbitrary value
+    if( x < 0 ) {
+      x = 0;
     }
-  }
-  // left-truncate to display_pos_
-  sf::String final_str = text_str_;
-  final_str.Erase(0, display_pos_);
-  text_.SetString(final_str);
-  // right-truncate if needed
-  for(unsigned int i=cursor_pos_; i<text_str_.GetSize(); i++ ) {
-    if( text_.GetCharacterPos(i+1-display_pos_).x > display_width ) {
-      final_str.Erase(i-display_pos_, text_str_.GetSize());
-      text_.SetString(final_str);
-    }
+    force = true;
   }
 
-  cursor_.SetPosition(text_.GetCharacterPos(cursor_pos_-display_pos_));
+  cursor_.SetX(cursor_pos_x-x);
+  // redraw only if needed
+  if( force ) {
+    text_img_.Clear(sf::Color(0,0,0,0));
+    text_.SetX(-x);
+    text_img_.Draw(text_);
+    text_img_.Display();
+  }
 }
 
 

@@ -5,7 +5,9 @@
 #include <boost/function.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Window/Event.hpp>
+#include <SFML/Graphics/RenderImage.hpp>
 #include <SFML/Graphics/Text.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Shape.hpp>
 
 namespace gui {
@@ -97,17 +99,17 @@ class WEntry: public Widget
   virtual bool onInputEvent(const sf::Event &);
   std::string text() const { return text_.GetString(); }
  private:
-  /// Update text display after text input or cursor move
-  void updateTextDisplay();
+  /// Update text image and cursor position after text input or cursor move
+  void updateTextDisplay(bool force=false);
 
  private:
   const StyleButton &style_;
+  const float width_;
+  sf::RenderImage text_img_;
   sf::Text text_;
+  sf::Sprite text_sprite_;
   sf::Shape cursor_;
-  sf::String text_str_;
-  float width_;
   unsigned int cursor_pos_;  ///< cursor position, in the complete string
-  unsigned int display_pos_;  ///< position of the first displayed character
 };
 
 
