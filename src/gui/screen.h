@@ -7,6 +7,8 @@
 #include "widget.h"
 #include "../instance.h"
 
+class IniFile;
+
 namespace gui {
 
 class GuiInterface;
@@ -18,6 +20,7 @@ class Screen
   Screen(GuiInterface &intf, const std::string &name);
   virtual ~Screen();
   const std::string& name() const { return name_; }
+  const IniFile& style() const;
 
   virtual void enter();
   virtual void exit();

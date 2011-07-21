@@ -11,6 +11,12 @@ Screen::Screen(GuiInterface &intf, const std::string &name):
 }
 
 Screen::~Screen() {}
+
+const IniFile& Screen::style() const
+{
+  return intf_.res_mgr().style();
+}
+
 void Screen::enter() {}
 void Screen::exit() {}
 void Screen::redraw() {}
