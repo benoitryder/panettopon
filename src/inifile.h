@@ -8,8 +8,11 @@
  *  - string quoting (with simple or double quotes)
  *  - escape sequences in strings: <tt>\\</tt>, <tt>\"</tt>, <tt>\'</tt>, <tt>\n</tt>
  *  - strip whitespaces after keys and around values
- *  - comments begin with <tt>#</tt> or <tt>;</tt>
+ *  - comments begin with <tt>#</tt> or <tt>;</tt> at the beginning of the line
  *  - break lines with trailing <tt>\</tt>
+ *
+ * Section and values names are internally stored as dotted strings. They are
+ * both joined by a dot to obtain the actual entry key.
  *
  * Empty values are considered as unset.
  */
@@ -30,13 +33,13 @@ class IniFile
  public:
   class NotSetError: public std::runtime_error {
    public:
-    NotSetError(const std::string& section, const std::string& key):
-        std::runtime_error("value not set: ["+section+"] "+key) {}
+    NotSetError(const std::string& key):
+        std::runtime_error("value not set: "+key) {}
   };
   class ParseError: public std::runtime_error {
    public:
-    ParseError(const std::string& section, const std::string& key):
-        std::runtime_error("failed to parse value: ["+section+"] "+key) {}
+    ParseError(const std::string& key):
+        std::runtime_error("failed to parse value: "+key) {}
   };
 
   /// Create an empty INI file content.
@@ -45,43 +48,63 @@ class IniFile
   bool load(const std::string& fname);
 
   /// Return true if the value exists.
-  bool has(const std::string& section, const std::string& key) const;
+  bool has(const std::string& key) const;
   /// Retrieve a value, throw a NotSetError if not set
+  template <typename T> T get(const std::string& key) const;
+  /// Set a value.
+  void set(const std::string& key, const std::string& val);
+
+  /** @name Aliases for access by section and key */
+  //@{
+  inline bool has(const std::string& section, const std::string& key) const;
   template <typename T> T get(const std::string& section, const std::string& key) const;
+  inline void set(const std::string& section, const std::string& key, const std::string& val);
+  //@}
+
   /// Retrieve a value, use default if not set
   template <typename T> T get(const std::string& section, const std::string& key, const T& def) const;
-  /// Convenient alias to retrieve a string value.
+  /// Convenient alias to retrieve a string value
   inline std::string get(const std::string& section, const std::string& key, const char *def) const;
-  /// Set a value.
-  void set(const std::string& section, const std::string& key, const std::string& val);
+
 
  private:
-  typedef std::map<std::string, std::string> section_type;
-  typedef std::map<std::string, section_type> content_type;
-  content_type content_;
+  typedef std::map<std::string, std::string> entries_type;
+  entries_type entries_;
 };
 
 
-template <typename T> T IniFile::get(const std::string& section, const std::string& key) const
+template <typename T> T IniFile::get(const std::string& key) const
 {
-  content_type::const_iterator sec_it = content_.find(section);
-  if( sec_it != content_.end() ) {
-    section_type::const_iterator val_it = sec_it->second.find(key);
-    if( val_it != sec_it->second.end() ) {
-      try {
-        return boost::lexical_cast<T>(val_it->second);
-      } catch(const boost::bad_lexical_cast &) {
-        throw ParseError(section, key);
-      }
+  entries_type::const_iterator it = entries_.find(key);
+  if( it != entries_.end() ) {
+    try {
+      return boost::lexical_cast<T>(it->second);
+    } catch(const boost::bad_lexical_cast &) {
+      throw ParseError(key);
     }
   }
-  throw NotSetError(section, key);
+  throw NotSetError(key);
+}
+
+bool IniFile::has(const std::string& section, const std::string& key) const
+{
+  return has(section+'.'+key);
+}
+
+template <typename T> T IniFile::get(const std::string& section, const std::string& key) const
+{
+  return get<T>(section+'.'+key);
+}
+
+void IniFile::set(const std::string& section, const std::string& key, const std::string& val)
+{
+  set(section+'.'+key, val);
 }
 
 template <typename T> T IniFile::get(const std::string& section, const std::string& key, const T& def) const
 {
   try {
-    return this->get<T>(section, key);
+    return get<T>(section, key);
   } catch(const NotSetError &) {
     return def;
   }

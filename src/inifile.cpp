@@ -14,7 +14,7 @@ bool IniFile::load(const std::string& fname)
   }
 
   char buf[MAX_LINE_SIZE];
-  content_type::iterator section_it = content_.end();
+  std::string section;
   for(;;) {
 
     // read next line
@@ -58,13 +58,11 @@ bool IniFile::load(const std::string& fname)
       if( pos < 2 || pos == std::string::npos ) {
         goto error;
       }
-      std::string name = line.substr(1, pos-1);
-      content_type::value_type section(name, section_type());
-      section_it = content_.insert( section ).first;
+      section = line.substr(1, pos-1);
 
     } else {
 
-      if( section_it == content_.end() ) {
+      if( section.empty() ) {
         goto error; // no current section
       }
 
@@ -113,7 +111,7 @@ bool IniFile::load(const std::string& fname)
         }
       }
       if( !val.empty() ) {
-        (*section_it).second[key] = val;
+        entries_[key] = val;
       }
     }
   }
@@ -127,25 +125,17 @@ error:
 }
 
 
-bool IniFile::has(const std::string& section, const std::string& key) const
+bool IniFile::has(const std::string& key) const
 {
-  content_type::const_iterator sec_it = content_.find(section);
-  if( sec_it == content_.end() ) {
-    return false;
-  }
-  section_type::const_iterator val_it = sec_it->second.find(key);
-  if( val_it == sec_it->second.end() ) {
-    return false;
-  }
-  return true;
+  return entries_.find(key) != entries_.end();
 }
 
-void IniFile::set(const std::string& section, const std::string& key, const std::string& val)
+void IniFile::set(const std::string& key, const std::string& val)
 {
   if( val.empty() ) {
-    content_[section].erase(key);
+    entries_.erase(key);
   } else {
-    content_[section][key] = val;;
+    entries_[key] = val;
   }
 }
 
