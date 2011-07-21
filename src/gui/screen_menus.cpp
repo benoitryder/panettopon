@@ -9,7 +9,7 @@ namespace gui {
 
 
 ScreenStart::ScreenStart(GuiInterface &intf):
-    ScreenMenu(intf)
+    ScreenMenu(intf, "ScreenStart")
 {
 }
 
@@ -83,7 +83,7 @@ void ScreenStart::onCreateServer()
 
 
 ScreenJoinServer::ScreenJoinServer(GuiInterface &intf):
-    ScreenMenu(intf),
+    ScreenMenu(intf, "ScreenJoinServer"),
     submitting_(false)
 {
 }
@@ -178,7 +178,7 @@ void ScreenJoinServer::submit()
 
 
 ScreenCreateServer::ScreenCreateServer(GuiInterface &intf):
-    ScreenMenu(intf)
+    ScreenMenu(intf, "ScreenCreateServer")
 {
 }
 
@@ -247,7 +247,7 @@ void ScreenCreateServer::submit()
 
 
 ScreenLobby::ScreenLobby(GuiInterface &intf, Player *pl):
-    ScreenMenu(intf),
+    ScreenMenu(intf, "ScreenLobby"),
     player_(pl)
 {
 }

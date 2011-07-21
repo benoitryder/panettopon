@@ -15,8 +15,9 @@ class GuiInterface;
 class Screen
 {
  public:
-  Screen(GuiInterface &intf);
+  Screen(GuiInterface &intf, const std::string &name);
   virtual ~Screen();
+  const std::string& name() const { return name_; }
 
   virtual void enter();
   virtual void exit();
@@ -41,6 +42,7 @@ class Screen
 
  protected:
   GuiInterface &intf_;
+  const std::string name_;
 };
 
 
@@ -48,7 +50,7 @@ class Screen
 class ScreenMenu: public Screen
 {
  public:
-  ScreenMenu(GuiInterface &intf);
+  ScreenMenu(GuiInterface &intf, const std::string &name);
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event &ev);
   void focus(Widget *w);

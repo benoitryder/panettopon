@@ -5,8 +5,8 @@
 namespace gui {
 
 
-Screen::Screen(GuiInterface &intf):
-    intf_(intf)
+Screen::Screen(GuiInterface &intf, const std::string &name):
+    intf_(intf), name_(name)
 {
 }
 
@@ -16,8 +16,8 @@ void Screen::exit() {}
 void Screen::redraw() {}
 
 
-ScreenMenu::ScreenMenu(GuiInterface &intf):
-    Screen(intf), focused_(NULL)
+ScreenMenu::ScreenMenu(GuiInterface &intf, const std::string &name):
+    Screen(intf, name), focused_(NULL)
 {
 }
 

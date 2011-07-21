@@ -7,7 +7,7 @@ namespace gui {
 
 
 ScreenGame::ScreenGame(GuiInterface &intf, Player *pl):
-    Screen(intf),
+    Screen(intf, "ScreenGame"),
     player_(pl),
     input_scheduler_(*intf.instance(), *this, intf.io_service()),
     fdp_player_(NULL)
