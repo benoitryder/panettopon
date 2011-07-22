@@ -111,7 +111,7 @@ bool IniFile::load(const std::string& fname)
         }
       }
       if( !val.empty() ) {
-        entries_[key] = val;
+        entries_[section+'.'+key] = val;
       }
     }
   }
