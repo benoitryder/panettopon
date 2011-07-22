@@ -9,15 +9,27 @@
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Shape.hpp>
+#include "resources.h"
 
 namespace gui {
 
-class StyleButton;
+class Screen;
 
 
+/** @brief Base class for widgets.
+ *
+ * Style properties:
+ *  - Position: x,y vector
+ *
+ * @note Name does not have to be unique and may be empty.
+ */
 class Widget: public sf::Drawable
 {
  public:
+  struct StyleError: public std::runtime_error {
+    StyleError(const Widget& w, const std::string& prop, const std::string& msg);
+  };
+
   enum Neighbor {
     NEIGHBOR_NONE = -1,
     NEIGHBOR_UP = 0,
@@ -27,7 +39,7 @@ class Widget: public sf::Drawable
     NEIGHBOR_COUNT
   };
 
-  Widget();
+  Widget(const Screen& screen, const std::string& name);
   virtual ~Widget();
   virtual bool onInputEvent(const sf::Event &) { return false; }
   bool focused() const { return focused_; }
@@ -35,7 +47,23 @@ class Widget: public sf::Drawable
   Widget *neighbor(Neighbor n) const { return neighbors_[n]; }
   void setNeighbors(Widget *up, Widget *down, Widget *left, Widget *right);
 
+  /// Return the widget type as a string.
+  virtual const std::string& type() const = 0;
+
+  /** @brief Get style entry key for a given property.
+   *
+   * The requested property is searched in the following sections (in order):
+   *  - Screen.WidgetName
+   *  - Screen.Type
+   *  - Type
+   *
+   * @return true if found, false otherwise.
+   */
+  bool searchStyle(const std::string& prop, std::string *key) const;
+
  private:
+  const Screen& screen_;
+  const std::string& name_;
   bool focused_;
   Widget *neighbors_[NEIGHBOR_COUNT];
 };
@@ -45,12 +73,19 @@ class Widget: public sf::Drawable
  *
  * Contained widgets are owned by the container and deleted when it is
  * destroyed.
+ *
+ * Style properties: none
  */
 class WContainer: public Widget
 {
  public:
-  WContainer();
+  WContainer(const Screen& screen, const std::string& name);
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+
+ private:
+  static const std::string type_;
+ protected:
+  virtual const std::string& type() const;
 
  public:
   typedef boost::ptr_vector<Widget> Container;
@@ -58,10 +93,18 @@ class WContainer: public Widget
 };
 
 
+/** @brief Text button with image background
+ *
+ * Style properties:
+ *  - Font, FontSize
+ *  - Color, FocusColor
+ *  - Width
+ *  - BgImage, BgImageRect, BgImageMarginX
+ */
 class WButton: public Widget
 {
  public:
-  WButton(const StyleButton &style, float width);
+  WButton(const Screen& screen, const std::string& name);
   void setCaption(const std::string &caption);
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   virtual bool onInputEvent(const sf::Event &);
@@ -69,20 +112,39 @@ class WButton: public Widget
   void setCallback(Callback cb) { callback_ = cb; }
 
  private:
-  const StyleButton &style_;
+  static const std::string type_;
+ protected:
+  virtual const std::string& type() const;
+
+ private:
   sf::Text caption_;  ///< Button caption
-  Callback callback_;
+  ImageFrameX frame_;
+  sf::Color color_;
+  sf::Color focus_color_;
   float width_;
+  Callback callback_;
 };
 
 
+/** @brief Simple text widget
+ *
+ * Style properties:
+ *  - Font, FontSize
+ *  - Color
+ *  - TextAlign: left, center, right
+ */
 class WLabel: public Widget
 {
  public:
-  WLabel();
+  WLabel(const Screen& screen, const std::string& name);
   void setText(const std::string &caption);
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   void setTextAlign(int align);
+
+ private:
+  static const std::string type_;
+ protected:
+  virtual const std::string& type() const;
 
  private:
   sf::Text text_;
@@ -90,25 +152,42 @@ class WLabel: public Widget
 };
 
 
+/** @brief Text field
+ *
+ * Style properties:
+ *  - Font, FontSize
+ *  - Color, FocusColor
+ *  - Width
+ *  - BgImage, BgImageRect, BgImageMarginX
+ *  - TextMarginX: left and right margin for text
+ */
 class WEntry: public Widget
 {
  public:
-  WEntry(const StyleButton &style, float width);
+  WEntry(const Screen& screen, const std::string& name);
   void setText(const std::string &caption);
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   virtual bool onInputEvent(const sf::Event &);
   std::string text() const { return text_.GetString(); }
+
+ private:
+  static const std::string type_;
+ protected:
+  virtual const std::string& type() const;
+
  private:
   /// Update text image and cursor position after text input or cursor move
   void updateTextDisplay(bool force=false);
 
  private:
-  const StyleButton &style_;
-  const float width_;
   sf::RenderImage text_img_;
   sf::Text text_;
   sf::Sprite text_sprite_;
   sf::Shape cursor_;
+  ImageFrameX frame_;
+  sf::Color color_;
+  sf::Color focus_color_;
+  float width_;
   unsigned int cursor_pos_;  ///< cursor position, in the complete string
 };
 

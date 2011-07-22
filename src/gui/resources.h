@@ -76,6 +76,30 @@ class ImageTile
 };
 
 
+/** @brief Image split in 3 left/middle/right parts
+ *
+ * It is typically used for button or entry backgrounds.
+ * Left and right parts are drawn without being resized and the middle part is
+ * sized to fit the drawn width.
+ */
+class ImageFrameX
+{
+ public:
+  ImageFrameX();
+  /// Initialize the frame using image subrect and margin
+  void create(const sf::Image *img, const sf::IntRect& rect, unsigned int margin);
+  /// Draw the frame at given position, with given size
+  void render(sf::Renderer &renderer, const sf::FloatRect& rect) const;
+  /// Draw the frame centered on 0,0 with given width
+  void render(sf::Renderer &renderer, float w) const;
+
+ private:
+  const sf::Image *image_;
+  sf::IntRect rect_;
+  unsigned int margin_;
+};
+
+
 /** @brief Container for field display resources
  *
  * Style entries:
@@ -125,34 +149,6 @@ class StyleField
     ImageTile blocks[FIELD_WIDTH];
     ImageTile line;
   } tiles_gb_hanging;
-};
-
-
-/** @brief Container for WButton or WEntry style
- *
- * Style entries:
- *  - Font, FontSize: text font and size
- *  - Image, ImageRect: background image
- *  - ImageMarginX: width of sides in background image
- *  - Color, FocusColor: image and text colors
- *  - MarginLeft: image left margin, for text display
- */
-class StyleButton
-{
- public:
-  StyleButton();
-  void load(ResourceManager *res_mgr, const std::string& section);
-
-  const sf::Font *font;
-  unsigned int font_size;
-  struct {
-    ImageTile left;
-    ImageTile middle;
-    ImageTile right;
-  } tiles;
-  sf::Color color;
-  sf::Color focus_color;
-  unsigned int margin_left;
 };
 
 

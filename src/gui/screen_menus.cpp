@@ -16,41 +16,29 @@ ScreenStart::ScreenStart(GuiInterface &intf):
 void ScreenStart::enter()
 {
   intf_.stopInstance();
-  ResourceManager &res_mgr = intf_.res_mgr();
-  const IniFile &style = res_mgr.style();
-  const std::string section("ScreenStart");
-  style_button_.load(&res_mgr, style.get<std::string>(section, "ButtonStyle", "ScreenMenu.Button"));
+  const ResourceManager& res_mgr = intf_.res_mgr();
 
-  // create buttons
-  const std::string labels[] = {
-    res_mgr.getLang(section, "JoinServer"),
-    res_mgr.getLang(section, "CreateServer"),
-    res_mgr.getLang(section, "Exit"),
-  };
-  const int button_nb = sizeof(labels)/sizeof(*labels);
-  const sf::FloatRect button_rect = style.get<sf::FloatRect>(section, "ButtonRect");
-  WButton *buttons[button_nb];
-  int i;
-  for( i=0; i<button_nb; i++ ) {
-    WButton *button = new WButton(style_button_, button_rect.Width);
-    button->setCaption(labels[i]);
-    button->SetPosition(button_rect.Left, button_rect.Top+i*button_rect.Height);
-    buttons[i] = button;
-    container_.widgets.push_back(button);
-  }
-  for( i=0; i<button_nb; i++ ) {
-    buttons[i]->setNeighbors(
-        buttons[ i-1<0 ? button_nb-1 : i-1 ],
-        buttons[ i+1>=button_nb ? 0 : i+1 ],
-        NULL, NULL );
-  }
-  button_exit_ = buttons[button_nb-1];
+  WButton *button_join = new WButton(*this, "JoinServer");
+  button_join->setCaption(res_mgr.getLang(name_, "JoinServer"));
+  container_.widgets.push_back(button_join);
 
-  buttons[0]->setCallback(boost::bind(&ScreenStart::onJoinServer, this));
-  buttons[1]->setCallback(boost::bind(&ScreenStart::onCreateServer, this));
+  WButton *button_create = new WButton(*this, "CreateServer");
+  button_create->setCaption(res_mgr.getLang(name_, "CreateServer"));
+  container_.widgets.push_back(button_create);
+
+  button_exit_ = new WButton(*this, "Exit");
+  button_exit_->setCaption(res_mgr.getLang(name_, "Exit"));
+  container_.widgets.push_back(button_exit_);
+
+  button_join->setNeighbors(button_exit_, button_create, NULL, NULL);
+  button_create->setNeighbors(button_join, button_exit_, NULL, NULL);
+  button_exit_->setNeighbors(button_create, button_join, NULL, NULL);
+
+  button_join->setCallback(boost::bind(&ScreenStart::onJoinServer, this));
+  button_create->setCallback(boost::bind(&ScreenStart::onCreateServer, this));
   button_exit_->setCallback(boost::bind(&GuiInterface::swapScreen, &intf_, (gui::Screen*)NULL));
 
-  this->focus(buttons[0]);
+  this->focus(button_join);
 }
 
 bool ScreenStart::onInputEvent(const sf::Event &ev)
@@ -90,35 +78,22 @@ ScreenJoinServer::ScreenJoinServer(GuiInterface &intf):
 
 void ScreenJoinServer::enter()
 {
-  ResourceManager &res_mgr = intf_.res_mgr();
-  const IniFile &style = res_mgr.style();
-  const std::string section("ScreenJoinServer");
-  style_button_.load(&res_mgr, style.get<std::string>(section, "ButtonStyle", "ScreenMenu.Button"));
-  style_entry_.load(&res_mgr, style.get<std::string>(section, "EntryStyle", "ScreenMenu.Entry"));
+  const ResourceManager& res_mgr = intf_.res_mgr();
 
-  WLabel *label = new WLabel();
-  label->setText(res_mgr.getLang(section, "HostPort"));
-  label->setTextAlign(0);
-  label->SetPosition(style.get<sf::Vector2f>(section, "TitleLabelPos"));
-
-  sf::FloatRect rect = style.get<sf::FloatRect>(section, "HostEntryRect");
-  entry_host_ = new WEntry(style_entry_, rect.Width);
-  entry_host_->setText("localhost");
-  entry_host_->SetPosition(rect.Left, rect.Top);
-
-  rect = style.get<sf::FloatRect>(section, "PortEntryRect");
-  entry_port_ = new WEntry(style_entry_, rect.Width);
-  entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
-  entry_port_->SetPosition(rect.Left, rect.Top);
-
-  rect = style.get<sf::FloatRect>(section, "JoinButtonRect");
-  WButton *button = new WButton(style_button_, rect.Width);
-  button->setCaption(res_mgr.getLang(section, "Join"));
-  button->SetPosition(rect.Left, rect.Top);
-
+  WLabel *label = new WLabel(*this, "Title");
+  label->setText(res_mgr.getLang(name_, "HostPort"));
   container_.widgets.push_back(label);
+
+  entry_host_ = new WEntry(*this, "Host");
+  entry_host_->setText("localhost");
   container_.widgets.push_back(entry_host_);
+
+  entry_port_ = new WEntry(*this, "Port");
+  entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
   container_.widgets.push_back(entry_port_);
+
+  WButton *button = new WButton(*this, "Join");
+  button->setCaption(res_mgr.getLang(name_, "Join"));
   container_.widgets.push_back(button);
 
   //XXX neighbors should be defined in style.ini too
@@ -184,29 +159,18 @@ ScreenCreateServer::ScreenCreateServer(GuiInterface &intf):
 
 void ScreenCreateServer::enter()
 {
-  ResourceManager &res_mgr = intf_.res_mgr();
-  const IniFile &style = res_mgr.style();
-  const std::string section("ScreenCreateServer");
-  style_button_.load(&res_mgr, style.get<std::string>(section, "ButtonStyle", "ScreenMenu.Button"));
-  style_entry_.load(&res_mgr, style.get<std::string>(section, "EntryStyle", "ScreenMenu.Entry"));
+  const ResourceManager& res_mgr = intf_.res_mgr();
 
-  WLabel *label = new WLabel();
-  label->setText(res_mgr.getLang(section, "Port"));
-  label->setTextAlign(1);
-  label->SetPosition(style.get<sf::Vector2f>(section, "PortLabelPos"));
-
-  sf::FloatRect rect = style.get<sf::FloatRect>(section, "PortEntryRect");
-  entry_port_ = new WEntry(style_entry_, rect.Width);
-  entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
-  entry_port_->SetPosition(rect.Left, rect.Top);
-
-  rect = style.get<sf::FloatRect>(section, "CreateButtonRect");
-  WButton *button = new WButton(style_button_, rect.Width);
-  button->setCaption(res_mgr.getLang(section, "Create"));
-  button->SetPosition(rect.Left, rect.Top);
-
+  WLabel *label = new WLabel(*this, "PortLabel");
+  label->setText(res_mgr.getLang(name_, "Port"));
   container_.widgets.push_back(label);
+
+  entry_port_ = new WEntry(*this, "PortEntry");
+  entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
   container_.widgets.push_back(entry_port_);
+
+  WButton *button = new WButton(*this, "Create");
+  button->setCaption(res_mgr.getLang(name_, "Create"));
   container_.widgets.push_back(button);
 
   entry_port_->setNeighbors(button, button, NULL, NULL);
@@ -255,22 +219,16 @@ ScreenLobby::ScreenLobby(GuiInterface &intf, Player *pl):
 void ScreenLobby::enter()
 {
   assert( player_ );
-  ResourceManager &res_mgr = intf_.res_mgr();
-  const IniFile &style = res_mgr.style();
-  const std::string section("ScreenLobby");
-  style_button_.load(&res_mgr, style.get<std::string>(section, "ButtonStyle", "ScreenMenu.Button"));
-  style_entry_.load(&res_mgr, style.get<std::string>(section, "EntryStyle", "ScreenMenu.Entry"));
+  const ResourceManager& res_mgr = intf_.res_mgr();
 
-  sf::FloatRect rect = style.get<sf::FloatRect>(section, "ReadyButtonRect");
-  button_ready_ = new WButton(style_button_, rect.Width);
-  button_ready_->SetPosition(rect.Left, rect.Top);
+  button_ready_ = new WButton(*this, "Ready");
+  button_ready_->setCaption(res_mgr.getLang(name_, "Ready"));
   button_ready_->setCallback(boost::bind(&ScreenLobby::submit, this));
-  this->updateReadyButtonCaption();
-
   container_.widgets.push_back(button_ready_);
 
   button_ready_->setNeighbors(NULL, NULL, NULL, NULL);
 
+  this->updateReadyButtonCaption();
   this->focus(button_ready_);
 }
 

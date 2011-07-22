@@ -1,14 +1,25 @@
 #include "widget.h"
+#include "screen.h"
+#include "interface.h"
 #include "resources.h"
 #include "../log.h"
 
 namespace gui {
 
+Widget::StyleError::StyleError(const Widget& w, const std::string& prop, const std::string& msg):
+  std::runtime_error("style error for "+w.screen_.name()+"."+w.name_+"."+prop+": "+msg) {}
 
-Widget::Widget():
-    focused_(false)
+
+Widget::Widget(const Screen& screen, const std::string& name):
+    screen_(screen), name_(name), focused_(false)
 {
   this->setNeighbors(NULL, NULL, NULL, NULL);
+
+  const IniFile& style = screen.style();
+  const std::string section = screen.name()+'.'+name;
+  if( style.has(section, "Pos") ) {
+    this->SetPosition(style.get<sf::Vector2f>(section, "Pos"));
+  }
 }
 
 Widget::~Widget() {}
@@ -21,8 +32,36 @@ void Widget::setNeighbors(Widget *up, Widget *down, Widget *left, Widget *right)
   neighbors_[NEIGHBOR_RIGHT] = right;
 }
 
+bool Widget::searchStyle(const std::string& prop, std::string *key) const
+{
+  const IniFile& style = screen_.style();
+  std::string s;
+  if( !name_.empty() ) {
+    s = screen_.name()+'.'+name_+'.'+prop;
+    if( style.has(s) ) {
+      goto found;
+    }
+  }
+  s = screen_.name()+'.'+this->type()+'.'+prop;
+  if( style.has(s) ) {
+    goto found;
+  }
+  s = this->type()+'.'+prop;
+  if( style.has(s) ) {
+    goto found;
+  }
+  return false;
+found:
+  *key = s;
+  return true;
+}
 
-WContainer::WContainer()
+
+const std::string WContainer::type_("Container");
+const std::string& WContainer::type() const { return type_; }
+
+WContainer::WContainer(const Screen& screen, const std::string& name):
+    Widget(screen, name)
 {
 }
 
@@ -35,10 +74,56 @@ void WContainer::Render(sf::RenderTarget &target, sf::Renderer &) const
 }
 
 
-WButton::WButton(const StyleButton &style, float width):
-    style_(style), caption_("", *style.font, style.font_size),
-    callback_(NULL), width_(width)
+const std::string WButton::type_("Button");
+const std::string& WButton::type() const { return type_; }
+
+WButton::WButton(const Screen& screen, const std::string& name):
+    Widget(screen, name), callback_(NULL)
 {
+  const IniFile& style = screen.style();
+  ResourceManager& res_mgr = screen.intf().res_mgr();
+  std::string key;
+
+  if( searchStyle("Font", &key) ) {
+    caption_.SetFont(*res_mgr.getFont(style.get<std::string>(key)));
+  }
+  if( searchStyle("FontSize", &key) ) {
+    caption_.SetCharacterSize(style.get<unsigned int>(key));
+  }
+
+  if( searchStyle("Color", &key) ) {
+    color_ = style.get<sf::Color>(key);
+  }
+  if( searchStyle("FocusColor", &key) ) {
+    focus_color_ = style.get<sf::Color>(key);
+  }
+
+  if( searchStyle("Width", &key) ) {
+    width_ = style.get<float>(key);
+    if( width_ <= 0 ) {
+      throw StyleError(*this, "Width", "value must be positive");
+    }
+  } else {
+    throw StyleError(*this, "Width", "not set");
+  }
+
+  if( searchStyle("BgImage", &key) ) {
+    const sf::Image *img = res_mgr.getImage(style.get<std::string>(key));
+    sf::IntRect rect(0, 0, img->GetWidth(), img->GetHeight());
+    if( searchStyle("BgImageRect", &key) ) {
+      rect = style.get<sf::IntRect>(key);
+    }
+    unsigned int frame_margin = 0;
+    if( searchStyle("BgImageMarginX", &key) ) {
+      frame_margin = style.get<unsigned int>(key);
+      if( 2*frame_margin >= (unsigned int)rect.Width ) {
+        throw StyleError(*this, "BgImageMarginX", "margins larger than image width");
+      }
+    }
+    frame_.create(img, rect, frame_margin);
+  } else {
+    throw StyleError(*this, "BgImage", "not set");
+  }
 }
 
 void WButton::setCaption(const std::string &caption)
@@ -51,16 +136,11 @@ void WButton::setCaption(const std::string &caption)
 void WButton::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
 {
   if( this->focused() ) {
-    renderer.SetColor(style_.focus_color);
+    renderer.SetColor(focus_color_);
   } else {
-    renderer.SetColor(style_.color);
+    renderer.SetColor(color_);
   }
-  const float height = style_.tiles.left.rect().Height;
-  const float side_width = style_.tiles.left.rect().Width;
-  const float middle_width = width_ - 2*side_width;
-  style_.tiles.left.render(renderer, -width_/2, -height/2);
-  style_.tiles.right.render(renderer, middle_width/2, -height/2);
-  style_.tiles.middle.render(renderer, -middle_width/2, -height/2, middle_width, height);
+  frame_.render(renderer, width_);
   target.Draw(caption_);
 }
 
@@ -78,9 +158,37 @@ bool WButton::onInputEvent(const sf::Event &ev)
 }
 
 
-WLabel::WLabel(): align_(0)
+const std::string WLabel::type_("Label");
+const std::string& WLabel::type() const { return type_; }
+
+WLabel::WLabel(const Screen& screen, const std::string& name):
+    Widget(screen, name), align_(0)
 {
-  text_.SetColor(sf::Color::White);
+  const IniFile& style = screen.style();
+  ResourceManager& res_mgr = screen.intf().res_mgr();
+  std::string key;
+
+  if( searchStyle("Font", &key) ) {
+    text_.SetFont(*res_mgr.getFont(style.get<std::string>(key)));
+  }
+  if( searchStyle("FontSize", &key) ) {
+    text_.SetCharacterSize(style.get<unsigned int>(key));
+  }
+  if( searchStyle("Color", &key) ) {
+    text_.SetColor(style.get<sf::Color>(key));
+  }
+  if( searchStyle("TextAlign", &key) ) {
+    const std::string align = style.get<std::string>(key);
+    if( align == "left" ) {
+      align_ = -1;
+    } else if( align == "center" ) {
+      align_ = 0;
+    } else if( align == "right" ) {
+      align_ = 1;
+    } else {
+      throw StyleError(*this, "TextAlign", "invalid value");
+    }
+  }
 }
 
 void WLabel::setText(const std::string &text)
@@ -110,17 +218,67 @@ void WLabel::setTextAlign(int align)
 }
 
 
-WEntry::WEntry(const StyleButton &style, float width):
-    style_(style), width_(width),
-    text_("", *style.font, style.font_size),
-    cursor_pos_(0)
+const std::string WEntry::type_("Entry");
+const std::string& WEntry::type() const { return type_; }
+
+WEntry::WEntry(const Screen& screen, const std::string& name):
+    Widget(screen, name), cursor_pos_(0)
 {
-  unsigned int text_height = style.font->GetLineSpacing(style.font_size)+2;
-  text_img_.Create(width-2*style.margin_left, text_height);
-  text_sprite_.SetOrigin(width/2-style_.margin_left, text_height/2.);
+  const IniFile& style = screen.style();
+  ResourceManager& res_mgr = screen.intf().res_mgr();
+  std::string key;
+
+  if( searchStyle("Font", &key) ) {
+    text_.SetFont(*res_mgr.getFont(style.get<std::string>(key)));
+  }
+  if( searchStyle("FontSize", &key) ) {
+    text_.SetCharacterSize(style.get<unsigned int>(key));
+  }
+
+  if( searchStyle("Color", &key) ) {
+    color_ = style.get<sf::Color>(key);
+  }
+  if( searchStyle("FocusColor", &key) ) {
+    focus_color_ = style.get<sf::Color>(key);
+  }
+
+  //XXX factorize some code with WButton
+  if( searchStyle("Width", &key) ) {
+    width_ = style.get<float>(key);
+    if( width_ <= 0 ) {
+      throw StyleError(*this, "Width", "value must be positive");
+    }
+  } else {
+    throw StyleError(*this, "Width", "not set");
+  }
+  unsigned int text_margin = 0;
+  if( searchStyle("TextMarginX", &key) ) {
+    text_margin = style.get<unsigned int>(key);
+  }
+  unsigned int text_height = text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2;
+  text_img_.Create(width_-2*text_margin, text_height);
+  text_sprite_.SetOrigin(width_/2.-text_margin, text_height/2.);
   text_sprite_.SetImage(text_img_.GetImage(), true);
   cursor_ = sf::Shape::Line(0, 0, 0, text_height, 1, sf::Color::White);
   cursor_.SetOrigin(text_sprite_.GetOrigin());
+
+  if( searchStyle("BgImage", &key) ) {
+    const sf::Image *img = res_mgr.getImage(style.get<std::string>(key));
+    sf::IntRect rect(0, 0, img->GetWidth(), img->GetHeight());
+    if( searchStyle("BgImageRect", &key) ) {
+      rect = style.get<sf::IntRect>(key);
+    }
+    unsigned int frame_margin = 0;
+    if( searchStyle("BgImageMarginX", &key) ) {
+      frame_margin = style.get<unsigned int>(key);
+      if( 2*frame_margin >= (unsigned int)rect.Width ) {
+        throw StyleError(*this, "BgImageMarginX", "margins larger than image width");
+      }
+    }
+    frame_.create(img, rect, frame_margin);
+  } else {
+    throw StyleError(*this, "BgImage", "not set");
+  }
 }
 
 void WEntry::setText(const std::string &text)
@@ -132,17 +290,12 @@ void WEntry::setText(const std::string &text)
 void WEntry::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
 {
   if( this->focused() ) {
-    renderer.SetColor(style_.focus_color);
+    renderer.SetColor(focus_color_);
   } else {
-    renderer.SetColor(style_.color);
+    renderer.SetColor(color_);
   }
-  const float height = style_.tiles.left.rect().Height;
-  const float side_width = style_.tiles.left.rect().Width;
-  const float middle_width = width_ - 2*side_width;
-  style_.tiles.left.render(renderer, -width_/2, -height/2);
-  style_.tiles.right.render(renderer, middle_width/2, -height/2);
-  style_.tiles.middle.render(renderer, -middle_width/2, -height/2, middle_width, height);
 
+  frame_.render(renderer, width_);
   target.Draw(text_sprite_);
   if( this->focused() ) {
     target.Draw(cursor_);

@@ -23,7 +23,7 @@ void Screen::redraw() {}
 
 
 ScreenMenu::ScreenMenu(GuiInterface &intf, const std::string &name):
-    Screen(intf, name), focused_(NULL)
+    Screen(intf, name), container_(*this, ""), focused_(NULL)
 {
 }
 

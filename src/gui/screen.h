@@ -20,7 +20,7 @@ class Screen
   Screen(GuiInterface &intf, const std::string &name);
   virtual ~Screen();
   const std::string& name() const { return name_; }
-  const GuiInterface& intf() const { return intf_; }
+  GuiInterface& intf() const { return intf_; }
   const IniFile& style() const;
 
   virtual void enter();

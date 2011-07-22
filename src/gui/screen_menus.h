@@ -11,10 +11,10 @@ class GuiInterface;
 
 /** @brief The very first screen.
  *
- * Style entries:
- *  - ButtonStyle: section for button style
- *  - ButtonRect: geometry of the first button, height is used for space
- *  between buttons
+ * Widget:
+ *  - JoinServer (button)
+ *  - CreateServer (button)
+ *  - Exit (button)
  */
 class ScreenStart: public ScreenMenu
 {
@@ -28,19 +28,16 @@ class ScreenStart: public ScreenMenu
   void onCreateServer();
 
  private:
-  StyleButton style_button_;
   WButton *button_exit_;
 };
 
 /** @brief Join server (choose host and port).
  *
- * Style entries:
- *  - ButtonStyle: section for button style
- *  - EntryStyle: section for entry style
- *  - TitleLabelPos: position of title label
- *  - HostEntryRect: geometry of the host entry (height ignored)
- *  - PortEntryRect: geometry of the port entry (height ignored)
- *  - JoinButtonRect: geometry of the join button (height ignored)
+ * Widgets:
+ *  - Title (label)
+ *  - Host (entry)
+ *  - Port (entry)
+ *  - Join (button)
  */
 class ScreenJoinServer: public ScreenMenu
 {
@@ -55,8 +52,6 @@ class ScreenJoinServer: public ScreenMenu
   void submit();
 
  private:
-  StyleButton style_button_;
-  StyleButton style_entry_;
   WEntry *entry_host_;
   WEntry *entry_port_;
   bool submitting_;
@@ -64,12 +59,10 @@ class ScreenJoinServer: public ScreenMenu
 
 /** @brief Server creation (choose port).
  *
- * Style entries:
- *  - ButtonStyle: section for button style
- *  - EntryStyle: section for entry style
- *  - PortLabelPos: position of port label
- *  - PortEntryRect: geometry of the port entry (height ignored)
- *  - CreateButtonRect: geometry of the create button (height ignored)
+ * Widgets:
+ *  - PortLabel (label)
+ *  - PortEntry (entry)
+ *  - Create (button)
  */
 class ScreenCreateServer: public ScreenMenu
 {
@@ -82,17 +75,13 @@ class ScreenCreateServer: public ScreenMenu
   void submit();
 
  private:
-  StyleButton style_button_;
-  StyleButton style_entry_;
   WEntry *entry_port_;
 };
 
 /** @brief Lobby (game preparation).
  *
  * Style entries:
- *  - ButtonStyle: section for button style
- *  - EntryStyle: section for entry style
- *  - ReadyButtonRect: geometry of the ready button (height ignored)
+ *  - Ready (button)
  */
 class ScreenLobby: public ScreenMenu
 {
@@ -108,8 +97,6 @@ class ScreenLobby: public ScreenMenu
 
  private:
   Player *player_; ///< Controlled player
-  StyleButton style_button_;
-  StyleButton style_entry_;
   WButton *button_ready_;
 };
 

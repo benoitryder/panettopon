@@ -152,6 +152,52 @@ void ImageTile::setToSprite(sf::Sprite *spr, bool center) const
 }
 
 
+ImageFrameX::ImageFrameX():
+    image_(NULL), margin_(0)
+{
+}
+
+void ImageFrameX::create(const sf::Image *img, const sf::IntRect& rect, unsigned int margin)
+{
+  image_ = img;
+  rect_ = rect;
+  margin_ = margin;
+}
+
+void ImageFrameX::render(sf::Renderer &renderer, const sf::FloatRect& rect) const
+{
+  const float x = rect.Left;
+  const float y = rect.Top;
+  const float w = rect.Width;
+  const float h = rect.Height;
+  sf::FloatRect coords = image_->GetTexCoords(rect_);
+  const float left   = coords.Left;
+  const float top    = coords.Top;
+  const float right  = coords.Left + coords.Width;
+  const float bottom = coords.Top  + coords.Height;
+  const float margin_tex = (float)margin_/rect_.Width * coords.Width;
+
+  renderer.SetTexture(image_);
+  renderer.Begin(sf::Renderer::TriangleStrip);
+    // left
+    renderer.AddVertex(x, y,   left, bottom);
+    renderer.AddVertex(x, y+h, left, top);
+    renderer.AddVertex(x+margin_, y,   left+margin_tex, bottom);
+    renderer.AddVertex(x+margin_, y+h, left+margin_tex, top);
+    // middle
+    renderer.AddVertex(x+w-margin_, y,   right-margin_tex, bottom);
+    renderer.AddVertex(x+w-margin_, y+h, right-margin_tex, top);
+    // right
+    renderer.AddVertex(x+w, y,   right, bottom);
+    renderer.AddVertex(x+w, y+h, right, top);
+  renderer.End();
+}
+
+void ImageFrameX::render(sf::Renderer &renderer, float w) const
+{
+  this->render(renderer, sf::FloatRect(-w/2, -rect_.Height/2, w, rect_.Height));
+}
+
 
 StyleField::StyleField():
     bk_size(0), img_field_frame(NULL)
@@ -221,42 +267,6 @@ void StyleField::load(ResourceManager *res_mgr, const std::string& section)
     tiles_gb_hanging.blocks[i].create(img, gb_hanging_sx+1, 2, i%gb_hanging_sx, i/gb_hanging_sx);
   }
   tiles_gb_hanging.line.create(img, gb_hanging_sx+1, 2, gb_hanging_sx, 0);
-}
-
-
-StyleButton::StyleButton():
-    font(NULL), font_size(0), margin_left(0)
-{
-}
-
-void StyleButton::load(ResourceManager *res_mgr, const std::string& section)
-{
-  const IniFile &style = res_mgr->style();
-
-  std::string s = style.get(section, "Font", "");
-  if( s.empty() ) {
-    font = &sf::Font::GetDefaultFont();
-  } else {
-    font = res_mgr->getFont(s);
-  }
-
-  font_size = style.get<unsigned int>(section, "FontSize");
-
-  const std::string img_name = style.get<std::string>(section, "Image");
-  const sf::Image *img = res_mgr->getImage(img_name);
-  const sf::IntRect img_rect = style.get<sf::IntRect>(section, "ImageRect", sf::IntRect(0, 0, img->GetWidth(), img->GetHeight()));
-  int margin = style.get<int>(section, "ImageMarginX", 0);
-  if( 2*margin >= img_rect.Width ) {
-    throw std::runtime_error("invalid ImageMarginX in "+section);
-  }
-  tiles.left.create(img, sf::IntRect(img_rect.Left, img_rect.Top, margin, img_rect.Height));
-  tiles.middle.create(img, sf::IntRect(img_rect.Left+margin, img_rect.Top, img_rect.Width-2*margin, img_rect.Height));
-  tiles.right.create(img, sf::IntRect(img_rect.Left+img_rect.Width-margin, img_rect.Top, margin, img_rect.Height));
-
-  color = style.get<sf::Color>(section, "Color", sf::Color::White);
-  focus_color = style.get<sf::Color>(section, "FocusColor", color);
-
-  margin_left = style.get<unsigned int>(section, "MarginLeft", 0);
 }
 
 
