@@ -48,15 +48,15 @@ bool GuiInterface::run(const IniFile &cfg)
 
   res_mgr_.init(cfg.get(CONF_SECTION, "ResPath", "./res"));
 
-  // create the first screen
-  this->swapScreen(new ScreenStart(*this));
-
   // start display loop
   if( !this->initDisplay() ) {
     LOG("display initialization failed");
     this->endDisplay();
     return false;
   }
+  // create the first screen
+  this->swapScreen(new ScreenStart(*this));
+
   boost::posix_time::time_duration dt = boost::posix_time::milliseconds(conf_.redraw_dt);
   redraw_timer_.expires_from_now(dt);
   redraw_timer_.async_wait(boost::bind(&GuiInterface::onRedrawTick, this,
@@ -170,6 +170,7 @@ bool GuiInterface::initDisplay()
       conf_.fullscreen ? sf::Style::Fullscreen : sf::Style::Resize|sf::Style::Close
       );
   window_.EnableKeyRepeat(false);
+  window_.SetActive();
 
   // load icon
   const sf::Image *icon = res_mgr_.getImage("icon-32");
