@@ -111,6 +111,22 @@ void Widget::applyStyle(ImageFrameX *frame, const std::string prefix)
   }
 }
 
+void Widget::applyStyle(sf::Sprite *sprite, const std::string prefix)
+{
+  const IniFile& style = screen_.style();
+  ResourceManager& res_mgr = screen_.intf().res_mgr();
+  std::string key;
+
+  if( searchStyle(prefix+"Image", &key) ) {
+    sprite->SetImage(*res_mgr.getImage(style.get<std::string>(key)), true);
+  } else {
+    throw StyleError(*this, prefix+"Image", "not set");
+  }
+  if( searchStyle(prefix+"ImageRect", &key) ) {
+    sprite->SetSubRect(style.get<sf::IntRect>(key));
+  }
+}
+
 
 const std::string& WContainer::type() const {
   static const std::string type("Container");
