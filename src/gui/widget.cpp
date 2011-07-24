@@ -56,19 +56,19 @@ found:
   return true;
 }
 
-void Widget::setTextStyle(sf::Text *text)
+void Widget::setTextStyle(sf::Text *text, const std::string prefix)
 {
   const IniFile& style = screen_.style();
   ResourceManager& res_mgr = screen_.intf().res_mgr();
   std::string key;
 
-  if( searchStyle("Font", &key) ) {
+  if( searchStyle(prefix+"Font", &key) ) {
     text->SetFont(*res_mgr.getFont(style.get<std::string>(key)));
   }
-  if( searchStyle("FontSize", &key) ) {
+  if( searchStyle(prefix+"FontSize", &key) ) {
     text->SetCharacterSize(style.get<unsigned int>(key));
   }
-  if( searchStyle("FontStyle", &key) ) {
+  if( searchStyle(prefix+"FontStyle", &key) ) {
     const std::string val = style.get<std::string>(key);
     int txt_style;
     if( val == "regular" ) {
@@ -80,7 +80,7 @@ void Widget::setTextStyle(sf::Text *text)
     } else if( val == "bold,italic" || val == "italic,bold" ) {
       txt_style = sf::Text::Bold|sf::Text::Italic;
     } else {
-      throw StyleError(*this, "FontStyle", "invalid value");
+      throw StyleError(*this, prefix+"FontStyle", "invalid value");
     }
     text->SetStyle(txt_style);
   }
