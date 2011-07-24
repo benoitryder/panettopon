@@ -98,12 +98,7 @@ WButton::WButton(const Screen& screen, const std::string& name):
   ResourceManager& res_mgr = screen.intf().res_mgr();
   std::string key;
 
-  if( searchStyle("Font", &key) ) {
-    caption_.SetFont(*res_mgr.getFont(style.get<std::string>(key)));
-  }
-  if( searchStyle("FontSize", &key) ) {
-    caption_.SetCharacterSize(style.get<unsigned int>(key));
-  }
+  this->setTextStyle(&caption_);
 
   if( searchStyle("Color", &key) ) {
     color_ = style.get<sf::Color>(key);
@@ -179,15 +174,9 @@ WLabel::WLabel(const Screen& screen, const std::string& name):
     Widget(screen, name), align_(0)
 {
   const IniFile& style = screen.style();
-  ResourceManager& res_mgr = screen.intf().res_mgr();
   std::string key;
 
-  if( searchStyle("Font", &key) ) {
-    text_.SetFont(*res_mgr.getFont(style.get<std::string>(key)));
-  }
-  if( searchStyle("FontSize", &key) ) {
-    text_.SetCharacterSize(style.get<unsigned int>(key));
-  }
+  this->setTextStyle(&text_);
   if( searchStyle("Color", &key) ) {
     text_.SetColor(style.get<sf::Color>(key));
   }
@@ -242,12 +231,7 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   ResourceManager& res_mgr = screen.intf().res_mgr();
   std::string key;
 
-  if( searchStyle("Font", &key) ) {
-    text_.SetFont(*res_mgr.getFont(style.get<std::string>(key)));
-  }
-  if( searchStyle("FontSize", &key) ) {
-    text_.SetCharacterSize(style.get<unsigned int>(key));
-  }
+  this->setTextStyle(&text_);
 
   if( searchStyle("Color", &key) ) {
     color_ = style.get<sf::Color>(key);
