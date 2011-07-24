@@ -86,6 +86,31 @@ void Widget::applyStyle(sf::Text *text, const std::string prefix)
   }
 }
 
+void Widget::applyStyle(ImageFrameX *frame, const std::string prefix)
+{
+  const IniFile& style = screen_.style();
+  ResourceManager& res_mgr = screen_.intf().res_mgr();
+  std::string key;
+
+  if( searchStyle(prefix+"Image", &key) ) {
+    const sf::Image *img = res_mgr.getImage(style.get<std::string>(key));
+    sf::IntRect rect(0, 0, img->GetWidth(), img->GetHeight());
+    if( searchStyle(prefix+"ImageRect", &key) ) {
+      rect = style.get<sf::IntRect>(key);
+    }
+    unsigned int margin = 0;
+    if( searchStyle(prefix+"ImageMarginX", &key) ) {
+      margin = style.get<unsigned int>(key);
+      if( 2*margin >= (unsigned int)rect.Width ) {
+        throw StyleError(*this, prefix+"ImageMarginX", "margins larger than image width");
+      }
+    }
+    frame->create(img, rect, margin);
+  } else {
+    throw StyleError(*this, prefix+"Image", "not set");
+  }
+}
+
 
 const std::string WContainer::type_("Container");
 const std::string& WContainer::type() const { return type_; }
@@ -111,7 +136,6 @@ WButton::WButton(const Screen& screen, const std::string& name):
     Widget(screen, name), callback_(NULL)
 {
   const IniFile& style = screen.style();
-  ResourceManager& res_mgr = screen.intf().res_mgr();
   std::string key;
 
   this->applyStyle(&caption_);
@@ -132,23 +156,7 @@ WButton::WButton(const Screen& screen, const std::string& name):
     throw StyleError(*this, "Width", "not set");
   }
 
-  if( searchStyle("BgImage", &key) ) {
-    const sf::Image *img = res_mgr.getImage(style.get<std::string>(key));
-    sf::IntRect rect(0, 0, img->GetWidth(), img->GetHeight());
-    if( searchStyle("BgImageRect", &key) ) {
-      rect = style.get<sf::IntRect>(key);
-    }
-    unsigned int frame_margin = 0;
-    if( searchStyle("BgImageMarginX", &key) ) {
-      frame_margin = style.get<unsigned int>(key);
-      if( 2*frame_margin >= (unsigned int)rect.Width ) {
-        throw StyleError(*this, "BgImageMarginX", "margins larger than image width");
-      }
-    }
-    frame_.create(img, rect, frame_margin);
-  } else {
-    throw StyleError(*this, "BgImage", "not set");
-  }
+  this->applyStyle(&frame_, "Bg");
 }
 
 void WButton::setCaption(const std::string &caption)
@@ -244,7 +252,6 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
     Widget(screen, name), cursor_pos_(0)
 {
   const IniFile& style = screen.style();
-  ResourceManager& res_mgr = screen.intf().res_mgr();
   std::string key;
 
   this->applyStyle(&text_);
@@ -256,7 +263,6 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
     focus_color_ = style.get<sf::Color>(key);
   }
 
-  //XXX factorize some code with WButton
   if( searchStyle("Width", &key) ) {
     width_ = style.get<float>(key);
     if( width_ <= 0 ) {
@@ -276,23 +282,7 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   cursor_ = sf::Shape::Line(0, 0, 0, text_height, 1, sf::Color::White);
   cursor_.SetOrigin(text_sprite_.GetOrigin());
 
-  if( searchStyle("BgImage", &key) ) {
-    const sf::Image *img = res_mgr.getImage(style.get<std::string>(key));
-    sf::IntRect rect(0, 0, img->GetWidth(), img->GetHeight());
-    if( searchStyle("BgImageRect", &key) ) {
-      rect = style.get<sf::IntRect>(key);
-    }
-    unsigned int frame_margin = 0;
-    if( searchStyle("BgImageMarginX", &key) ) {
-      frame_margin = style.get<unsigned int>(key);
-      if( 2*frame_margin >= (unsigned int)rect.Width ) {
-        throw StyleError(*this, "BgImageMarginX", "margins larger than image width");
-      }
-    }
-    frame_.create(img, rect, frame_margin);
-  } else {
-    throw StyleError(*this, "BgImage", "not set");
-  }
+  this->applyStyle(&frame_, "Bg");
 }
 
 void WEntry::setText(const std::string &text)

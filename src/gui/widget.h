@@ -63,7 +63,9 @@ class Widget: public sf::Drawable
 
  protected:
   /// Search and apply text style
-  void setStyle(sf::Text *text, const std::string prefix="");
+  void applyStyle(sf::Text *text, const std::string prefix="");
+  /// Search and apply ImageFrameX style
+  void applyStyle(ImageFrameX *frame, const std::string prefix="");
 
  private:
   const Screen& screen_;
