@@ -103,7 +103,7 @@ class GameInstance
     virtual void onChat(Player *pl, const std::string &msg) = 0;
     /// Called on new player (even local).
     virtual void onPlayerJoined(Player *pl) = 0;
-    /// Called before player's nick change.
+    /// Called after player's nick change.
     virtual void onPlayerChangeNick(Player *pl, const std::string &nick) = 0;
     /// Called after player's ready state change.
     virtual void onPlayerReady(Player *pl) = 0;

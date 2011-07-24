@@ -389,8 +389,9 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
 
   } else {
     if( pkt_pl.has_nick() ) {
-      observer_.onPlayerChangeNick(pl, pkt_pl.nick());
+      const std::string old_nick = pl->nick();
       pl->setNick( pkt_pl.nick() );
+      observer_.onPlayerChangeNick(pl, old_nick);
     }
     if( pkt_pl.has_ready() ) {
       //XXX check whether change is valid?

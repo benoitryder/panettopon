@@ -76,8 +76,9 @@ void ServerInstance::playerSetNick(Player *pl, const std::string &nick)
   if( nick == pl->nick() ) {
     return; // nothing to do
   }
-  observer_.onPlayerChangeNick(pl, nick);
+  const std::string old_nick = pl->nick();
   pl->setNick(nick);
+  observer_.onPlayerChangeNick(pl, old_nick);
 
   netplay::Packet pkt;
   netplay::Player *np_player = pkt.mutable_player();
@@ -398,8 +399,9 @@ void ServerInstance::processPacketPlayer(netplay::PeerSocket *peer, const netpla
     bool do_send = false;
     bool become_ready = false;
     if( pkt_pl.has_nick() && pkt_pl.nick() != pl->nick() ) {
-      observer_.onPlayerChangeNick(pl, pkt_pl.nick());
+      const std::string old_nick = pl->nick();
       pl->setNick( pkt_pl.nick() );
+      observer_.onPlayerChangeNick(pl, old_nick);
       np_player->set_nick( pkt_pl.nick() );
       do_send = true;
     }

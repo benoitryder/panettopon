@@ -32,9 +32,9 @@ void BasicServerInterface::onPlayerJoined(Player *pl)
   LOG("%s(%u) joined", pl->nick().c_str(), pl->plid());
 }
 
-void BasicServerInterface::onPlayerChangeNick(Player *pl, const std::string &old_nick)
+void BasicServerInterface::onPlayerChangeNick(Player *pl, const std::string &nick)
 {
-  LOG("%s(%u) is now known as %s", old_nick.c_str(), pl->plid(),
+  LOG("%s(%u) is now known as %s", nick.c_str(), pl->plid(),
       pl->nick().c_str());
 }
 
