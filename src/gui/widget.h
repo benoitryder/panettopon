@@ -98,7 +98,7 @@ class WContainer: public Widget
 /** @brief Text button with image background
  *
  * Style properties:
- *  - Font, FontSize
+ *  - Font, FontSize, FontStyle
  *  - Color, FocusColor
  *  - Width
  *  - BgImage, BgImageRect, BgImageMarginX
@@ -131,7 +131,7 @@ class WButton: public Widget
 /** @brief Simple text widget
  *
  * Style properties:
- *  - Font, FontSize
+ *  - Font, FontSize, FontStyle
  *  - Color
  *  - TextAlign: left, center, right
  */
@@ -157,7 +157,7 @@ class WLabel: public Widget
 /** @brief Text field
  *
  * Style properties:
- *  - Font, FontSize
+ *  - Font, FontSize, FontStyle
  *  - Color, FocusColor
  *  - Width
  *  - BgImage, BgImageRect, BgImageMarginX

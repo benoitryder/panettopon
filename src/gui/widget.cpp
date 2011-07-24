@@ -68,6 +68,22 @@ void Widget::setTextStyle(sf::Text *text)
   if( searchStyle("FontSize", &key) ) {
     text->SetCharacterSize(style.get<unsigned int>(key));
   }
+  if( searchStyle("FontStyle", &key) ) {
+    const std::string val = style.get<std::string>(key);
+    int txt_style;
+    if( val == "regular" ) {
+      txt_style = sf::Text::Regular;
+    } else if( val == "bold" ) {
+      txt_style = sf::Text::Bold;
+    } else if( val == "italic" ) {
+      txt_style = sf::Text::Italic;
+    } else if( val == "bold,italic" || val == "italic,bold" ) {
+      txt_style = sf::Text::Bold|sf::Text::Italic;
+    } else {
+      throw StyleError(*this, "FontStyle", "invalid value");
+    }
+    text->SetStyle(txt_style);
+  }
 }
 
 
