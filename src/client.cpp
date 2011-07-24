@@ -372,6 +372,7 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
     }
     //TODO check we asked for a new local player
     pl = new Player(pkt_pl.plid(), pkt_pl.join());
+    pl->setNick( pkt_pl.nick() );
     PlId plid = pl->plid(); // use a temporary value to help g++
     players_.insert(plid, pl);
     if( pkt_pl.has_ready() ) {
