@@ -56,6 +56,20 @@ found:
   return true;
 }
 
+void Widget::setTextStyle(sf::Text *text)
+{
+  const IniFile& style = screen_.style();
+  ResourceManager& res_mgr = screen_.intf().res_mgr();
+  std::string key;
+
+  if( searchStyle("Font", &key) ) {
+    text->SetFont(*res_mgr.getFont(style.get<std::string>(key)));
+  }
+  if( searchStyle("FontSize", &key) ) {
+    text->SetCharacterSize(style.get<unsigned int>(key));
+  }
+}
+
 
 const std::string WContainer::type_("Container");
 const std::string& WContainer::type() const { return type_; }
