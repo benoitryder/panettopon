@@ -112,8 +112,10 @@ void Widget::applyStyle(ImageFrameX *frame, const std::string prefix)
 }
 
 
-const std::string WContainer::type_("Container");
-const std::string& WContainer::type() const { return type_; }
+const std::string& WContainer::type() const {
+  static const std::string type("Container");
+  return type;
+}
 
 WContainer::WContainer(const Screen& screen, const std::string& name):
     Widget(screen, name)
@@ -129,8 +131,10 @@ void WContainer::Render(sf::RenderTarget &target, sf::Renderer &) const
 }
 
 
-const std::string WButton::type_("Button");
-const std::string& WButton::type() const { return type_; }
+const std::string& WButton::type() const {
+  static const std::string type("Button");
+  return type;
+}
 
 WButton::WButton(const Screen& screen, const std::string& name):
     Widget(screen, name), callback_(NULL)
@@ -191,8 +195,10 @@ bool WButton::onInputEvent(const sf::Event &ev)
 }
 
 
-const std::string WLabel::type_("Label");
-const std::string& WLabel::type() const { return type_; }
+const std::string& WLabel::type() const {
+  static const std::string type("Label");
+  return type;
+}
 
 WLabel::WLabel(const Screen& screen, const std::string& name):
     Widget(screen, name), align_(0)
@@ -245,8 +251,10 @@ void WLabel::setTextAlign(int align)
 }
 
 
-const std::string WEntry::type_("Entry");
-const std::string& WEntry::type() const { return type_; }
+const std::string& WEntry::type() const {
+  static const std::string type("Entry");
+  return type;
+}
 
 WEntry::WEntry(const Screen& screen, const std::string& name):
     Widget(screen, name), cursor_pos_(0)

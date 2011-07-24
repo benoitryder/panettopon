@@ -89,8 +89,6 @@ class WContainer: public Widget
   WContainer(const Screen& screen, const std::string& name);
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
 
- private:
-  static const std::string type_;
  protected:
   virtual const std::string& type() const;
 
@@ -118,8 +116,6 @@ class WButton: public Widget
   typedef boost::function<void()> Callback;
   void setCallback(Callback cb) { callback_ = cb; }
 
- private:
-  static const std::string type_;
  protected:
   virtual const std::string& type() const;
 
@@ -148,8 +144,6 @@ class WLabel: public Widget
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   void setTextAlign(int align);
 
- private:
-  static const std::string type_;
  protected:
   virtual const std::string& type() const;
 
@@ -177,8 +171,6 @@ class WEntry: public Widget
   virtual bool onInputEvent(const sf::Event &);
   std::string text() const { return text_.GetString(); }
 
- private:
-  static const std::string type_;
  protected:
   virtual const std::string& type() const;
 
