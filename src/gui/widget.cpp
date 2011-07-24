@@ -56,7 +56,7 @@ found:
   return true;
 }
 
-void Widget::setTextStyle(sf::Text *text, const std::string prefix)
+void Widget::applyStyle(sf::Text *text, const std::string prefix)
 {
   const IniFile& style = screen_.style();
   ResourceManager& res_mgr = screen_.intf().res_mgr();
@@ -114,7 +114,7 @@ WButton::WButton(const Screen& screen, const std::string& name):
   ResourceManager& res_mgr = screen.intf().res_mgr();
   std::string key;
 
-  this->setTextStyle(&caption_);
+  this->applyStyle(&caption_);
 
   if( searchStyle("Color", &key) ) {
     color_ = style.get<sf::Color>(key);
@@ -192,7 +192,7 @@ WLabel::WLabel(const Screen& screen, const std::string& name):
   const IniFile& style = screen.style();
   std::string key;
 
-  this->setTextStyle(&text_);
+  this->applyStyle(&text_);
   if( searchStyle("Color", &key) ) {
     text_.SetColor(style.get<sf::Color>(key));
   }
@@ -247,7 +247,7 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   ResourceManager& res_mgr = screen.intf().res_mgr();
   std::string key;
 
-  this->setTextStyle(&text_);
+  this->applyStyle(&text_);
 
   if( searchStyle("Color", &key) ) {
     color_ = style.get<sf::Color>(key);

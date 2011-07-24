@@ -60,8 +60,10 @@ class Widget: public sf::Drawable
    * @return true if found, false otherwise.
    */
   bool searchStyle(const std::string& prop, std::string *key) const;
+
+ protected:
   /// Search and apply text style
-  void setTextStyle(sf::Text *text, const std::string prefix="");
+  void setStyle(sf::Text *text, const std::string prefix="");
 
  private:
   const Screen& screen_;
