@@ -219,6 +219,7 @@ ScreenLobby::ScreenLobby(GuiInterface &intf, Player *pl):
 void ScreenLobby::enter()
 {
   assert( player_ );
+  assert( intf_.instance() );
   const ResourceManager& res_mgr = intf_.res_mgr();
 
   button_ready_ = new WButton(*this, "Ready");
@@ -228,9 +229,35 @@ void ScreenLobby::enter()
 
   button_ready_->setNeighbors(NULL, NULL, NULL, NULL);
 
+  const IniFile& style = this->style();
+  player_rows_pos_ = style.get<sf::Vector2f>(name_, "PlayerRowsPos");
+  player_rows_dy_ = style.get<float>(name_, "PlayerRowsDY");
+
+  // add already connected players
+  const GameInstance::PlayerContainer& players = intf_.instance()->players();
+  GameInstance::PlayerContainer::const_iterator plit;
+  for( plit=players.begin(); plit!=players.end(); ++plit ) {
+    const Player& pl = *(*plit).second;
+    PlId plid = pl.plid(); // intermediate variable to help g++
+    player_rows_.insert(plid, new WPlayerRow(*this, pl));
+  }
+
   this->updateReadyButtonCaption();
+  this->updatePlayerRowsPos();
   this->focus(button_ready_);
 }
+
+void ScreenLobby::redraw()
+{
+  ScreenMenu::redraw();
+
+  sf::RenderWindow& w = intf_.window();
+  PlayerRowsContainer::const_iterator it;
+  for( it=player_rows_.begin(); it!=player_rows_.end(); ++it ) {
+    w.Draw(*(*it).second);
+  }
+}
+
 
 bool ScreenLobby::onInputEvent(const sf::Event &ev)
 {
@@ -255,6 +282,30 @@ void ScreenLobby::onStateChange(GameInstance::State state)
   }
 }
 
+void ScreenLobby::onPlayerJoined(Player *pl)
+{
+  PlId plid = pl->plid(); // intermediate variable to help g++
+  player_rows_.insert(plid, new WPlayerRow(*this, *pl));
+  this->updatePlayerRowsPos();
+}
+
+void ScreenLobby::onPlayerChangeNick(Player *pl, const std::string &)
+{
+  player_rows_.find(pl->plid())->second->update();
+}
+
+void ScreenLobby::onPlayerReady(Player *pl)
+{
+  player_rows_.find(pl->plid())->second->update();
+}
+
+void ScreenLobby::onPlayerQuit(Player *pl)
+{
+  player_rows_.erase(pl->plid());
+  this->updatePlayerRowsPos();
+}
+
+
 void ScreenLobby::submit()
 {
   GameInstance *instance = intf_.instance();
@@ -271,6 +322,16 @@ void ScreenLobby::updateReadyButtonCaption()
   button_ready_->setCaption(intf_.res_mgr().getLang("ScreenLobby", caption));
 }
 
+void ScreenLobby::updatePlayerRowsPos()
+{
+  PlayerRowsContainer::iterator it;
+  float y = player_rows_pos_.y;
+  for( it=player_rows_.begin(); it!=player_rows_.end(); ++it ) {
+    (*it).second->SetPosition(player_rows_pos_.x, y);
+    y += player_rows_dy_;
+  }
+}
+
 
 const std::string& ScreenLobby::WPlayerRow::type() const {
   static const std::string type("PlayerRow");
@@ -284,7 +345,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   std::string key;
 
   this->applyStyle(&nick_, "Nick");
-  ready_.SetOrigin(0, (nick_.GetFont().GetLineSpacing(nick_.GetCharacterSize())+2)/2);
+  nick_.SetOrigin(0, (nick_.GetFont().GetLineSpacing(nick_.GetCharacterSize())+2)/2);
   if( searchStyle("NickX", &key) ) {
     nick_.SetX(style.get<float>(key));
   } else {
@@ -292,7 +353,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   }
 
   this->applyStyle(&ready_, "Ready");
-  ready_.SetOrigin(-ready_.GetSize()/2.f);
+  ready_.SetOrigin(ready_.GetSize()/2.f);
   if( searchStyle("ReadyX", &key) ) {
     ready_.SetX(style.get<float>(key));
   } else {

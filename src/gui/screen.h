@@ -17,6 +17,11 @@ class GuiInterface;
 class Screen
 {
  public:
+  struct StyleError: public std::runtime_error {
+    StyleError(const Screen& s, const std::string& prop, const std::string& msg);
+  };
+
+ public:
   Screen(GuiInterface &intf, const std::string &name);
   virtual ~Screen();
   const std::string& name() const { return name_; }

@@ -4,6 +4,9 @@
 
 namespace gui {
 
+Screen::StyleError::StyleError(const Screen& s, const std::string& prop, const std::string& msg):
+  std::runtime_error("style error for "+s.name_+"."+prop+": "+msg) {}
+
 
 Screen::Screen(GuiInterface &intf, const std::string &name):
     intf_(intf), name_(name)

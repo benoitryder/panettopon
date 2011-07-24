@@ -80,18 +80,34 @@ class ScreenCreateServer: public ScreenMenu
 
 /** @brief Lobby (game preparation).
  *
- * Style entries:
+ * Widgets:
  *  - Ready (button)
+ *  - PlayerRow (widget type)
+ *
+ * Style properties:
+ *  - PlayerRowsPos, PlayerRowsDY
  */
 class ScreenLobby: public ScreenMenu
 {
  public:
   ScreenLobby(GuiInterface &intf, Player *pl);
   virtual void enter();
+  virtual void redraw();
   virtual bool onInputEvent(const sf::Event &ev);
   virtual void onStateChange(GameInstance::State state);
+  virtual void onPlayerJoined(Player *);
+  virtual void onPlayerChangeNick(Player *, const std::string &);
+  virtual void onPlayerReady(Player *);
+  virtual void onPlayerQuit(Player *);
 
  private:
+  /** @brief Display a row of informaion for a player.
+   *
+   * Style properties:
+   *  - NickFont, NickFontSize, NickFontStyle
+   *  - ReadyImage, RedayImageRect
+   *  - NickX, ReadyX
+   */
   class WPlayerRow: public Widget
   {
    public:
@@ -111,10 +127,15 @@ class ScreenLobby: public ScreenMenu
 
   void submit();
   void updateReadyButtonCaption();
+  void updatePlayerRowsPos();
 
  private:
   Player *player_; ///< Controlled player
   WButton *button_ready_;
+  typedef boost::ptr_map<PlId, WPlayerRow> PlayerRowsContainer;
+  PlayerRowsContainer player_rows_;
+  sf::Vector2f player_rows_pos_;
+  float player_rows_dy_;
 };
 
 
