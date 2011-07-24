@@ -272,5 +272,49 @@ void ScreenLobby::updateReadyButtonCaption()
 }
 
 
+const std::string& ScreenLobby::WPlayerRow::type() const {
+  static const std::string type("PlayerRow");
+  return type;
+}
+
+ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
+    Widget(screen, ""), player_(pl)
+{
+  const IniFile& style = screen_.style();
+  std::string key;
+
+  this->applyStyle(&nick_, "Nick");
+  ready_.SetOrigin(0, (nick_.GetFont().GetLineSpacing(nick_.GetCharacterSize())+2)/2);
+  if( searchStyle("NickX", &key) ) {
+    nick_.SetX(style.get<float>(key));
+  } else {
+    throw StyleError(*this, "NickX", "not set");
+  }
+
+  this->applyStyle(&ready_, "Ready");
+  ready_.SetOrigin(-ready_.GetSize()/2.f);
+  if( searchStyle("ReadyX", &key) ) {
+    ready_.SetX(style.get<float>(key));
+  } else {
+    throw StyleError(*this, "ReadyX", "not set");
+  }
+
+  this->update();
+}
+
+void ScreenLobby::WPlayerRow::Render(sf::RenderTarget &target, sf::Renderer &) const
+{
+  target.Draw(nick_);
+  if( player_.ready() ) {
+    target.Draw(ready_);
+  }
+}
+
+void ScreenLobby::WPlayerRow::update()
+{
+  nick_.SetString(player_.nick());
+}
+
+
 }
 

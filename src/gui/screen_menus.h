@@ -92,6 +92,23 @@ class ScreenLobby: public ScreenMenu
   virtual void onStateChange(GameInstance::State state);
 
  private:
+  class WPlayerRow: public Widget
+  {
+   public:
+    WPlayerRow(const Screen& screen, const Player& pl);
+    virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+    /// Update the widget after player state changes
+    void update();
+
+   protected:
+    virtual const std::string& type() const;
+
+   private:
+    const Player& player_;
+    sf::Text nick_;
+    sf::Sprite ready_;
+  };
+
   void submit();
   void updateReadyButtonCaption();
 
