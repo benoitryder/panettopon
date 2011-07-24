@@ -15,8 +15,8 @@ Widget::Widget(const Screen& screen, const std::string& name):
 {
   this->setNeighbors(NULL, NULL, NULL, NULL);
 
-  const IniFile& style = screen.style();
-  const std::string section = screen.name()+'.'+name;
+  const IniFile& style = screen_.style();
+  const std::string section = screen_.name()+'.'+name_;
   if( style.has(section, "Pos") ) {
     this->SetPosition(style.get<sf::Vector2f>(section, "Pos"));
   }
@@ -135,7 +135,7 @@ const std::string& WButton::type() const { return type_; }
 WButton::WButton(const Screen& screen, const std::string& name):
     Widget(screen, name), callback_(NULL)
 {
-  const IniFile& style = screen.style();
+  const IniFile& style = screen_.style();
   std::string key;
 
   this->applyStyle(&caption_);
@@ -197,7 +197,7 @@ const std::string& WLabel::type() const { return type_; }
 WLabel::WLabel(const Screen& screen, const std::string& name):
     Widget(screen, name), align_(0)
 {
-  const IniFile& style = screen.style();
+  const IniFile& style = screen_.style();
   std::string key;
 
   this->applyStyle(&text_);
@@ -251,7 +251,7 @@ const std::string& WEntry::type() const { return type_; }
 WEntry::WEntry(const Screen& screen, const std::string& name):
     Widget(screen, name), cursor_pos_(0)
 {
-  const IniFile& style = screen.style();
+  const IniFile& style = screen_.style();
   std::string key;
 
   this->applyStyle(&text_);

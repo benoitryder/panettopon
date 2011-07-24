@@ -67,9 +67,10 @@ class Widget: public sf::Drawable
   /// Search and apply ImageFrameX style
   void applyStyle(ImageFrameX *frame, const std::string prefix="");
 
- private:
+ protected:
   const Screen& screen_;
   const std::string& name_;
+ private:
   bool focused_;
   Widget *neighbors_[NEIGHBOR_COUNT];
 };
