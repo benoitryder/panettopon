@@ -176,7 +176,8 @@ WButton::WButton(const Screen& screen, const std::string& name):
     throw StyleError(*this, "Width", "not set");
   }
 
-  this->applyStyle(&frame_, "Bg");
+  this->applyStyle(&frame_);
+  this->applyStyle(&focus_frame_, "Focus");
 }
 
 void WButton::setCaption(const std::string &caption)
@@ -189,11 +190,10 @@ void WButton::setCaption(const std::string &caption)
 void WButton::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
 {
   if( this->focused() ) {
-    renderer.SetColor(focus_color_);
+    focus_frame_.render(renderer, width_);
   } else {
-    renderer.SetColor(color_);
+    frame_.render(renderer, width_);
   }
-  frame_.render(renderer, width_);
   target.Draw(caption_);
 }
 
@@ -208,6 +208,12 @@ bool WButton::onInputEvent(const sf::Event &ev)
     }
   }
   return false;
+}
+
+void WButton::focus(bool focused)
+{
+  Widget::focus(focused);
+  caption_.SetColor(focused ? focus_color_ : color_);
 }
 
 
@@ -305,8 +311,10 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   text_sprite_.SetImage(text_img_.GetImage(), true);
   cursor_ = sf::Shape::Line(0, 0, 0, text_height, 1, sf::Color::White);
   cursor_.SetOrigin(text_sprite_.GetOrigin());
+  cursor_.SetColor(focus_color_);
 
-  this->applyStyle(&frame_, "Bg");
+  this->applyStyle(&frame_);
+  this->applyStyle(&focus_frame_, "Focus");
 }
 
 void WEntry::setText(const std::string &text)
@@ -318,15 +326,12 @@ void WEntry::setText(const std::string &text)
 void WEntry::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
 {
   if( this->focused() ) {
-    renderer.SetColor(focus_color_);
-  } else {
-    renderer.SetColor(color_);
-  }
-
-  frame_.render(renderer, width_);
-  target.Draw(text_sprite_);
-  if( this->focused() ) {
+    focus_frame_.render(renderer, width_);
+    target.Draw(text_sprite_);
     target.Draw(cursor_);
+  } else {
+    frame_.render(renderer, width_);
+    target.Draw(text_sprite_);
   }
 }
 
@@ -379,6 +384,13 @@ bool WEntry::onInputEvent(const sf::Event &ev)
   }
   return false;
 }
+
+void WEntry::focus(bool focused)
+{
+  Widget::focus(focused);
+  text_.SetColor(focused ? focus_color_ : color_);
+}
+
 
 void WEntry::updateTextDisplay(bool force)
 {

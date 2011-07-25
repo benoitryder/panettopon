@@ -106,7 +106,8 @@ class WContainer: public Widget
  *  - Font, FontSize, FontStyle
  *  - Color, FocusColor
  *  - Width
- *  - BgImage, BgImageRect, BgImageMarginX
+ *  - Image, ImageRect, ImageMarginX
+ *  - FocusImage, FocusImageRect, FocusImageMarginX
  */
 class WButton: public Widget
 {
@@ -115,6 +116,7 @@ class WButton: public Widget
   void setCaption(const std::string &caption);
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   virtual bool onInputEvent(const sf::Event &);
+  virtual void focus(bool focused);
   typedef boost::function<void()> Callback;
   void setCallback(Callback cb) { callback_ = cb; }
 
@@ -124,6 +126,7 @@ class WButton: public Widget
  private:
   sf::Text caption_;  ///< Button caption
   ImageFrameX frame_;
+  ImageFrameX focus_frame_;
   sf::Color color_;
   sf::Color focus_color_;
   float width_;
@@ -171,6 +174,7 @@ class WEntry: public Widget
   void setText(const std::string &caption);
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   virtual bool onInputEvent(const sf::Event &);
+  virtual void focus(bool focused);
   std::string text() const { return text_.GetString(); }
 
  protected:
@@ -186,6 +190,7 @@ class WEntry: public Widget
   sf::Sprite text_sprite_;
   sf::Shape cursor_;
   ImageFrameX frame_;
+  ImageFrameX focus_frame_;
   sf::Color color_;
   sf::Color focus_color_;
   float width_;
