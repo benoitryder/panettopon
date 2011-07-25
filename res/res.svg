@@ -143,10 +143,8 @@
       x1="0.55" y1="0.55" x2="0.45" y2="0.45"
       xlink:href="#BkGarbage-gradient" />
     <linearGradient id="BkGarbage-Big-gradient"
-      x1="0.475" y1="0.475" x2="0.525" y2="0.525">
-      <stop offset="0" stop-color="#505050" />
-      <stop offset="1" stop-color="black" />
-    </linearGradient>
+      x1="0.475" y1="0.475" x2="0.525" y2="0.525"
+      xlink:href="#BkGarbage-gradient" />
     <pattern id="BkGarbage-tile"
       class="bk-gb bk-tile"
       x="0" y="0" width="128" height="128"
