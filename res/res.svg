@@ -37,32 +37,32 @@
 
     <!-- 3D-effect gradients -->
     <linearGradient id="BkColor1-gradient"
-      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55">
       <stop offset="0" stop-color="#ef1010" />
       <stop offset="1" stop-color="black" />
     </linearGradient>
     <linearGradient id="BkColor2-gradient"
-      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55">
       <stop offset="0" stop-color="#00e700" />
       <stop offset="1" stop-color="black" />
     </linearGradient>
     <linearGradient id="BkColor3-gradient"
-      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55">
       <stop offset="0" stop-color="#00efef" />
       <stop offset="1" stop-color="black" />
     </linearGradient>
     <linearGradient id="BkColor4-gradient"
-      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55">
       <stop offset="0" stop-color="#dede00" />
       <stop offset="1" stop-color="black" />
     </linearGradient>
     <linearGradient id="BkColor5-gradient"
-      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55">
       <stop offset="0" stop-color="#d618ff" />
       <stop offset="1" stop-color="black" />
     </linearGradient>
     <linearGradient id="BkColor6-gradient"
-      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55">
       <stop offset="0" stop-color="#3963ff" />
       <stop offset="1" stop-color="black" />
     </linearGradient>
@@ -135,12 +135,12 @@
 
     <!-- Garbage parts -->
     <linearGradient id="BkGarbage-gradient"
-      x1="0.45" y1="0.45" x2="0.55" y2="0.55" spreadMethod="pad">
+      x1="0.45" y1="0.45" x2="0.55" y2="0.55">
       <stop offset="0" stop-color="#505050" />
       <stop offset="1" stop-color="black" />
     </linearGradient>
     <linearGradient id="BkGarbage-Big-gradient"
-      x1="0.475" y1="0.475" x2="0.525" y2="0.525" spreadMethod="pad">
+      x1="0.475" y1="0.475" x2="0.525" y2="0.525">
       <stop offset="0" stop-color="#505050" />
       <stop offset="1" stop-color="black" />
     </linearGradient>
