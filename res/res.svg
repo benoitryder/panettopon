@@ -139,6 +139,9 @@
       <stop offset="0" stop-color="#505050" />
       <stop offset="1" stop-color="black" />
     </linearGradient>
+    <linearGradient id="BkGarbage-gradient-inverse"
+      x1="0.55" y1="0.55" x2="0.45" y2="0.45"
+      xlink:href="#BkGarbage-gradient" />
     <linearGradient id="BkGarbage-Big-gradient"
       x1="0.475" y1="0.475" x2="0.525" y2="0.525">
       <stop offset="0" stop-color="#505050" />
@@ -161,18 +164,24 @@
     </symbol>
 
     <!-- Hanging garbages -->
+    <!--
+      Large hanging garbage is split in two parts, to use two gradients.
+      The two parts overlap to have a square shape, which is easier to use
+      gradients.
+     -->
     <symbol id="GbHanging-large"
       class="bk-gb bk-mutate">
-      <rect class="bk-bg"
-        x="-96" y="-64"
-        width="192" height="128"
-        rx="16" ry="16"
-        />
+      <use class="bk-bg" xlink:href="#GbHanging-large-left" />
+      <use class="bk-bg" xlink:href="#GbHanging-large-left"
+        transform="scale(-1,-1)" style="fill: url(#BkGarbage-gradient-inverse)"/>
       <rect class="bk-fg"
         x="-88" y="-56"
         width="176" height="112"
         rx="8" ry="8"
         />
+    </symbol>
+    <symbol id="GbHanging-large-left">
+      <path d="m 0,-64 -80,0 a 16,16 0 0,0 -16,16 l 0,96 a 16,16 0 0,0 16,16 l 112,0 z" />
     </symbol>
     <symbol id="GbHanging-small"
       class="bk-gb bk-mutate" transform="scale(0.5)">
