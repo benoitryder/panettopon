@@ -67,6 +67,14 @@ class ScreenMenu: public Screen
  protected:
   WContainer container_;
   Widget *focused_;
+ private:
+  /// Dummy drawable, to have a renderer
+  class Background: public sf::Drawable {
+   public:
+    Background(): img(NULL) {}
+    virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+    const sf::Image *img;
+  } background_;
 };
 
 

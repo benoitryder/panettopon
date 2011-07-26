@@ -1,3 +1,4 @@
+#include <GL/gl.h>
 #include "screen.h"
 #include "interface.h"
 #include "../log.h"
@@ -28,14 +29,37 @@ void Screen::redraw() {}
 ScreenMenu::ScreenMenu(GuiInterface &intf, const std::string &name):
     Screen(intf, name), container_(*this, ""), focused_(NULL)
 {
+  const IniFile& style = this->style();
+  background_.img = intf_.res_mgr().getImage(style.get<std::string>("ScreenMenu", "BackgroundImage"));
+  //XXX assume that the background image always needs wrapping
+  background_.img->Bind();
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 void ScreenMenu::redraw()
 {
   sf::RenderWindow &w = intf_.window();
-  w.Clear(sf::Color(48,48,48)); //XXX:tmp
+  w.Clear();
+  w.Draw(background_);
   w.Draw(container_);
 }
+
+void ScreenMenu::Background::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
+{
+  renderer.SetTexture(img);
+  const float wx = target.GetWidth() / 2.;
+  const float wy = target.GetHeight() / 2.;
+  const float ix = wx / img->GetWidth();
+  const float iy = wy / img->GetHeight();
+  renderer.Begin(sf::Renderer::QuadList);
+    renderer.AddVertex(-wx, +wy, -ix, +iy);
+    renderer.AddVertex(-wx, -wy, -ix, -iy);
+    renderer.AddVertex(+wx, -wy, +ix, -iy);
+    renderer.AddVertex(+wx, +wy, +ix, +iy);
+  renderer.End();
+}
+
 
 bool ScreenMenu::onInputEvent(const sf::Event &ev)
 {
