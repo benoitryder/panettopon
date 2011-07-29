@@ -47,7 +47,12 @@ ScreenMenu::ScreenMenu(GuiInterface &intf, const std::string &name):
     Screen(intf, name), container_(*this, ""), focused_(NULL)
 {
   const IniFile& style = this->style();
-  background_.img = intf_.res_mgr().getImage(style.get<std::string>("ScreenMenu", "BackgroundImage"));
+  std::string key;
+  if( searchStyle("BackgroundImage", &key) ) {
+    background_.img = intf_.res_mgr().getImage(style.get<std::string>(key));
+  } else {
+    throw StyleError(*this, "BackgroundImage", "not set");
+  }
   //XXX assume that the background image always needs wrapping
   background_.img->Bind();
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

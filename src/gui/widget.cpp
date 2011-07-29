@@ -34,26 +34,21 @@ void Widget::setNeighbors(Widget *up, Widget *down, Widget *left, Widget *right)
 
 bool Widget::searchStyle(const std::string& prop, std::string *key) const
 {
-  const IniFile& style = screen_.style();
-  std::string s;
   if( !name_.empty() ) {
-    s = screen_.name()+'.'+name_+'.'+prop;
-    if( style.has(s) ) {
-      goto found;
+    if( screen_.searchStyle(name_+'.'+prop, key) ) {
+      return true;
     }
   }
-  s = screen_.name()+'.'+this->type()+'.'+prop;
-  if( style.has(s) ) {
-    goto found;
+  if( screen_.searchStyle(this->type()+'.'+prop, key) ) {
+    return true;
   }
-  s = this->type()+'.'+prop;
+  const IniFile& style = screen_.style();
+  std::string s = this->type()+'.'+prop;
   if( style.has(s) ) {
-    goto found;
+    *key = s;
+    return true;
   }
   return false;
-found:
-  *key = s;
-  return true;
 }
 
 void Widget::applyStyle(sf::Text *text, const std::string prefix)

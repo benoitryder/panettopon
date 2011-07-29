@@ -53,8 +53,8 @@ class Widget: public sf::Drawable
   /** @brief Get style entry key for a given property.
    *
    * The requested property is searched in the following sections (in order):
-   *  - Screen.WidgetName
-   *  - Screen.Type
+   *  - Screen.WidgetName (with fallback)
+   *  - Screen.Type (with fallback)
    *  - Type
    *
    * @return true if found, false otherwise.
