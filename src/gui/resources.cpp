@@ -152,6 +152,81 @@ void ImageTile::setToSprite(sf::Sprite *spr, bool center) const
 }
 
 
+ImageFrame::ImageFrame():
+    image_(NULL)
+{
+}
+
+void ImageFrame::create(const sf::Image *img, const sf::IntRect& rect, const sf::IntRect& inside)
+{
+  image_ = img;
+  rect_ = rect;
+  inside_ = inside;
+}
+
+void ImageFrame::render(sf::Renderer &renderer, const sf::FloatRect& rect) const
+{
+  const float img_x0 = rect.Left;
+  const float img_y0 = rect.Top;
+  const float img_x3 = rect.Left + rect.Width;
+  const float img_y3 = rect.Top  + rect.Height;
+  sf::FloatRect coords = image_->GetTexCoords(rect_);
+  const float tex_x0 = coords.Left;
+  const float tex_y0 = coords.Top;
+  const float tex_x3 = coords.Left + coords.Width;
+  const float tex_y3 = coords.Top  + coords.Height;
+
+  const float img_x1 = rect.Left + inside_.Left;
+  const float img_y1 = rect.Top  + inside_.Top;
+  const float img_x2 = rect.Left + rect.Width  - (rect_.Width  - inside_.Left - inside_.Width);
+  const float img_y2 = rect.Top  + rect.Height - (rect_.Height - inside_.Top  - inside_.Height);
+  sf::FloatRect in_coords = image_->GetTexCoords(sf::IntRect(
+          rect_.Left + inside_.Left, rect_.Top + inside_.Top,
+          inside_.Width, inside_.Height));
+  const float tex_x1 = in_coords.Left;
+  const float tex_y1 = in_coords.Top;
+  const float tex_x2 = in_coords.Left + in_coords.Width;
+  const float tex_y2 = in_coords.Top  + in_coords.Height;
+
+  renderer.SetTexture(image_);
+  renderer.Begin(sf::Renderer::TriangleStrip);
+    renderer.AddVertex(img_x0, img_y0, tex_x0, tex_y3);
+    renderer.AddVertex(img_x0, img_y1, tex_x0, tex_y2);
+    renderer.AddVertex(img_x1, img_y0, tex_x1, tex_y3);
+    renderer.AddVertex(img_x1, img_y1, tex_x1, tex_y2);
+    renderer.AddVertex(img_x2, img_y0, tex_x2, tex_y3);
+    renderer.AddVertex(img_x2, img_y1, tex_x2, tex_y2);
+    renderer.AddVertex(img_x3, img_y0, tex_x3, tex_y3);
+    renderer.AddVertex(img_x3, img_y1, tex_x3, tex_y2);
+  renderer.End();
+  renderer.Begin(sf::Renderer::TriangleStrip);
+    renderer.AddVertex(img_x0, img_y1, tex_x0, tex_y2);
+    renderer.AddVertex(img_x0, img_y2, tex_x0, tex_y1);
+    renderer.AddVertex(img_x1, img_y1, tex_x1, tex_y2);
+    renderer.AddVertex(img_x1, img_y2, tex_x1, tex_y1);
+    renderer.AddVertex(img_x2, img_y1, tex_x2, tex_y2);
+    renderer.AddVertex(img_x2, img_y2, tex_x2, tex_y1);
+    renderer.AddVertex(img_x3, img_y1, tex_x3, tex_y2);
+    renderer.AddVertex(img_x3, img_y2, tex_x3, tex_y1);
+  renderer.End();
+  renderer.Begin(sf::Renderer::TriangleStrip);
+    renderer.AddVertex(img_x0, img_y2, tex_x0, tex_y1);
+    renderer.AddVertex(img_x0, img_y3, tex_x0, tex_y0);
+    renderer.AddVertex(img_x1, img_y2, tex_x1, tex_y1);
+    renderer.AddVertex(img_x1, img_y3, tex_x1, tex_y0);
+    renderer.AddVertex(img_x2, img_y2, tex_x2, tex_y1);
+    renderer.AddVertex(img_x2, img_y3, tex_x2, tex_y0);
+    renderer.AddVertex(img_x3, img_y2, tex_x3, tex_y1);
+    renderer.AddVertex(img_x3, img_y3, tex_x3, tex_y0);
+  renderer.End();
+}
+
+void ImageFrame::render(sf::Renderer &renderer, const sf::Vector2f& size) const
+{
+  this->render(renderer, sf::FloatRect(-size.x/2, -size.y/2, size.x, size.y));
+}
+
+
 ImageFrameX::ImageFrameX():
     image_(NULL), margin_(0)
 {

@@ -76,12 +76,31 @@ class ImageTile
 };
 
 
-/** @brief Image split in 3 left/middle/right parts
+/** @brief Display a frame using a single image.
  *
- * It is typically used for button or entry backgrounds.
- * Left and right parts are drawn without being resized and the middle part is
- * sized to fit the drawn width.
+ * Sides and inside are stretched to fill the drawn area while preserving the
+ * original aspect size.
+ * The inside subrect is the inner part rect in the whole frame image.
  */
+class ImageFrame
+{
+ public:
+  ImageFrame();
+  /// Initialize the frame using image subrect and frame inside subrect
+  void create(const sf::Image *img, const sf::IntRect& rect, const sf::IntRect& inside);
+  /// Draw the frame at given position, with given size
+  void render(sf::Renderer &renderer, const sf::FloatRect& rect) const;
+  /// Draw the frame centered on 0,0 with given size
+  void render(sf::Renderer &renderer, const sf::Vector2f& size) const;
+
+ private:
+  const sf::Image *image_;
+  sf::IntRect rect_;
+  sf::IntRect inside_;
+};
+
+
+/// Like ImageFrame, but with only 3 parts (left/middle/right)
 class ImageFrameX
 {
  public:
