@@ -25,6 +25,23 @@ void Screen::enter() {}
 void Screen::exit() {}
 void Screen::redraw() {}
 
+bool Screen::searchStyle(const std::string& prop, std::string *key) const
+{
+  const IniFile& style = this->style();
+  std::string section = name_;
+  for( int i=0; i<10; i++ ) {
+    if( style.has(section, prop) ) {
+      *key = section+'.'+prop;
+      return true;
+    }
+    section = style.get(section, "Fallback", "");
+    if( section.empty() ) {
+      return false;
+    }
+  }
+  throw StyleError(*this, prop, "too many recursive fallbacks");
+}
+
 
 ScreenMenu::ScreenMenu(GuiInterface &intf, const std::string &name):
     Screen(intf, name), container_(*this, ""), focused_(NULL)

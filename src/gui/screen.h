@@ -49,6 +49,15 @@ class Screen
   virtual void onServerDisconnect() {}
   //@}
 
+  /** @brief Get style entry key for a given property.
+   *
+   * The requested property is searched in the screen's section and
+   * recursively in the section given by the \e Fallback property.
+   *
+   * @return true if found, false otherwise.
+   */
+  bool searchStyle(const std::string& prop, std::string *key) const;
+
  protected:
   GuiInterface &intf_;
   const std::string name_;
