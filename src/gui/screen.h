@@ -14,6 +14,11 @@ namespace gui {
 class GuiInterface;
 
 
+/** @brief Basic screen.
+ *
+ * Style properties:
+ *  - BackgroundImage, BackgroundColor
+ */
 class Screen
 {
  public:
@@ -61,6 +66,15 @@ class Screen
  protected:
   GuiInterface &intf_;
   const std::string name_;
+ private:
+  /// Dummy drawable, to have a renderer
+  class Background: public sf::Drawable {
+   public:
+    Background(): img(NULL), color(sf::Color::White) {}
+    virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+    const sf::Image *img;
+    sf::Color color;
+  } background_;
 };
 
 
@@ -76,14 +90,6 @@ class ScreenMenu: public Screen
  protected:
   WContainer container_;
   Widget *focused_;
- private:
-  /// Dummy drawable, to have a renderer
-  class Background: public sf::Drawable {
-   public:
-    Background(): img(NULL) {}
-    virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
-    const sf::Image *img;
-  } background_;
 };
 
 

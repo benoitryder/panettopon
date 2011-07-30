@@ -12,6 +12,18 @@ Screen::StyleError::StyleError(const Screen& s, const std::string& prop, const s
 Screen::Screen(GuiInterface &intf, const std::string &name):
     intf_(intf), name_(name)
 {
+  const IniFile& style = this->style();
+  std::string key;
+  if( searchStyle("BackgroundImage", &key) ) {
+    background_.img = intf_.res_mgr().getImage(style.get<std::string>(key));
+    //XXX assume that the background image always needs wrapping
+    background_.img->Bind();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  }
+  if( searchStyle("BackgroundColor", &key) ) {
+    background_.color = style.get<sf::Color>(key);
+  }
 }
 
 Screen::~Screen() {}
@@ -23,7 +35,31 @@ const IniFile& Screen::style() const
 
 void Screen::enter() {}
 void Screen::exit() {}
-void Screen::redraw() {}
+void Screen::redraw()
+{
+  sf::RenderWindow &w = intf_.window();
+  w.Draw(background_);
+}
+
+void ScreenMenu::Background::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
+{
+  renderer.Clear(color);
+  if( img ) {
+    renderer.SetColor(color);
+    renderer.SetTexture(img);
+    const float wx = target.GetWidth() / 2.;
+    const float wy = target.GetHeight() / 2.;
+    const float ix = wx / img->GetWidth();
+    const float iy = wy / img->GetHeight();
+    renderer.Begin(sf::Renderer::QuadList);
+    renderer.AddVertex(-wx, +wy, -ix, +iy);
+    renderer.AddVertex(-wx, -wy, -ix, -iy);
+    renderer.AddVertex(+wx, -wy, +ix, -iy);
+    renderer.AddVertex(+wx, +wy, +ix, +iy);
+    renderer.End();
+  }
+}
+
 
 bool Screen::searchStyle(const std::string& prop, std::string *key) const
 {
@@ -46,40 +82,13 @@ bool Screen::searchStyle(const std::string& prop, std::string *key) const
 ScreenMenu::ScreenMenu(GuiInterface &intf, const std::string &name):
     Screen(intf, name), container_(*this, ""), focused_(NULL)
 {
-  const IniFile& style = this->style();
-  std::string key;
-  if( searchStyle("BackgroundImage", &key) ) {
-    background_.img = intf_.res_mgr().getImage(style.get<std::string>(key));
-  } else {
-    throw StyleError(*this, "BackgroundImage", "not set");
-  }
-  //XXX assume that the background image always needs wrapping
-  background_.img->Bind();
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 }
 
 void ScreenMenu::redraw()
 {
+  Screen::redraw();
   sf::RenderWindow &w = intf_.window();
-  w.Clear();
-  w.Draw(background_);
   w.Draw(container_);
-}
-
-void ScreenMenu::Background::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
-{
-  renderer.SetTexture(img);
-  const float wx = target.GetWidth() / 2.;
-  const float wy = target.GetHeight() / 2.;
-  const float ix = wx / img->GetWidth();
-  const float iy = wy / img->GetHeight();
-  renderer.Begin(sf::Renderer::QuadList);
-    renderer.AddVertex(-wx, +wy, -ix, +iy);
-    renderer.AddVertex(-wx, -wy, -ix, -iy);
-    renderer.AddVertex(+wx, -wy, +ix, -iy);
-    renderer.AddVertex(+wx, +wy, +ix, +iy);
-  renderer.End();
 }
 
 
