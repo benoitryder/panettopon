@@ -81,6 +81,34 @@ void Widget::applyStyle(sf::Text *text, const std::string prefix)
   }
 }
 
+void Widget::applyStyle(ImageFrame *frame, const std::string prefix)
+{
+  const IniFile& style = screen_.style();
+  ResourceManager& res_mgr = screen_.intf().res_mgr();
+  std::string key;
+
+  if( searchStyle(prefix+"Image", &key) ) {
+    const sf::Image *img = res_mgr.getImage(style.get<std::string>(key));
+    sf::IntRect rect(0, 0, img->GetWidth(), img->GetHeight());
+    if( searchStyle(prefix+"ImageRect", &key) ) {
+      rect = style.get<sf::IntRect>(key);
+    }
+    sf::IntRect inside;
+    if( searchStyle(prefix+"ImageInside", &key) ) {
+      inside = style.get<sf::IntRect>(key);
+      if( inside.Left < 0 || inside.Left+inside.Width > rect.Width
+         || inside.Top < 0 || inside.Top+inside.Height > rect.Height ) {
+        throw StyleError(*this, key, "image inside not contained in image size");
+      }
+    } else {
+      throw StyleError(*this, prefix+"ImageInside", "not set");
+    }
+    frame->create(img, rect, inside);
+  } else {
+    throw StyleError(*this, prefix+"Image", "not set");
+  }
+}
+
 void Widget::applyStyle(ImageFrameX *frame, const std::string prefix)
 {
   const IniFile& style = screen_.style();

@@ -64,6 +64,8 @@ class Widget: public sf::Drawable
  protected:
   /// Search and apply text style
   void applyStyle(sf::Text *text, const std::string prefix="");
+  /// Search and apply ImageFrame style
+  void applyStyle(ImageFrame *frame, const std::string prefix="");
   /// Search and apply ImageFrameX style
   void applyStyle(ImageFrameX *frame, const std::string prefix="");
   /// Search and apply sprite style
