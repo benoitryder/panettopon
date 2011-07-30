@@ -173,6 +173,7 @@ WButton::WButton(const Screen& screen, const std::string& name):
 
   this->applyStyle(&frame_);
   this->applyStyle(&focus_frame_, "Focus");
+  caption_.SetColor(color_);
 }
 
 void WButton::setCaption(const std::string &caption)
@@ -304,6 +305,7 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   text_img_.Create(width_-2*text_margin, text_height);
   text_sprite_.SetOrigin(width_/2.-text_margin, text_height/2.);
   text_sprite_.SetImage(text_img_.GetImage(), true);
+  text_sprite_.SetColor(color_);
   cursor_ = sf::Shape::Line(0, 0, 0, text_height, 1, sf::Color::White);
   cursor_.SetOrigin(text_sprite_.GetOrigin());
   cursor_.SetColor(focus_color_);
@@ -383,7 +385,7 @@ bool WEntry::onInputEvent(const sf::Event &ev)
 void WEntry::focus(bool focused)
 {
   Widget::focus(focused);
-  text_.SetColor(focused ? focus_color_ : color_);
+  text_sprite_.SetColor(focused ? focus_color_ : color_);
 }
 
 
