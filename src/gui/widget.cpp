@@ -170,6 +170,34 @@ void WContainer::Render(sf::RenderTarget &target, sf::Renderer &) const
 }
 
 
+const std::string& WFrame::type() const {
+  static const std::string type("Frame");
+  return type;
+}
+
+WFrame::WFrame(const Screen& screen, const std::string& name):
+    Widget(screen, name)
+{
+  const IniFile& style = screen_.style();
+  std::string key;
+  if( searchStyle("Size", &key) ) {
+    size_ = style.get<sf::Vector2f>(key);
+    if( size_.x <= 0 || size_.y <= 0 ) {
+      throw StyleError(*this, "Size", "invalid value");
+    }
+  } else {
+    throw StyleError(*this, "Size", "not set");
+  }
+
+  this->applyStyle(&frame_);
+}
+
+void WFrame::Render(sf::RenderTarget &, sf::Renderer &renderer) const
+{
+  frame_.render(renderer, size_);
+}
+
+
 const std::string& WButton::type() const {
   static const std::string type("Button");
   return type;

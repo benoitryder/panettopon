@@ -102,6 +102,27 @@ class WContainer: public Widget
 };
 
 
+/** @brief Widget wrapping an ImageFrame.
+ *
+ * Style properties:
+ *  - Image, ImageRect, ImageInside
+ *  - Size
+ */
+class WFrame: public Widget
+{
+ public:
+  WFrame(const Screen& screen, const std::string& name);
+  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+
+ protected:
+  virtual const std::string& type() const;
+
+ private:
+  ImageFrame frame_;
+  sf::Vector2f size_;
+};
+
+
 /** @brief Text button with image background
  *
  * Style properties:
