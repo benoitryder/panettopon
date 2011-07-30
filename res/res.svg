@@ -343,14 +343,14 @@
       }
 
       #Menu-Background-bg {
-        fill: #808080;
+        fill: #eeeeee;
       }
       #Menu-Background .face {
         stroke-linecap: round;
         stroke-linejoin: round;
         stroke-width: 12;
-        stroke: #404040;
-        fill: #404040;
+        stroke: #cccccc;
+        fill: #cccccc;
       }
 
       #RJ45-socket-hole { stroke: none; fill: #111111; }
