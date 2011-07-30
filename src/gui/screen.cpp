@@ -47,8 +47,8 @@ void ScreenMenu::Background::Render(sf::RenderTarget &target, sf::Renderer &rend
   if( img ) {
     renderer.SetColor(color);
     renderer.SetTexture(img);
-    const float wx = target.GetWidth() / 2.;
-    const float wy = target.GetHeight() / 2.;
+    const float wx = target.GetWidth() / 2. + 1;
+    const float wy = target.GetHeight() / 2. + 1;
     const float ix = wx / img->GetWidth();
     const float iy = wy / img->GetHeight();
     renderer.Begin(sf::Renderer::QuadList);
