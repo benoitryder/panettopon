@@ -334,14 +334,6 @@
       }
 
 
-      .widget {
-        stroke-width: 6;
-        fill: #101010;
-        stroke: #b0b0b0;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-
       #Menu-Background-bg {
         fill: #eeeeee;
       }
@@ -769,23 +761,38 @@
     transform="translate(500,1100) scale(2)">
     <!-- force the bounding box for the export -->
     <rect id="Menu-container"
-      width="128" height="128"
+      width="256" height="128"
       style="stroke: none; fill: none;"
       />
     <rect id="Menu-Button"
-      transform="translate(5,5)"
-      class="widget"
-      x="0" y="0"
-      width="120" height="54"
+      transform="translate(64,32)"
+      x="-61" y="-29"
+      width="122" height="58"
       rx="16" ry="16"
+      style="fill: #c0c0c0; stroke: #101010; stroke-width: 1;"
       />
     <rect id="Menu-Entry"
-      transform="translate(5,69)"
-      class="widget"
-      x="0" y="0"
-      width="120" height="54"
+      transform="translate(64,96)"
+      x="-61" y="-29"
+      width="122" height="58"
       rx="4" ry="4"
+      style="fill: #c0c0c0; stroke: #101010; stroke-width: 1;"
       />
+    <g id="Menu-Frame"
+      transform="translate(192,64)">
+      <rect id="Menu-Frame-inside"
+        x="-57" y="-57"
+        width="114" height="114"
+        rx="24" ry="24"
+        style="fill:#202020; fill-opacity:0.9; stroke: #f0f0f0; stroke-width: 4;"
+        />
+      <rect id="Menu-Frame-border"
+        x="-60" y="-60"
+        width="120" height="120"
+        rx="26" ry="26"
+        style="fill: none; stroke: #181818; stroke-width: 2;"
+        />
+    </g>
   </g>
 
   <g id="Menu-Background"
