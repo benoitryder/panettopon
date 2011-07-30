@@ -67,6 +67,11 @@ function(INKSCAPE_CONVERT_SVG2PNG var svg)
   endif()
   get_filename_component(svg_abs ${svg} ABSOLUTE)
 
+  if(WIN32)
+    set(dev_null NUL)
+  else()
+    set(dev_null /dev/null)
+  endif()
   foreach(id ${ARGN})
     if(arg_output)
       set(output_name ${arg_output})
@@ -79,8 +84,8 @@ function(INKSCAPE_CONVERT_SVG2PNG var svg)
     add_custom_command(
       OUTPUT ${output}
       COMMAND ${INKSCAPE_EXECUTABLE}
-      ARGS -z ${svg_abs} -e ${output} -j -i ${id} -b black -y 0
-        ${args_dpi} ${args_width} ${args_height}
+        -z ${svg_abs} -e ${output} -j -i ${id} -b black -y 0
+        ${args_dpi} ${args_width} ${args_height} > ${dev_null}
       DEPENDS ${svg_abs}
       COMMENT "Exporting SVG object to ${relative_output}"
       VERBATIM)
