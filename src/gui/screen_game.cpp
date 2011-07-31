@@ -16,8 +16,8 @@ ScreenGame::ScreenGame(GuiInterface &intf, Player *pl):
   keys_.down  = sf::Keyboard::Down;
   keys_.left  = sf::Keyboard::Left;
   keys_.right = sf::Keyboard::Right;
-  keys_.swap  = sf::Keyboard::Key('d');
-  keys_.raise = sf::Keyboard::Key('f');
+  keys_.swap  = sf::Keyboard::D;
+  keys_.raise = sf::Keyboard::F;
 }
 
 void ScreenGame::enter()
