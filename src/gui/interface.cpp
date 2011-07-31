@@ -49,7 +49,7 @@ bool GuiInterface::run(IniFile *cfg)
   res_mgr_.init(cfg->get(CONF_SECTION, "ResPath", "./res"));
   // set some default values
   if( !cfg->has("Global", "Port") ) {
-    cfg->set("Global", "Port", QUOTE(DEFAULT_PNP_PORT));
+    cfg->set("Global", "Port", DEFAULT_PNP_PORT);
   }
   if( !cfg->has("Client", "Hostname") ) {
     cfg->set("Client", "Hostname", "localhost");

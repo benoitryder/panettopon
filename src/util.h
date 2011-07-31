@@ -12,8 +12,6 @@
 #endif
 #include <stdint.h>
 
-#define QUOTE_(x)  #x
-#define QUOTE(x)   QUOTE_(x)
 
 /// Default port for PnP servers.
 #define DEFAULT_PNP_PORT   2426
