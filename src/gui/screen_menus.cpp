@@ -79,17 +79,18 @@ ScreenJoinServer::ScreenJoinServer(GuiInterface &intf):
 void ScreenJoinServer::enter()
 {
   const ResourceManager& res_mgr = intf_.res_mgr();
+  const IniFile& cfg = intf_.cfg();
 
   WLabel *label = new WLabel(*this, "Title");
   label->setText(res_mgr.getLang(name_, "HostPort"));
   container_.widgets.push_back(label);
 
   entry_host_ = new WEntry(*this, "Host");
-  entry_host_->setText("localhost");
+  entry_host_->setText(cfg.get("Client", "Hostname", ""));
   container_.widgets.push_back(entry_host_);
 
   entry_port_ = new WEntry(*this, "Port");
-  entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
+  entry_port_->setText(cfg.get("Global", "Port", ""));
   container_.widgets.push_back(entry_port_);
 
   WButton *button = new WButton(*this, "Join");
@@ -145,6 +146,8 @@ void ScreenJoinServer::submit()
   if( port_end != port_str.c_str()+port_str.size() || port <= 0 || port > 65535 ) {
     LOG("invalid port value: %s", port_str.c_str());
   } else {
+    intf_.cfg().set("Client", "Hostname", entry_host_->text());
+    intf_.cfg().set("Global", "Port", port_str);
     intf_.startClient(entry_host_->text().c_str(), port);
     intf_.client()->newLocalPlayer("Client"); //XXX temporary player name
     submitting_ = true;
@@ -160,13 +163,14 @@ ScreenCreateServer::ScreenCreateServer(GuiInterface &intf):
 void ScreenCreateServer::enter()
 {
   const ResourceManager& res_mgr = intf_.res_mgr();
+  const IniFile& cfg = intf_.cfg();
 
   WLabel *label = new WLabel(*this, "PortLabel");
   label->setText(res_mgr.getLang(name_, "Port"));
   container_.widgets.push_back(label);
 
   entry_port_ = new WEntry(*this, "PortEntry");
-  entry_port_->setText(QUOTE(DEFAULT_PNP_PORT));
+  entry_port_->setText(cfg.get("Global", "Port", ""));
   container_.widgets.push_back(entry_port_);
 
   WButton *button = new WButton(*this, "Create");
@@ -203,6 +207,7 @@ void ScreenCreateServer::submit()
   if( port_end != port_str.c_str()+port_str.size() || port <= 0 || port > 65535 ) {
     LOG("invalid port value: %s", port_str.c_str());
   } else {
+    intf_.cfg().set("Global", "Port", port_str);
     intf_.startServer(port);
     Player *pl = intf_.server()->newLocalPlayer("Server"); //XXX temporary player name
     intf_.swapScreen(new ScreenLobby(intf_, pl));
