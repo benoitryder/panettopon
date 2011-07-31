@@ -130,12 +130,8 @@ bool IniFile::has(const std::string& key) const
   return entries_.find(key) != entries_.end();
 }
 
-void IniFile::set(const std::string& key, const std::string& val)
+void IniFile::unset(const std::string& key)
 {
-  if( val.empty() ) {
-    entries_.erase(key);
-  } else {
-    entries_[key] = val;
-  }
+  entries_.erase(key);
 }
 

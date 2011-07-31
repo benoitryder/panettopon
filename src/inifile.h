@@ -41,6 +41,11 @@ class IniFile
     ParseError(const std::string& key):
         std::runtime_error("failed to parse value: "+key) {}
   };
+  class ConvertError: public std::runtime_error {
+   public:
+    ConvertError(const std::string& key):
+        std::runtime_error("failed to convert value: "+key) {}
+  };
 
   /// Create an empty INI file content.
   IniFile() {}
@@ -51,14 +56,16 @@ class IniFile
   bool has(const std::string& key) const;
   /// Retrieve a value, throw a NotSetError if not set
   template <typename T> T get(const std::string& key) const;
-  /// Set a value.
-  void set(const std::string& key, const std::string& val);
+  /// Set a value
+  template <typename T> void set(const std::string& key, const T& val);
+  /// Unset a value
+  void unset(const std::string& key);
 
   /** @name Aliases for access by section and key */
   //@{
   inline bool has(const std::string& section, const std::string& key) const;
   template <typename T> T get(const std::string& section, const std::string& key) const;
-  inline void set(const std::string& section, const std::string& key, const std::string& val);
+  template <typename T> void set(const std::string& section, const std::string& key, const T& val);
   //@}
 
   /// Retrieve a value, use default if not set
@@ -86,6 +93,20 @@ template <typename T> T IniFile::get(const std::string& key) const
   throw NotSetError(key);
 }
 
+template <typename T> void IniFile::set(const std::string& key, const T& val)
+{
+  try {
+    const std::string sval = boost::lexical_cast<std::string>(val);
+    if( sval.empty() ) {
+      entries_.erase(key);
+    } else {
+      entries_[key] = sval;
+    }
+  } catch(const boost::bad_lexical_cast &) {
+    throw ConvertError(key);
+  }
+}
+
 bool IniFile::has(const std::string& section, const std::string& key) const
 {
   return has(section+'.'+key);
@@ -96,9 +117,9 @@ template <typename T> T IniFile::get(const std::string& section, const std::stri
   return get<T>(section+'.'+key);
 }
 
-void IniFile::set(const std::string& section, const std::string& key, const std::string& val)
+template <typename T> void IniFile::set(const std::string& section, const std::string& key, const T& val)
 {
-  set(section+'.'+key, val);
+  set<T>(section+'.'+key, val);
 }
 
 template <typename T> T IniFile::get(const std::string& section, const std::string& key, const T& def) const
