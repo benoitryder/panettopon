@@ -146,6 +146,7 @@ void GuiInterface::startServer(int port)
   assert( instance_.get() == NULL );
   server_instance_ = new ServerInstance(*this, io_service_);
   instance_.reset(server_instance_);
+  server_instance_->loadConf(*cfg_);
   server_instance_->startServer(port);
 }
 
