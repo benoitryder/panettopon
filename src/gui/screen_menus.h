@@ -54,6 +54,7 @@ class ScreenJoinServer: public ScreenMenu
  private:
   WEntry *entry_host_;
   WEntry *entry_port_;
+  WEntry *entry_nick_;
   bool submitting_;
 };
 

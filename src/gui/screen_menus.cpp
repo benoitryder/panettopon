@@ -81,26 +81,35 @@ void ScreenJoinServer::enter()
   const ResourceManager& res_mgr = intf_.res_mgr();
   const IniFile& cfg = intf_.cfg();
 
-  WLabel *label = new WLabel(*this, "Title");
+  WLabel *label = new WLabel(*this, "HostPortLabel");
   label->setText(res_mgr.getLang(name_, "HostPort"));
   container_.widgets.push_back(label);
 
-  entry_host_ = new WEntry(*this, "Host");
+  entry_host_ = new WEntry(*this, "HostEntry");
   entry_host_->setText(cfg.get("Client", "Hostname", ""));
   container_.widgets.push_back(entry_host_);
 
-  entry_port_ = new WEntry(*this, "Port");
+  entry_port_ = new WEntry(*this, "PortEntry");
   entry_port_->setText(cfg.get("Global", "Port", ""));
   container_.widgets.push_back(entry_port_);
 
-  WButton *button = new WButton(*this, "Join");
+  label = new WLabel(*this, "NickLabel");
+  label->setText(res_mgr.getLang(name_, "PlayerName"));
+  container_.widgets.push_back(label);
+
+  entry_nick_ = new WEntry(*this, "NickEntry");
+  entry_nick_->setText(cfg.get("Client", "Nick", "Player"));
+  container_.widgets.push_back(entry_nick_);
+
+  WButton *button = new WButton(*this, "JoinButton");
   button->setCaption(res_mgr.getLang(name_, "Join"));
   container_.widgets.push_back(button);
 
   //XXX neighbors should be defined in style.ini too
   entry_host_->setNeighbors(button, entry_port_, NULL, NULL);
-  entry_port_->setNeighbors(entry_host_, button, NULL, NULL);
-  button->setNeighbors(entry_port_, entry_host_, NULL, NULL);
+  entry_port_->setNeighbors(entry_host_, entry_nick_, NULL, NULL);
+  entry_nick_->setNeighbors(entry_port_, button, NULL, NULL);
+  button->setNeighbors(entry_nick_, entry_host_, NULL, NULL);
 
   this->focus(entry_host_);
 }
@@ -145,11 +154,15 @@ void ScreenJoinServer::submit()
   long port = strtol(port_str.c_str(), &port_end, 0);
   if( port_end != port_str.c_str()+port_str.size() || port <= 0 || port > 65535 ) {
     LOG("invalid port value: %s", port_str.c_str());
+  } else if( entry_nick_->text().empty() ) {
+    // TODO check nick is valid, not only not empty
+    LOG("empty nick");
   } else {
     intf_.cfg().set("Client", "Hostname", entry_host_->text());
     intf_.cfg().set("Global", "Port", port_str);
+    intf_.cfg().set("Client", "Nick", entry_nick_->text());
     intf_.startClient(entry_host_->text().c_str(), port);
-    intf_.client()->newLocalPlayer("Client"); //XXX temporary player name
+    intf_.client()->newLocalPlayer(entry_nick_->text());
     submitting_ = true;
   }
 }
