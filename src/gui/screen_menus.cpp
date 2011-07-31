@@ -186,12 +186,21 @@ void ScreenCreateServer::enter()
   entry_port_->setText(cfg.get("Global", "Port", ""));
   container_.widgets.push_back(entry_port_);
 
-  WButton *button = new WButton(*this, "Create");
+  label = new WLabel(*this, "NickLabel");
+  label->setText(res_mgr.getLang(name_, "PlayerName"));
+  container_.widgets.push_back(label);
+
+  entry_nick_ = new WEntry(*this, "NickEntry");
+  entry_nick_->setText(cfg.get("Client", "Nick", "Player"));
+  container_.widgets.push_back(entry_nick_);
+
+  WButton *button = new WButton(*this, "CreateButton");
   button->setCaption(res_mgr.getLang(name_, "Create"));
   container_.widgets.push_back(button);
 
-  entry_port_->setNeighbors(button, button, NULL, NULL);
-  button->setNeighbors(entry_port_, entry_port_, NULL, NULL);
+  entry_port_->setNeighbors(button, entry_nick_, NULL, NULL);
+  entry_nick_->setNeighbors(entry_port_, button, NULL, NULL);
+  button->setNeighbors(entry_nick_, entry_port_, NULL, NULL);
 
   this->focus(entry_port_);
 }
@@ -219,10 +228,14 @@ void ScreenCreateServer::submit()
   long port = strtol(port_str.c_str(), &port_end, 0);
   if( port_end != port_str.c_str()+port_str.size() || port <= 0 || port > 65535 ) {
     LOG("invalid port value: %s", port_str.c_str());
+  } else if( entry_nick_->text().empty() ) {
+    // TODO check nick is valid, not only not empty
+    LOG("empty nick");
   } else {
     intf_.cfg().set("Global", "Port", port_str);
+    intf_.cfg().set("Client", "Nick", entry_nick_->text());
     intf_.startServer(port);
-    Player *pl = intf_.server()->newLocalPlayer("Server"); //XXX temporary player name
+    Player *pl = intf_.server()->newLocalPlayer(entry_nick_->text());
     intf_.swapScreen(new ScreenLobby(intf_, pl));
   }
 }
