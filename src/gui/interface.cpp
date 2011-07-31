@@ -169,7 +169,7 @@ bool GuiInterface::initDisplay()
       "Panettopon",
       conf_.fullscreen ? sf::Style::Fullscreen : sf::Style::Resize|sf::Style::Close
       );
-  window_.EnableKeyRepeat(false);
+  window_.EnableKeyRepeat(true);
   window_.SetActive();
 
   // load icon
