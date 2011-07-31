@@ -26,6 +26,7 @@ class GuiInterface: public ClientInstance::Observer
   virtual ~GuiInterface();
   bool run(IniFile *cfg);
   boost::asio::io_service &io_service() { return io_service_; }
+  IniFile& cfg() const { return *cfg_; }
 
   /** @brief Change the active screen.
    *
@@ -70,6 +71,7 @@ class GuiInterface: public ClientInstance::Observer
 
  private:
   boost::asio::io_service io_service_;
+  IniFile *cfg_;
 
   /// Various configuration values.
   struct {

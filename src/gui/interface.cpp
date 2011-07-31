@@ -16,7 +16,7 @@ namespace gui {
 const std::string GuiInterface::CONF_SECTION("GUI");
 
 GuiInterface::GuiInterface():
-    redraw_timer_(io_service_),
+    cfg_(NULL), redraw_timer_(io_service_),
     instance_(NULL), server_instance_(NULL), client_instance_(NULL)
 {
   window_conf_.redraw_dt = (1000.0/60.0);
@@ -72,7 +72,10 @@ bool GuiInterface::run(IniFile *cfg)
   redraw_timer_.async_wait(boost::bind(&GuiInterface::onRedrawTick, this,
                                        asio::placeholders::error));
 
+  assert( cfg_ == NULL );
+  cfg_ = cfg;
   io_service_.run();
+  cfg_ = NULL;
   return true;
 }
 
