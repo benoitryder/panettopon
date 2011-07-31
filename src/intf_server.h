@@ -8,7 +8,7 @@ class BasicServerInterface: public ServerInstance::Observer
 {
  public:
   BasicServerInterface();
-  bool run(const IniFile &cfg);
+  bool run(IniFile *cfg);
 
   /** @name ServerInstance::Observer methods. */
   //@{

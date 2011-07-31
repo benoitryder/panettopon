@@ -22,7 +22,7 @@ class CursesInterface: public ClientInstance::Observer,
  public:
   CursesInterface();
   virtual ~CursesInterface();
-  bool run(const IniFile &cfg);
+  bool run(IniFile *cfg);
 
   /** @name ClientInstance::Observer methods. */
   //@{

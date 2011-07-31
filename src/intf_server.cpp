@@ -10,13 +10,13 @@ BasicServerInterface::BasicServerInterface():
 }
 
 
-bool BasicServerInterface::run(const IniFile &cfg)
+bool BasicServerInterface::run(IniFile *cfg)
 {
   boost::asio::io_service io_service;
   ServerInstance instance(*this, io_service);
   instance_ = &instance;
-  instance.loadConf(cfg);
-  instance.startServer( cfg.get<int>("Global", "Port", DEFAULT_PNP_PORT) );
+  instance.loadConf(*cfg);
+  instance.startServer( cfg->get<int>("Global", "Port", DEFAULT_PNP_PORT) );
   io_service.run();
   instance_ = NULL;
   return true;

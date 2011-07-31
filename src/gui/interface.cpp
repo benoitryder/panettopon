@@ -30,15 +30,15 @@ GuiInterface::~GuiInterface()
   this->endDisplay();
 }
 
-bool GuiInterface::run(const IniFile &cfg)
+bool GuiInterface::run(IniFile *cfg)
 {
 #define CONF_LOAD(n,ini) \
-  conf_.n = cfg.get(CONF_SECTION, #ini, conf_.n);
+  conf_.n = cfg->get(CONF_SECTION, #ini, conf_.n);
   CONF_LOAD(fullscreen,    Fullscreen);
   CONF_LOAD(screen_width,  ScreenWidth);
   CONF_LOAD(screen_height, ScreenHeight);
 #undef CONF_LOAD
-  float f = cfg.get(CONF_SECTION, "FPS", 60.0);
+  float f = cfg->get(CONF_SECTION, "FPS", 60.0);
   //XXX default not based on the cfg value set in constructor
   if( f <= 0 ) {
     LOG("invalid conf. value for FPS: %f", f);
@@ -46,7 +46,7 @@ bool GuiInterface::run(const IniFile &cfg)
     conf_.redraw_dt = (1000.0/f);
   }
 
-  res_mgr_.init(cfg.get(CONF_SECTION, "ResPath", "./res"));
+  res_mgr_.init(cfg->get(CONF_SECTION, "ResPath", "./res"));
 
   // start display loop
   if( !this->initDisplay() ) {
