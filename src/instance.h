@@ -64,6 +64,8 @@ class Player
   void setNick(const std::string &v) { nick_ = v; }
   bool ready() const { return ready_; }
   void setReady(bool v) { ready_ = v; }
+  const FieldConf& fieldConf() const { return field_conf_; }
+  void setFieldConf(const FieldConf& conf) { field_conf_ = conf; }
   const Field *field() const { return field_; }
   Field *field() { return field_; }
   void setField(Field *fld) { field_ = fld; }
@@ -73,6 +75,7 @@ class Player
   bool local_;  ///< \e true for local players
   std::string nick_;
   bool ready_;  ///< ready for server state change
+  FieldConf field_conf_;
   Field *field_;
 };
 

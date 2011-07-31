@@ -320,8 +320,6 @@ void ClientInstance::processPacketField(const netplay::Field &pkt_fld)
     if( pkt_fld.has_tick() || !pkt_fld.has_seed() ) {
       throw netplay::CallbackError("invalid fields");
     }
-    Field *fld = match_.newField(pkt_fld.seed());
-    pl->setField(fld);
     // conf
     const netplay::Field::Conf &np_conf = pkt_fld.conf();
     FieldConf conf;
@@ -333,8 +331,9 @@ void ClientInstance::processPacketField(const netplay::Field &pkt_fld)
     if( !conf.isValid() ) {
       throw netplay::CallbackError("invalid configuration");
     }
-    // check client conf against server conf
-    fld->setConf(conf);
+    pl->setFieldConf(conf);
+    Field *fld = match_.newField(pl->fieldConf(), pkt_fld.seed());
+    pl->setField(fld);
     // grid
     if( pkt_fld.blocks_size() > 0 ) {
       //TODO throw exceptions in setGridContentFromPacket

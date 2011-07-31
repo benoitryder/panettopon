@@ -21,8 +21,8 @@ bool FieldConf::isValid() const
 }
 
 
-Field::Field(uint32_t seed):
-    seed_(seed), rank_(0)
+Field::Field(const FieldConf& conf, uint32_t seed):
+    seed_(seed), rank_(0), conf_(conf)
 {
   ::memset(grid_, 0, sizeof(grid_));
 }
@@ -928,10 +928,10 @@ void Match::stop()
   fields_.clear();
 }
 
-Field *Match::newField(uint32_t seed)
+Field *Match::newField(const FieldConf& conf, uint32_t seed)
 {
   assert( !started_ );
-  Field *fld = new Field(seed);
+  Field *fld = new Field(conf, seed);
   fields_.push_back(fld);
   return fld;
 }

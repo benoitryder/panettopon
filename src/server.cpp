@@ -489,9 +489,9 @@ void ServerInstance::prepareMatch()
     if( ! pl->ready() ) {
       continue;
     }
-    Field *fld = match_.newField(seed);
+    pl->setFieldConf(default_field_conf); //XXX:temp
+    Field *fld = match_.newField(pl->fieldConf(), seed);
     pl->setField(fld);
-    fld->setConf( default_field_conf ); //XXX:temp
     fld->fillRandom(6);
 
     netplay::Field *np_field = pkt.mutable_field();

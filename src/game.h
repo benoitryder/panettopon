@@ -190,7 +190,7 @@ class Field
   };
   typedef boost::ptr_deque<Garbage> GarbageList;
 
-  Field( uint32_t seed);
+  Field(const FieldConf& conf, uint32_t seed);
   ~Field();
 
   Tick tick() const { return tick_; }
@@ -207,7 +207,6 @@ class Field
 
   const StepInfo &stepInfo() const { return step_info_; }
   const FieldConf &conf() const { return conf_; }
-  void setConf(const FieldConf &conf) { conf_ = conf; }
   const Block &block(uint8_t x, uint8_t y) const {
     assert( x < FIELD_WIDTH );
     assert( y <= FIELD_HEIGHT );
@@ -362,7 +361,7 @@ class Field
   Block grid_[FIELD_WIDTH][FIELD_HEIGHT+1];
 
   StepInfo step_info_;     ///< Last step information.
-  FieldConf conf_;  ///< Configuration.
+  const FieldConf& conf_;  ///< Configuration.
 
   /// Key state, or-ed GameKeyState values.
   KeyState key_state_;
@@ -416,7 +415,7 @@ class Match
   /// Stop the match, remove fields.
   void stop();
   /// Create and return a new field.
-  Field *newField(uint32_t seed);
+  Field *newField(const FieldConf& conf, uint32_t seed);
   /** @brief Make a field abort.
    *
    * Remove the field but don't destroy nor rank it.
