@@ -184,6 +184,7 @@ void ScreenCreateServer::enter()
 {
   const ResourceManager& res_mgr = intf_.res_mgr();
   const IniFile& cfg = intf_.cfg();
+  // reload configuration from values
 
   WLabel *label = new WLabel(*this, "PortLabel");
   label->setText(res_mgr.getLang(name_, "Port"));
@@ -198,15 +199,24 @@ void ScreenCreateServer::enter()
   container_.widgets.push_back(label);
 
   entry_nick_ = new WEntry(*this, "NickEntry");
-  entry_nick_->setText(cfg.get("Client", "Nick", "Player"));
+  entry_nick_->setText(cfg.get("Client", "Nick", ""));
   container_.widgets.push_back(entry_nick_);
+
+  label = new WLabel(*this, "PlayerNbLabel");
+  label->setText(res_mgr.getLang(name_, "PlayerNumber"));
+  container_.widgets.push_back(label);
+
+  entry_player_nb_ = new WEntry(*this, "PlayerNbEntry");
+  entry_player_nb_->setText(cfg.get("Server", "PlayerNumber", ""));
+  container_.widgets.push_back(entry_player_nb_);
 
   WButton *button = new WButton(*this, "CreateButton");
   button->setCaption(res_mgr.getLang(name_, "Create"));
   container_.widgets.push_back(button);
 
-  entry_port_->setNeighbors(button, entry_nick_, NULL, NULL);
-  entry_nick_->setNeighbors(entry_port_, button, NULL, NULL);
+  entry_port_->setNeighbors(button, entry_player_nb_, NULL, NULL);
+  entry_player_nb_->setNeighbors(entry_port_, entry_nick_, NULL, NULL);
+  entry_nick_->setNeighbors(entry_player_nb_, button, NULL, NULL);
   button->setNeighbors(entry_nick_, entry_port_, NULL, NULL);
 
   this->focus(entry_port_);
@@ -243,9 +253,17 @@ void ScreenCreateServer::submit()
     LOG("invalid port value: %s", entry_port_->text().c_str());
     return;
   }
+  unsigned int player_nb;
+  try {
+    player_nb = boost::lexical_cast<unsigned int>(entry_player_nb_->text());
+  } catch(const boost::bad_lexical_cast &) {
+    LOG("invalid player number: %s", entry_player_nb_->text().c_str());
+    return;
+  }
 
   intf_.cfg().set("Global", "Port", port);
   intf_.cfg().set("Client", "Nick", entry_nick_->text());
+  intf_.cfg().set("Server", "PlayerNumber", player_nb);
   intf_.startServer(port);
   Player *pl = intf_.server()->newLocalPlayer(entry_nick_->text());
   intf_.swapScreen(new ScreenLobby(intf_, pl));

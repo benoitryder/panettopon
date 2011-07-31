@@ -77,6 +77,7 @@ class ScreenCreateServer: public ScreenMenu
 
  private:
   WEntry *entry_port_;
+  WEntry *entry_player_nb_;
   WEntry *entry_nick_;
 };
 
