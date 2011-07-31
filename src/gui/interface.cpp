@@ -19,10 +19,10 @@ GuiInterface::GuiInterface():
     redraw_timer_(io_service_),
     instance_(NULL), server_instance_(NULL), client_instance_(NULL)
 {
-  conf_.redraw_dt = (1000.0/60.0);
-  conf_.fullscreen = false;
-  conf_.screen_width = 800;
-  conf_.screen_height = 600;
+  window_conf_.redraw_dt = (1000.0/60.0);
+  window_conf_.fullscreen = false;
+  window_conf_.screen_width = 800;
+  window_conf_.screen_height = 600;
 }
 
 GuiInterface::~GuiInterface()
@@ -33,7 +33,7 @@ GuiInterface::~GuiInterface()
 bool GuiInterface::run(IniFile *cfg)
 {
 #define CONF_LOAD(n,ini) \
-  conf_.n = cfg->get(CONF_SECTION, #ini, conf_.n);
+  window_conf_.n = cfg->get(CONF_SECTION, #ini, window_conf_.n);
   CONF_LOAD(fullscreen,    Fullscreen);
   CONF_LOAD(screen_width,  ScreenWidth);
   CONF_LOAD(screen_height, ScreenHeight);
@@ -43,7 +43,7 @@ bool GuiInterface::run(IniFile *cfg)
   if( f <= 0 ) {
     LOG("invalid conf. value for FPS: %f", f);
   } else {
-    conf_.redraw_dt = (1000.0/f);
+    window_conf_.redraw_dt = (1000.0/f);
   }
 
   res_mgr_.init(cfg->get(CONF_SECTION, "ResPath", "./res"));
@@ -67,7 +67,7 @@ bool GuiInterface::run(IniFile *cfg)
   // create the first screen
   this->swapScreen(new ScreenStart(*this));
 
-  boost::posix_time::time_duration dt = boost::posix_time::milliseconds(conf_.redraw_dt);
+  boost::posix_time::time_duration dt = boost::posix_time::milliseconds(window_conf_.redraw_dt);
   redraw_timer_.expires_from_now(dt);
   redraw_timer_.async_wait(boost::bind(&GuiInterface::onRedrawTick, this,
                                        asio::placeholders::error));
@@ -175,9 +175,9 @@ bool GuiInterface::initDisplay()
 {
   //TODO handle errors/exceptions
   window_.Create(
-      sf::VideoMode(conf_.screen_width, conf_.screen_height, 32),
+      sf::VideoMode(window_conf_.screen_width, window_conf_.screen_height, 32),
       "Panettopon",
-      conf_.fullscreen ? sf::Style::Fullscreen : sf::Style::Resize|sf::Style::Close
+      window_conf_.fullscreen ? sf::Style::Fullscreen : sf::Style::Resize|sf::Style::Close
       );
   window_.EnableKeyRepeat(true);
   window_.SetActive();
@@ -214,7 +214,7 @@ void GuiInterface::onRedrawTick(const boost::system::error_code &ec)
   // redraw period
   boost::posix_time::ptime next_redraw =
       boost::posix_time::microsec_clock::universal_time()
-      + boost::posix_time::milliseconds(conf_.redraw_dt);
+      + boost::posix_time::milliseconds(window_conf_.redraw_dt);
 
   sf::Event event;
   while(window_.PollEvent(event)) {

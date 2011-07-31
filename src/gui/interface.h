@@ -76,7 +76,7 @@ class GuiInterface: public ClientInstance::Observer
     unsigned int redraw_dt;
     bool fullscreen;
     unsigned int screen_width, screen_height;
-  } conf_;
+  } window_conf_;
 
   bool initDisplay();
   void endDisplay();
