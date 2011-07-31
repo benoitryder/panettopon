@@ -149,22 +149,29 @@ void ScreenJoinServer::onServerDisconnect()
 void ScreenJoinServer::submit()
 {
   assert( !submitting_ );
-  std::string port_str = entry_port_->text();
-  char *port_end;
-  long port = strtol(port_str.c_str(), &port_end, 0);
-  if( port_end != port_str.c_str()+port_str.size() || port <= 0 || port > 65535 ) {
-    LOG("invalid port value: %s", port_str.c_str());
-  } else if( entry_nick_->text().empty() ) {
+  //TODO display errors to the user
+  if( entry_nick_->text().empty() ) {
     // TODO check nick is valid, not only not empty
     LOG("empty nick");
-  } else {
-    intf_.cfg().set("Client", "Hostname", entry_host_->text());
-    intf_.cfg().set("Global", "Port", port_str);
-    intf_.cfg().set("Client", "Nick", entry_nick_->text());
-    intf_.startClient(entry_host_->text().c_str(), port);
-    intf_.client()->newLocalPlayer(entry_nick_->text());
-    submitting_ = true;
+    return;
+  } else if( entry_host_->text().empty() ) {
+    LOG("empty hostname");
+    return;
   }
+  uint16_t port;
+  try {
+    port = boost::lexical_cast<uint16_t>(entry_port_->text());
+  } catch(const boost::bad_lexical_cast &) {
+    LOG("invalid port value: %s", entry_port_->text().c_str());
+    return;
+  }
+
+  intf_.cfg().set("Client", "Hostname", entry_host_->text());
+  intf_.cfg().set("Global", "Port", port);
+  intf_.cfg().set("Client", "Nick", entry_nick_->text());
+  intf_.startClient(entry_host_->text(), port);
+  intf_.client()->newLocalPlayer(entry_nick_->text());
+  submitting_ = true;
 }
 
 
@@ -223,21 +230,25 @@ bool ScreenCreateServer::onInputEvent(const sf::Event &ev)
 
 void ScreenCreateServer::submit()
 {
-  std::string port_str = entry_port_->text();
-  char *port_end;
-  long port = strtol(port_str.c_str(), &port_end, 0);
-  if( port_end != port_str.c_str()+port_str.size() || port <= 0 || port > 65535 ) {
-    LOG("invalid port value: %s", port_str.c_str());
-  } else if( entry_nick_->text().empty() ) {
+  //TODO display errors to the user
+  if( entry_nick_->text().empty() ) {
     // TODO check nick is valid, not only not empty
     LOG("empty nick");
-  } else {
-    intf_.cfg().set("Global", "Port", port_str);
-    intf_.cfg().set("Client", "Nick", entry_nick_->text());
-    intf_.startServer(port);
-    Player *pl = intf_.server()->newLocalPlayer(entry_nick_->text());
-    intf_.swapScreen(new ScreenLobby(intf_, pl));
+    return;
   }
+  uint16_t port;
+  try {
+    port = boost::lexical_cast<uint16_t>(entry_port_->text());
+  } catch(const boost::bad_lexical_cast &) {
+    LOG("invalid port value: %s", entry_port_->text().c_str());
+    return;
+  }
+
+  intf_.cfg().set("Global", "Port", port);
+  intf_.cfg().set("Client", "Nick", entry_nick_->text());
+  intf_.startServer(port);
+  Player *pl = intf_.server()->newLocalPlayer(entry_nick_->text());
+  intf_.swapScreen(new ScreenLobby(intf_, pl));
 }
 
 
