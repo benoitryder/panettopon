@@ -326,7 +326,6 @@ void ClientInstance::processPacketField(const netplay::Field &pkt_fld)
     const netplay::Field::Conf &np_conf = pkt_fld.conf();
     FieldConf conf;
 #define FIELD_CONF_EXPR_INIT(n) \
-    if( !np_conf.has_##n() ) throw netplay::CallbackError("conf field missing: " #n); \
     conf.n = np_conf.n();
     FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
 #undef FIELD_CONF_EXPR_INIT
