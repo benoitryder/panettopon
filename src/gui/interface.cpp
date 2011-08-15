@@ -187,8 +187,9 @@ bool GuiInterface::initDisplay()
   window_.SetActive();
 
   // load icon
-  const sf::Image *icon = res_mgr_.getImage("icon-32");
-  window_.SetIcon(icon->GetWidth(), icon->GetHeight(), icon->GetPixelsPtr());
+  sf::Image icon;
+  icon.LoadFromFile(res_mgr_.getResourceFilename("icon-32.png"));
+  window_.SetIcon(icon.GetWidth(), icon.GetHeight(), icon.GetPixelsPtr());
 
   sf::View view = window_.GetDefaultView();
   view.SetCenter(0,0);

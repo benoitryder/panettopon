@@ -110,7 +110,7 @@ FieldDisplay::FieldDisplay(const Field &fld, const StyleField &style):
   //this->SetPosition( slot * 2*style.img_field_frame.GetWidth(), 0 );
   this->SetOrigin(style_.bk_size*FIELD_WIDTH/2, style_.bk_size*FIELD_HEIGHT/2);
 
-  spr_frame_.SetImage(*style_.img_field_frame);
+  spr_frame_.SetTexture(*style_.img_field_frame);
   spr_frame_.SetOrigin(style_.frame_origin.x, style_.frame_origin.y);
   spr_frame_.SetScale(2,2);
 

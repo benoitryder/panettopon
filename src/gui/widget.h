@@ -5,7 +5,7 @@
 #include <boost/function.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Window/Event.hpp>
-#include <SFML/Graphics/RenderImage.hpp>
+#include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Shape.hpp>
@@ -208,7 +208,7 @@ class WEntry: public Widget
   void updateTextDisplay(bool force=false);
 
  private:
-  sf::RenderImage text_img_;
+  sf::RenderTexture text_img_;
   sf::Text text_;
   sf::Sprite text_sprite_;
   sf::Shape cursor_;

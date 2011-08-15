@@ -72,7 +72,7 @@ class Screen
    public:
     Background(): img(NULL), color(sf::Color::White) {}
     virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
-    const sf::Image *img;
+    const sf::Texture *img;
     sf::Color color;
   } background_;
 };

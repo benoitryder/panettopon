@@ -88,7 +88,7 @@ void Widget::applyStyle(ImageFrame *frame, const std::string prefix)
   std::string key;
 
   if( searchStyle(prefix+"Image", &key) ) {
-    const sf::Image *img = res_mgr.getImage(style.get<std::string>(key));
+    const sf::Texture *img = res_mgr.getImage(style.get<std::string>(key));
     sf::IntRect rect(0, 0, img->GetWidth(), img->GetHeight());
     if( searchStyle(prefix+"ImageRect", &key) ) {
       rect = style.get<sf::IntRect>(key);
@@ -116,7 +116,7 @@ void Widget::applyStyle(ImageFrameX *frame, const std::string prefix)
   std::string key;
 
   if( searchStyle(prefix+"Image", &key) ) {
-    const sf::Image *img = res_mgr.getImage(style.get<std::string>(key));
+    const sf::Texture *img = res_mgr.getImage(style.get<std::string>(key));
     sf::IntRect rect(0, 0, img->GetWidth(), img->GetHeight());
     if( searchStyle(prefix+"ImageRect", &key) ) {
       rect = style.get<sf::IntRect>(key);
@@ -141,7 +141,7 @@ void Widget::applyStyle(sf::Sprite *sprite, const std::string prefix)
   std::string key;
 
   if( searchStyle(prefix+"Image", &key) ) {
-    sprite->SetImage(*res_mgr.getImage(style.get<std::string>(key)), true);
+    sprite->SetTexture(*res_mgr.getImage(style.get<std::string>(key)), true);
   } else {
     throw StyleError(*this, prefix+"Image", "not set");
   }
@@ -360,7 +360,7 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   unsigned int text_height = text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2;
   text_img_.Create(width_-2*text_margin, text_height);
   text_sprite_.SetOrigin(width_/2.-text_margin, text_height/2.);
-  text_sprite_.SetImage(text_img_.GetImage(), true);
+  text_sprite_.SetTexture(text_img_.GetTexture(), true);
   text_sprite_.SetColor(color_);
   cursor_ = sf::Shape::Line(0, 0, 0, text_height, 1, sf::Color::White);
   cursor_.SetOrigin(text_sprite_.GetOrigin());

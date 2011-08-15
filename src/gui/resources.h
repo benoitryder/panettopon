@@ -3,7 +3,7 @@
 
 #include <map>
 #include <string>
-#include <SFML/Graphics/Image.hpp>
+#include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/Font.hpp>
 #include <istream>
 #include "../util.h"
@@ -25,8 +25,10 @@ class ResourceManager
   /// Load language strings.
   void setLang(const std::string &lang);
 
+  /// Get filename to use for a given resource filename
+  std::string getResourceFilename(const std::string& filename) const;
   /// Get an image from its name.
-  const sf::Image *getImage(const std::string &name);
+  const sf::Texture *getImage(const std::string &name);
   /// Get a font from its name
   const sf::Font *getFont(const std::string &name);
   /// Style accessors
@@ -37,7 +39,7 @@ class ResourceManager
  private:
   std::string res_path_;  ///< Path to resources.
 
-  typedef std::map<std::string, sf::ResourcePtr<sf::Image> > ImageContainer;
+  typedef std::map<std::string, sf::ResourcePtr<sf::Texture> > ImageContainer;
   ImageContainer images_;  ///< Loaded images.
   typedef std::map<std::string, sf::ResourcePtr<sf::Font> > FontContainer;
   FontContainer fonts_;  ///< Loaded fonts
@@ -57,9 +59,9 @@ class ImageTile
   const sf::IntRect &rect() const { return rect_; }
 
   /// Initialize the tile using image subrect
-  void create(const sf::Image *img, const sf::IntRect &rect);
+  void create(const sf::Texture *img, const sf::IntRect &rect);
   /// Initialize the tile (x,y) from a (sx,sy) tilemap
-  void create(const sf::Image *img, int sx, int sy, int x, int y);
+  void create(const sf::Texture *img, int sx, int sy, int x, int y);
   /// Draw the tile at given position, with given size
   void render(sf::Renderer &renderer, float x, float y, float w, float h) const;
   /// Draw the tile at given position
@@ -71,7 +73,7 @@ class ImageTile
   void setToSprite(sf::Sprite *spr, bool center=false) const;
 
  private:
-  const sf::Image *image_;
+  const sf::Texture *image_;
   sf::IntRect rect_;
 };
 
@@ -87,14 +89,14 @@ class ImageFrame
  public:
   ImageFrame();
   /// Initialize the frame using image subrect and frame inside subrect
-  void create(const sf::Image *img, const sf::IntRect& rect, const sf::IntRect& inside);
+  void create(const sf::Texture *img, const sf::IntRect& rect, const sf::IntRect& inside);
   /// Draw the frame at given position, with given size
   void render(sf::Renderer &renderer, const sf::FloatRect& rect) const;
   /// Draw the frame centered on 0,0 with given size
   void render(sf::Renderer &renderer, const sf::Vector2f& size) const;
 
  private:
-  const sf::Image *image_;
+  const sf::Texture *image_;
   sf::IntRect rect_;
   sf::IntRect inside_;
 };
@@ -106,14 +108,14 @@ class ImageFrameX
  public:
   ImageFrameX();
   /// Initialize the frame using image subrect and margin
-  void create(const sf::Image *img, const sf::IntRect& rect, unsigned int margin);
+  void create(const sf::Texture *img, const sf::IntRect& rect, unsigned int margin);
   /// Draw the frame at given position, with given size
   void render(sf::Renderer &renderer, const sf::FloatRect& rect) const;
   /// Draw the frame centered on 0,0 with given width
   void render(sf::Renderer &renderer, float w) const;
 
  private:
-  const sf::Image *image_;
+  const sf::Texture *image_;
   sf::IntRect rect_;
   unsigned int margin_;
 };
@@ -151,7 +153,7 @@ class StyleField
   } tiles_gb;
 
   /// Field frame
-  const sf::Image *img_field_frame;
+  const sf::Texture *img_field_frame;
   /// Origin of field blocks in frame (top left corner)
   sf::Vector2f frame_origin;
 

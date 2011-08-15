@@ -43,31 +43,34 @@ void ResourceManager::init(const std::string &path)
 
 void ResourceManager::setLang(const std::string &lang)
 {
-  if( res_path_.empty() ) {
-    throw std::runtime_error("resource path not set");
-  }
   if( lang.empty() || lang.find_first_of("/\\.") != std::string::npos ) {
     throw std::invalid_argument("empty resource path");
   }
-  const std::string lang_path = res_path_+"/lang/"+lang+".ini";
+  const std::string lang_path = this->getResourceFilename("lang/"+lang+".ini");
   if( !lang_.load(lang_path.c_str()) ) {
     throw std::runtime_error("failed to load language "+lang);
   }
 }
 
 
-const sf::Image *ResourceManager::getImage(const std::string &name)
+std::string ResourceManager::getResourceFilename(const std::string& filename) const
 {
-  assert( ! res_path_.empty() );
+  if( res_path_.empty() ) {
+    throw std::runtime_error("resource path not set");
+  }
+  return res_path_+"/"+filename;
+}
 
+const sf::Texture *ResourceManager::getImage(const std::string &name)
+{
   ImageContainer::iterator it = images_.find(name);
   if( it != images_.end() ) {
     return (*it).second;
   }
 
-  sf::Image *img = new sf::Image;
-  sf::ResourcePtr<sf::Image> pimg(img);
-  if( ! img->LoadFromFile(res_path_+"/"+name+".png") ) {
+  sf::Texture *img = new sf::Texture;
+  sf::ResourcePtr<sf::Texture> pimg(img);
+  if( ! img->LoadFromFile(this->getResourceFilename(name+".png")) ) {
     throw std::runtime_error("failed to load image "+name);
   }
   images_[name] = pimg;
@@ -77,8 +80,6 @@ const sf::Image *ResourceManager::getImage(const std::string &name)
 
 const sf::Font *ResourceManager::getFont(const std::string &name)
 {
-  assert( ! res_path_.empty() );
-
   FontContainer::iterator it = fonts_.find(name);
   if( it != fonts_.end() ) {
     return (*it).second;
@@ -86,7 +87,7 @@ const sf::Font *ResourceManager::getFont(const std::string &name)
 
   sf::Font *font = new sf::Font;
   sf::ResourcePtr<sf::Font> pfont(font);
-  if( ! font->LoadFromFile(res_path_+"/"+name+".ttf") ) {
+  if( ! font->LoadFromFile(this->getResourceFilename(name+".ttf")) ) {
     throw std::runtime_error("failed to load font "+name);
   }
   fonts_[name] = pfont;
@@ -105,13 +106,13 @@ ImageTile::ImageTile():
 {
 }
 
-void ImageTile::create(const sf::Image *img, const sf::IntRect &rect)
+void ImageTile::create(const sf::Texture *img, const sf::IntRect &rect)
 {
   image_ = img;
   rect_ = rect;
 }
 
-void ImageTile::create(const sf::Image *img, int sx, int sy, int x, int y)
+void ImageTile::create(const sf::Texture *img, int sx, int sy, int x, int y)
 {
   assert( img->GetWidth() % sx == 0 );
   assert( img->GetHeight() % sy == 0 );
@@ -144,7 +145,7 @@ void ImageTile::render(sf::Renderer &renderer, float x, float y) const
 
 void ImageTile::setToSprite(sf::Sprite *spr, bool center) const
 {
-  spr->SetImage(*image_);
+  spr->SetTexture(*image_);
   spr->SetSubRect(rect_);
   if( center ) {
     spr->SetOrigin( rect_.Width/2., rect_.Height/2. );
@@ -157,7 +158,7 @@ ImageFrame::ImageFrame():
 {
 }
 
-void ImageFrame::create(const sf::Image *img, const sf::IntRect& rect, const sf::IntRect& inside)
+void ImageFrame::create(const sf::Texture *img, const sf::IntRect& rect, const sf::IntRect& inside)
 {
   image_ = img;
   rect_ = rect;
@@ -232,7 +233,7 @@ ImageFrameX::ImageFrameX():
 {
 }
 
-void ImageFrameX::create(const sf::Image *img, const sf::IntRect& rect, unsigned int margin)
+void ImageFrameX::create(const sf::Texture *img, const sf::IntRect& rect, unsigned int margin)
 {
   image_ = img;
   rect_ = rect;
@@ -287,7 +288,7 @@ void StyleField::load(ResourceManager *res_mgr, const std::string& section)
     throw std::runtime_error("ColorNb is too small, must be at least 4");
   }
 
-  const sf::Image *img;
+  const sf::Texture *img;
 
   // Block tiles (and block size)
   img = res_mgr->getImage("BkColor-map");
