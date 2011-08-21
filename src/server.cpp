@@ -47,6 +47,7 @@ void ServerInstance::loadConf(const IniFile &cfg)
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_LOAD);
 #undef SERVER_CONF_EXPR_LOAD
   socket_.setPktSizeMax(conf_.pkt_size_max);
+  conf_.field_confs["default"] = default_field_conf; //TODO:temp
 }
 
 void ServerInstance::startServer(int port)
@@ -151,6 +152,17 @@ void ServerInstance::onPeerConnect(netplay::PeerSocket *peer)
   np_conf->set_##n(conf_.n);
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_PKT);
 #undef SERVER_CONF_EXPR_PKT
+  google::protobuf::RepeatedPtrField<netplay::Field_Conf> *np_fcs = np_conf->mutable_field_confs();
+  np_fcs->Reserve(conf_.field_confs.size());
+  std::map<std::string, FieldConf>::const_iterator fcit;
+  for( fcit=conf_.field_confs.begin(); fcit!=conf_.field_confs.end(); ++fcit ) {
+    netplay::Field_Conf *np_fc = np_fcs->Add();
+    np_fc->set_name( (*fcit).first );
+#define FIELD_CONF_EXPR_INIT(n) \
+    np_fc->set_##n((*fcit).second.n);
+    FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
+#undef FIELD_CONF_EXPR_INIT
+  }
   peer->writePacket(pkt);
   pkt.clear_server(); // packet reused below
 

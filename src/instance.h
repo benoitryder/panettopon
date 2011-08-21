@@ -32,6 +32,9 @@ struct ServerConf
    * Value must be lower than the \e gb_hang_tk field configuration value.
    */
   uint32_t tk_lag_max;
+
+  /// Field configurations indexed by their name
+  std::map<std::string, FieldConf> field_confs;
 };
 
 /** @brief Generic macro for server configuration fields.

@@ -68,6 +68,7 @@ message Server {
     optional uint32 pl_nb_max    = 2 [default =     2];
     optional uint32 tk_usec      = 3 [default = 16667]; // 60Hz
     optional uint32 tk_lag_max   = 4 [default =    60]; // 1s (at 60Hz)
+    repeated Field.Conf field_confs = 20;
   }
   optional Conf conf = 2;
 }
@@ -90,6 +91,7 @@ message Field {
       ALWAYS    = 2;
       ALTERNATE = 3;
     }
+    optional string name = 50;
     required uint32 raise_tk = 1;
     required uint32 raise_steps = 2;
     required uint32 swap_tk = 3;

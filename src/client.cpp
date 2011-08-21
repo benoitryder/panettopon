@@ -413,6 +413,19 @@ void ClientInstance::processPacketServer(const netplay::Server &pkt_server)
     conf_.n = np_conf.n();
     SERVER_CONF_APPLY(SERVER_CONF_EXPR_PKT);
 #undef SERVER_CONF_EXPR_PKT
+    google::protobuf::RepeatedPtrField<netplay::Field_Conf> np_fcs = np_conf.field_confs();
+    google::protobuf::RepeatedPtrField<netplay::Field_Conf>::const_iterator fcit;
+    conf_.field_confs.clear();
+    for( fcit=np_fcs.begin(); fcit!=np_fcs.end(); ++fcit ) {
+      if( !fcit->has_name() || fcit->name().empty() ) {
+        throw netplay::CallbackError("unnamed server field configuration");
+      }
+      FieldConf *fc = &conf_.field_confs[fcit->name()];
+#define FIELD_CONF_EXPR_INIT(n) \
+      fc->n = fcit->n();
+      FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
+#undef FIELD_CONF_EXPR_INIT
+    }
   }
 
   if( pkt_server.has_state() ) {

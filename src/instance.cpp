@@ -12,6 +12,7 @@ void ServerConf::toDefault()
   n = np_conf.n();
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_INIT);
 #undef SERVER_CONF_EXPR_INIT
+  //TODO define default configuration here
 }
 
 
