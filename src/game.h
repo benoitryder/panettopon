@@ -52,6 +52,10 @@ struct FieldConf
 
   /// Check field validity.
   bool isValid() const;
+  /** @brief Set configuration from a packet
+   * @note Configuration validity is checked.
+   */
+  void fromPacket(const netplay::FieldConf& pkt);
 };
 
 /** @brief Generic macro for field configuration fields.

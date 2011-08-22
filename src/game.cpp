@@ -1,5 +1,6 @@
 #include <boost/bind.hpp>
 #include "game.h"
+#include "netplay.h"
 #include "log.h"
 
 
@@ -18,6 +19,18 @@ bool FieldConf::isValid() const
       && pop0_tk > 0
       && transform_tk > 0
       && color_nb > 3 && color_nb < 16;
+}
+
+void FieldConf::fromPacket(const netplay::FieldConf& pkt)
+{
+#define FIELD_CONF_EXPR_INIT(n) \
+  n = pkt.n();
+  FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
+#undef FIELD_CONF_EXPR_INIT
+  raise_adjacent = static_cast<RaiseAdjacent>(pkt.raise_adjacent());
+  if( !this->isValid() ) {
+    throw netplay::CallbackError("invalid configuration");
+  }
 }
 
 
