@@ -211,6 +211,11 @@ void CursesInterface::onPlayerReady(Player *pl)
   }
 }
 
+void CursesInterface::onPlayerChangeFieldConf(Player *pl)
+{
+  this->addMessage(2, "%s(%u) changed configuration", pl->nick().c_str(), pl->plid());
+}
+
 void CursesInterface::onPlayerQuit(Player *pl)
 {
   this->addMessage(2, "%s(%u) has quit", pl->nick().c_str(), pl->plid());

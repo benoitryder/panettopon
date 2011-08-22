@@ -47,6 +47,7 @@ class Screen
   virtual void onPlayerJoined(Player *) {}
   virtual void onPlayerChangeNick(Player *, const std::string &) {}
   virtual void onPlayerReady(Player *) {}
+  virtual void onPlayerChangeFieldConf(Player *) {}
   virtual void onPlayerQuit(Player *) {}
   virtual void onStateChange(GameInstance::State) {}
   virtual void onPlayerStep(Player *) {}

@@ -115,6 +115,11 @@ void GuiInterface::onPlayerReady(Player *pl)
   screen_->onPlayerReady(pl);
 }
 
+void GuiInterface::onPlayerChangeFieldConf(Player *pl)
+{
+  screen_->onPlayerChangeFieldConf(pl);
+}
+
 void GuiInterface::onPlayerQuit(Player *pl)
 {
   screen_->onPlayerQuit(pl);

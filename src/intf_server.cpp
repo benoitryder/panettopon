@@ -47,6 +47,12 @@ void BasicServerInterface::onPlayerReady(Player *pl)
   }
 }
 
+void BasicServerInterface::onPlayerChangeFieldConf(Player *pl)
+{
+  //TODO log configuration name
+  LOG("%s(%u) changed configuration", pl->nick().c_str(), pl->plid());
+}
+
 void BasicServerInterface::onPlayerQuit(Player *pl)
 {
   LOG("%s(%u) has quit", pl->nick().c_str(), pl->plid());

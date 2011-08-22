@@ -113,6 +113,8 @@ class GameInstance
     virtual void onPlayerChangeNick(Player *pl, const std::string &nick) = 0;
     /// Called after player's ready state change.
     virtual void onPlayerReady(Player *pl) = 0;
+    /// Called after player's field configuration change.
+    virtual void onPlayerChangeFieldConf(Player *pl) = 0;
     /// Called when a player quit.
     virtual void onPlayerQuit(Player *pl) = 0;
     /// Called on state update.
