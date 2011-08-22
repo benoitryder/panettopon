@@ -34,6 +34,33 @@ message Notification {
 }
 
 
+// Field configuration
+message FieldConf {
+  // random color picking mode for raised lines
+  enum RaiseAdjacent {
+    NEVER     = 1;
+    ALWAYS    = 2;
+    ALTERNATE = 3;
+  }
+  optional string name = 1;
+  required uint32 raise_tk = 2;
+  required uint32 raise_steps = 3;
+  required uint32 swap_tk = 4;
+  required uint32 stop_combo_0 = 5;
+  required uint32 stop_combo_k = 6;
+  required uint32 stop_chain_0 = 7;
+  required uint32 stop_chain_k = 8;
+  required uint32 lost_tk = 9;
+  required uint32 gb_hang_tk = 10;
+  required uint32 flash_tk = 11;
+  required uint32 levitate_tk = 12;
+  required uint32 pop_tk = 13;
+  required uint32 pop0_tk = 14;
+  required uint32 transform_tk = 15;
+  required uint32 color_nb = 16;
+  required RaiseAdjacent raise_adjacent = 17;
+}
+
 // Player informations.
 // The ready flag must be automatically reset when server state changes.
 // The join flag is set by the client to join the server (along with plid set
@@ -45,7 +72,9 @@ message Player {
   optional string nick = 3;
   optional bool out = 11 [default = false]; // disconnected
   optional bool join = 12 [default = false]; // new registered player
+  optional FieldConf field_conf = 20;
 }
+
 
 // Server informations.
 message Server {
@@ -68,7 +97,7 @@ message Server {
     optional uint32 pl_nb_max    = 2 [default =     2];
     optional uint32 tk_usec      = 3 [default = 16667]; // 60Hz
     optional uint32 tk_lag_max   = 4 [default =    60]; // 1s (at 60Hz)
-    repeated Field.Conf field_confs = 20;
+    repeated FieldConf field_confs = 20;
   }
   optional Conf conf = 2;
 }
@@ -83,33 +112,6 @@ message Field {
   optional uint32  tick = 2;
   optional fixed32 seed = 3; // only set for init
   optional uint32  rank = 4; // 0: still playing, 1: first, 2: second, ...
-
-  message Conf {
-    // random color picking mode for raised lines
-    enum RaiseAdjacent {
-      NEVER     = 1;
-      ALWAYS    = 2;
-      ALTERNATE = 3;
-    }
-    optional string name = 50;
-    required uint32 raise_tk = 1;
-    required uint32 raise_steps = 2;
-    required uint32 swap_tk = 3;
-    required uint32 stop_combo_0 = 4;
-    required uint32 stop_combo_k = 5;
-    required uint32 stop_chain_0 = 6;
-    required uint32 stop_chain_k = 7;
-    required uint32 lost_tk = 8;
-    required uint32 gb_hang_tk = 9;
-    required uint32 flash_tk = 10;
-    required uint32 levitate_tk = 11;
-    required uint32 pop_tk = 12;
-    required uint32 pop0_tk = 13;
-    required uint32 transform_tk = 14;
-    required uint32 color_nb = 15;
-    required RaiseAdjacent raise_adjacent = 16;
-  }
-  optional Conf conf = 5; // field init: all fields must be set
 
   // Color block
   message BkColor {

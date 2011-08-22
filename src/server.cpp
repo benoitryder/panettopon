@@ -152,16 +152,13 @@ void ServerInstance::onPeerConnect(netplay::PeerSocket *peer)
   np_conf->set_##n(conf_.n);
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_PKT);
 #undef SERVER_CONF_EXPR_PKT
-  google::protobuf::RepeatedPtrField<netplay::Field_Conf> *np_fcs = np_conf->mutable_field_confs();
+  google::protobuf::RepeatedPtrField<netplay::FieldConf> *np_fcs = np_conf->mutable_field_confs();
   np_fcs->Reserve(conf_.field_confs.size());
   std::map<std::string, FieldConf>::const_iterator fcit;
   for( fcit=conf_.field_confs.begin(); fcit!=conf_.field_confs.end(); ++fcit ) {
-    netplay::Field_Conf *np_fc = np_fcs->Add();
+    netplay::FieldConf *np_fc = np_fcs->Add();
     np_fc->set_name( (*fcit).first );
-#define FIELD_CONF_EXPR_INIT(n) \
-    np_fc->set_##n((*fcit).second.n);
-    FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
-#undef FIELD_CONF_EXPR_INIT
+    (*fcit).second.toPacket(np_fc);
   }
   peer->writePacket(pkt);
   pkt.clear_server(); // packet reused below
@@ -173,6 +170,8 @@ void ServerInstance::onPeerConnect(netplay::PeerSocket *peer)
     np_player->set_plid( (*it).second->plid() );
     np_player->set_nick( (*it).second->nick() );
     np_player->set_ready( (*it).second->ready() );
+    netplay::FieldConf *np_fc = np_player->mutable_field_conf();
+    (*it).second->fieldConf().toPacket(np_fc);
     peer->writePacket(pkt);
   }
 
@@ -273,6 +272,7 @@ Player *ServerInstance::newPlayer(netplay::PeerSocket *peer, const std::string &
   Player *pl = new Player(this->nextPlayerId(), peer==NULL);
   LOG("init player: %d", pl->plid());
   pl->setNick(nick);
+  pl->setFieldConf(conf_.field_confs.begin()->second); //TODO:temp default configuration
   // put accepted player with his friends
   PlId plid = pl->plid(); // use a temporary value to help g++
   players_.insert(plid, pl);
@@ -287,6 +287,8 @@ Player *ServerInstance::newPlayer(netplay::PeerSocket *peer, const std::string &
   netplay::Player *np_player = pkt.mutable_player();
   np_player->set_plid(pl->plid());
   np_player->set_nick(pl->nick());
+  netplay::FieldConf *np_fc = np_player->mutable_field_conf();
+  pl->fieldConf().toPacket(np_fc);
   socket_.broadcastPacket(pkt, peer);
   if( peer != NULL ) {
     np_player->set_join(true);
@@ -396,7 +398,13 @@ void ServerInstance::processPacketPlayer(netplay::PeerSocket *peer, const netpla
     if( pkt_pl.plid() != 0 || pkt_pl.has_ready() ) {
       throw netplay::CallbackError("invalid fields");
     }
-    this->newPlayer(peer, pkt_pl.has_nick() ? pkt_pl.nick() : "Player");
+    Player *pl = this->newPlayer(peer, pkt_pl.has_nick() ? pkt_pl.nick() : "Player");
+    //TODO don't set configuration in a separated packet
+    if( pkt_pl.has_field_conf() ) {
+      FieldConf conf;
+      conf.fromPacket(pkt_pl.field_conf());
+      pl->setFieldConf(conf);
+    }
 
   } else if( pkt_pl.out() ) {
     // player out
@@ -427,6 +435,12 @@ void ServerInstance::processPacketPlayer(netplay::PeerSocket *peer, const netpla
         become_ready = pl->ready();
         do_send = true;
       }
+    }
+    if( pkt_pl.has_field_conf() ) {
+      FieldConf conf;
+      conf.fromPacket(pkt_pl.field_conf());
+      pl->setFieldConf(conf);
+      do_send = true;
     }
     if( do_send ) {
       np_player->set_plid( pkt_pl.plid() );
@@ -501,7 +515,6 @@ void ServerInstance::prepareMatch()
     if( ! pl->ready() ) {
       continue;
     }
-    pl->setFieldConf(default_field_conf); //XXX:temp
     Field *fld = match_.newField(pl->fieldConf(), seed);
     pl->setField(fld);
     fld->fillRandom(6);
@@ -512,13 +525,6 @@ void ServerInstance::prepareMatch()
     np_field->set_seed(fld->seed()); //note: seed changed due to fillRandom()
     np_field->set_rank(0);
 
-    // conf
-    netplay::Field::Conf *np_conf = np_field->mutable_conf();
-#define FIELD_CONF_EXPR_INIT(n) \
-    np_conf->set_##n( fld->conf().n );
-    FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
-#undef FIELD_CONF_EXPR_INIT
-    np_conf->set_raise_adjacent( static_cast<netplay::Field_Conf_RaiseAdjacent>(fld->conf().raise_adjacent) );
     // grid
     fld->setGridContentToPacket(np_field->mutable_blocks());
     socket_.broadcastPacket(pkt);

@@ -320,18 +320,6 @@ void ClientInstance::processPacketField(const netplay::Field &pkt_fld)
     if( pkt_fld.has_tick() || !pkt_fld.has_seed() ) {
       throw netplay::CallbackError("invalid fields");
     }
-    // conf
-    const netplay::Field::Conf &np_conf = pkt_fld.conf();
-    FieldConf conf;
-#define FIELD_CONF_EXPR_INIT(n) \
-    conf.n = np_conf.n();
-    FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
-#undef FIELD_CONF_EXPR_INIT
-    conf.raise_adjacent = static_cast<FieldConf::RaiseAdjacent>(np_conf.raise_adjacent());
-    if( !conf.isValid() ) {
-      throw netplay::CallbackError("invalid configuration");
-    }
-    pl->setFieldConf(conf);
     Field *fld = match_.newField(pl->fieldConf(), pkt_fld.seed());
     pl->setField(fld);
     // grid
@@ -345,7 +333,7 @@ void ClientInstance::processPacketField(const netplay::Field &pkt_fld)
     if( fld == NULL ) {
       throw netplay::CallbackError("field not initialized");
     }
-    if( fld == NULL || pkt_fld.has_seed() || pkt_fld.has_conf() ||
+    if( fld == NULL || pkt_fld.has_seed() ||
        pkt_fld.blocks_size() > 0 ) {
       throw netplay::CallbackError("invalid fields");
     }
@@ -365,7 +353,7 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
   Player *pl = this->player(pkt_pl.plid());
   if( pl == NULL ) {
     // new player
-    if( !pkt_pl.has_nick() ) {
+    if( !pkt_pl.has_nick() || !pkt_pl.has_field_conf() ) {
       throw netplay::CallbackError("invalid fields");
     }
     //TODO check we asked for a new local player
@@ -376,6 +364,9 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
     if( pkt_pl.has_ready() ) {
       pl->setReady(pkt_pl.ready());
     }
+    FieldConf conf;
+    conf.fromPacket(pkt_pl.field_conf());
+    pl->setFieldConf(conf);
     observer_.onPlayerJoined(pl);
 
   } else if( pkt_pl.out() ) {
@@ -397,6 +388,11 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
       pl->setReady(pkt_pl.ready());
       observer_.onPlayerReady(pl);
     }
+    if( pkt_pl.has_field_conf() ) {
+      FieldConf conf;
+      conf.fromPacket(pkt_pl.field_conf());
+      pl->setFieldConf(conf);
+    }
   }
 }
 
@@ -413,18 +409,14 @@ void ClientInstance::processPacketServer(const netplay::Server &pkt_server)
     conf_.n = np_conf.n();
     SERVER_CONF_APPLY(SERVER_CONF_EXPR_PKT);
 #undef SERVER_CONF_EXPR_PKT
-    google::protobuf::RepeatedPtrField<netplay::Field_Conf> np_fcs = np_conf.field_confs();
-    google::protobuf::RepeatedPtrField<netplay::Field_Conf>::const_iterator fcit;
+    google::protobuf::RepeatedPtrField<netplay::FieldConf> np_fcs = np_conf.field_confs();
+    google::protobuf::RepeatedPtrField<netplay::FieldConf>::const_iterator fcit;
     conf_.field_confs.clear();
     for( fcit=np_fcs.begin(); fcit!=np_fcs.end(); ++fcit ) {
       if( !fcit->has_name() || fcit->name().empty() ) {
         throw netplay::CallbackError("unnamed server field configuration");
       }
-      FieldConf *fc = &conf_.field_confs[fcit->name()];
-#define FIELD_CONF_EXPR_INIT(n) \
-      fc->n = fcit->n();
-      FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
-#undef FIELD_CONF_EXPR_INIT
+      conf_.field_confs[fcit->name()].fromPacket(*fcit);
     }
   }
 
