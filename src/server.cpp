@@ -404,6 +404,7 @@ void ServerInstance::processPacketPlayer(netplay::PeerSocket *peer, const netpla
       FieldConf conf;
       conf.fromPacket(pkt_pl.field_conf());
       pl->setFieldConf(conf);
+      observer_.onPlayerChangeFieldConf(pl);
     }
 
   } else if( pkt_pl.out() ) {
@@ -440,6 +441,7 @@ void ServerInstance::processPacketPlayer(netplay::PeerSocket *peer, const netpla
       FieldConf conf;
       conf.fromPacket(pkt_pl.field_conf());
       pl->setFieldConf(conf);
+      observer_.onPlayerChangeFieldConf(pl);
       do_send = true;
     }
     if( do_send ) {

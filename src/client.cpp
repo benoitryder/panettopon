@@ -392,6 +392,7 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
       FieldConf conf;
       conf.fromPacket(pkt_pl.field_conf());
       pl->setFieldConf(conf);
+      observer_.onPlayerChangeFieldConf(pl);
     }
   }
 }
