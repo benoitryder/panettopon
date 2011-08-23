@@ -419,6 +419,9 @@ void ClientInstance::processPacketServer(const netplay::Server &pkt_server)
       }
       conf_.field_confs[fcit->name()].fromPacket(*fcit);
     }
+    if( conf_.field_confs.size() == 0 ) {
+      throw netplay::CallbackError("no field configurations");
+    }
   }
 
   if( pkt_server.has_state() ) {
