@@ -56,6 +56,8 @@ struct FieldConf
    * @note Configuration validity is checked.
    */
   void fromPacket(const netplay::FieldConf& pkt);
+  /// Set configuration to a packet
+  void toPacket(netplay::FieldConf *pkt) const;
 };
 
 /** @brief Generic macro for field configuration fields.

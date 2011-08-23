@@ -33,6 +33,15 @@ void FieldConf::fromPacket(const netplay::FieldConf& pkt)
   }
 }
 
+void FieldConf::toPacket(netplay::FieldConf *pkt) const
+{
+#define FIELD_CONF_EXPR_INIT(n) \
+  pkt->set_##n(n);
+  FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
+#undef FIELD_CONF_EXPR_INIT
+  pkt->set_raise_adjacent(static_cast<netplay::FieldConf::RaiseAdjacent>(raise_adjacent));
+}
+
 
 Field::Field(const FieldConf& conf, uint32_t seed):
     seed_(seed), rank_(0), conf_(conf)
