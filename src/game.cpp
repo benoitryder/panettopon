@@ -23,7 +23,7 @@ bool FieldConf::isValid() const
 
 void FieldConf::fromPacket(const netplay::FieldConf& pkt)
 {
-#define FIELD_CONF_EXPR_INIT(n) \
+#define FIELD_CONF_EXPR_INIT(n,ini) \
   n = pkt.n();
   FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
 #undef FIELD_CONF_EXPR_INIT
@@ -35,7 +35,7 @@ void FieldConf::fromPacket(const netplay::FieldConf& pkt)
 
 void FieldConf::toPacket(netplay::FieldConf *pkt) const
 {
-#define FIELD_CONF_EXPR_INIT(n) \
+#define FIELD_CONF_EXPR_INIT(n,ini) \
   pkt->set_##n(n);
   FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
 #undef FIELD_CONF_EXPR_INIT

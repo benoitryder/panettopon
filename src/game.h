@@ -67,21 +67,21 @@ struct FieldConf
  * @warning \e expr is not applied to the \e raise_adjacent field.
  */
 #define FIELD_CONF_APPLY(expr) { \
-  expr(swap_tk); \
-  expr(raise_tk); \
-  expr(raise_steps); \
-  expr(stop_combo_0); \
-  expr(stop_combo_k); \
-  expr(stop_chain_0); \
-  expr(stop_chain_k); \
-  expr(lost_tk); \
-  expr(gb_hang_tk); \
-  expr(flash_tk); \
-  expr(levitate_tk); \
-  expr(pop_tk); \
-  expr(pop0_tk); \
-  expr(transform_tk); \
-  expr(color_nb); \
+  expr(swap_tk, SwapTicks); \
+  expr(raise_tk, RaiseTicks); \
+  expr(raise_steps, RaiseSteps); \
+  expr(stop_combo_0, StopCombo0); \
+  expr(stop_combo_k, StopComboStep); \
+  expr(stop_chain_0, StopChain0); \
+  expr(stop_chain_k, StopChainStep); \
+  expr(lost_tk, LostTicks); \
+  expr(gb_hang_tk, GbHangTicks); \
+  expr(flash_tk, FlashTicks); \
+  expr(levitate_tk, LevitateTicks); \
+  expr(pop_tk, PopTicks); \
+  expr(pop0_tk, Pop0Ticks); \
+  expr(transform_tk, TransformTicks); \
+  expr(color_nb, ColorNb); \
 }
 
 
