@@ -47,7 +47,48 @@ void ServerInstance::loadConf(const IniFile &cfg)
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_LOAD);
 #undef SERVER_CONF_EXPR_LOAD
   socket_.setPktSizeMax(conf_.pkt_size_max);
-  conf_.field_confs["default"] = default_field_conf; //TODO:temp
+
+  conf_.field_confs.clear();
+  const std::string s_conf = cfg.get(CONF_SECTION, "FieldConfsList", "");
+  if( !s_conf.empty() ) {
+    size_t pos = 0;
+    for(;;) {
+      size_t pos2 = s_conf.find(',', pos);
+      const std::string name = s_conf.substr(pos, pos2-pos);
+      if( name.empty() ) {
+        throw std::runtime_error("empty field configuration name");
+      }
+      const std::string field_conf_section = CONF_SECTION+".FieldConfs"+name;
+      FieldConf *fc = &conf_.field_confs[name];
+#define FIELD_CONF_EXPR_INIT(n,ini) \
+      fc->n = cfg.get<decltype(fc->n)>(field_conf_section, #ini);
+      FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
+#undef FIELD_CONF_EXPR_INIT
+      const std::string s_raise_adjacent = cfg.get<std::string>(field_conf_section, "RaiseAdjacent");
+      if( s_raise_adjacent == "never" ) {
+        fc->raise_adjacent = FieldConf::ADJACENT_NEVER;
+      } else if( s_raise_adjacent == "always" ) {
+        fc->raise_adjacent = FieldConf::ADJACENT_ALWAYS;
+      } else if( s_raise_adjacent == "alternate" ) {
+        fc->raise_adjacent = FieldConf::ADJACENT_ALTERNATE;
+      } else {
+        throw std::runtime_error("invalid RaiseAdjacent value: "+s_raise_adjacent);
+      }
+      if( !fc->isValid() ) {
+        throw std::runtime_error("invalid configuration: "+name);
+      }
+
+      if( pos2 == std::string::npos ) {
+        break;
+      }
+      pos = pos2;
+    }
+  }
+
+  //TODO:temp
+  if( conf_.field_confs.size() < 1 ) {
+    conf_.field_confs["default"] = default_field_conf;
+  }
 }
 
 void ServerInstance::startServer(int port)
