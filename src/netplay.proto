@@ -35,6 +35,9 @@ message Notification {
 
 
 // Field configuration
+// If name is empty (the default) it is a custom configuration.
+// Otherwise, name must be a valid configuration name and other fields
+// may be ignored.
 message FieldConf {
   // random color picking mode for raised lines
   enum RaiseAdjacent {
