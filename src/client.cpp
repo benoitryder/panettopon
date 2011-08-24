@@ -389,9 +389,18 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
       observer_.onPlayerReady(pl);
     }
     if( pkt_pl.has_field_conf() ) {
-      FieldConf conf;
-      conf.fromPacket(pkt_pl.field_conf());
-      pl->setFieldConf(conf, pkt_pl.field_conf().name());
+      const std::string name = pkt_pl.field_conf().name();
+      if( name.empty() ) {
+        FieldConf conf;
+        conf.fromPacket(pkt_pl.field_conf());
+        pl->setFieldConf(conf, name);
+      } else {
+        auto fc_it = conf_.field_confs.find(name);
+        if( fc_it == conf_.field_confs.end() ) {
+          throw netplay::CallbackError("invalid configuration name: "+name);
+        }
+        pl->setFieldConf(fc_it->second, name);
+      }
       observer_.onPlayerChangeFieldConf(pl);
     }
   }
