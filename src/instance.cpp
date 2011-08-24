@@ -27,6 +27,12 @@ Player::~Player()
 {
 }
 
+void Player::setFieldConf(const FieldConf& conf, const std::string& name)
+{
+  field_conf_ = conf;
+  field_conf_name_ = name;
+}
+
 
 GameInstance::GameInstance():
     state_(STATE_NONE)

@@ -366,7 +366,7 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
     }
     FieldConf conf;
     conf.fromPacket(pkt_pl.field_conf());
-    pl->setFieldConf(conf);
+    pl->setFieldConf(conf, pkt_pl.field_conf().name());
     observer_.onPlayerJoined(pl);
 
   } else if( pkt_pl.out() ) {
@@ -391,7 +391,7 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
     if( pkt_pl.has_field_conf() ) {
       FieldConf conf;
       conf.fromPacket(pkt_pl.field_conf());
-      pl->setFieldConf(conf);
+      pl->setFieldConf(conf, pkt_pl.field_conf().name());
       observer_.onPlayerChangeFieldConf(pl);
     }
   }

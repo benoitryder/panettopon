@@ -313,7 +313,8 @@ Player *ServerInstance::newPlayer(netplay::PeerSocket *peer, const std::string &
   Player *pl = new Player(this->nextPlayerId(), peer==NULL);
   LOG("init player: %d", pl->plid());
   pl->setNick(nick);
-  pl->setFieldConf(conf_.field_confs.begin()->second); //TODO:temp default configuration
+  auto fc_it = conf_.field_confs.begin(); //TODO:temp default configuration
+  pl->setFieldConf(fc_it->second, fc_it->first);
   // put accepted player with his friends
   PlId plid = pl->plid(); // use a temporary value to help g++
   players_.insert(plid, pl);
@@ -444,7 +445,7 @@ void ServerInstance::processPacketPlayer(netplay::PeerSocket *peer, const netpla
     if( pkt_pl.has_field_conf() ) {
       FieldConf conf;
       conf.fromPacket(pkt_pl.field_conf());
-      pl->setFieldConf(conf);
+      pl->setFieldConf(conf, pkt_pl.field_conf().name());
       observer_.onPlayerChangeFieldConf(pl);
     }
 
@@ -481,7 +482,7 @@ void ServerInstance::processPacketPlayer(netplay::PeerSocket *peer, const netpla
     if( pkt_pl.has_field_conf() ) {
       FieldConf conf;
       conf.fromPacket(pkt_pl.field_conf());
-      pl->setFieldConf(conf);
+      pl->setFieldConf(conf, pkt_pl.field_conf().name());
       observer_.onPlayerChangeFieldConf(pl);
       do_send = true;
     }
