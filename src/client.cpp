@@ -414,7 +414,7 @@ void ClientInstance::processPacketServer(const netplay::Server &pkt_server)
     google::protobuf::RepeatedPtrField<netplay::FieldConf>::const_iterator fcit;
     conf_.field_confs.clear();
     for( fcit=np_fcs.begin(); fcit!=np_fcs.end(); ++fcit ) {
-      if( !fcit->has_name() || fcit->name().empty() ) {
+      if( fcit->name().empty() ) {
         throw netplay::CallbackError("unnamed server field configuration");
       }
       conf_.field_confs[fcit->name()].fromPacket(*fcit);
