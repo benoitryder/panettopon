@@ -657,27 +657,27 @@ void Field::abort()
 }
 
 
-void Field::setGridContentToPacket(google::protobuf::RepeatedPtrField<netplay::Field_Block> *grid)
+void Field::setGridContentToPacket(google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block> *grid)
 {
   grid->Clear();
   grid->Reserve(FIELD_WIDTH*(FIELD_HEIGHT+1));
   int x, y;
   for( y=0; y<=FIELD_HEIGHT; y++ ) {
     for( x=0; x<FIELD_WIDTH; x++ ) {
-      netplay::Field_Block *np_bk = grid->Add();
+      netplay::PktPlayerField_Block *np_bk = grid->Add();
       const Block &bk = block(x,y);
       np_bk->set_swapped( bk.swapped );
       np_bk->set_chaining( bk.chaining );
       np_bk->set_ntick( bk.ntick );
       if( bk.type == Block::COLOR ) {
-        netplay::Field_BkColor *np_bk_color = np_bk->mutable_bk_color();
+        netplay::PktPlayerField_BkColor *np_bk_color = np_bk->mutable_bk_color();
         const BkColor &bk_color = bk.bk_color;
-        np_bk_color->set_state( static_cast<netplay::Field_BkColor::State>(bk_color.state) );
+        np_bk_color->set_state( static_cast<netplay::PktPlayerField_BkColor::State>(bk_color.state) );
         np_bk_color->set_color( bk_color.color );
       } else if( bk.type == Block::GARBAGE ) {
-        netplay::Field_BkGarbage *np_bk_garbage = np_bk->mutable_bk_garbage();
+        netplay::PktPlayerField_BkGarbage *np_bk_garbage = np_bk->mutable_bk_garbage();
         const BkGarbage &bk_garbage = bk.bk_garbage;
-        np_bk_garbage->set_state( static_cast<netplay::Field_BkGarbage::State>(bk_garbage.state) );
+        np_bk_garbage->set_state( static_cast<netplay::PktPlayerField_BkGarbage::State>(bk_garbage.state) );
       } else {
         // NONE, do nothing
       }
@@ -685,20 +685,20 @@ void Field::setGridContentToPacket(google::protobuf::RepeatedPtrField<netplay::F
   }
 }
 
-bool Field::setGridContentFromPacket(const google::protobuf::RepeatedPtrField<netplay::Field_Block> &grid)
+bool Field::setGridContentFromPacket(const google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block> &grid)
 {
   if( grid.size() != FIELD_WIDTH*(FIELD_HEIGHT+1) )
     return false;
   int x, y;
-  google::protobuf::RepeatedPtrField<netplay::Field_Block>::const_iterator it = grid.begin();
+  google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block>::const_iterator it = grid.begin();
   for( y=0; y<=FIELD_HEIGHT; y++ ) {
     for( x=0; x<FIELD_WIDTH; x++ ) {
       Block *bk = &grid_[x][y];
-      const netplay::Field_Block &np_bk = (*it++);
+      const netplay::PktPlayerField_Block &np_bk = (*it++);
       if( np_bk.has_bk_color() ) {
         if( np_bk.has_bk_garbage() )
           return false; // mutually exclusive fields
-        const netplay::Field_BkColor &np_bk_color = np_bk.bk_color();
+        const netplay::PktPlayerField_BkColor &np_bk_color = np_bk.bk_color();
         bk->type = Block::COLOR;
         BkColor *bk_color = &bk->bk_color;
         bk_color->state = static_cast<BkColor::State>(np_bk_color.state());

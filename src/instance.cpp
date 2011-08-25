@@ -7,7 +7,7 @@
 
 void ServerConf::toDefault()
 {
-  const netplay::Server::Conf &np_conf = netplay::Server::Conf::default_instance();
+  const netplay::PktServerConf &np_conf = netplay::PktServerConf::default_instance();
 #define SERVER_CONF_EXPR_INIT(n,ini) \
   n = np_conf.n();
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_INIT);
@@ -53,6 +53,9 @@ Player *GameInstance::player(PlId plid)
 Player *GameInstance::player(const Field *fld)
 {
   //XXX use a map on the instance to optimize?
+  if( fld == NULL ) {
+    return NULL;
+  }
   PlayerContainer::iterator it;
   for(it=players_.begin(); it!=players_.end(); ++it) {
     if( fld == (*it).second->field() ) {

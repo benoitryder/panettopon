@@ -276,11 +276,11 @@ class Field
   }
 
   /// Fill a packet message with grid content.
-  void setGridContentToPacket(google::protobuf::RepeatedPtrField<netplay::Field_Block> *grid);
+  void setGridContentToPacket(google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block> *grid);
   /** @brief Set grid content from a packet.
    * @return \e false on invalid packet data.
    */
-  bool setGridContentFromPacket(const google::protobuf::RepeatedPtrField<netplay::Field_Block> &grid);
+  bool setGridContentFromPacket(const google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block> &grid);
 
  private:
 

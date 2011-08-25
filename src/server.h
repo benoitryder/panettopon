@@ -87,9 +87,11 @@ class ServerInstance: public GameInstance,
    */
   Player *checkPeerPlayer(PlId plid, const netplay::PeerSocket *peer);
 
-  void processPacketInput(netplay::PeerSocket *peer, const netplay::Input &pkt_input);
-  void processPacketGarbage(netplay::PeerSocket *peer, const netplay::Garbage &pkt_gb);
-  void processPacketPlayer(netplay::PeerSocket *peer, const netplay::Player &pkt_pl);
+  void processPktInput(netplay::PeerSocket *peer, const netplay::PktInput& pkt);
+  void processPktGarbageState(netplay::PeerSocket *peer, const netplay::PktGarbageState& pkt);
+  void processPktPlayerJoin(netplay::PeerSocket *peer, const netplay::PktPlayerJoin& pkt);
+  void processPktPlayerConf(netplay::PeerSocket *peer, const netplay::PktPlayerConf& pkt);
+  void processPktPlayerState(netplay::PeerSocket *peer, const netplay::PktPlayerState& pkt);
   //@}
 
   /// Check if all players are ready and take actions

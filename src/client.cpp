@@ -35,10 +35,8 @@ void ClientInstance::disconnect()
 void ClientInstance::newLocalPlayer(const std::string &nick)
 {
   netplay::Packet pkt;
-  netplay::Player *np_player = pkt.mutable_player();
-  np_player->set_plid(0);
-  np_player->set_join(true);
-  np_player->set_nick(nick);
+  netplay::PktPlayerJoin *np_join = pkt.mutable_player_join();
+  np_join->set_nick(nick);
   socket_.writePacket(pkt);
 }
 
@@ -52,9 +50,9 @@ void ClientInstance::playerSetNick(Player *pl, const std::string &nick)
   pl->setNick(nick);
 
   netplay::Packet pkt;
-  netplay::Player *np_player = pkt.mutable_player();
-  np_player->set_plid(pl->plid());
-  np_player->set_nick(nick);
+  netplay::PktPlayerConf *np_conf = pkt.mutable_player_conf();
+  np_conf->set_plid(pl->plid());
+  np_conf->set_nick(nick);
   socket_.writePacket(pkt);
 }
 
@@ -68,9 +66,9 @@ void ClientInstance::playerSetReady(Player *pl, bool ready)
   pl->setReady(ready);
 
   netplay::Packet pkt;
-  netplay::Player *np_player = pkt.mutable_player();
-  np_player->set_plid(pl->plid());
-  np_player->set_ready(ready);
+  netplay::PktPlayerState *np_state = pkt.mutable_player_state();
+  np_state->set_plid(pl->plid());
+  np_state->set_state(netplay::PktPlayerState::READY);
   socket_.writePacket(pkt);
 }
 
@@ -79,7 +77,7 @@ void ClientInstance::playerSendChat(Player *pl, const std::string &msg)
   assert( pl->local() );
 
   netplay::Packet pkt;
-  netplay::Chat *np_chat = pkt.mutable_chat();
+  netplay::PktChat *np_chat = pkt.mutable_chat();
   np_chat->set_plid(pl->plid());
   np_chat->set_txt(msg);
   socket_.writePacket(pkt);
@@ -93,7 +91,7 @@ void ClientInstance::playerStep(Player *pl, KeyState keys)
 
   // send packet
   netplay::Packet pkt;
-  netplay::Input *np_input = pkt.mutable_input();
+  netplay::PktInput *np_input = pkt.mutable_input();
   np_input->set_plid(pl->plid());
   np_input->set_tick(tk);
   np_input->add_keys(keys);
@@ -105,9 +103,9 @@ void ClientInstance::playerQuit(Player *pl)
   assert( pl->local() );
 
   netplay::Packet pkt;
-  netplay::Player *np_player = pkt.mutable_player();
-  np_player->set_plid(pl->plid());
-  np_player->set_out(true);
+  netplay::PktPlayerState *np_state = pkt.mutable_player_state();
+  np_state->set_plid(pl->plid());
+  np_state->set_state(netplay::PktPlayerState::LEAVE);
   socket_.writePacket(pkt);
 }
 
@@ -115,17 +113,28 @@ void ClientInstance::playerQuit(Player *pl)
 void ClientInstance::onClientPacket(const netplay::Packet &pkt)
 {
   if( pkt.has_input() ) {
-    this->processPacketInput(pkt.input());
-  } else if( pkt.has_garbage() ) {
-    this->processPacketGarbage(pkt.garbage());
-  } else if( pkt.has_field() ) {
-    this->processPacketField(pkt.field());
-  } else if( pkt.has_player() ) {
-    this->processPacketPlayer(pkt.player());
-  } else if( pkt.has_server() ) {
-    this->processPacketServer(pkt.server());
+    this->processPktInput(pkt.input());
+  } else if( pkt.has_new_garbage() ) {
+    this->processPktNewGarbage(pkt.new_garbage());
+  } else if( pkt.has_update_garbage() ) {
+    this->processPktUpdateGarbage(pkt.update_garbage());
+  } else if( pkt.has_garbage_state() ) {
+    this->processPktGarbageState(pkt.garbage_state());
+  } else if( pkt.has_server_conf() ) {
+    this->processPktServerConf(pkt.server_conf());
+  } else if( pkt.has_server_state() ) {
+    this->processPktServerState(pkt.server_state());
+  } else if( pkt.has_player_conf() ) {
+    this->processPktPlayerConf(pkt.player_conf());
+  } else if( pkt.has_player_state() ) {
+    this->processPktPlayerState(pkt.player_state());
+  } else if( pkt.has_player_rank() ) {
+    this->processPktPlayerRank(pkt.player_rank());
+  } else if( pkt.has_player_field() ) {
+    this->processPktPlayerField(pkt.player_field());
+
   } else if( pkt.has_chat() ) {
-    const netplay::Chat &np_chat = pkt.chat();
+    const netplay::PktChat &np_chat = pkt.chat();
     Player *pl = this->player(np_chat.plid());
     if( pl == NULL ) {
       throw netplay::CallbackError("invalid player");
@@ -133,7 +142,7 @@ void ClientInstance::onClientPacket(const netplay::Packet &pkt)
     observer_.onChat(pl, np_chat.txt());
 
   } else if( pkt.has_notification() ) {
-    const netplay::Notification &np_notification = pkt.notification();
+    const netplay::PktNotification &np_notification = pkt.notification();
     observer_.onNotification(static_cast<GameInstance::Severity>(np_notification.severity()), np_notification.txt());
 
   } else {
@@ -148,19 +157,19 @@ void ClientInstance::onServerDisconnect()
 }
 
 
-void ClientInstance::processPacketInput(const netplay::Input &pkt_input)
+void ClientInstance::processPktInput(const netplay::PktInput& pkt)
 {
   if( state_ != STATE_GAME ) {
     throw netplay::CallbackError("match is not running");
   }
   //TODO ignore local players
-  Player *pl = this->player(pkt_input.plid());
+  Player *pl = this->player(pkt.plid());
   if( pl == NULL || pl->field() == NULL ) {
     throw netplay::CallbackError("invalid player");
   }
   Field *fld = pl->field();
 
-  Tick tick = pkt_input.tick();
+  Tick tick = pkt.tick();
   if( tick < fld->tick() ) {
     throw netplay::CallbackError("input tick in the past");
   }
@@ -169,230 +178,235 @@ void ClientInstance::processPacketInput(const netplay::Input &pkt_input)
     this->stepRemotePlayer(pl, 0);
   }
   // provided frames
-  const int keys_nb = pkt_input.keys_size();
+  const int keys_nb = pkt.keys_size();
   for( int i=0; i<keys_nb; i++ ) {
-    this->stepRemotePlayer(pl, pkt_input.keys(i));
+    this->stepRemotePlayer(pl, pkt.keys(i));
   }
 }
 
-void ClientInstance::processPacketGarbage(const netplay::Garbage &pkt_gb)
+void ClientInstance::processPktNewGarbage(const netplay::PktNewGarbage& pkt)
 {
   if( state_ != STATE_GAME ) {
     throw netplay::CallbackError("match is not running");
   }
 
-  const Match::GbHangingMap gbs_hang = match_.hangingGarbages();
-  Match::GbHangingMap::const_iterator it = gbs_hang.find(pkt_gb.gbid());
-  Garbage *gb = it == gbs_hang.end() ? NULL : (*it).second;
+  Garbage *gb = new Garbage;
+  std::auto_ptr<Garbage> agb(gb);
+  gb->gbid = pkt.gbid();
 
-  if( pkt_gb.wait() ) {
-    // garbage from hanging to wait (gbid is not significant)
-    if( gb == NULL ) {
-      throw netplay::CallbackError("garbage to wait not found");
+  Player *pl_to = this->player(pkt.plid_to());
+  if( pl_to == NULL || pl_to->field() == NULL ) {
+    throw netplay::CallbackError("invalid garbage target");
+  }
+  gb->to = pl_to->field();
+
+  if( pkt.has_plid_from() ) {
+    Player *pl_from = this->player(pkt.plid_from());
+    if( pl_from == NULL || pl_from->field() == NULL ) {
+      throw netplay::CallbackError("invalid garbage origin");
     }
+    gb->from = pl_from->field();
+  } else {
+    gb->from = NULL;
+  }
+
+  gb->type = static_cast<Garbage::Type>(pkt.type());
+  if( pkt.size() == 0 ) {
+    throw netplay::CallbackError("invalid garbage size");
+  }
+  if( gb->type == Garbage::TYPE_CHAIN ) {
+    gb->size = FieldPos(FIELD_WIDTH, pkt.size());
+  } else if( gb->type == Garbage::TYPE_COMBO ) {
+    gb->size = FieldPos(pkt.size(), 1);
+  } else {
+    assert( !"not supported yet" );
+  }
+
+  if( pkt.pos() > gb->to->hangingGarbageCount() ) {
+    throw netplay::CallbackError("invalid garbage position");
+  }
+  agb.release();
+  match_.addGarbage(gb, pkt.pos());
+
+}
+
+void ClientInstance::processPktUpdateGarbage(const netplay::PktUpdateGarbage& pkt)
+{
+  if( state_ != STATE_GAME ) {
+    throw netplay::CallbackError("match is not running");
+  }
+  const Match::GbHangingMap gbs_hang = match_.hangingGarbages();
+  Match::GbHangingMap::const_iterator it = gbs_hang.find(pkt.gbid());
+  if( it == gbs_hang.end() ) {
+    throw netplay::CallbackError("garbage not found");
+  }
+  Garbage *gb = (*it).second;
+
+  if( pkt.has_pos() ) {
+    Player *pl_to = this->player(gb->to);
+    assert( pl_to != NULL );
+
+    if( pkt.has_plid_to() && pkt.plid_to() != pl_to->plid() ) {
+      // actual target change
+      pl_to = this->player(pkt.plid_to());
+      if( pl_to != NULL && pl_to->field() != NULL ) {
+        throw netplay::CallbackError("invalid garbage target");
+      }
+    }
+    if( pkt.pos() > pl_to->field()->hangingGarbageCount() ) {
+      throw netplay::CallbackError("invalid garbage position");
+    }
+    gb->to->removeHangingGarbage(gb);
+    gb->to = pl_to->field(); // no-op if plid_to did not changed
+    gb->to->insertHangingGarbage(gb, pkt.pos());
+  } else if( pkt.has_plid_to() ) {
+    throw netplay::CallbackError("garbage position missing");
+  }
+
+  if( pkt.has_size() ) {
+    if( pkt.size() == 0 ) {
+      throw netplay::CallbackError("invalid garbage size");
+    }
+    if( gb->type == Garbage::TYPE_CHAIN ) {
+      gb->size = FieldPos(FIELD_WIDTH, pkt.size());
+    } else if( gb->type == Garbage::TYPE_COMBO ) {
+      gb->size = FieldPos(pkt.size(), 1);
+    } else {
+      assert( !"not supported yet" );
+    }
+  }
+}
+
+void ClientInstance::processPktGarbageState(const netplay::PktGarbageState& pkt)
+{
+  if( state_ != STATE_GAME ) {
+    throw netplay::CallbackError("match is not running");
+  }
+
+  netplay::PktGarbageState::State state = pkt.state();
+
+  if( state == netplay::PktGarbageState::WAIT ) {
+    // garbage from hanging to wait
+    const Match::GbHangingMap gbs_hang = match_.hangingGarbages();
+    Match::GbHangingMap::const_iterator it = gbs_hang.find(pkt.gbid());
+    if( it == gbs_hang.end() ) {
+      throw netplay::CallbackError("garbage not found");
+    }
+    Garbage *gb = (*it).second;
     match_.waitGarbageDrop(gb);
     Player *pl = this->player(gb->to);
     if( pl->local() ) {
       // one of our garbages, drop it
-      netplay::Packet pkt;
-      netplay::Garbage *pkt_gb = pkt.mutable_garbage();
-      pkt_gb->set_gbid( gb->gbid );
-      pkt_gb->set_plid_to(pl->plid());
-      pkt_gb->set_drop(true);
-      socket_.writePacket(pkt);
+      netplay::Packet pkt_send;
+      netplay::PktGarbageState *np_state = pkt_send.mutable_garbage_state();
+      np_state->set_gbid( gb->gbid );
+      np_state->set_state(netplay::PktGarbageState::DROP);
+      socket_.writePacket(pkt_send);
       gb->to->dropNextGarbage();
     }
 
-  } else if( pkt_gb.drop() ) {
+  } else if( state == netplay::PktGarbageState::DROP ) {
     // drop garbage
-    Player *pl = this->player(pkt_gb.plid_to());
-    if( pl == NULL || pl->field() == NULL ) {
-      throw netplay::CallbackError("invalid field for dropped garbage");
+    //TODO retrieve garbage from its ID
+    Garbage *gb = NULL;
+    Field *fld = gb->to;
+    Player *pl = this->player(fld);
+    if( pl == NULL ) {
+      throw netplay::CallbackError("invalid player");
     }
     if( !pl->local() ) { // ignore our garbages (already dropped)
+      if( fld->waitingGarbages().size() == 0 || fld->waitingGarbages().front().gbid != gb->gbid ) {
+        throw netplay::CallbackError("invalid dropped garbage");
+      }
       pl->field()->dropNextGarbage();
     }
-
-  } else if( gb == NULL ) {
-    // new garbage
-    if( !pkt_gb.has_plid_to() || !pkt_gb.has_pos() ||
-       !pkt_gb.has_type() || !pkt_gb.has_size() ) {
-      throw netplay::CallbackError("incomplete new garbage information");
-    }
-    gb = new Garbage;
-    std::auto_ptr<Garbage> agb(gb);
-    gb->gbid = pkt_gb.gbid();
-
-    Player *pl_to = this->player(pkt_gb.plid_to());
-    if( pl_to == NULL || pl_to->field() == NULL ) {
-      throw netplay::CallbackError("invalid garbage target");
-    }
-    gb->to = pl_to->field();
-
-    if( pkt_gb.has_plid_from() ) {
-      Player *pl_from = this->player(pkt_gb.plid_from());
-      if( pl_from == NULL || pl_from->field() == NULL ) {
-        throw netplay::CallbackError("invalid garbage origin");
-      }
-      gb->from = pl_from->field();
-    } else {
-      gb->from = NULL;
-    }
-
-    gb->type = static_cast<Garbage::Type>(pkt_gb.type());
-    if( pkt_gb.size() == 0 ) {
-      throw netplay::CallbackError("invalid garbage size");
-    }
-    if( gb->type == Garbage::TYPE_CHAIN ) {
-      gb->size = FieldPos(FIELD_WIDTH, pkt_gb.size());
-    } else if( gb->type == Garbage::TYPE_COMBO ) {
-      gb->size = FieldPos(pkt_gb.size(), 1);
-    } else {
-      assert( !"not supported yet" );
-    }
-
-    if( pkt_gb.pos() > gb->to->hangingGarbageCount() ) {
-      throw netplay::CallbackError("invalid garbage position");
-    }
-    agb.release();
-    match_.addGarbage(gb, pkt_gb.pos());
-
-  } else {
-    // update existing garbage
-
-    if( pkt_gb.has_plid_to() ) {
-      Player *pl_to = this->player(gb->to);
-      assert( pl_to != NULL );
-      if( pkt_gb.plid_to() != pl_to->plid() ) {
-        // actual change
-        pl_to = this->player(pkt_gb.plid_to());
-        if( pl_to != NULL && pl_to->field() != NULL ) {
-          throw netplay::CallbackError("invalid garbage target");
-        }
-        if( !pkt_gb.has_pos() ) {
-          throw netplay::CallbackError("garbage position missing");
-        }
-      }
-      if( pkt_gb.pos() > pl_to->field()->hangingGarbageCount() ) {
-        throw netplay::CallbackError("invalid garbage position");
-      }
-      gb->to->removeHangingGarbage(gb);
-      gb->to = pl_to->field();
-      gb->to->insertHangingGarbage(gb, pkt_gb.pos());
-    }
-
-    if( pkt_gb.has_type() ) {
-      const Garbage::Type type = static_cast<Garbage::Type>(pkt_gb.type());
-      if( type != gb->type ) {
-        if( !pkt_gb.has_size() ) {
-          throw netplay::CallbackError("garbage size missing");
-        }
-        gb->type = type;
-      }
-    }
-
-    if( pkt_gb.has_size() ) {
-      if( pkt_gb.size() == 0 ) {
-        throw netplay::CallbackError("invalid garbage size");
-      }
-      if( gb->type == Garbage::TYPE_CHAIN ) {
-        gb->size = FieldPos(FIELD_WIDTH, pkt_gb.size());
-      } else if( gb->type == Garbage::TYPE_COMBO ) {
-        gb->size = FieldPos(pkt_gb.size(), 1);
-      } else {
-        assert( !"not supported yet" );
-      }
-    }
   }
 }
 
-void ClientInstance::processPacketField(const netplay::Field &pkt_fld)
+void ClientInstance::processPktServerConf(const netplay::PktServerConf& pkt)
 {
-  Player *pl = this->player(pkt_fld.plid());
-  if( pl == NULL ) {
-    throw netplay::CallbackError("invalid player");
-  }
-
-  if( state_ == STATE_INIT ) {
-    if( pl->field() != NULL ) {
-      throw netplay::CallbackError("field already initialized");
-    }
-    if( pkt_fld.has_tick() || !pkt_fld.has_seed() ) {
-      throw netplay::CallbackError("invalid fields");
-    }
-    Field *fld = match_.newField(pl->fieldConf(), pkt_fld.seed());
-    pl->setField(fld);
-    // grid
-    if( pkt_fld.blocks_size() > 0 ) {
-      //TODO throw exceptions in setGridContentFromPacket
-      fld->setGridContentFromPacket(pkt_fld.blocks());
-    }
-
-  } else if( state_ == STATE_GAME ) {
-    Field *fld = pl->field();
-    if( fld == NULL ) {
-      throw netplay::CallbackError("field not initialized");
-    }
-    if( fld == NULL || pkt_fld.has_seed() ||
-       pkt_fld.blocks_size() > 0 ) {
-      throw netplay::CallbackError("invalid fields");
-    }
-    // note: field tick not used
-    // rank
-    if( pkt_fld.has_rank() ) {
-      fld->setRank(pkt_fld.rank()); //TODO may fail if already set
-    }
-
-  } else {
+  if( state_ != STATE_LOBBY ) {
     throw netplay::CallbackError("invalid in current state");
   }
+#define SERVER_CONF_EXPR_PKT(n,ini) \
+  conf_.n = pkt.n();
+  SERVER_CONF_APPLY(SERVER_CONF_EXPR_PKT);
+#undef SERVER_CONF_EXPR_PKT
+  google::protobuf::RepeatedPtrField<netplay::FieldConf> np_fcs = pkt.field_confs();
+  google::protobuf::RepeatedPtrField<netplay::FieldConf>::const_iterator fcit;
+  conf_.field_confs.clear();
+  for( fcit=np_fcs.begin(); fcit!=np_fcs.end(); ++fcit ) {
+    if( fcit->name().empty() ) {
+      throw netplay::CallbackError("unnamed server field configuration");
+    }
+    conf_.field_confs[fcit->name()].fromPacket(*fcit);
+  }
+  if( conf_.field_confs.size() == 0 ) {
+    throw netplay::CallbackError("no field configuration");
+  }
 }
 
-void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
+void ClientInstance::processPktServerState(const netplay::PktServerState& pkt)
 {
-  Player *pl = this->player(pkt_pl.plid());
+  //TODO check whether state change is valid
+  State new_state = static_cast<State>(pkt.state());
+  if( new_state == state_ ) {
+    return; // nothing to do, should not happen though
+  }
+  // automatically reset ready flag
+  PlayerContainer::iterator it;
+  for( it=players_.begin(); it!=players_.end(); ++it ) {
+    (*it).second->setReady(false);
+  }
+
+  if( new_state == STATE_INIT ) {
+    if( match_.started() ) {
+      this->stopMatch();
+    }
+    state_ = new_state;
+    observer_.onStateChange(state_);
+  } else if( new_state == STATE_READY ) {
+    state_ = new_state;
+    // init fields for match
+    match_.start();
+    observer_.onStateChange(state_);
+  } else if( new_state == STATE_GAME ) {
+    state_ = new_state;
+    observer_.onStateChange(state_);
+  } else if( new_state == STATE_LOBBY ) {
+    this->stopMatch();
+  }
+}
+
+void ClientInstance::processPktPlayerConf(const netplay::PktPlayerConf& pkt)
+{
+  Player *pl = this->player(pkt.plid());
   if( pl == NULL ) {
     // new player
-    if( !pkt_pl.has_nick() || !pkt_pl.has_field_conf() ) {
-      throw netplay::CallbackError("invalid fields");
+    if( !pkt.has_nick() || !pkt.has_field_conf() ) {
+      throw netplay::CallbackError("missing fields");
     }
     //TODO check we asked for a new local player
-    pl = new Player(pkt_pl.plid(), pkt_pl.join());
-    pl->setNick( pkt_pl.nick() );
+    pl = new Player(pkt.plid(), pkt.join());
+    pl->setNick( pkt.nick() );
     PlId plid = pl->plid(); // use a temporary value to help g++
     players_.insert(plid, pl);
-    if( pkt_pl.has_ready() ) {
-      pl->setReady(pkt_pl.ready());
-    }
     FieldConf conf;
-    conf.fromPacket(pkt_pl.field_conf());
-    pl->setFieldConf(conf, pkt_pl.field_conf().name());
+    conf.fromPacket(pkt.field_conf());
+    pl->setFieldConf(conf, pkt.field_conf().name());
     observer_.onPlayerJoined(pl);
-
-  } else if( pkt_pl.out() ) {
-    observer_.onPlayerQuit(pl);
-    if( pl->field() != NULL ) {
-      match_.removeField(pl->field());
-      pl->setField(NULL);
-    }
-    players_.erase(pl->plid());
-
   } else {
-    if( pkt_pl.has_nick() ) {
+    // update player
+    if( pkt.has_nick() ) {
       const std::string old_nick = pl->nick();
-      pl->setNick( pkt_pl.nick() );
+      pl->setNick( pkt.nick() );
       observer_.onPlayerChangeNick(pl, old_nick);
     }
-    if( pkt_pl.has_ready() ) {
-      //XXX check whether change is valid?
-      pl->setReady(pkt_pl.ready());
-      observer_.onPlayerReady(pl);
-    }
-    if( pkt_pl.has_field_conf() ) {
-      const std::string name = pkt_pl.field_conf().name();
+    if( pkt.has_field_conf() ) {
+      const std::string name = pkt.field_conf().name();
       if( name.empty() ) {
         FieldConf conf;
-        conf.fromPacket(pkt_pl.field_conf());
+        conf.fromPacket(pkt.field_conf());
         pl->setFieldConf(conf, name);
       } else {
         auto fc_it = conf_.field_confs.find(name);
@@ -406,62 +420,68 @@ void ClientInstance::processPacketPlayer(const netplay::Player &pkt_pl)
   }
 }
 
-void ClientInstance::processPacketServer(const netplay::Server &pkt_server)
+void ClientInstance::processPktPlayerState(const netplay::PktPlayerState& pkt)
 {
-  if( pkt_server.has_conf() ) {
-    if( state_ != STATE_LOBBY &&
-       !(pkt_server.has_state() &&
-         pkt_server.state() == netplay::Server::LOBBY) ) {
-      throw netplay::CallbackError("invalid in current state");
-    }
-    const netplay::Server::Conf &np_conf = pkt_server.conf();
-#define SERVER_CONF_EXPR_PKT(n,ini) \
-    conf_.n = np_conf.n();
-    SERVER_CONF_APPLY(SERVER_CONF_EXPR_PKT);
-#undef SERVER_CONF_EXPR_PKT
-    google::protobuf::RepeatedPtrField<netplay::FieldConf> np_fcs = np_conf.field_confs();
-    google::protobuf::RepeatedPtrField<netplay::FieldConf>::const_iterator fcit;
-    conf_.field_confs.clear();
-    for( fcit=np_fcs.begin(); fcit!=np_fcs.end(); ++fcit ) {
-      if( fcit->name().empty() ) {
-        throw netplay::CallbackError("unnamed server field configuration");
-      }
-      conf_.field_confs[fcit->name()].fromPacket(*fcit);
-    }
-    if( conf_.field_confs.size() == 0 ) {
-      throw netplay::CallbackError("no field configurations");
-    }
+  Player *pl = this->player(pkt.plid());
+  if( pl == NULL ) {
+    throw netplay::CallbackError("invalid player");
   }
 
-  if( pkt_server.has_state() ) {
-    //TODO check whether state change is valid
-    State new_state = static_cast<State>(pkt_server.state());
-    if( new_state == state_ ) {
-      return; // nothing to do, should not happen though
+  netplay::PktPlayerState::State state = pkt.state();
+  if( state == netplay::PktPlayerState::LEAVE ) {
+    observer_.onPlayerQuit(pl);
+    if( pl->field() != NULL ) {
+      match_.removeField(pl->field());
+      pl->setField(NULL);
     }
-    // automatically reset ready flag
-    PlayerContainer::iterator it;
-    for( it=players_.begin(); it!=players_.end(); ++it ) {
-      (*it).second->setReady(false);
+    players_.erase(pl->plid());
+  } else if( state == netplay::PktPlayerState::PREPARE ) {
+    if( state_ != STATE_LOBBY ) {
+      throw netplay::CallbackError("invalid in current state");
     }
+    if( pl->ready() ) {
+      pl->setReady(false);
+      observer_.onPlayerReady(pl);
+    }
+  } else if( state == netplay::PktPlayerState::READY ) {
+    if( !pl->ready() ) {
+      pl->setReady(true);
+      observer_.onPlayerReady(pl);
+    }
+  }
+}
 
-    if( new_state == STATE_INIT ) {
-      if( match_.started() ) {
-        this->stopMatch();
-      }
-      state_ = new_state;
-      observer_.onStateChange(state_);
-    } else if( new_state == STATE_READY ) {
-      state_ = new_state;
-      // init fields for match
-      match_.start();
-      observer_.onStateChange(state_);
-    } else if( new_state == STATE_GAME ) {
-      state_ = new_state;
-      observer_.onStateChange(state_);
-    } else if( new_state == STATE_LOBBY ) {
-      this->stopMatch();
-    }
+void ClientInstance::processPktPlayerRank(const netplay::PktPlayerRank& pkt)
+{
+  if( state_ != STATE_GAME ) {
+    throw netplay::CallbackError("invalid in current state");
+  }
+  Player *pl = this->player(pkt.plid());
+  if( pl == NULL || pl->field() == NULL ) {
+    throw netplay::CallbackError("invalid player");
+  }
+  pl->field()->setRank(pkt.rank()); //TODO may fail if already set
+}
+
+void ClientInstance::processPktPlayerField(const netplay::PktPlayerField& pkt)
+{
+  //XXX support sending of current game fields to new clients
+  if( state_ != STATE_INIT ) {
+    throw netplay::CallbackError("invalid in current state");
+  }
+  Player *pl = this->player(pkt.plid());
+  if( pl == NULL ) {
+    throw netplay::CallbackError("invalid player");
+  }
+  if( pl->field() != NULL ) {
+    throw netplay::CallbackError("field already initialized");
+  }
+
+  Field *fld = match_.newField(pl->fieldConf(), pkt.seed());
+  pl->setField(fld);
+  if( pkt.blocks_size() > 0 ) {
+    //TODO throw exceptions in setGridContentFromPacket
+    fld->setGridContentFromPacket(pkt.blocks());
   }
 }
 

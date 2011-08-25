@@ -123,9 +123,9 @@ void ServerInstance::playerSetNick(Player *pl, const std::string &nick)
   observer_.onPlayerChangeNick(pl, old_nick);
 
   netplay::Packet pkt;
-  netplay::Player *np_player = pkt.mutable_player();
-  np_player->set_plid(pl->plid());
-  np_player->set_nick(nick);
+  netplay::PktPlayerConf *np_plconf = pkt.mutable_player_conf();
+  np_plconf->set_plid(pl->plid());
+  np_plconf->set_nick(nick);
   socket_.broadcastPacket(pkt);
 }
 
@@ -140,9 +140,9 @@ void ServerInstance::playerSetReady(Player *pl, bool ready)
   observer_.onPlayerReady(pl);
 
   netplay::Packet pkt;
-  netplay::Player *np_player = pkt.mutable_player();
-  np_player->set_plid(pl->plid());
-  np_player->set_ready(ready);
+  netplay::PktPlayerState *np_state = pkt.mutable_player_state();
+  np_state->set_plid(pl->plid());
+  np_state->set_state(netplay::PktPlayerState::READY);
   socket_.broadcastPacket(pkt);
 
   this->checkAllPlayersReady();
@@ -154,7 +154,7 @@ void ServerInstance::playerSendChat(Player *pl, const std::string &msg)
   observer_.onChat(pl, msg);
 
   netplay::Packet pkt;
-  netplay::Chat *np_chat = pkt.mutable_chat();
+  netplay::PktChat *np_chat = pkt.mutable_chat();
   np_chat->set_plid(pl->plid());
   np_chat->set_txt(msg);
   socket_.broadcastPacket(pkt);
@@ -186,9 +186,7 @@ void ServerInstance::onPeerConnect(netplay::PeerSocket *peer)
   netplay::Packet pkt;
 
   // send server info
-  netplay::Server *np_server = pkt.mutable_server();
-  np_server->set_state( static_cast<netplay::Server::State>(state_) );
-  netplay::Server::Conf *np_conf = np_server->mutable_conf();
+  netplay::PktServerConf *np_conf = pkt.mutable_server_conf();
 #define SERVER_CONF_EXPR_PKT(n,ini) \
   np_conf->set_##n(conf_.n);
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_PKT);
@@ -202,18 +200,32 @@ void ServerInstance::onPeerConnect(netplay::PeerSocket *peer)
     (*fcit).second.toPacket(np_fc);
   }
   peer->writePacket(pkt);
-  pkt.clear_server(); // packet reused below
+  pkt.clear_server_conf();
+
+  netplay::PktServerState *np_state = pkt.mutable_server_state();
+  np_state->set_state( static_cast<netplay::PktServerState::State>(state_) );
+  peer->writePacket(pkt);
+  pkt.clear_server_state();
 
   // send information on other players
-  netplay::Player *np_player = pkt.mutable_player();
   PlayerContainer::const_iterator it;
   for( it=players_.begin(); it!=players_.end(); ++it ) {
-    np_player->set_plid( (*it).second->plid() );
-    np_player->set_nick( (*it).second->nick() );
-    np_player->set_ready( (*it).second->ready() );
-    netplay::FieldConf *np_fc = np_player->mutable_field_conf();
-    (*it).second->fieldConf().toPacket(np_fc);
+    const Player *pl = (*it).second;
+    netplay::PktPlayerConf *np_plconf = pkt.mutable_player_conf();
+    np_plconf->set_plid( pl->plid() );
+    np_plconf->set_nick( pl->nick() );
+    netplay::FieldConf *np_fc = np_plconf->mutable_field_conf();
+    pl->fieldConf().toPacket(np_fc);
     peer->writePacket(pkt);
+    pkt.clear_player_conf();
+
+    if( pl->ready() ) {
+      netplay::PktPlayerState *np_state = pkt.mutable_player_state();
+      np_state->set_plid( pl->plid() );
+      np_state->set_state(netplay::PktPlayerState::READY);
+      peer->writePacket(pkt);
+      pkt.clear_player_state();
+    }
   }
 
   // set read handler
@@ -238,17 +250,21 @@ void ServerInstance::onPeerDisconnect(netplay::PeerSocket *peer)
 void ServerInstance::onPeerPacket(netplay::PeerSocket *peer, const netplay::Packet &pkt)
 {
   if( pkt.has_input() ) {
-    this->processPacketInput(peer, pkt.input());
-  } else if( pkt.has_garbage() ) {
-    this->processPacketGarbage(peer, pkt.garbage());
-  } else if( pkt.has_player() ) {
-    this->processPacketPlayer(peer, pkt.player());
+    this->processPktInput(peer, pkt.input());
+  } else if( pkt.has_garbage_state() ) {
+    this->processPktGarbageState(peer, pkt.garbage_state());
+  } else if( pkt.has_player_join() ) {
+    this->processPktPlayerJoin(peer, pkt.player_join());
+  } else if( pkt.has_player_conf() ) {
+    this->processPktPlayerConf(peer, pkt.player_conf());
+  } else if( pkt.has_player_state() ) {
+    this->processPktPlayerState(peer, pkt.player_state());
   } else if( pkt.has_chat() ) {
-    const netplay::Chat &np_chat = pkt.chat();
-    Player *pl = this->checkPeerPlayer(np_chat.plid(), peer);
-    observer_.onChat(pl, np_chat.txt());
+    const netplay::PktChat& pkt_chat = pkt.chat();
+    Player *pl = this->checkPeerPlayer(pkt_chat.plid(), peer);
+    observer_.onChat(pl, pkt_chat.txt());
     netplay::Packet pkt_send;
-    pkt_send.mutable_chat()->MergeFrom( np_chat );
+    pkt_send.mutable_chat()->MergeFrom(pkt_chat);
     socket_.broadcastPacket(pkt_send);
 
   } else {
@@ -264,12 +280,12 @@ void ServerInstance::onGarbageAdd(const Garbage *gb, unsigned int pos)
   assert( pl_to != NULL );
 
   netplay::Packet pkt;
-  netplay::Garbage *np_garbage = pkt.mutable_garbage();
+  netplay::PktNewGarbage *np_garbage = pkt.mutable_new_garbage();
   np_garbage->set_gbid( gb->gbid );
   np_garbage->set_pos( pos );
   np_garbage->set_plid_to( pl_to->plid() );
   np_garbage->set_plid_from( pl_from == NULL ? 0 : pl_from->plid() );
-  np_garbage->set_type( static_cast<netplay::Garbage_Type>(gb->type) );
+  np_garbage->set_type( static_cast<netplay::GarbageType>(gb->type) );
   np_garbage->set_size( gb->type == Garbage::TYPE_COMBO ? gb->size.x : gb->size.y );
   socket_.broadcastPacket(pkt);
 }
@@ -277,7 +293,7 @@ void ServerInstance::onGarbageAdd(const Garbage *gb, unsigned int pos)
 void ServerInstance::onGarbageUpdateSize(const Garbage *gb)
 {
   netplay::Packet pkt;
-  netplay::Garbage *np_garbage = pkt.mutable_garbage();
+  netplay::PktUpdateGarbage *np_garbage = pkt.mutable_update_garbage();
   np_garbage->set_gbid( gb->gbid );
   np_garbage->set_size( gb->type == Garbage::TYPE_COMBO ? gb->size.x : gb->size.y );
   socket_.broadcastPacket(pkt);
@@ -289,19 +305,16 @@ void ServerInstance::onGarbageDrop(const Garbage *gb)
   assert( pl_to != NULL );
 
   netplay::Packet pkt;
-  netplay::Garbage *np_garbage = pkt.mutable_garbage();
-  np_garbage->set_gbid(gb->gbid);
-  np_garbage->set_wait(true);
+  netplay::PktGarbageState *np_state = pkt.mutable_garbage_state();
+  np_state->set_gbid(gb->gbid);
+  np_state->set_state(netplay::PktGarbageState::WAIT);
   match_.waitGarbageDrop(gb); // note: reset the gbid
   socket_.broadcastPacket(pkt);
 
   // local player: drop immediately
   if( pl_to->local() ) {
     gb->to->dropNextGarbage();
-    np_garbage->Clear();
-    np_garbage->set_gbid(0);
-    np_garbage->set_plid_to(pl_to->plid());
-    np_garbage->set_drop(true);
+    np_state->set_state(netplay::PktGarbageState::DROP);
     socket_.broadcastPacket(pkt);
   }
 }
@@ -326,14 +339,14 @@ Player *ServerInstance::newPlayer(netplay::PeerSocket *peer, const std::string &
   // inform the new player about his ID (if remote)
   // tell others about their new friend
   netplay::Packet pkt;
-  netplay::Player *np_player = pkt.mutable_player();
-  np_player->set_plid(pl->plid());
-  np_player->set_nick(pl->nick());
-  netplay::FieldConf *np_fc = np_player->mutable_field_conf();
+  netplay::PktPlayerConf *np_conf = pkt.mutable_player_conf();
+  np_conf->set_plid(pl->plid());
+  np_conf->set_nick(pl->nick());
+  netplay::FieldConf *np_fc = np_conf->mutable_field_conf();
   pl->fieldConf().toPacket(np_fc);
   socket_.broadcastPacket(pkt, peer);
   if( peer != NULL ) {
-    np_player->set_join(true);
+    np_conf->set_join(true);
     peer->writePacket(pkt);
   }
 
@@ -349,9 +362,9 @@ void ServerInstance::removePlayer(PlId plid)
   peers_.erase(plid);
   // tell other players
   netplay::Packet pkt;
-  netplay::Player *np_player = pkt.mutable_player();
-  np_player->set_plid(plid);
-  np_player->set_out(true);
+  netplay::PktPlayerState *np_state = pkt.mutable_player_state();
+  np_state->set_plid(plid);
+  np_state->set_state(netplay::PktPlayerState::LEAVE);
   socket_.broadcastPacket(pkt);
   // only one player left: abort the game
   if( players_.size() < 2 ) {
@@ -360,12 +373,12 @@ void ServerInstance::removePlayer(PlId plid)
 }
 
 
-void ServerInstance::processPacketInput(netplay::PeerSocket *peer, const netplay::Input &pkt_input)
+void ServerInstance::processPktInput(netplay::PeerSocket *peer, const netplay::PktInput& pkt)
 {
   if( state_ != STATE_GAME ) {
     return;  // ignore remains of the previous match
   }
-  Player *pl = this->checkPeerPlayer(pkt_input.plid(), peer);
+  Player *pl = this->checkPeerPlayer(pkt.plid(), peer);
   //XXX:check field may have win without player knowing it
   // this must not trigger an error
   Field *fld = pl->field();
@@ -373,7 +386,7 @@ void ServerInstance::processPacketInput(netplay::PeerSocket *peer, const netplay
     throw netplay::CallbackError("player without a field");
   }
 
-  Tick tick = pkt_input.tick();
+  Tick tick = pkt.tick();
   if( tick < fld->tick() ) {
     throw netplay::CallbackError("input tick in the past");
   }
@@ -385,127 +398,129 @@ void ServerInstance::processPacketInput(netplay::PeerSocket *peer, const netplay
     }
   }
   // provided frames
-  const int keys_nb = pkt_input.keys_size();
+  const int keys_nb = pkt.keys_size();
   for( int i=0; i<keys_nb; i++ ) {
-    this->stepRemotePlayer(pl, pkt_input.keys(i));
+    this->stepRemotePlayer(pl, pkt.keys(i));
     if( !match_.started() ) {
       return; // end of match
     }
   }
 }
 
-void ServerInstance::processPacketGarbage(netplay::PeerSocket *peer, const netplay::Garbage &pkt_gb)
+void ServerInstance::processPktGarbageState(netplay::PeerSocket *peer, const netplay::PktGarbageState& pkt)
 {
   if( state_ != STATE_GAME ) {
     throw netplay::CallbackError("match is not running");
   }
-  if( !pkt_gb.drop() ) {
-    throw netplay::CallbackError("garbage drop expected");
+  if( pkt.state() != netplay::PktGarbageState::DROP ) {
+    throw netplay::CallbackError("unexpected garbage state");
   }
-  if( !pkt_gb.has_plid_to() ) {
-    throw netplay::CallbackError("player not set for garbage drop");
-  }
-  Player *pl = this->player(pkt_gb.plid_to());
-  if( pl == NULL || pl->field() == NULL ) {
+
+  //TODO retrieve garbage from its ID
+  Garbage *gb = NULL;
+  Field *fld = gb->to;
+  Player *pl = this->player(fld);
+  if( pl == NULL ) {
     throw netplay::CallbackError("invalid player");
   }
   this->checkPeerPlayer(pl->plid(), peer);
-
-  Field *fld = pl->field();
-  if( fld->waitingGarbages().size() == 0 ) {
-    throw netplay::CallbackError("no garbage to drop");
+  if( fld->waitingGarbages().size() == 0 || fld->waitingGarbages().front().gbid != gb->gbid ) {
+    throw netplay::CallbackError("invalid dropped garbage");
   }
 
   netplay::Packet pkt_send;
-  netplay::Garbage *np_garbage_send = pkt_send.mutable_garbage();
-  np_garbage_send->set_gbid(0);
-  np_garbage_send->set_plid_to(pl->plid());
-  np_garbage_send->set_drop(true);
+  netplay::PktGarbageState *np_state = pkt_send.mutable_garbage_state();
+  np_state->set_gbid(gb->gbid);
+  np_state->set_state(netplay::PktGarbageState::DROP);
   socket_.broadcastPacket(pkt_send);
 
   fld->dropNextGarbage();
 }
 
-void ServerInstance::processPacketPlayer(netplay::PeerSocket *peer, const netplay::Player &pkt_pl)
+void ServerInstance::processPktPlayerJoin(netplay::PeerSocket *peer, const netplay::PktPlayerJoin& pkt)
 {
-  if( pkt_pl.join() ) {
-    // new player, ignore all other fields
-    if( state_ != STATE_LOBBY ) {
-      throw netplay::CallbackError("match is running");
-    } else if( players_.size() > conf_.pl_nb_max ) {
-      //TODO don't close the connection if the server is full
-      // only send back an error
-      throw netplay::CallbackError("server full");
-    }
-    if( pkt_pl.plid() != 0 || pkt_pl.has_ready() ) {
-      throw netplay::CallbackError("invalid fields");
-    }
-    Player *pl = this->newPlayer(peer, pkt_pl.has_nick() ? pkt_pl.nick() : "Player");
-    //TODO don't set configuration in a separated packet
-    if( pkt_pl.has_field_conf() ) {
+  if( state_ != STATE_LOBBY ) {
+    throw netplay::CallbackError("match is running");
+  } else if( players_.size() > conf_.pl_nb_max ) {
+    //TODO don't close the connection if the server is full
+    // only send back an error
+    throw netplay::CallbackError("server full");
+  }
+  this->newPlayer(peer, pkt.has_nick() ? pkt.nick() : "Player");
+}
+
+void ServerInstance::processPktPlayerConf(netplay::PeerSocket *peer, const netplay::PktPlayerConf& pkt)
+{
+  netplay::Packet pkt_send;
+  netplay::PktPlayerConf *np_plconf = pkt_send.mutable_player_conf();
+
+  Player *pl = this->checkPeerPlayer(pkt.plid(), peer);
+  bool do_send = false;
+  if( pkt.has_nick() && pkt.nick() != pl->nick() ) {
+    const std::string old_nick = pl->nick();
+    pl->setNick( pkt.nick() );
+    observer_.onPlayerChangeNick(pl, old_nick);
+    np_plconf->set_nick( pkt.nick() );
+    do_send = true;
+  }
+  if( pkt.has_field_conf() ) {
+    const std::string name = pkt.field_conf().name();
+    //TODO compare with previous conf/name, ignore if not changed
+    do_send = true;
+    if( name.empty() ) {
       FieldConf conf;
-      conf.fromPacket(pkt_pl.field_conf());
-      pl->setFieldConf(conf, pkt_pl.field_conf().name());
-      observer_.onPlayerChangeFieldConf(pl);
-    }
-
-  } else if( pkt_pl.out() ) {
-    // player out
-    Player *pl = this->checkPeerPlayer(pkt_pl.plid(), peer);
-    this->removePlayer(pl->plid()); // note: don't disconnect the peer
-
-  } else {
-    Player *pl = this->checkPeerPlayer(pkt_pl.plid(), peer);
-
-    netplay::Packet pkt_send;
-    netplay::Player *np_player = pkt_send.mutable_player();
-    bool do_send = false;
-    bool become_ready = false;
-    if( pkt_pl.has_nick() && pkt_pl.nick() != pl->nick() ) {
-      const std::string old_nick = pl->nick();
-      pl->setNick( pkt_pl.nick() );
-      observer_.onPlayerChangeNick(pl, old_nick);
-      np_player->set_nick( pkt_pl.nick() );
-      do_send = true;
-    }
-    if( pkt_pl.has_ready() && pkt_pl.ready() != pl->ready() ) {
-      // check whether change is valid
-      // (silently ignore invalid changes)
-      if( state_ == STATE_LOBBY || state_ == STATE_READY ) {
-        pl->setReady(pkt_pl.ready());
-        observer_.onPlayerReady(pl);
-        np_player->set_ready(pl->ready());
-        become_ready = pl->ready();
-        do_send = true;
+      conf.fromPacket(pkt.field_conf());
+      pl->setFieldConf(conf, name);
+    } else {
+      auto fc_it = conf_.field_confs.find(name);
+      if( fc_it == conf_.field_confs.end() ) {
+        throw netplay::CallbackError("invalid configuration name: "+name);
       }
+      pl->setFieldConf(fc_it->second, name);
     }
-    if( pkt_pl.has_field_conf() ) {
-      const std::string name = pkt_pl.field_conf().name();
-      if( name.empty() ) {
-        FieldConf conf;
-        conf.fromPacket(pkt_pl.field_conf());
-        pl->setFieldConf(conf, name);
-      } else {
-        auto fc_it = conf_.field_confs.find(name);
-        if( fc_it == conf_.field_confs.end() ) {
-          throw netplay::CallbackError("invalid configuration name: "+name);
-        }
-        pl->setFieldConf(fc_it->second, name);
-      }
-      netplay::FieldConf *np_fc = np_player->mutable_field_conf();
+    if( do_send ) {
+      netplay::FieldConf *np_fc = np_plconf->mutable_field_conf();
       np_fc->set_name(name);
       pl->fieldConf().toPacket(np_fc);
       observer_.onPlayerChangeFieldConf(pl);
+    }
+  }
+  if( do_send ) {
+    np_plconf->set_plid( pl->plid() );
+    socket_.broadcastPacket(pkt_send);
+  }
+}
+
+void ServerInstance::processPktPlayerState(netplay::PeerSocket *peer, const netplay::PktPlayerState& pkt)
+{
+  Player *pl = this->checkPeerPlayer(pkt.plid(), peer);
+
+  bool do_send = false;
+  netplay::PktPlayerState::State state = pkt.state();
+  // Invalid state changes are silently ignored
+
+  if( state == netplay::PktPlayerState::LEAVE ) {
+    do_send = true;
+    this->removePlayer(pl->plid()); // note: don't disconnect the peer
+  } else if( state == netplay::PktPlayerState::PREPARE ) {
+    if( state_ == STATE_LOBBY && pl->ready() ) {
+      pl->setReady(false);
       do_send = true;
     }
-    if( do_send ) {
-      np_player->set_plid( pkt_pl.plid() );
-      socket_.broadcastPacket(pkt_send);
+  } else if( state == netplay::PktPlayerState::READY ) {
+    if( !pl->ready() ) {
+      pl->setReady(true);
+      do_send = true;
     }
+  }
 
-    if( become_ready ) {
-      this->checkAllPlayersReady();
-    }
+  if( do_send ) {
+    netplay::Packet pkt_send;
+    *pkt_send.mutable_player_state() = pkt;
+    socket_.broadcastPacket(pkt_send);
+  }
+  if( do_send && state == netplay::PktPlayerState::READY ) {
+    this->checkAllPlayersReady();
   }
 }
 
@@ -541,8 +556,8 @@ void ServerInstance::checkAllPlayersReady()
 void ServerInstance::setState(State state)
 {
   netplay::Packet pkt;
-  netplay::Server *np_server = pkt.mutable_server();
-  np_server->set_state( static_cast<netplay::Server::State>(state) );
+  netplay::PktServerState *np_state = pkt.mutable_server_state();
+  np_state->set_state( static_cast<netplay::PktServerState::State>(state) );
   socket_.broadcastPacket(pkt);
 
   if( state != STATE_INIT ) {
@@ -575,13 +590,10 @@ void ServerInstance::prepareMatch()
     pl->setField(fld);
     fld->fillRandom(6);
 
-    netplay::Field *np_field = pkt.mutable_field();
+    netplay::PktPlayerField *np_field = pkt.mutable_player_field();
     np_field->Clear();
     np_field->set_plid(pl->plid());
     np_field->set_seed(fld->seed()); //note: seed changed due to fillRandom()
-    np_field->set_rank(0);
-
-    // grid
     fld->setGridContentToPacket(np_field->mutable_blocks());
     socket_.broadcastPacket(pkt);
   }
@@ -622,7 +634,7 @@ void ServerInstance::doStepPlayer(Player *pl, KeyState keys)
 
   //XXX Current implementation does not group Input packets.
   netplay::Packet pkt_send;
-  netplay::Input *np_input_send = pkt_send.mutable_input();
+  netplay::PktInput *np_input_send = pkt_send.mutable_input();
   np_input_send->set_plid(pl->plid());
   np_input_send->set_tick(prev_tick);
   np_input_send->add_keys(keys);
@@ -640,14 +652,14 @@ void ServerInstance::doStepPlayer(Player *pl, KeyState keys)
   // ranking
   std::vector<const Field *> ranked;
   bool end_of_match = match_.updateRanks(ranked);
-  netplay::Field *np_field_send = pkt_send.mutable_field();
+  netplay::PktPlayerRank *np_rank = pkt_send.mutable_player_rank();
   std::vector<const Field *>::iterator it;
   for(it=ranked.begin(); it!=ranked.end(); ++it) {
     Player *pl = this->player(*it);
     // don't send packet for aborted fields (no player)
     if( pl != NULL ) {
-      np_field_send->set_plid( pl->plid() );
-      np_field_send->set_rank( (*it)->rank() );
+      np_rank->set_plid( pl->plid() );
+      np_rank->set_rank( (*it)->rank() );
       socket_.broadcastPacket(pkt_send);
     }
   }

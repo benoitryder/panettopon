@@ -18,7 +18,7 @@ namespace netplay {
 
 BaseSocket::BaseSocket(asio::io_service &io_service):
     socket_(io_service),
-    pkt_size_max_(netplay::Server::Conf::default_instance().pkt_size_max())
+    pkt_size_max_(netplay::PktServerConf::default_instance().pkt_size_max())
 {
 }
 
@@ -197,9 +197,9 @@ void PeerSocket::processError(const std::string &msg, const boost::system::error
 
   // send notification
   netplay::Packet pkt;
-  netplay::Notification *notif = pkt.mutable_notification();
+  netplay::PktNotification *notif = pkt.mutable_notification();
   notif->set_txt(msg);
-  notif->set_severity(netplay::Notification::ERROR);
+  notif->set_severity(netplay::PktNotification::ERROR);
   this->writePacket(pkt);
 
   this->closeAfterWrites();
@@ -228,7 +228,7 @@ void PeerSocket::close()
 
 ServerSocket::ServerSocket(Observer &obs, asio::io_service &io_service):
     acceptor_(io_service), started_(false), observer_(obs),
-    pkt_size_max_(netplay::Server::Conf::default_instance().pkt_size_max())
+    pkt_size_max_(netplay::PktServerConf::default_instance().pkt_size_max())
 {
 }
 

@@ -66,11 +66,16 @@ class ClientInstance: public GameInstance,
    * netplay::Callback exceptions are thrown on error.
    */
   //@{
-  void processPacketInput(const netplay::Input &pkt_input);
-  void processPacketGarbage(const netplay::Garbage &pkt_gb);
-  void processPacketField(const netplay::Field &pkt_fld);
-  void processPacketPlayer(const netplay::Player &pkt_pl);
-  void processPacketServer(const netplay::Server &pkt_server);
+  void processPktInput(const netplay::PktInput& pkt);
+  void processPktNewGarbage(const netplay::PktNewGarbage& pkt);
+  void processPktUpdateGarbage(const netplay::PktUpdateGarbage& pkt);
+  void processPktGarbageState(const netplay::PktGarbageState& pkt);
+  void processPktServerConf(const netplay::PktServerConf& pkt);
+  void processPktServerState(const netplay::PktServerState& pkt);
+  void processPktPlayerConf(const netplay::PktPlayerConf& pkt);
+  void processPktPlayerState(const netplay::PktPlayerState& pkt);
+  void processPktPlayerRank(const netplay::PktPlayerRank& pkt);
+  void processPktPlayerField(const netplay::PktPlayerField& pkt);
   //@}
 
   void stopMatch();
