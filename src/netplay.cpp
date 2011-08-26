@@ -67,12 +67,18 @@ void PacketSocket::onReadSize(const boost::system::error_code &ec)
     } else if( read_size_ == 0 ) {
       this->readNext(); // ignore null size
     } else {
-      // resize buffer if needed
+      // resize buffer if needed (double size)
       if( read_size_ > read_buf_size_ ) {
         assert( read_buf_size_ != 0 || read_buf_ == NULL );
         delete[] read_buf_;
-        read_buf_ = new char[pkt_size_max];
-        read_buf_size_ = pkt_size_max;
+        if( read_buf_size_ == 0 ) {
+          read_buf_size_ = pkt_size_max/16;
+        } else if( read_buf_size_ >= pkt_size_max/2 ) {
+          read_buf_size_ = pkt_size_max;
+        } else {
+          read_buf_size_ *= 2;
+        }
+        read_buf_ = new char[read_buf_size_];
       }
       asio::async_read(
           socket_, asio::buffer(read_buf_, read_size_),
