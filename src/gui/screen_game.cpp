@@ -80,6 +80,9 @@ void ScreenGame::onStateChange(GameInstance::State state)
 KeyState ScreenGame::getNextInput(Player *pl)
 {
   assert( pl == player_ );
+  if( !intf_.focused() ) {
+    return GAME_KEY_NONE;
+  }
   int key = GAME_KEY_NONE;
   if( sf::Keyboard::IsKeyPressed(keys_.up   ) ) key |= GAME_KEY_UP;
   if( sf::Keyboard::IsKeyPressed(keys_.down ) ) key |= GAME_KEY_DOWN;

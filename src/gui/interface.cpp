@@ -16,7 +16,7 @@ namespace gui {
 const std::string GuiInterface::CONF_SECTION("GUI");
 
 GuiInterface::GuiInterface():
-    cfg_(NULL), redraw_timer_(io_service_),
+    cfg_(NULL), focused_(false), redraw_timer_(io_service_),
     instance_(NULL), server_instance_(NULL), client_instance_(NULL)
 {
   window_conf_.redraw_dt = (1000.0/60.0);
@@ -190,6 +190,8 @@ bool GuiInterface::initDisplay()
       );
   window_.EnableKeyRepeat(true);
   window_.SetActive();
+  //XXX assume a GainedFocus event when a window is created with focus
+  focused_ = false;
 
   // load icon
   sf::Image icon;
@@ -234,6 +236,10 @@ void GuiInterface::onRedrawTick(const boost::system::error_code &ec)
                event.Type == sf::Event::KeyReleased ||
                event.Type == sf::Event::TextEntered ) {
       screen_->onInputEvent(event);
+    } else if( event.Type == sf::Event::GainedFocus ) {
+      focused_ = true;
+    } else if( event.Type == sf::Event::LostFocus ) {
+      focused_ = false;
     }
   }
 

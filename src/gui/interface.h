@@ -37,6 +37,7 @@ class GuiInterface: public ClientInstance::Observer
   void swapScreen(Screen *screen);
 
   sf::RenderWindow &window() { return window_; }
+  bool focused() const { return focused_; }
   ResourceManager &res_mgr() { return res_mgr_; }
 
   /** @name Instance observer methods. */
@@ -86,6 +87,7 @@ class GuiInterface: public ClientInstance::Observer
   void onRedrawTick(const boost::system::error_code &ec);
 
   sf::RenderWindow window_;
+  bool focused_;
   ResourceManager res_mgr_;
   std::auto_ptr<Screen> screen_;
   boost::asio::monotone_timer redraw_timer_;
