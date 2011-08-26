@@ -239,7 +239,7 @@ class Field
   void step(KeyState keys);
 
   /// Move a hanging garbage to wait list.
-  void waitNextGarbageDrop();
+  void waitGarbageDrop(Garbage *gb);
   /** @brief Drop the next waiting garbage.
    *
    * Garbage will fall on the field as soon as possible.

@@ -606,11 +606,11 @@ void Field::step(KeyState keys)
 }
 
 
-void Field::waitNextGarbageDrop()
+void Field::waitGarbageDrop(Garbage *gb)
 {
-  LOG("[%p|%u] waitNextGarbageDrop()", this, tick_);
-  Garbage *gb = gbs_hang_.pop_front().release();
-  gbs_wait_.push_back( gb );
+  LOG("[%p|%u] waitGarbageDrop(%u)", this, tick_, gb->gbid);
+  this->removeHangingGarbage(gb);
+  gbs_wait_.push_back(gb);
 }
 
 void Field::dropNextGarbage()
@@ -1056,13 +1056,12 @@ void Match::addGarbage(Garbage *gb, unsigned int pos)
 void Match::waitGarbageDrop(const Garbage *gb)
 {
   assert( gb->to != NULL );
-  assert( gb->to->hangingGarbage(0).gbid == gb->gbid );
 
   auto it = gbs_hang_.find(gb->gbid);
   assert( it != gbs_hang_.end() );
   Garbage *gb2 = it->second; // same as gb, but not const
   gbs_hang_.erase(it);
-  gb->to->waitNextGarbageDrop();
+  gb->to->waitGarbageDrop(gb2);
   gbs_wait_[gb->gbid] = gb2;
 }
 
