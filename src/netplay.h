@@ -50,7 +50,7 @@ class BaseSocket
 
  protected:
   boost::asio::ip::tcp::socket socket_;
-  uint16_t pkt_size_max_;
+  uint32_t pkt_size_max_;
 };
 
 /// Handle packet read/write operations.
@@ -97,8 +97,8 @@ class PacketSocket: public BaseSocket
   std::queue<std::string> write_queue_;
   /** @name Attributes for packet reading. */
   //@{
-  char read_size_buf_[2]; ///< buffer for the size of the next read packet
-  uint16_t read_size_;    ///< size of the next packet
+  uint32_t read_size_;    ///< size of the next packet
+  char read_size_buf_[sizeof(read_size_)]; ///< buffer for the size of the next read packet
   char *read_buf_;        ///< buffer for the read packet
   size_t read_buf_size_;  ///< allocated size of read_buf_
   //@}
@@ -156,7 +156,7 @@ class ServerSocket
   void close();
   boost::asio::io_service &io_service() { return acceptor_.get_io_service(); }
 
-  void setPktSizeMax(uint16_t v) { pkt_size_max_ = v; }
+  void setPktSizeMax(uint32_t v) { pkt_size_max_ = v; }
 
   /// Send a packet to all peers, excepting \e except.
   void broadcastPacket(const netplay::Packet &pkt, const PeerSocket *except=NULL);
@@ -170,7 +170,7 @@ class ServerSocket
   boost::asio::ip::tcp::acceptor acceptor_;
   bool started_;
   Observer &observer_;
-  uint16_t pkt_size_max_;
+  uint32_t pkt_size_max_;
 
   typedef boost::ptr_vector<PeerSocket> PeerSocketContainer;
   /// Sockets of connected accepted clients.

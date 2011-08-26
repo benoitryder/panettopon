@@ -59,9 +59,9 @@ void PacketSocket::onReadSize(const boost::system::error_code &ec)
   if( delayed_close_ || ec == asio::error::operation_aborted )
     return;
   if( !ec ) {
-    uint16_t n_size;
+    uint32_t n_size;
     ::memcpy(&n_size, read_size_buf_, sizeof(n_size));
-    read_size_ = asio::detail::socket_ops::network_to_host_short(n_size);
+    read_size_ = asio::detail::socket_ops::network_to_host_long(n_size);
     if( read_size_ > pkt_size_max_ ) {
       this->processError("packet is too large");
     } else if( read_size_ == 0 ) {
@@ -114,12 +114,12 @@ void PacketSocket::onReadData(const boost::system::error_code &ec)
 std::string PacketSocket::serializePacket(const Packet &pkt)
 {
   // prepare buffer
-  uint16_t pkt_size = pkt.ByteSize();
+  uint32_t pkt_size = pkt.ByteSize();
   const size_t buf_size = sizeof(pkt_size) + pkt_size;
   char buf[buf_size];
 
   // write packet size
-  uint16_t n_pkt_size = asio::detail::socket_ops::host_to_network_short(pkt_size);
+  uint32_t n_pkt_size = asio::detail::socket_ops::host_to_network_long(pkt_size);
   ::memcpy(buf, &n_pkt_size, sizeof(n_pkt_size));
 
   // serialize message

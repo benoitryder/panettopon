@@ -19,7 +19,7 @@ struct ServerConf
   void toDefault();
 
   /// Maximum size of packets (without size indicator).
-  uint16_t pkt_size_max;
+  uint32_t pkt_size_max;
 
   uint32_t pl_nb_max; ///< Maximum number of players.
   uint32_t tk_usec; ///< Game tick/frame/step period.
