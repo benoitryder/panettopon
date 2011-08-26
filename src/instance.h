@@ -18,9 +18,6 @@ struct ServerConf
   /// Initialize with default values.
   void toDefault();
 
-  /// Maximum size of packets (without size indicator).
-  uint32_t pkt_size_max;
-
   uint32_t pl_nb_max; ///< Maximum number of players.
   uint32_t tk_usec; ///< Game tick/frame/step period.
 
@@ -43,7 +40,6 @@ struct ServerConf
  * \e get methods).
  */
 #define SERVER_CONF_APPLY(expr) { \
-  expr(pkt_size_max, PacketSizeMax); \
   expr(pl_nb_max,    PlayerNumber ); \
   expr(tk_usec,      TickPeriod   ); \
   expr(tk_lag_max,   LagTicksLimit); \

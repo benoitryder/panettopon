@@ -15,10 +15,10 @@ using namespace asio::ip;
 
 namespace netplay {
 
+const uint32_t BaseSocket::pkt_size_max = 50*1024;
 
 BaseSocket::BaseSocket(asio::io_service &io_service):
-    socket_(io_service),
-    pkt_size_max_(netplay::PktServerConf::default_instance().pkt_size_max())
+    socket_(io_service)
 {
 }
 
@@ -62,18 +62,17 @@ void PacketSocket::onReadSize(const boost::system::error_code &ec)
     uint32_t n_size;
     ::memcpy(&n_size, read_size_buf_, sizeof(n_size));
     read_size_ = asio::detail::socket_ops::network_to_host_long(n_size);
-    if( read_size_ > pkt_size_max_ ) {
+    if( read_size_ > pkt_size_max ) {
       this->processError("packet is too large");
     } else if( read_size_ == 0 ) {
       this->readNext(); // ignore null size
     } else {
       // resize buffer if needed
-      // note: size is not reduced if pkt_size_max_ is reduced
       if( read_size_ > read_buf_size_ ) {
         assert( read_buf_size_ != 0 || read_buf_ == NULL );
         delete[] read_buf_;
-        read_buf_ = new char[pkt_size_max_];
-        read_buf_size_ = pkt_size_max_;
+        read_buf_ = new char[pkt_size_max];
+        read_buf_size_ = pkt_size_max;
       }
       asio::async_read(
           socket_, asio::buffer(read_buf_, read_size_),
@@ -166,7 +165,7 @@ void PacketSocket::writeNext()
 
 void PacketSocket::writeRaw(const std::string &s)
 {
-  assert( s.size() > 0 && s.size() <= pkt_size_max_ );
+  assert( s.size() > 0 && s.size() <= pkt_size_max );
   bool process_next = write_queue_.empty();
   write_queue_.push(s);
   if( process_next ) {
@@ -179,7 +178,6 @@ PeerSocket::PeerSocket(ServerSocket &server):
     PacketSocket(server.io_service()),
     server_(server), has_error_(false)
 {
-  pkt_size_max_ = server.pkt_size_max_;
 }
 
 void PeerSocket::processError(const std::string &msg, const boost::system::error_code &ec)
@@ -227,8 +225,7 @@ void PeerSocket::close()
 
 
 ServerSocket::ServerSocket(Observer &obs, asio::io_service &io_service):
-    acceptor_(io_service), started_(false), observer_(obs),
-    pkt_size_max_(netplay::PktServerConf::default_instance().pkt_size_max())
+    acceptor_(io_service), started_(false), observer_(obs)
 {
 }
 

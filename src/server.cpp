@@ -46,7 +46,6 @@ void ServerInstance::loadConf(const IniFile &cfg)
   conf_.n = cfg.get(CONF_SECTION, #ini, conf_.n);
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_LOAD);
 #undef SERVER_CONF_EXPR_LOAD
-  socket_.setPktSizeMax(conf_.pkt_size_max);
 
   conf_.field_confs.clear();
   const std::string s_conf = cfg.get(CONF_SECTION, "FieldConfsList", "");

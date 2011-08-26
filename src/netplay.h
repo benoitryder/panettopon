@@ -36,6 +36,9 @@ class CallbackError: public std::runtime_error
 /// Base socket for both server and clients.
 class BaseSocket
 {
+ protected:
+  /// Maximum packet size (without size indicator)
+  static const uint32_t pkt_size_max;
  public:
   BaseSocket(boost::asio::io_service &io_service);
   virtual ~BaseSocket();
@@ -50,7 +53,6 @@ class BaseSocket
 
  protected:
   boost::asio::ip::tcp::socket socket_;
-  uint32_t pkt_size_max_;
 };
 
 /// Handle packet read/write operations.
@@ -156,8 +158,6 @@ class ServerSocket
   void close();
   boost::asio::io_service &io_service() { return acceptor_.get_io_service(); }
 
-  void setPktSizeMax(uint32_t v) { pkt_size_max_ = v; }
-
   /// Send a packet to all peers, excepting \e except.
   void broadcastPacket(const netplay::Packet &pkt, const PeerSocket *except=NULL);
 
@@ -170,7 +170,6 @@ class ServerSocket
   boost::asio::ip::tcp::acceptor acceptor_;
   bool started_;
   Observer &observer_;
-  uint32_t pkt_size_max_;
 
   typedef boost::ptr_vector<PeerSocket> PeerSocketContainer;
   /// Sockets of connected accepted clients.
