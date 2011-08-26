@@ -162,10 +162,12 @@ void ClientInstance::processPktInput(const netplay::PktInput& pkt)
   if( state_ != STATE_GAME ) {
     throw netplay::CallbackError("match is not running");
   }
-  //TODO ignore local players
   Player *pl = this->player(pkt.plid());
   if( pl == NULL || pl->field() == NULL ) {
     throw netplay::CallbackError("invalid player");
+  }
+  if( pl->local() ) {
+    return; // already processed
   }
   Field *fld = pl->field();
 
