@@ -416,8 +416,12 @@ void ServerInstance::processPktGarbageState(netplay::PeerSocket *peer, const net
     throw netplay::CallbackError("unexpected garbage state");
   }
 
-  //TODO retrieve garbage from its ID
-  Garbage *gb = NULL;
+  const Match::GarbageMap gbs_wait = match_.waitingGarbages();
+  Match::GarbageMap::const_iterator it = gbs_wait.find(pkt.gbid());
+  if( it == gbs_wait.end() ) {
+    throw netplay::CallbackError("garbage not found");
+  }
+  Garbage *gb = (*it).second;
   Field *fld = gb->to;
   Player *pl = this->player(fld);
   if( pl == NULL ) {

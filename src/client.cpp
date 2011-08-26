@@ -307,8 +307,12 @@ void ClientInstance::processPktGarbageState(const netplay::PktGarbageState& pkt)
 
   } else if( state == netplay::PktGarbageState::DROP ) {
     // drop garbage
-    //TODO retrieve garbage from its ID
-    Garbage *gb = NULL;
+    const Match::GarbageMap gbs_wait = match_.waitingGarbages();
+    Match::GarbageMap::const_iterator it = gbs_wait.find(pkt.gbid());
+    if( it == gbs_wait.end() ) {
+      throw netplay::CallbackError("garbage not found");
+    }
+    Garbage *gb = (*it).second;
     Field *fld = gb->to;
     Player *pl = this->player(fld);
     if( pl == NULL ) {
