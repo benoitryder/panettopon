@@ -308,7 +308,7 @@ void ServerInstance::onGarbageDrop(const Garbage *gb)
   netplay::PktGarbageState *np_state = pkt.mutable_garbage_state();
   np_state->set_gbid(gb->gbid);
   np_state->set_state(netplay::PktGarbageState::WAIT);
-  match_.waitGarbageDrop(gb); // note: reset the gbid
+  match_.waitGarbageDrop(gb);
   socket_.broadcastPacket(pkt);
 
   // local player: drop immediately

@@ -408,7 +408,7 @@ class Match
 {
  public:
   typedef boost::ptr_vector<Field> FieldContainer;
-  typedef std::map<GbId, Garbage *> GbHangingMap;
+  typedef std::map<GbId, Garbage *> GarbageMap;
 
   Match();
   ~Match() {}
@@ -449,7 +449,8 @@ class Match
    */
   bool updateRanks(std::vector<const Field *> &ranked);
 
-  const GbHangingMap &hangingGarbages() const { return gbs_hang_; }
+  const GarbageMap &hangingGarbages() const { return gbs_hang_; }
+  const GarbageMap &waitingGarbages() const { return gbs_wait_; }
 
   /** @brief Add a new (hanging) garbage.
    *
@@ -463,7 +464,9 @@ class Match
   FieldContainer fields_;
 
   /// Map of all hanging garbages.
-  GbHangingMap gbs_hang_;
+  GarbageMap gbs_hang_;
+  /// Map of all waiting garbages
+  GarbageMap gbs_wait_;
 
   bool started_;
   Tick tick_;

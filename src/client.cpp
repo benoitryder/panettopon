@@ -235,8 +235,8 @@ void ClientInstance::processPktUpdateGarbage(const netplay::PktUpdateGarbage& pk
   if( state_ != STATE_GAME ) {
     throw netplay::CallbackError("match is not running");
   }
-  const Match::GbHangingMap gbs_hang = match_.hangingGarbages();
-  Match::GbHangingMap::const_iterator it = gbs_hang.find(pkt.gbid());
+  const Match::GarbageMap gbs_hang = match_.hangingGarbages();
+  Match::GarbageMap::const_iterator it = gbs_hang.find(pkt.gbid());
   if( it == gbs_hang.end() ) {
     throw netplay::CallbackError("garbage not found");
   }
@@ -287,8 +287,8 @@ void ClientInstance::processPktGarbageState(const netplay::PktGarbageState& pkt)
 
   if( state == netplay::PktGarbageState::WAIT ) {
     // garbage from hanging to wait
-    const Match::GbHangingMap gbs_hang = match_.hangingGarbages();
-    Match::GbHangingMap::const_iterator it = gbs_hang.find(pkt.gbid());
+    const Match::GarbageMap gbs_hang = match_.hangingGarbages();
+    Match::GarbageMap::const_iterator it = gbs_hang.find(pkt.gbid());
     if( it == gbs_hang.end() ) {
       throw netplay::CallbackError("garbage not found");
     }

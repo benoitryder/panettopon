@@ -609,16 +609,16 @@ void Field::step(KeyState keys)
 void Field::waitNextGarbageDrop()
 {
   LOG("[%p|%u] waitNextGarbageDrop()", this, tick_);
-  // id is not meaningful anymore, it could be reused
   Garbage *gb = gbs_hang_.pop_front().release();
-  gb->gbid = 0;
   gbs_wait_.push_back( gb );
 }
 
 void Field::dropNextGarbage()
 {
   LOG("[%p|%u] dropNextGarbage()", this, tick_);
-  gbs_drop_.push_back( gbs_wait_.pop_front().release() );
+  Garbage *gb = gbs_wait_.pop_front().release();
+  gb->gbid = 0;
+  gbs_drop_.push_back(gb);
 }
 
 void Field::insertHangingGarbage(Garbage *gb, unsigned int pos)
@@ -947,6 +947,7 @@ void Match::stop()
   assert( started_ );
   started_ = false;
   gbs_hang_.clear();
+  gbs_wait_.clear();
   fields_.clear();
 }
 
@@ -1055,10 +1056,14 @@ void Match::addGarbage(Garbage *gb, unsigned int pos)
 void Match::waitGarbageDrop(const Garbage *gb)
 {
   assert( gb->to != NULL );
-
-  gbs_hang_.erase(gb->gbid);
   assert( gb->to->hangingGarbage(0).gbid == gb->gbid );
+
+  auto it = gbs_hang_.find(gb->gbid);
+  assert( it != gbs_hang_.end() );
+  Garbage *gb2 = it->second; // same as gb, but not const
+  gbs_hang_.erase(it);
   gb->to->waitNextGarbageDrop();
+  gbs_wait_[gb->gbid] = gb2;
 }
 
 
@@ -1271,13 +1276,16 @@ void GarbageDistributor::newGarbage(Field *from, Field *to, Garbage::Type type, 
 
 GbId GarbageDistributor::nextGarbageId()
 {
-  const Match::GbHangingMap gbs_hang = match_.hangingGarbages();
+  const Match::GarbageMap gbs_wait = match_.waitingGarbages();
+  const Match::GarbageMap gbs_hang = match_.hangingGarbages();
   for(;;) {
     current_gbid_++;
     if( current_gbid_ <= 0 ) // overflow
       current_gbid_ = 1;
-    if( gbs_hang.find(current_gbid_) == gbs_hang.end() )
+    if( gbs_hang.find(current_gbid_) == gbs_hang.end() &&
+       gbs_wait.find(current_gbid_) == gbs_wait.end() ) {
       break; // not already in use
+    }
   }
   return current_gbid_;
 }
