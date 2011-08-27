@@ -42,6 +42,7 @@ class ClientInstance: public GameInstance,
   /** @name Local player operations. */
   //@{
   virtual void playerSetNick(Player *pl, const std::string &nick);
+  virtual void playerSetFieldConf(Player *pl, const FieldConf& conf, const std::string& name);
   virtual void playerSetReady(Player *pl, bool ready);
   virtual void playerSendChat(Player *pl, const std::string &msg);
   virtual void playerStep(Player *pl, KeyState keys);

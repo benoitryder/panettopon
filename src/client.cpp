@@ -57,6 +57,21 @@ void ClientInstance::playerSetNick(Player *pl, const std::string &nick)
   socket_.writePacket(pkt);
 }
 
+void ClientInstance::playerSetFieldConf(Player *pl, const FieldConf& conf, const std::string& name)
+{
+  assert( pl->local() );
+  assert( state_ == STATE_LOBBY && !pl->ready() );
+  //TODO compare with current conf/name
+
+  netplay::Packet pkt;
+  netplay::PktPlayerConf *np_conf = pkt.mutable_player_conf();
+  np_conf->set_plid(pl->plid());
+  netplay::FieldConf *np_fc = np_conf->mutable_field_conf();
+  np_fc->set_name(name);
+  conf.toPacket(np_fc);
+  socket_.writePacket(pkt);
+}
+
 void ClientInstance::playerSetReady(Player *pl, bool ready)
 {
   assert( pl->local() );

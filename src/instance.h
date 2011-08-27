@@ -138,6 +138,7 @@ class GameInstance
    */
   //@{
   virtual void playerSetNick(Player *pl, const std::string &nick) = 0;
+  virtual void playerSetFieldConf(Player *pl, const FieldConf& conf, const std::string& name) = 0;
   virtual void playerSetReady(Player *pl, bool ready) = 0;
   virtual void playerSendChat(Player *pl, const std::string &msg) = 0;
   virtual void playerStep(Player *pl, KeyState keys) = 0;

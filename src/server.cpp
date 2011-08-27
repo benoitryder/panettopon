@@ -129,6 +129,21 @@ void ServerInstance::playerSetNick(Player *pl, const std::string &nick)
   socket_.broadcastPacket(pkt);
 }
 
+void ServerInstance::playerSetFieldConf(Player *pl, const FieldConf& conf, const std::string& name)
+{
+  assert( pl->local() );
+  assert( state_ == STATE_LOBBY && !pl->ready() );
+  pl->setFieldConf(conf, name);
+
+  netplay::Packet pkt;
+  netplay::PktPlayerConf *np_conf = pkt.mutable_player_conf();
+  np_conf->set_plid(pl->plid());
+  netplay::FieldConf *np_fc = np_conf->mutable_field_conf();
+  np_fc->set_name(name);
+  conf.toPacket(np_fc);
+  socket_.broadcastPacket(pkt);
+}
+
 void ServerInstance::playerSetReady(Player *pl, bool ready)
 {
   assert( pl->local() );
