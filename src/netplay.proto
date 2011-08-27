@@ -105,6 +105,7 @@ message PktPlayerJoin {
 
 // Set player configuration
 // For new players, nick and field_conf must be set.
+// From client, only valid in LOBBY server state.
 message PktPlayerConf {
   required uint32 plid = 1;
   optional string nick = 2;

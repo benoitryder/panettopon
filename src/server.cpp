@@ -114,6 +114,7 @@ Player *ServerInstance::newLocalPlayer(const std::string &nick)
 void ServerInstance::playerSetNick(Player *pl, const std::string &nick)
 {
   assert( pl->local() );
+  assert( state_ == STATE_LOBBY && !pl->ready() );
   if( nick == pl->nick() ) {
     return; // nothing to do
   }
@@ -454,10 +455,16 @@ void ServerInstance::processPktPlayerJoin(netplay::PeerSocket *peer, const netpl
 
 void ServerInstance::processPktPlayerConf(netplay::PeerSocket *peer, const netplay::PktPlayerConf& pkt)
 {
+  if( state_ != STATE_LOBBY ) {
+    throw netplay::CallbackError("match is running");
+  }
   netplay::Packet pkt_send;
   netplay::PktPlayerConf *np_plconf = pkt_send.mutable_player_conf();
 
   Player *pl = this->checkPeerPlayer(pkt.plid(), peer);
+  if( pl->ready() ) {
+    throw netplay::CallbackError("invalid when player is ready");
+  }
   bool do_send = false;
   if( pkt.has_nick() && pkt.nick() != pl->nick() ) {
     const std::string old_nick = pl->nick();

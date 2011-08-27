@@ -44,6 +44,7 @@ void ClientInstance::newLocalPlayer(const std::string &nick)
 void ClientInstance::playerSetNick(Player *pl, const std::string &nick)
 {
   assert( pl->local() );
+  assert( state_ == STATE_LOBBY && !pl->ready() );
   if( nick == pl->nick() ) {
     return; // nothing to do
   }
