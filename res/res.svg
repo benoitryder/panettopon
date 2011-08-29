@@ -334,6 +334,19 @@
       }
 
 
+      #Menu-Choice rect {
+        fill: #c0c0c0;
+        stroke: #101010;
+        stroke-width: 1;
+      }
+      #Menu-Choice path {
+        fill: #101010;
+        stroke: #101010;
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
       #Menu-Background-bg {
         fill: #eeeeee;
       }
@@ -761,7 +774,7 @@
     transform="translate(500,1100) scale(2)">
     <!-- force the bounding box for the export -->
     <rect id="Menu-container"
-      width="256" height="128"
+      width="256" height="192"
       style="stroke: none; fill: none;"
       />
     <rect id="Menu-Button"
@@ -778,6 +791,22 @@
       rx="4" ry="4"
       style="fill: #c0c0c0; stroke: #101010; stroke-width: 1;"
       />
+    <g id="Menu-Choice"
+      transform="translate(64,160)">
+      <rect
+        x="-47" y="-29"
+        width="94" height="58"
+        rx="4" ry="4"
+        />
+      <path
+        sodipodi:nodetypes="cccc"
+        d="m -59,0 7,-16 0,32 z"
+        />
+      <path
+        sodipodi:nodetypes="cccc"
+        d="m 59,0 -7,-16 0,32 z"
+        />
+    </g>
     <g id="Menu-Frame"
       transform="translate(192,64)">
       <rect id="Menu-Frame-inside"
