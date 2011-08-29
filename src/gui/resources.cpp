@@ -229,43 +229,48 @@ void ImageFrame::render(sf::Renderer &renderer, const sf::Vector2f& size) const
 
 
 ImageFrameX::ImageFrameX():
-    image_(NULL), margin_(0)
+    image_(NULL)
 {
 }
 
-void ImageFrameX::create(const sf::Texture *img, const sf::IntRect& rect, unsigned int margin)
+void ImageFrameX::create(const sf::Texture *img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width)
 {
   image_ = img;
   rect_ = rect;
-  margin_ = margin;
+  inside_left_ = inside_left;
+  inside_width_ = inside_width;
 }
 
 void ImageFrameX::render(sf::Renderer &renderer, const sf::FloatRect& rect) const
 {
-  const float x = rect.Left;
-  const float y = rect.Top;
-  const float w = rect.Width;
-  const float h = rect.Height;
+  const float img_x0 = rect.Left;
+  const float img_y0 = rect.Top;
+  const float img_x3 = rect.Left + rect.Width;
+  const float img_y1 = rect.Top + rect.Height;
   sf::FloatRect coords = image_->GetTexCoords(rect_);
-  const float left   = coords.Left;
-  const float top    = coords.Top;
-  const float right  = coords.Left + coords.Width;
-  const float bottom = coords.Top  + coords.Height;
-  const float margin_tex = (float)margin_/rect_.Width * coords.Width;
+  const float tex_x0 = coords.Left;
+  const float tex_y0 = coords.Top;
+  const float tex_x3 = coords.Left + coords.Width;
+  const float tex_y1 = coords.Top  + coords.Height;
+
+  const float img_x1 = rect.Left + inside_left_;
+  const float img_x2 = rect.Left + rect.Width  - (rect_.Width  - inside_left_ - inside_width_);
+  const float tex_x1 = (float)inside_left_/rect_.Width * coords.Width;
+  const float tex_x2 = (float)(inside_left_+inside_width_)/rect_.Width * coords.Width;
 
   renderer.SetTexture(image_);
   renderer.Begin(sf::Renderer::TriangleStrip);
     // left
-    renderer.AddVertex(x, y,   left, bottom);
-    renderer.AddVertex(x, y+h, left, top);
-    renderer.AddVertex(x+margin_, y,   left+margin_tex, bottom);
-    renderer.AddVertex(x+margin_, y+h, left+margin_tex, top);
+    renderer.AddVertex(img_x0, img_y0, tex_x0, tex_y1);
+    renderer.AddVertex(img_x0, img_y1, tex_x0, tex_y0);
+    renderer.AddVertex(img_x1, img_y0, tex_x1, tex_y1);
+    renderer.AddVertex(img_x1, img_y1, tex_x1, tex_y0);
     // middle
-    renderer.AddVertex(x+w-margin_, y,   right-margin_tex, bottom);
-    renderer.AddVertex(x+w-margin_, y+h, right-margin_tex, top);
+    renderer.AddVertex(img_x2, img_y0, tex_x2, tex_y0);
+    renderer.AddVertex(img_x2, img_y1, tex_x2, tex_y1);
     // right
-    renderer.AddVertex(x+w, y,   right, bottom);
-    renderer.AddVertex(x+w, y+h, right, top);
+    renderer.AddVertex(img_x3, img_y0, tex_x3, tex_y0);
+    renderer.AddVertex(img_x3, img_y1, tex_x3, tex_y1);
   renderer.End();
 }
 
