@@ -211,6 +211,21 @@ template <typename T> std::istream& operator>>(std::istream& in, sf::Vector2<T>&
   return in;
 }
 
+template <typename T1, typename T2> std::istream& operator>>(std::istream& in, std::pair<T1, T2>& pair)
+{
+  T1 v1;
+  T2 v2;
+  char c;
+  in >> v1 >> c >> v2;
+  if( in && c == ',' ) {
+    pair.first = v1;
+    pair.second = v2;
+    return in;
+  }
+  in.clear( in.rdstate() | std::istream::failbit );
+  return in;
+}
+
 //@}
 
 #endif
