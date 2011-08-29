@@ -129,8 +129,8 @@ class WFrame: public Widget
  *  - Font, FontSize, FontStyle
  *  - Color, FocusColor
  *  - Width
- *  - Image, ImageRect, ImageMarginX
- *  - FocusImage, FocusImageRect, FocusImageMarginX
+ *  - Image, ImageRect, ImageInside
+ *  - FocusImage, FocusImageRect, FocusImageInside
  */
 class WButton: public Widget
 {
@@ -187,8 +187,8 @@ class WLabel: public Widget
  *  - Font, FontSize, FontStyle
  *  - Color, FocusColor
  *  - Width
- *  - BgImage, BgImageRect, BgImageMarginX
- *  - TextMarginX: left and right margin for text
+ *  - BgImage, BgImageRect, BgImageInside
+ *  - TextMarginsX: left and right margin for text
  */
 class WEntry: public Widget
 {

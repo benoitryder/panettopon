@@ -121,14 +121,16 @@ void Widget::applyStyle(ImageFrameX *frame, const std::string prefix)
     if( searchStyle(prefix+"ImageRect", &key) ) {
       rect = style.get<sf::IntRect>(key);
     }
-    unsigned int margin = 0;
-    if( searchStyle(prefix+"ImageMarginX", &key) ) {
-      margin = style.get<unsigned int>(key);
-      if( 2*margin >= (unsigned int)rect.Width ) {
-        throw StyleError(*this, prefix+"ImageMarginX", "margins larger than image width");
+    if( searchStyle(prefix+"ImageInside", &key) ) {
+      std::pair<int, int> inside(0,0);
+      inside = style.get<decltype(inside)>(key);
+      if( inside.first < 0 || inside.first+inside.second > rect.Width ) {
+        throw StyleError(*this, key, "image inside not contained in image size");
       }
+      frame->create(img, rect, inside.first, inside.second);
+    } else {
+      throw StyleError(*this, prefix+"ImageInside", "not set");
     }
-    frame->create(img, rect, margin);
   } else {
     throw StyleError(*this, prefix+"Image", "not set");
   }
@@ -353,13 +355,13 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   } else {
     throw StyleError(*this, "Width", "not set");
   }
-  unsigned int text_margin = 0;
-  if( searchStyle("TextMarginX", &key) ) {
-    text_margin = style.get<unsigned int>(key);
+  std::pair<unsigned int, unsigned int> text_margins(0, 0);
+  if( searchStyle("TextMarginsX", &key) ) {
+    text_margins = style.get<decltype(text_margins)>(key);
   }
   unsigned int text_height = text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2;
-  text_img_.Create(width_-2*text_margin, text_height);
-  text_sprite_.SetOrigin(width_/2.-text_margin, text_height/2.);
+  text_img_.Create(width_-(text_margins.first+text_margins.second), text_height);
+  text_sprite_.SetOrigin(width_/2.-text_margins.first, text_height/2.);
   text_sprite_.SetTexture(text_img_.GetTexture(), true);
   text_sprite_.SetColor(color_);
   cursor_ = sf::Shape::Line(0, 0, 0, text_height, 1, sf::Color::White);

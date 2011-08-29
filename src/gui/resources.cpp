@@ -266,11 +266,11 @@ void ImageFrameX::render(sf::Renderer &renderer, const sf::FloatRect& rect) cons
     renderer.AddVertex(img_x1, img_y0, tex_x1, tex_y1);
     renderer.AddVertex(img_x1, img_y1, tex_x1, tex_y0);
     // middle
-    renderer.AddVertex(img_x2, img_y0, tex_x2, tex_y0);
-    renderer.AddVertex(img_x2, img_y1, tex_x2, tex_y1);
+    renderer.AddVertex(img_x2, img_y0, tex_x2, tex_y1);
+    renderer.AddVertex(img_x2, img_y1, tex_x2, tex_y0);
     // right
-    renderer.AddVertex(img_x3, img_y0, tex_x3, tex_y0);
-    renderer.AddVertex(img_x3, img_y1, tex_x3, tex_y1);
+    renderer.AddVertex(img_x3, img_y0, tex_x3, tex_y1);
+    renderer.AddVertex(img_x3, img_y1, tex_x3, tex_y0);
   renderer.End();
 }
 
