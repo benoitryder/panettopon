@@ -482,5 +482,91 @@ void WEntry::updateTextDisplay(bool force)
 }
 
 
+const std::string& WChoice::type() const {
+  static const std::string type("Choice");
+  return type;
+}
+
+WChoice::WChoice(const Screen& screen, const std::string& name):
+    Widget(screen, name)
+{
+  const IniFile& style = screen_.style();
+  std::string key;
+
+  this->applyStyle(&text_);
+
+  if( searchStyle("Color", &key) ) {
+    color_ = style.get<sf::Color>(key);
+  }
+  if( searchStyle("FocusColor", &key) ) {
+    focus_color_ = style.get<sf::Color>(key);
+  }
+
+  if( searchStyle("Width", &key) ) {
+    width_ = style.get<float>(key);
+    if( width_ <= 0 ) {
+      throw StyleError(key, "value must be positive");
+    }
+  } else {
+    throw StyleError(*this, "Width", "not set");
+  }
+
+  this->applyStyle(&frame_);
+  this->applyStyle(&focus_frame_, "Focus");
+  text_.SetColor(color_);
+}
+
+void WChoice::setItems(const ItemContainer& items)
+{
+  if( items.size() == 0 ) {
+    throw std::runtime_error("empty items list");
+  }
+  items_ = items;
+  if( index_ >= items_.size() ) {
+    this->select(0);
+  }
+}
+
+void WChoice::select(unsigned int i)
+{
+  text_.SetString(items_[i]);
+  index_ = i;
+  sf::FloatRect r = text_.GetRect();
+  text_.SetOrigin(r.Width/2, (text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2)/2);
+}
+
+void WChoice::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
+{
+  if( this->focused() ) {
+    focus_frame_.render(renderer, width_);
+  } else {
+    frame_.render(renderer, width_);
+  }
+  target.Draw(text_);
+}
+
+bool WChoice::onInputEvent(const sf::Event &ev)
+{
+  if( ev.Type == sf::Event::KeyPressed ) {
+    sf::Keyboard::Key c = ev.Key.Code;
+    if( c == sf::Keyboard::Left ) {
+      this->select( index_ == 0 ? items_.size()-1 : index_-1 );
+    } else if( c == sf::Keyboard::Right ) {
+      this->select( index_ == items_.size()-1 ? 0 : index_+1 );
+    } else {
+      return false; // not processed
+    }
+    return true;
+  }
+  return false;
+}
+
+void WChoice::focus(bool focused)
+{
+  Widget::focus(focused);
+  text_.SetColor(focused ? focus_color_ : color_);
+}
+
+
 }
 

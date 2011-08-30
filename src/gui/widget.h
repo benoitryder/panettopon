@@ -222,6 +222,45 @@ class WEntry: public Widget
 };
 
 
+/** @brief Choice among an option list
+ *
+ * Similar to a drop-down list, unless it does not drop-down.
+ *
+ * Style properties:
+ *  - Font, FontSize, FontStyle
+ *  - Color, FocusColor
+ *  - Width
+ *  - BgImage, BgImageRect, BgImageInside
+ */
+class WChoice: public Widget
+{
+ public:
+  typedef std::vector<std::string> ItemContainer;
+
+  WChoice(const Screen& screen, const std::string& name);
+  const ItemContainer& items() const { return items_; }
+  unsigned int index() const { return index_; }
+  void setItems(const ItemContainer& items);
+  void select(unsigned int i);
+  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+  virtual bool onInputEvent(const sf::Event &);
+  virtual void focus(bool focused);
+
+ protected:
+  virtual const std::string& type() const;
+
+ private:
+  ItemContainer items_;
+  unsigned int index_;
+  ImageFrameX frame_;
+  ImageFrameX focus_frame_;
+  sf::Text text_;
+  sf::Color color_;
+  sf::Color focus_color_;
+  float width_;
+};
+
+
 }
 
 #endif
