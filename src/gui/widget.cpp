@@ -6,6 +6,8 @@
 
 namespace gui {
 
+Widget::StyleError::StyleError(const std::string& prop, const std::string& msg):
+  std::runtime_error("style error for "+prop+": "+msg) {}
 Widget::StyleError::StyleError(const Widget& w, const std::string& prop, const std::string& msg):
   std::runtime_error("style error for "+w.screen_.name()+"."+w.name_+"."+prop+": "+msg) {}
 
@@ -75,7 +77,7 @@ void Widget::applyStyle(sf::Text *text, const std::string prefix)
     } else if( val == "bold,italic" || val == "italic,bold" ) {
       txt_style = sf::Text::Bold|sf::Text::Italic;
     } else {
-      throw StyleError(*this, prefix+"FontStyle", "invalid value");
+      throw StyleError(key, "invalid value");
     }
     text->SetStyle(txt_style);
   }
@@ -98,7 +100,7 @@ void Widget::applyStyle(ImageFrame *frame, const std::string prefix)
       inside = style.get<sf::IntRect>(key);
       if( inside.Left < 0 || inside.Left+inside.Width > rect.Width
          || inside.Top < 0 || inside.Top+inside.Height > rect.Height ) {
-        throw StyleError(*this, key, "image inside not contained in image size");
+        throw StyleError(key, "image inside not contained in image size");
       }
     } else {
       throw StyleError(*this, prefix+"ImageInside", "not set");
@@ -125,7 +127,7 @@ void Widget::applyStyle(ImageFrameX *frame, const std::string prefix)
       std::pair<int, int> inside(0,0);
       inside = style.get<decltype(inside)>(key);
       if( inside.first < 0 || inside.first+inside.second > rect.Width ) {
-        throw StyleError(*this, key, "image inside not contained in image size");
+        throw StyleError(key, "image inside not contained in image size");
       }
       frame->create(img, rect, inside.first, inside.second);
     } else {
@@ -185,7 +187,7 @@ WFrame::WFrame(const Screen& screen, const std::string& name):
   if( searchStyle("Size", &key) ) {
     size_ = style.get<sf::Vector2f>(key);
     if( size_.x <= 0 || size_.y <= 0 ) {
-      throw StyleError(*this, "Size", "invalid value");
+      throw StyleError(key, "invalid value");
     }
   } else {
     throw StyleError(*this, "Size", "not set");
@@ -223,7 +225,7 @@ WButton::WButton(const Screen& screen, const std::string& name):
   if( searchStyle("Width", &key) ) {
     width_ = style.get<float>(key);
     if( width_ <= 0 ) {
-      throw StyleError(*this, "Width", "value must be positive");
+      throw StyleError(key, "value must be positive");
     }
   } else {
     throw StyleError(*this, "Width", "not set");
@@ -295,7 +297,7 @@ WLabel::WLabel(const Screen& screen, const std::string& name):
     } else if( align == "right" ) {
       align_ = 1;
     } else {
-      throw StyleError(*this, "TextAlign", "invalid value");
+      throw StyleError(key, "invalid value");
     }
   }
 }
@@ -350,7 +352,7 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   if( searchStyle("Width", &key) ) {
     width_ = style.get<float>(key);
     if( width_ <= 0 ) {
-      throw StyleError(*this, "Width", "value must be positive");
+      throw StyleError(key, "value must be positive");
     }
   } else {
     throw StyleError(*this, "Width", "not set");

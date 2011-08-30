@@ -27,6 +27,7 @@ class Widget: public sf::Drawable
 {
  public:
   struct StyleError: public std::runtime_error {
+    StyleError(const std::string& prop, const std::string& msg);
     StyleError(const Widget& w, const std::string& prop, const std::string& msg);
   };
 
