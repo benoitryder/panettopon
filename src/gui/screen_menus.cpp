@@ -359,6 +359,11 @@ void ScreenLobby::onPlayerReady(Player *pl)
   player_rows_.find(pl->plid())->second->update();
 }
 
+void ScreenLobby::onPlayerChangeFieldConf(Player *pl)
+{
+  player_rows_.find(pl->plid())->second->update();
+}
+
 void ScreenLobby::onPlayerQuit(Player *pl)
 {
   player_rows_.erase(pl->plid());
@@ -412,6 +417,14 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
     throw StyleError(*this, "NickX", "not set");
   }
 
+  this->applyStyle(&conf_, "Conf");
+  conf_.SetOrigin(0, (conf_.GetFont().GetLineSpacing(conf_.GetCharacterSize())+2)/2);
+  if( searchStyle("ConfX", &key) ) {
+    conf_.SetX(style.get<float>(key));
+  } else {
+    throw StyleError(*this, "ConfX", "not set");
+  }
+
   this->applyStyle(&ready_, "Ready");
   ready_.SetOrigin(ready_.GetSize()/2.f);
   if( searchStyle("ReadyX", &key) ) {
@@ -426,6 +439,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
 void ScreenLobby::WPlayerRow::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
   target.Draw(nick_);
+  target.Draw(conf_);
   if( player_.ready() ) {
     target.Draw(ready_);
   }
@@ -434,6 +448,7 @@ void ScreenLobby::WPlayerRow::Render(sf::RenderTarget &target, sf::Renderer &) c
 void ScreenLobby::WPlayerRow::update()
 {
   nick_.SetString(player_.nick());
+  conf_.SetString(player_.fieldConfName());
 }
 
 

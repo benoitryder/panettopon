@@ -101,6 +101,7 @@ class ScreenLobby: public ScreenMenu
   virtual void onPlayerJoined(Player *);
   virtual void onPlayerChangeNick(Player *, const std::string &);
   virtual void onPlayerReady(Player *);
+  virtual void onPlayerChangeFieldConf(Player *);
   virtual void onPlayerQuit(Player *);
 
  private:
@@ -109,7 +110,7 @@ class ScreenLobby: public ScreenMenu
    * Style properties:
    *  - NickFont, NickFontSize, NickFontStyle
    *  - ReadyImage, RedayImageRect
-   *  - NickX, ReadyX
+   *  - NickX, ConfX, ReadyX
    */
   class WPlayerRow: public Widget
   {
@@ -125,6 +126,7 @@ class ScreenLobby: public ScreenMenu
    private:
     const Player& player_;
     sf::Text nick_;
+    sf::Text conf_;
     sf::Sprite ready_;
   };
 
