@@ -105,7 +105,7 @@ class ScreenLobby: public ScreenMenu
   virtual void onPlayerQuit(Player *);
 
  private:
-  /** @brief Display a row of informaion for a player.
+  /** @brief Display a row of information for a player.
    *
    * Style properties:
    *  - NickFont, NickFontSize, NickFontStyle
