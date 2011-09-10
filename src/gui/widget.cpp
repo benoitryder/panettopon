@@ -13,10 +13,8 @@ Widget::StyleError::StyleError(const Widget& w, const std::string& prop, const s
 
 
 Widget::Widget(const Screen& screen, const std::string& name):
-    screen_(screen), name_(name), focused_(false)
+    screen_(screen), name_(name)
 {
-  this->setNeighbors(NULL, NULL, NULL, NULL);
-
   const IniFile& style = screen_.style();
   const std::string section = screen_.name()+'.'+name_;
   if( style.has(section, "Pos") ) {
@@ -25,14 +23,6 @@ Widget::Widget(const Screen& screen, const std::string& name):
 }
 
 Widget::~Widget() {}
-
-void Widget::setNeighbors(Widget *up, Widget *down, Widget *left, Widget *right)
-{
-  neighbors_[NEIGHBOR_UP] = up;
-  neighbors_[NEIGHBOR_DOWN] = down;
-  neighbors_[NEIGHBOR_LEFT] = left;
-  neighbors_[NEIGHBOR_RIGHT] = right;
-}
 
 bool Widget::searchStyle(const std::string& prop, std::string *key) const
 {
@@ -155,6 +145,21 @@ void Widget::applyStyle(sf::Sprite *sprite, const std::string prefix)
 }
 
 
+WFocusable::WFocusable(const Screen& screen, const std::string& name):
+    Widget(screen, name), focused_(false)
+{
+  this->setNeighbors(NULL, NULL, NULL, NULL);
+}
+
+void WFocusable::setNeighbors(WFocusable *up, WFocusable *down, WFocusable *left, WFocusable *right)
+{
+  neighbors_[NEIGHBOR_UP] = up;
+  neighbors_[NEIGHBOR_DOWN] = down;
+  neighbors_[NEIGHBOR_LEFT] = left;
+  neighbors_[NEIGHBOR_RIGHT] = right;
+}
+
+
 const std::string& WContainer::type() const {
   static const std::string type("Container");
   return type;
@@ -208,7 +213,7 @@ const std::string& WButton::type() const {
 }
 
 WButton::WButton(const Screen& screen, const std::string& name):
-    Widget(screen, name), callback_(NULL)
+    WFocusable(screen, name), callback_(NULL)
 {
   const IniFile& style = screen_.style();
   std::string key;
@@ -268,7 +273,7 @@ bool WButton::onInputEvent(const sf::Event &ev)
 
 void WButton::focus(bool focused)
 {
-  Widget::focus(focused);
+  WFocusable::focus(focused);
   caption_.SetColor(focused ? focus_color_ : color_);
 }
 
@@ -335,7 +340,7 @@ const std::string& WEntry::type() const {
 }
 
 WEntry::WEntry(const Screen& screen, const std::string& name):
-    Widget(screen, name), cursor_pos_(0)
+    WFocusable(screen, name), cursor_pos_(0)
 {
   const IniFile& style = screen_.style();
   std::string key;
@@ -444,7 +449,7 @@ bool WEntry::onInputEvent(const sf::Event &ev)
 
 void WEntry::focus(bool focused)
 {
-  Widget::focus(focused);
+  WFocusable::focus(focused);
   text_sprite_.SetColor(focused ? focus_color_ : color_);
 }
 
@@ -488,7 +493,7 @@ const std::string& WChoice::type() const {
 }
 
 WChoice::WChoice(const Screen& screen, const std::string& name):
-    Widget(screen, name)
+    WFocusable(screen, name)
 {
   const IniFile& style = screen_.style();
   std::string key;
@@ -563,7 +568,7 @@ bool WChoice::onInputEvent(const sf::Event &ev)
 
 void WChoice::focus(bool focused)
 {
-  Widget::focus(focused);
+  WFocusable::focus(focused);
   text_.SetColor(focused ? focus_color_ : color_);
 }
 

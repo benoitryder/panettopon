@@ -31,22 +31,8 @@ class Widget: public sf::Drawable
     StyleError(const Widget& w, const std::string& prop, const std::string& msg);
   };
 
-  enum Neighbor {
-    NEIGHBOR_NONE = -1,
-    NEIGHBOR_UP = 0,
-    NEIGHBOR_DOWN,
-    NEIGHBOR_LEFT,
-    NEIGHBOR_RIGHT,
-    NEIGHBOR_COUNT
-  };
-
   Widget(const Screen& screen, const std::string& name);
   virtual ~Widget();
-  virtual bool onInputEvent(const sf::Event &) { return false; }
-  bool focused() const { return focused_; }
-  virtual void focus(bool focused) { focused_ = focused; }
-  Widget *neighbor(Neighbor n) const { return neighbors_[n]; }
-  void setNeighbors(Widget *up, Widget *down, Widget *left, Widget *right);
 
   /// Return the widget type as a string.
   virtual const std::string& type() const = 0;
@@ -75,9 +61,34 @@ class Widget: public sf::Drawable
  protected:
   const Screen& screen_;
   const std::string& name_;
+};
+
+
+/** @brief Focusable widget.
+ */
+class WFocusable: public Widget
+{
+ public:
+  enum Neighbor {
+    NEIGHBOR_NONE = -1,
+    NEIGHBOR_UP = 0,
+    NEIGHBOR_DOWN,
+    NEIGHBOR_LEFT,
+    NEIGHBOR_RIGHT,
+    NEIGHBOR_COUNT
+  };
+
+  WFocusable(const Screen& screen, const std::string& name);
+
+  virtual bool onInputEvent(const sf::Event &) { return false; }
+  bool focused() const { return focused_; }
+  virtual void focus(bool focused) { focused_ = focused; }
+  WFocusable *neighbor(Neighbor n) const { return neighbors_[n]; }
+  void setNeighbors(WFocusable *up, WFocusable *down, WFocusable *left, WFocusable *right);
+
  private:
   bool focused_;
-  Widget *neighbors_[NEIGHBOR_COUNT];
+  WFocusable *neighbors_[NEIGHBOR_COUNT];
 };
 
 
@@ -133,7 +144,7 @@ class WFrame: public Widget
  *  - Image, ImageRect, ImageInside
  *  - FocusImage, FocusImageRect, FocusImageInside
  */
-class WButton: public Widget
+class WButton: public WFocusable
 {
  public:
   WButton(const Screen& screen, const std::string& name);
@@ -191,7 +202,7 @@ class WLabel: public Widget
  *  - BgImage, BgImageRect, BgImageInside
  *  - TextMarginsX: left and right margin for text
  */
-class WEntry: public Widget
+class WEntry: public WFocusable
 {
  public:
   WEntry(const Screen& screen, const std::string& name);
@@ -232,7 +243,7 @@ class WEntry: public Widget
  *  - Width
  *  - BgImage, BgImageRect, BgImageInside
  */
-class WChoice: public Widget
+class WChoice: public WFocusable
 {
  public:
   typedef std::vector<std::string> ItemContainer;

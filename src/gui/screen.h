@@ -86,11 +86,11 @@ class ScreenMenu: public Screen
   ScreenMenu(GuiInterface &intf, const std::string &name);
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event &ev);
-  void focus(Widget *w);
+  void focus(WFocusable *w);
 
  protected:
   WContainer container_;
-  Widget *focused_;
+  WFocusable *focused_;
 };
 
 
