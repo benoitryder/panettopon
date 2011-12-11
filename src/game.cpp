@@ -178,7 +178,6 @@ void Field::step(KeyState keys)
           if( bk2->isNone() ) {
             *bk2 = *bk;
             bk->type = Block::NONE;
-            bk->swapped = false; // cancel swap at field level?
             bk->chaining = false;
             bk->ntick = 0;
           } else if( bk2->isState(BkColor::LEVITATE) ) {
@@ -471,10 +470,9 @@ void Field::step(KeyState keys)
     key_repeat_ = 0;
     // keys pushed since last frame
     keys_input = (key_state_^keys)&keys;
+    // update key state
+    key_state_ = keys;
   }
-
-  // update key state
-  key_state_ = keys;
 
   // process key
   if( (keys_input&GAME_KEY_MOVE) && (key_repeat_ == 0 || key_repeat_ >= 10) ) {
