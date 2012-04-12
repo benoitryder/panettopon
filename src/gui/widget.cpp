@@ -170,7 +170,7 @@ WContainer::WContainer(const Screen& screen, const std::string& name):
 {
 }
 
-void WContainer::Render(sf::RenderTarget &target, sf::Renderer &) const
+void WContainer::draw(sf::RenderTarget &target, sf::RenderStates) const
 {
   Container::const_iterator it;
   for( it=widgets.begin(); it!=widgets.end(); ++it ) {
@@ -201,7 +201,7 @@ WFrame::WFrame(const Screen& screen, const std::string& name):
   this->applyStyle(&frame_);
 }
 
-void WFrame::Render(sf::RenderTarget &, sf::Renderer &renderer) const
+void WFrame::draw(sf::RenderTarget &, sf::RenderStates states) const
 {
   frame_.render(renderer, size_);
 }
@@ -248,7 +248,7 @@ void WButton::setCaption(const std::string &caption)
   caption_.setOrigin(r.width/2, (caption_.getFont().getLineSpacing(caption_.getCharacterSize())+2)/2);
 }
 
-void WButton::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
+void WButton::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   if( this->focused() ) {
     focus_frame_.render(renderer, width_);
@@ -313,7 +313,7 @@ void WLabel::setText(const std::string &text)
   this->setTextAlign(align_); // recompute origin
 }
 
-void WLabel::Render(sf::RenderTarget &target, sf::Renderer &) const
+void WLabel::draw(sf::RenderTarget &target, sf::RenderStates) const
 {
   target.draw(text_);
 }
@@ -385,7 +385,7 @@ void WEntry::setText(const std::string &text)
   this->updateTextDisplay(true);
 }
 
-void WEntry::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
+void WEntry::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   if( this->focused() ) {
     focus_frame_.render(renderer, width_);
@@ -540,7 +540,7 @@ void WChoice::select(unsigned int i)
   text_.setOrigin(r.width/2, (text_.getFont().getLineSpacing(text_.getCharacterSize())+2)/2);
 }
 
-void WChoice::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
+void WChoice::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   if( this->focused() ) {
     focus_frame_.render(renderer, width_);

@@ -103,7 +103,7 @@ class WContainer: public Widget
 {
  public:
   WContainer(const Screen& screen, const std::string& name);
-  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
 
  protected:
   virtual const std::string& type() const;
@@ -124,7 +124,7 @@ class WFrame: public Widget
 {
  public:
   WFrame(const Screen& screen, const std::string& name);
-  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
 
  protected:
   virtual const std::string& type() const;
@@ -149,7 +149,7 @@ class WButton: public WFocusable
  public:
   WButton(const Screen& screen, const std::string& name);
   void setCaption(const std::string &caption);
-  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
   virtual bool onInputEvent(const sf::Event &);
   virtual void focus(bool focused);
   typedef boost::function<void()> Callback;
@@ -181,7 +181,7 @@ class WLabel: public Widget
  public:
   WLabel(const Screen& screen, const std::string& name);
   void setText(const std::string &caption);
-  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
   void setTextAlign(int align);
 
  protected:
@@ -207,7 +207,7 @@ class WEntry: public WFocusable
  public:
   WEntry(const Screen& screen, const std::string& name);
   void setText(const std::string &caption);
-  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
   virtual bool onInputEvent(const sf::Event &);
   virtual void focus(bool focused);
   std::string text() const { return text_.getString(); }
@@ -253,7 +253,7 @@ class WChoice: public WFocusable
   unsigned int index() const { return index_; }
   void setItems(const ItemContainer& items);
   void select(unsigned int i);
-  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
   virtual bool onInputEvent(const sf::Event &);
   virtual void focus(bool focused);
 
