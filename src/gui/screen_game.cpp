@@ -508,11 +508,11 @@ FieldDisplay::GbHanging::GbHanging(const StyleField &style, const Garbage &gb):
   this->updateText();
 }
 
-void FieldDisplay::GbHanging::Render(sf::RenderTarget &target, sf::Renderer &) const
+void FieldDisplay::GbHanging::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-  target.draw(bg_);
+  target.draw(bg_, states);
   if( txt_size_ != 0 ) {
-    target.draw(txt_);
+    target.draw(txt_, states);
   }
 }
 

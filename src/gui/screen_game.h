@@ -123,7 +123,7 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   {
    public:
     GbHanging(const StyleField &res, const Garbage &gb);
-    virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
     /// Step and update the garbage.
     void step();
     /// Set position from drop order above the field.
