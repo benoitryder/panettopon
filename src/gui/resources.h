@@ -109,9 +109,9 @@ class ImageFrameX
   /// Initialize the frame using image subrect and margin
   void create(const sf::Texture *img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width);
   /// Draw the frame at given position, with given size
-  void render(sf::Renderer &renderer, const sf::FloatRect& rect) const;
+  void render(sf::RenderTarget &target, const sf::FloatRect& rect) const;
   /// Draw the frame centered on 0,0 with given width
-  void render(sf::Renderer &renderer, float w) const;
+  void render(sf::RenderTarget &target, float w) const;
 
  private:
   const sf::Texture *image_;

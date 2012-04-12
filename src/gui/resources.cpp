@@ -244,42 +244,44 @@ void ImageFrameX::create(const sf::Texture *img, const sf::IntRect& rect, unsign
   inside_width_ = inside_width;
 }
 
-void ImageFrameX::render(sf::Renderer &renderer, const sf::FloatRect& rect) const
+void ImageFrameX::render(sf::RenderTarget &target, const sf::FloatRect& rect) const
 {
-  const float img_x0 = rect.Left;
-  const float img_y0 = rect.Top;
-  const float img_x3 = rect.Left + rect.Width;
-  const float img_y1 = rect.Top + rect.Height;
-  sf::FloatRect coords = image_->GetTexCoords(rect_);
-  const float tex_x0 = coords.Left;
-  const float tex_y0 = coords.Top;
-  const float tex_x3 = coords.Left + coords.Width;
-  const float tex_y1 = coords.Top  + coords.Height;
+  sf::RenderStates states(image_);
 
-  const float img_x1 = rect.Left + inside_left_;
-  const float img_x2 = rect.Left + rect.Width  - (rect_.Width  - inside_left_ - inside_width_);
-  const float tex_x1 = (float)inside_left_/rect_.Width * coords.Width;
-  const float tex_x2 = (float)(inside_left_+inside_width_)/rect_.Width * coords.Width;
+  const float img_x0 = rect.left;
+  const float img_y0 = rect.top;
+  const float img_x3 = rect.left + rect.width;
+  const float img_y1 = rect.top + rect.height;
 
-  renderer.SetTexture(image_);
-  renderer.Begin(sf::Renderer::TriangleStrip);
+  const float tex_x0 = rect_.left;
+  const float tex_y0 = rect_.top;
+  const float tex_x3 = rect_.left + rect_.width;
+  const float tex_y1 = rect_.top  + rect_.height;
+
+  const float img_x1 = rect.left + inside_left_;
+  const float img_x2 = rect.left + rect.width  - (rect_.width  - inside_left_ - inside_width_);
+  const float tex_x1 = (float)inside_left_/rect_.width * rect_.width;
+  const float tex_x2 = (float)(inside_left_+inside_width_)/rect_.width * rect_.width;
+
+  const sf::Vertex vertices[] = {
     // left
-    renderer.AddVertex(img_x0, img_y0, tex_x0, tex_y1);
-    renderer.AddVertex(img_x0, img_y1, tex_x0, tex_y0);
-    renderer.AddVertex(img_x1, img_y0, tex_x1, tex_y1);
-    renderer.AddVertex(img_x1, img_y1, tex_x1, tex_y0);
+    sf::Vertex(sf::Vector2f(img_x0, img_y0), sf::Vector2f(tex_x0, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x0, img_y1), sf::Vector2f(tex_x0, tex_y0)),
+    sf::Vertex(sf::Vector2f(img_x1, img_y0), sf::Vector2f(tex_x1, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x1, img_y1), sf::Vector2f(tex_x1, tex_y0)),
     // middle
-    renderer.AddVertex(img_x2, img_y0, tex_x2, tex_y1);
-    renderer.AddVertex(img_x2, img_y1, tex_x2, tex_y0);
+    sf::Vertex(sf::Vector2f(img_x2, img_y0), sf::Vector2f(tex_x2, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x2, img_y1), sf::Vector2f(tex_x2, tex_y0)),
     // right
-    renderer.AddVertex(img_x3, img_y0, tex_x3, tex_y1);
-    renderer.AddVertex(img_x3, img_y1, tex_x3, tex_y0);
-  renderer.End();
+    sf::Vertex(sf::Vector2f(img_x3, img_y0), sf::Vector2f(tex_x3, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x3, img_y1), sf::Vector2f(tex_x3, tex_y0)),
+  };
+  target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::TrianglesStrip, states);
 }
 
-void ImageFrameX::render(sf::Renderer &renderer, float w) const
+void ImageFrameX::render(sf::RenderTarget &target, float w) const
 {
-  this->render(renderer, sf::FloatRect(-w/2, -rect_.Height/2, w, rect_.Height));
+  this->render(target, sf::FloatRect(-w/2, -rect_.height/2, w, rect_.height));
 }
 
 
