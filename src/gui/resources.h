@@ -90,9 +90,9 @@ class ImageFrame
   /// Initialize the frame using image subrect and frame inside subrect
   void create(const sf::Texture *img, const sf::IntRect& rect, const sf::IntRect& inside);
   /// Draw the frame at given position, with given size
-  void render(sf::Renderer &renderer, const sf::FloatRect& rect) const;
+  void render(sf::RenderTarget &target, const sf::FloatRect& rect) const;
   /// Draw the frame centered on 0,0 with given size
-  void render(sf::Renderer &renderer, const sf::Vector2f& size) const;
+  void render(sf::RenderTarget &target, const sf::Vector2f& size) const;
 
  private:
   const sf::Texture *image_;
