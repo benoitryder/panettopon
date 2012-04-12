@@ -72,7 +72,7 @@ class Screen
   class Background: public sf::Drawable {
    public:
     Background(): img(NULL), color(sf::Color::White) {}
-    virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
     const sf::Texture *img;
     sf::Color color;
   } background_;

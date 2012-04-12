@@ -41,22 +41,21 @@ void Screen::redraw()
   w.draw(background_);
 }
 
-void ScreenMenu::Background::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
+void ScreenMenu::Background::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-  renderer.Clear(color);
+  target.clear(color);
   if( img ) {
-    renderer.SetColor(color);
-    renderer.SetTexture(img);
+    states.texture = img;
+    states.blendMode = sf::BlendMultiply;
     const float wx = target.getSize().x / 2. + 1;
     const float wy = target.getSize().y / 2. + 1;
-    const float ix = wx / img->getSize().x;
-    const float iy = wy / img->getSize().y;
-    renderer.Begin(sf::Renderer::QuadList);
-    renderer.AddVertex(-wx, +wy, -ix, +iy);
-    renderer.AddVertex(-wx, -wy, -ix, -iy);
-    renderer.AddVertex(+wx, -wy, +ix, -iy);
-    renderer.AddVertex(+wx, +wy, +ix, +iy);
-    renderer.End();
+    const sf::Vertex vertices[] = {
+      sf::Vertex(sf::Vector2f(-wx, +wy), sf::Vector2f(-wx, +wy)),
+      sf::Vertex(sf::Vector2f(-wx, -wy), sf::Vector2f(-wx, -wy)),
+      sf::Vertex(sf::Vector2f(+wx, -wy), sf::Vector2f(+wx, -wy)),
+      sf::Vertex(sf::Vector2f(+wx, +wy), sf::Vector2f(+wx, +wy)),
+    };
+    target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::Quads, states);
   }
 }
 
