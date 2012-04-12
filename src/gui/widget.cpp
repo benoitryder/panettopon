@@ -371,9 +371,9 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   text_sprite_.setOrigin(width_/2.-text_margins.first, text_height/2.);
   text_sprite_.setTexture(text_img_.getTexture(), true);
   text_sprite_.setColor(color_);
-  cursor_ = sf::Shape::Line(0, 0, 0, text_height, 1, sf::Color::White);
-  cursor_.setOrigin(text_sprite_.getOrigin());
+  cursor_.setHeight(text_height);
   cursor_.setColor(focus_color_);
+  cursor_.x = text_sprite_.getOrigin().x;
 
   this->applyStyle(&frame_);
   this->applyStyle(&focus_frame_, "Focus");
@@ -476,7 +476,7 @@ void WEntry::updateTextDisplay(bool force)
     force = true;
   }
 
-  cursor_.setX(cursor_pos_x-x);
+  cursor_.x = cursor_pos_x-x;
   // redraw only if needed
   if( force ) {
     text_img_.clear(sf::Color(0,0,0,0));
@@ -486,6 +486,29 @@ void WEntry::updateTextDisplay(bool force)
   }
 }
 
+
+WEntry::Cursor::Cursor():
+    x(0), color_(sf::Color::White)
+{
+}
+
+void WEntry::Cursor::setHeight(float h)
+{
+  vertices_[0] = sf::Vertex(sf::Vector2f(0, 0));
+  vertices_[1] = sf::Vertex(sf::Vector2f(0, h));
+}
+
+void WEntry::Cursor::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+  states.transform.translate(x, 0);
+  target.draw(vertices_, 2, sf::Lines, states);
+}
+
+void WEntry::Cursor::setColor(const sf::Color &c)
+{
+  vertices_[0].color = c;
+  vertices_[1].color = c;
+}
 
 const std::string& WChoice::type() const {
   static const std::string type("Choice");

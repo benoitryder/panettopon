@@ -220,10 +220,22 @@ class WEntry: public WFocusable
   void updateTextDisplay(bool force=false);
 
  private:
+  class Cursor: public sf::Drawable {
+   public:
+    Cursor();
+    void setHeight(float h);
+    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
+    void setColor(const sf::Color &c);
+    float x;
+   private:
+    sf::Vertex vertices_[2];
+    sf::Color color_;
+  };
+
   sf::RenderTexture text_img_;
   sf::Text text_;
   sf::Sprite text_sprite_;
-  sf::Shape cursor_;
+  Cursor cursor_;
   ImageFrameX frame_;
   ImageFrameX focus_frame_;
   sf::Color color_;
