@@ -436,12 +436,12 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   this->update();
 }
 
-void ScreenLobby::WPlayerRow::Render(sf::RenderTarget &target, sf::Renderer &) const
+void ScreenLobby::WPlayerRow::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-  target.draw(nick_);
-  target.draw(conf_);
+  target.draw(nick_, states);
+  target.draw(conf_, states);
   if( player_.ready() ) {
-    target.draw(ready_);
+    target.draw(ready_, states);
   }
 }
 

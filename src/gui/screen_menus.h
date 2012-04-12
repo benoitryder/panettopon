@@ -116,7 +116,7 @@ class ScreenLobby: public ScreenMenu
   {
    public:
     WPlayerRow(const Screen& screen, const Player& pl);
-    virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
     /// Update the widget after player state changes
     void update();
 
