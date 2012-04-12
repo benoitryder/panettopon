@@ -17,7 +17,7 @@ Screen::Screen(GuiInterface &intf, const std::string &name):
   if( searchStyle("BackgroundImage", &key) ) {
     background_.img = intf_.res_mgr().getImage(style.get<std::string>(key));
     //XXX assume that the background image always needs wrapping
-    background_.img->Bind();
+    background_.img->bind();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   }
@@ -38,7 +38,7 @@ void Screen::exit() {}
 void Screen::redraw()
 {
   sf::RenderWindow &w = intf_.window();
-  w.Draw(background_);
+  w.draw(background_);
 }
 
 void ScreenMenu::Background::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
@@ -47,10 +47,10 @@ void ScreenMenu::Background::Render(sf::RenderTarget &target, sf::Renderer &rend
   if( img ) {
     renderer.SetColor(color);
     renderer.SetTexture(img);
-    const float wx = target.GetWidth() / 2. + 1;
-    const float wy = target.GetHeight() / 2. + 1;
-    const float ix = wx / img->GetWidth();
-    const float iy = wy / img->GetHeight();
+    const float wx = target.getSize().x / 2. + 1;
+    const float wy = target.getSize().y / 2. + 1;
+    const float ix = wx / img->getSize().x;
+    const float iy = wy / img->getSize().y;
     renderer.Begin(sf::Renderer::QuadList);
     renderer.AddVertex(-wx, +wy, -ix, +iy);
     renderer.AddVertex(-wx, -wy, -ix, -iy);
@@ -88,7 +88,7 @@ void ScreenMenu::redraw()
 {
   Screen::redraw();
   sf::RenderWindow &w = intf_.window();
-  w.Draw(container_);
+  w.draw(container_);
 }
 
 
@@ -100,20 +100,20 @@ bool ScreenMenu::onInputEvent(const sf::Event &ev)
     }
   }
 
-  if( ev.Type == sf::Event::KeyPressed ) {
+  if( ev.type == sf::Event::KeyPressed ) {
     // move focus
     if( focused_ ) {
       WFocusable *next_focused = NULL;
-      if( ev.Key.Code == sf::Keyboard::Up ) {
+      if( ev.key.code == sf::Keyboard::Up ) {
         next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
-      } else if( ev.Key.Code == sf::Keyboard::Down ) {
+      } else if( ev.key.code == sf::Keyboard::Down ) {
         next_focused = focused_->neighbor(WFocusable::NEIGHBOR_DOWN);
-      } else if( ev.Key.Code == sf::Keyboard::Left ) {
+      } else if( ev.key.code == sf::Keyboard::Left ) {
         next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
-      } else if( ev.Key.Code == sf::Keyboard::Right ) {
+      } else if( ev.key.code == sf::Keyboard::Right ) {
         next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
-      } else if( ev.Key.Code == sf::Keyboard::Tab ) {
-        if( ev.Key.Shift ) {
+      } else if( ev.key.code == sf::Keyboard::Tab ) {
+        if( ev.key.shift ) {
           next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
           if( ! next_focused ) {
             next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);

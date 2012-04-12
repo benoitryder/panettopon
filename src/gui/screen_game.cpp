@@ -35,17 +35,17 @@ void ScreenGame::exit()
 void ScreenGame::redraw()
 {
   sf::RenderWindow &w = intf_.window();
-  w.Clear(sf::Color(48,48,48)); //XXX:tmp
+  w.clear(sf::Color(48,48,48)); //XXX:tmp
   //TODO
   if( fdp_player_.get() ) {
-    w.Draw(*fdp_player_);
+    w.draw(*fdp_player_);
   }
 }
 
 bool ScreenGame::onInputEvent(const sf::Event &ev)
 {
-  if( ev.Type == sf::Event::KeyPressed ) {
-    if( ev.Key.Code == sf::Keyboard::Escape ) {
+  if( ev.type == sf::Event::KeyPressed ) {
+    if( ev.key.code == sf::Keyboard::Escape ) {
       intf_.swapScreen(new ScreenStart(intf_));
       return true;
     }
@@ -68,7 +68,7 @@ void ScreenGame::onStateChange(GameInstance::State state)
   } else if( state == GameInstance::STATE_READY ) {
     assert( player_->field() );
     fdp_player_.reset(new FieldDisplay(*player_->field(), style_field_));
-    fdp_player_->SetScale(0.5, 0.5);
+    fdp_player_->setScale(0.5, 0.5);
     intf_.instance()->playerSetReady(player_, true);
   } else if( state == GameInstance::STATE_GAME ) {
     LOG("match start");
@@ -84,12 +84,12 @@ KeyState ScreenGame::getNextInput(Player *pl)
     return GAME_KEY_NONE;
   }
   int key = GAME_KEY_NONE;
-  if( sf::Keyboard::IsKeyPressed(keys_.up   ) ) key |= GAME_KEY_UP;
-  if( sf::Keyboard::IsKeyPressed(keys_.down ) ) key |= GAME_KEY_DOWN;
-  if( sf::Keyboard::IsKeyPressed(keys_.left ) ) key |= GAME_KEY_LEFT;
-  if( sf::Keyboard::IsKeyPressed(keys_.right) ) key |= GAME_KEY_RIGHT;
-  if( sf::Keyboard::IsKeyPressed(keys_.swap ) ) key |= GAME_KEY_SWAP;
-  if( sf::Keyboard::IsKeyPressed(keys_.raise) ) key |= GAME_KEY_RAISE;
+  if( sf::Keyboard::isKeyPressed(keys_.up   ) ) key |= GAME_KEY_UP;
+  if( sf::Keyboard::isKeyPressed(keys_.down ) ) key |= GAME_KEY_DOWN;
+  if( sf::Keyboard::isKeyPressed(keys_.left ) ) key |= GAME_KEY_LEFT;
+  if( sf::Keyboard::isKeyPressed(keys_.right) ) key |= GAME_KEY_RIGHT;
+  if( sf::Keyboard::isKeyPressed(keys_.swap ) ) key |= GAME_KEY_SWAP;
+  if( sf::Keyboard::isKeyPressed(keys_.raise) ) key |= GAME_KEY_RAISE;
   return key;
 }
 
@@ -110,12 +110,12 @@ FieldDisplay::FieldDisplay(const Field &fld, const StyleField &style):
 {
   ::memset(crouch_dt_, 0, sizeof(crouch_dt_));
   //TODO:recup
-  //this->SetPosition( slot * 2*style.img_field_frame.GetWidth(), 0 );
-  this->SetOrigin(style_.bk_size*FIELD_WIDTH/2, style_.bk_size*FIELD_HEIGHT/2);
+  //this->setPosition( slot * 2*style.img_field_frame.getSize().x, 0 );
+  this->setOrigin(style_.bk_size*FIELD_WIDTH/2, style_.bk_size*FIELD_HEIGHT/2);
 
-  spr_frame_.SetTexture(*style_.img_field_frame);
-  spr_frame_.SetOrigin(style_.frame_origin.x, style_.frame_origin.y);
-  spr_frame_.SetScale(2,2);
+  spr_frame_.setTexture(*style_.img_field_frame);
+  spr_frame_.setOrigin(style_.frame_origin.x, style_.frame_origin.y);
+  spr_frame_.setScale(2,2);
 
   style_.tiles_cursor[0].setToSprite(&spr_cursor_, true);
 
@@ -145,7 +145,7 @@ void FieldDisplay::Render(sf::RenderTarget &target, sf::Renderer &renderer) cons
     }
   renderer.PopStates();
 
-  target.Draw(spr_frame_);
+  target.draw(spr_frame_);
 
   // hanging garbages
   renderer.SetColor(sf::Color(204,102,25)); //XXX:temp
@@ -154,17 +154,17 @@ void FieldDisplay::Render(sf::RenderTarget &target, sf::Renderer &renderer) cons
   for(gb_it=gbw_drbs_.begin(), gb_i=0;
       gb_it != gbw_drbs_.end() && gb_i<FIELD_HEIGHT*2/3;
       ++gb_it, gb_i++) {
-    target.Draw(*gb_it);
+    target.draw(*gb_it);
   }
   renderer.SetColor(sf::Color::White); //XXX:temp (cf. above)
 
   // cursor
-  target.Draw(spr_cursor_);
+  target.draw(spr_cursor_);
 
   // labels
   LabelContainer::const_iterator it;
   for( it=labels_.begin(); it!=labels_.end(); ++it ) {
-    target.Draw( (*it) );
+    target.draw( (*it) );
   }
 }
 
@@ -180,7 +180,7 @@ void FieldDisplay::step()
   if( field_.tick() % 15 == 0 ) {
     style_.tiles_cursor[ (field_.tick()/15) % 2 ].setToSprite(&spr_cursor_, true);
   }
-  spr_cursor_.SetPosition(
+  spr_cursor_.setPosition(
       style_.bk_size * (field_.cursor().x + 1),
       style_.bk_size * (FIELD_HEIGHT-field_.cursor().y + 0.5 - lift_offset_)
       );
@@ -427,9 +427,9 @@ const unsigned int FieldDisplay::Label::DURATION = 42;
 FieldDisplay::Label::Label(const StyleField &style, const FieldPos &pos, bool chain, unsigned int val):
     style_(style), dt_(DURATION)
 {
-  this->SetPosition((pos.x+0.5)*style_.bk_size, (FIELD_HEIGHT-pos.y+0.5)*style_.bk_size);
+  this->setPosition((pos.x+0.5)*style_.bk_size, (FIELD_HEIGHT-pos.y+0.5)*style_.bk_size);
   //XXX:hack space between combo and chain labels for a same match
-  this->Move(0, -0.1*style_.bk_size);
+  this->move(0, -0.1*style_.bk_size);
 
   // prepare label text
   char buf[5];
@@ -441,16 +441,16 @@ FieldDisplay::Label::Label(const StyleField &style, const FieldPos &pos, bool ch
   buf[sizeof(buf)-1] = '\0';
 
   // initialize text
-  txt_.SetString(buf);
-  txt_.SetColor(sf::Color::White);
-  sf::FloatRect txt_rect = txt_.GetRect();
-  float txt_sx = 0.8*style_.bk_size / txt_rect.Width;
-  float txt_sy = 0.8*style_.bk_size / txt_rect.Height;
+  txt_.setString(buf);
+  txt_.setColor(sf::Color::White);
+  sf::FloatRect txt_rect = txt_.getRect();
+  float txt_sx = 0.8*style_.bk_size / txt_rect.width;
+  float txt_sy = 0.8*style_.bk_size / txt_rect.height;
   if( txt_sx > txt_sy ) {
     txt_sx = txt_sy; // stretch Y, not X
   }
-  txt_.SetOrigin(txt_rect.Width/2, (txt_.GetFont().GetLineSpacing(txt_.GetCharacterSize())+2)/2);
-  txt_.SetScale(txt_sx, txt_sy); // scale after computations (needed for GetRect())
+  txt_.setOrigin(txt_rect.width/2, (txt_.getFont().getLineSpacing(txt_.getCharacterSize())+2)/2);
+  txt_.setScale(txt_sx, txt_sy); // scale after computations (needed for GetRect())
 
   // initialize sprite
   if( chain ) {
@@ -463,14 +463,14 @@ FieldDisplay::Label::Label(const StyleField &style, const FieldPos &pos, bool ch
 
 void FieldDisplay::Label::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
-  target.Draw(bg_);
-  target.Draw(txt_);
+  target.draw(bg_);
+  target.draw(txt_);
 }
 
 void FieldDisplay::Label::step()
 {
   dt_--;
-  this->Move(0, -0.5*style_.bk_size/Label::DURATION);
+  this->move(0, -0.5*style_.bk_size/Label::DURATION);
 }
 
 
@@ -510,15 +510,15 @@ FieldDisplay::GbHanging::GbHanging(const StyleField &style, const Garbage &gb):
 
 void FieldDisplay::GbHanging::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
-  target.Draw(bg_);
+  target.draw(bg_);
   if( txt_size_ != 0 ) {
-    target.Draw(txt_);
+    target.draw(txt_);
   }
 }
 
 void FieldDisplay::GbHanging::setPosition(int i)
 {
-  this->SetPosition((0.75+1.5*i)*style_.bk_size, -0.5*style_.bk_size);
+  this->setPosition((0.75+1.5*i)*style_.bk_size, -0.5*style_.bk_size);
 }
 
 void FieldDisplay::GbHanging::step()
@@ -547,15 +547,15 @@ void FieldDisplay::GbHanging::updateText()
 
   // reset the whole text to have a "fresh" GetRect()
   txt_ = sf::Text(buf);
-  txt_.SetColor(sf::Color::White);
-  sf::FloatRect txt_rect = txt_.GetRect();
-  float txt_sx = 0.8*style_.bk_size / txt_rect.Width;
-  float txt_sy = 0.8*style_.bk_size / txt_rect.Height;
+  txt_.setColor(sf::Color::White);
+  sf::FloatRect txt_rect = txt_.getRect();
+  float txt_sx = 0.8*style_.bk_size / txt_rect.width;
+  float txt_sy = 0.8*style_.bk_size / txt_rect.height;
   if( txt_sx > txt_sy ) {
     txt_sx = txt_sy; // stretch Y, not X
   }
-  txt_.SetOrigin(txt_rect.Width/2, (txt_.GetFont().GetLineSpacing(txt_.GetCharacterSize())+2)/2);
-  txt_.SetScale(txt_sx, txt_sy); // scale after computations (needed)
+  txt_.setOrigin(txt_rect.width/2, (txt_.getFont().getLineSpacing(txt_.getCharacterSize())+2)/2);
+  txt_.setScale(txt_sx, txt_sy); // scale after computations (needed)
 }
 
 

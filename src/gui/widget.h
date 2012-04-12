@@ -23,7 +23,7 @@ class Screen;
  *
  * @note Name does not have to be unique and may be empty.
  */
-class Widget: public sf::Drawable
+class Widget: public sf::Drawable, public sf::Transformable
 {
  public:
   struct StyleError: public std::runtime_error {
@@ -210,7 +210,7 @@ class WEntry: public WFocusable
   virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
   virtual bool onInputEvent(const sf::Event &);
   virtual void focus(bool focused);
-  std::string text() const { return text_.GetString(); }
+  std::string text() const { return text_.getString(); }
 
  protected:
   virtual const std::string& type() const;

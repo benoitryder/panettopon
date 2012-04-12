@@ -188,10 +188,10 @@ template <typename T> std::istream& operator>>(std::istream& in, sf::Rect<T>& re
   char c1, c2, c3;
   in >> left >> c1 >> top >> c2 >> width >> c3 >> height;
   if( in && c1 == ',' && c2 == ',' && c3 == ',' && width >= 0 && height >= 0 ) {
-    rect.Left = left;
-    rect.Top = top;
-    rect.Width = width;
-    rect.Height = height;
+    rect.left = left;
+    rect.top = top;
+    rect.width = width;
+    rect.height = height;
     return in;
   }
   in.clear( in.rdstate() | std::istream::failbit );

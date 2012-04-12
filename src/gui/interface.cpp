@@ -183,31 +183,31 @@ void GuiInterface::stopInstance()
 bool GuiInterface::initDisplay()
 {
   //TODO handle errors/exceptions
-  window_.Create(
+  window_.create(
       sf::VideoMode(window_conf_.screen_width, window_conf_.screen_height, 32),
       "Panettopon",
       window_conf_.fullscreen ? sf::Style::Fullscreen : sf::Style::Resize|sf::Style::Close
       );
-  window_.EnableKeyRepeat(true);
-  window_.SetActive();
+  window_.setKeyRepeatEnabled(true);
+  window_.setActive();
   //XXX assume a GainedFocus event when a window is created with focus
   focused_ = false;
 
   // load icon
   sf::Image icon;
-  icon.LoadFromFile(res_mgr_.getResourceFilename("icon-32.png"));
-  window_.SetIcon(icon.GetWidth(), icon.GetHeight(), icon.GetPixelsPtr());
+  icon.loadFromFile(res_mgr_.getResourceFilename("icon-32.png"));
+  window_.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 
-  sf::View view = window_.GetDefaultView();
-  view.SetCenter(0,0);
-  window_.SetView(view);
+  sf::View view = window_.getDefaultView();
+  view.setCenter(0,0);
+  window_.setView(view);
 
   return true;
 }
 
 void GuiInterface::endDisplay()
 {
-  window_.Close();
+  window_.close();
 }
 
 
@@ -216,7 +216,7 @@ void GuiInterface::onRedrawTick(const boost::system::error_code &ec)
   if( ec == asio::error::operation_aborted )
     return;
 
-  if( ! window_.IsOpened() ) {
+  if( ! window_.isOpen() ) {
     //TODO
     io_service_.stop();
     return;
@@ -229,23 +229,23 @@ void GuiInterface::onRedrawTick(const boost::system::error_code &ec)
       + boost::posix_time::milliseconds(window_conf_.redraw_dt);
 
   sf::Event event;
-  while(window_.PollEvent(event)) {
-    if( event.Type == sf::Event::Closed ) {
+  while(window_.pollEvent(event)) {
+    if( event.type == sf::Event::Closed ) {
       this->endDisplay();
-    } else if( event.Type == sf::Event::KeyPressed ||
-               event.Type == sf::Event::KeyReleased ||
-               event.Type == sf::Event::TextEntered ) {
+    } else if( event.type == sf::Event::KeyPressed ||
+               event.type == sf::Event::KeyReleased ||
+               event.type == sf::Event::TextEntered ) {
       screen_->onInputEvent(event);
-    } else if( event.Type == sf::Event::GainedFocus ) {
+    } else if( event.type == sf::Event::GainedFocus ) {
       focused_ = true;
-    } else if( event.Type == sf::Event::LostFocus ) {
+    } else if( event.type == sf::Event::LostFocus ) {
       focused_ = false;
     }
   }
 
   if( screen_.get() ) {  // screen may have been removed by a swapScreen()
     screen_->redraw();
-    window_.Display();
+    window_.display();
   }
 
   redraw_timer_.expires_from_now(next_redraw - boost::posix_time::microsec_clock::universal_time());

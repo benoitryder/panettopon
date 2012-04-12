@@ -46,8 +46,8 @@ bool ScreenStart::onInputEvent(const sf::Event &ev)
   if( ScreenMenu::onInputEvent(ev) ) {
     return true;
   }
-  if( ev.Type == sf::Event::KeyPressed ) {
-    if( ev.Key.Code == sf::Keyboard::Escape ) {
+  if( ev.type == sf::Event::KeyPressed ) {
+    if( ev.key.code == sf::Keyboard::Escape ) {
       if( focused_ == button_exit_ ) {
         intf_.swapScreen(NULL);
       } else {
@@ -122,10 +122,10 @@ bool ScreenJoinServer::onInputEvent(const sf::Event &ev)
   if( ScreenMenu::onInputEvent(ev) ) {
     return true;
   }
-  if( ev.Type == sf::Event::KeyPressed ) {
-    if( ev.Key.Code == sf::Keyboard::Escape ) {
+  if( ev.type == sf::Event::KeyPressed ) {
+    if( ev.key.code == sf::Keyboard::Escape ) {
       intf_.swapScreen(new ScreenStart(intf_));
-    } else if( ev.Key.Code == sf::Keyboard::Return ) {
+    } else if( ev.key.code == sf::Keyboard::Return ) {
       this->submit();
     }
     return true;
@@ -227,10 +227,10 @@ bool ScreenCreateServer::onInputEvent(const sf::Event &ev)
   if( ScreenMenu::onInputEvent(ev) ) {
     return true;
   }
-  if( ev.Type == sf::Event::KeyPressed ) {
-    if( ev.Key.Code == sf::Keyboard::Escape ) {
+  if( ev.type == sf::Event::KeyPressed ) {
+    if( ev.key.code == sf::Keyboard::Escape ) {
       intf_.swapScreen(new ScreenStart(intf_));
-    } else if( ev.Key.Code == sf::Keyboard::Return ) {
+    } else if( ev.key.code == sf::Keyboard::Return ) {
       this->submit();
     }
     return true;
@@ -314,7 +314,7 @@ void ScreenLobby::redraw()
   sf::RenderWindow& w = intf_.window();
   PlayerRowsContainer::const_iterator it;
   for( it=player_rows_.begin(); it!=player_rows_.end(); ++it ) {
-    w.Draw(*(*it).second);
+    w.draw(*(*it).second);
   }
 }
 
@@ -324,8 +324,8 @@ bool ScreenLobby::onInputEvent(const sf::Event &ev)
   if( ScreenMenu::onInputEvent(ev) ) {
     return true;
   }
-  if( ev.Type == sf::Event::KeyPressed ) {
-    if( ev.Key.Code == sf::Keyboard::Escape ) {
+  if( ev.type == sf::Event::KeyPressed ) {
+    if( ev.key.code == sf::Keyboard::Escape ) {
       intf_.swapScreen(new ScreenStart(intf_));
     }
     return true;
@@ -392,7 +392,7 @@ void ScreenLobby::updatePlayerRowsPos()
   PlayerRowsContainer::iterator it;
   float y = player_rows_pos_.y;
   for( it=player_rows_.begin(); it!=player_rows_.end(); ++it ) {
-    (*it).second->SetPosition(player_rows_pos_.x, y);
+    (*it).second->setPosition(player_rows_pos_.x, y);
     y += player_rows_dy_;
   }
 }
@@ -410,25 +410,25 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   std::string key;
 
   this->applyStyle(&nick_, "Nick");
-  nick_.SetOrigin(0, (nick_.GetFont().GetLineSpacing(nick_.GetCharacterSize())+2)/2);
+  nick_.setOrigin(0, (nick_.getFont().getLineSpacing(nick_.getCharacterSize())+2)/2);
   if( searchStyle("NickX", &key) ) {
-    nick_.SetX(style.get<float>(key));
+    nick_.setX(style.get<float>(key));
   } else {
     throw StyleError(*this, "NickX", "not set");
   }
 
   this->applyStyle(&conf_, "Conf");
-  conf_.SetOrigin(0, (conf_.GetFont().GetLineSpacing(conf_.GetCharacterSize())+2)/2);
+  conf_.setOrigin(0, (conf_.getFont().getLineSpacing(conf_.getCharacterSize())+2)/2);
   if( searchStyle("ConfX", &key) ) {
-    conf_.SetX(style.get<float>(key));
+    conf_.setX(style.get<float>(key));
   } else {
     throw StyleError(*this, "ConfX", "not set");
   }
 
   this->applyStyle(&ready_, "Ready");
-  ready_.SetOrigin(ready_.GetSize()/2.f);
+  ready_.setOrigin(ready_.getSize()/2.f);
   if( searchStyle("ReadyX", &key) ) {
-    ready_.SetX(style.get<float>(key));
+    ready_.setX(style.get<float>(key));
   } else {
     throw StyleError(*this, "ReadyX", "not set");
   }
@@ -438,17 +438,17 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
 
 void ScreenLobby::WPlayerRow::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
-  target.Draw(nick_);
-  target.Draw(conf_);
+  target.draw(nick_);
+  target.draw(conf_);
   if( player_.ready() ) {
-    target.Draw(ready_);
+    target.draw(ready_);
   }
 }
 
 void ScreenLobby::WPlayerRow::update()
 {
-  nick_.SetString(player_.nick());
-  conf_.SetString(player_.fieldConfName());
+  nick_.setString(player_.nick());
+  conf_.setString(player_.fieldConfName());
 }
 
 

@@ -40,7 +40,7 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
 
 
 /// Drawable class to display fields
-class FieldDisplay: public sf::Drawable
+class FieldDisplay: public sf::Drawable, public sf::Transformable
 {
  protected:
   static const unsigned int CROUCH_DURATION;
@@ -91,7 +91,7 @@ class FieldDisplay: public sf::Drawable
   /** @name Labels */
   //@{
 
-  class Label: public sf::Drawable
+  class Label: public sf::Drawable, public sf::Transformable
   {
    public:
     Label(const StyleField &style, const FieldPos &pos, bool chain, unsigned int val);
@@ -119,7 +119,7 @@ class FieldDisplay: public sf::Drawable
   //@{
 
   /// Drawable for hanging garbages
-  class GbHanging: public sf::Drawable
+  class GbHanging: public sf::Drawable, public sf::Transformable
   {
    public:
     GbHanging(const StyleField &res, const Garbage &gb);

@@ -18,7 +18,7 @@ Widget::Widget(const Screen& screen, const std::string& name):
   const IniFile& style = screen_.style();
   const std::string section = screen_.name()+'.'+name_;
   if( style.has(section, "Pos") ) {
-    this->SetPosition(style.get<sf::Vector2f>(section, "Pos"));
+    this->setPosition(style.get<sf::Vector2f>(section, "Pos"));
   }
 }
 
@@ -50,10 +50,10 @@ void Widget::applyStyle(sf::Text *text, const std::string prefix)
   std::string key;
 
   if( searchStyle(prefix+"Font", &key) ) {
-    text->SetFont(*res_mgr.getFont(style.get<std::string>(key)));
+    text->setFont(*res_mgr.getFont(style.get<std::string>(key)));
   }
   if( searchStyle(prefix+"FontSize", &key) ) {
-    text->SetCharacterSize(style.get<unsigned int>(key));
+    text->setCharacterSize(style.get<unsigned int>(key));
   }
   if( searchStyle(prefix+"FontStyle", &key) ) {
     const std::string val = style.get<std::string>(key);
@@ -69,7 +69,7 @@ void Widget::applyStyle(sf::Text *text, const std::string prefix)
     } else {
       throw StyleError(key, "invalid value");
     }
-    text->SetStyle(txt_style);
+    text->setStyle(txt_style);
   }
 }
 
@@ -81,15 +81,15 @@ void Widget::applyStyle(ImageFrame *frame, const std::string prefix)
 
   if( searchStyle(prefix+"Image", &key) ) {
     const sf::Texture *img = res_mgr.getImage(style.get<std::string>(key));
-    sf::IntRect rect(0, 0, img->GetWidth(), img->GetHeight());
+    sf::IntRect rect(0, 0, img->getSize().x, img->getSize().y);
     if( searchStyle(prefix+"ImageRect", &key) ) {
       rect = style.get<sf::IntRect>(key);
     }
     sf::IntRect inside;
     if( searchStyle(prefix+"ImageInside", &key) ) {
       inside = style.get<sf::IntRect>(key);
-      if( inside.Left < 0 || inside.Left+inside.Width > rect.Width
-         || inside.Top < 0 || inside.Top+inside.Height > rect.Height ) {
+      if( inside.left < 0 || inside.left+inside.width > rect.width
+         || inside.top < 0 || inside.top+inside.height > rect.height ) {
         throw StyleError(key, "image inside not contained in image size");
       }
     } else {
@@ -109,14 +109,14 @@ void Widget::applyStyle(ImageFrameX *frame, const std::string prefix)
 
   if( searchStyle(prefix+"Image", &key) ) {
     const sf::Texture *img = res_mgr.getImage(style.get<std::string>(key));
-    sf::IntRect rect(0, 0, img->GetWidth(), img->GetHeight());
+    sf::IntRect rect(0, 0, img->getSize().x, img->getSize().y);
     if( searchStyle(prefix+"ImageRect", &key) ) {
       rect = style.get<sf::IntRect>(key);
     }
     if( searchStyle(prefix+"ImageInside", &key) ) {
       std::pair<int, int> inside(0,0);
       inside = style.get<decltype(inside)>(key);
-      if( inside.first < 0 || inside.first+inside.second > rect.Width ) {
+      if( inside.first < 0 || inside.first+inside.second > rect.width ) {
         throw StyleError(key, "image inside not contained in image size");
       }
       frame->create(img, rect, inside.first, inside.second);
@@ -135,12 +135,12 @@ void Widget::applyStyle(sf::Sprite *sprite, const std::string prefix)
   std::string key;
 
   if( searchStyle(prefix+"Image", &key) ) {
-    sprite->SetTexture(*res_mgr.getImage(style.get<std::string>(key)), true);
+    sprite->setTexture(*res_mgr.getImage(style.get<std::string>(key)), true);
   } else {
     throw StyleError(*this, prefix+"Image", "not set");
   }
   if( searchStyle(prefix+"ImageRect", &key) ) {
-    sprite->SetSubRect(style.get<sf::IntRect>(key));
+    sprite->setTextureRect(style.get<sf::IntRect>(key));
   }
 }
 
@@ -174,7 +174,7 @@ void WContainer::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
   Container::const_iterator it;
   for( it=widgets.begin(); it!=widgets.end(); ++it ) {
-    target.Draw(*it);
+    target.draw(*it);
   }
 }
 
@@ -238,14 +238,14 @@ WButton::WButton(const Screen& screen, const std::string& name):
 
   this->applyStyle(&frame_);
   this->applyStyle(&focus_frame_, "Focus");
-  caption_.SetColor(color_);
+  caption_.setColor(color_);
 }
 
 void WButton::setCaption(const std::string &caption)
 {
-  caption_.SetString(caption);
-  sf::FloatRect r = caption_.GetRect();
-  caption_.SetOrigin(r.Width/2, (caption_.GetFont().GetLineSpacing(caption_.GetCharacterSize())+2)/2);
+  caption_.setString(caption);
+  sf::FloatRect r = caption_.getRect();
+  caption_.setOrigin(r.width/2, (caption_.getFont().getLineSpacing(caption_.getCharacterSize())+2)/2);
 }
 
 void WButton::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
@@ -255,13 +255,13 @@ void WButton::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
   } else {
     frame_.render(renderer, width_);
   }
-  target.Draw(caption_);
+  target.draw(caption_);
 }
 
 bool WButton::onInputEvent(const sf::Event &ev)
 {
-  if( ev.Type == sf::Event::KeyPressed ) {
-    if( ev.Key.Code == sf::Keyboard::Return ) {
+  if( ev.type == sf::Event::KeyPressed ) {
+    if( ev.key.code == sf::Keyboard::Return ) {
       if( callback_ ) {
         callback_();
         return true;
@@ -274,7 +274,7 @@ bool WButton::onInputEvent(const sf::Event &ev)
 void WButton::focus(bool focused)
 {
   WFocusable::focus(focused);
-  caption_.SetColor(focused ? focus_color_ : color_);
+  caption_.setColor(focused ? focus_color_ : color_);
 }
 
 
@@ -291,7 +291,7 @@ WLabel::WLabel(const Screen& screen, const std::string& name):
 
   this->applyStyle(&text_);
   if( searchStyle("Color", &key) ) {
-    text_.SetColor(style.get<sf::Color>(key));
+    text_.setColor(style.get<sf::Color>(key));
   }
   if( searchStyle("TextAlign", &key) ) {
     const std::string align = style.get<std::string>(key);
@@ -309,27 +309,27 @@ WLabel::WLabel(const Screen& screen, const std::string& name):
 
 void WLabel::setText(const std::string &text)
 {
-  text_.SetString(text);
+  text_.setString(text);
   this->setTextAlign(align_); // recompute origin
 }
 
 void WLabel::Render(sf::RenderTarget &target, sf::Renderer &) const
 {
-  target.Draw(text_);
+  target.draw(text_);
 }
 
 void WLabel::setTextAlign(int align)
 {
-  sf::FloatRect r = text_.GetRect();
+  sf::FloatRect r = text_.getRect();
   float x;
   if( align == 0 ) {
-    x = r.Width / 2;
+    x = r.width / 2;
   } else if( align < 0 ) {
     x = 0;
   } else if( align > 0 ) {
-    x = r.Width;
+    x = r.width;
   }
-  text_.SetOrigin(x, (text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2)/2);
+  text_.setOrigin(x, (text_.getFont().getLineSpacing(text_.getCharacterSize())+2)/2);
   align_ = align;
 }
 
@@ -366,14 +366,14 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   if( searchStyle("TextMarginsX", &key) ) {
     text_margins = style.get<decltype(text_margins)>(key);
   }
-  unsigned int text_height = text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2;
-  text_img_.Create(width_-(text_margins.first+text_margins.second), text_height);
-  text_sprite_.SetOrigin(width_/2.-text_margins.first, text_height/2.);
-  text_sprite_.SetTexture(text_img_.GetTexture(), true);
-  text_sprite_.SetColor(color_);
+  unsigned int text_height = text_.getFont().getLineSpacing(text_.getCharacterSize())+2;
+  text_img_.create(width_-(text_margins.first+text_margins.second), text_height);
+  text_sprite_.setOrigin(width_/2.-text_margins.first, text_height/2.);
+  text_sprite_.setTexture(text_img_.getTexture(), true);
+  text_sprite_.setColor(color_);
   cursor_ = sf::Shape::Line(0, 0, 0, text_height, 1, sf::Color::White);
-  cursor_.SetOrigin(text_sprite_.GetOrigin());
-  cursor_.SetColor(focus_color_);
+  cursor_.setOrigin(text_sprite_.getOrigin());
+  cursor_.setColor(focus_color_);
 
   this->applyStyle(&frame_);
   this->applyStyle(&focus_frame_, "Focus");
@@ -381,7 +381,7 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
 
 void WEntry::setText(const std::string &text)
 {
-  text_.SetString(text);
+  text_.setString(text);
   this->updateTextDisplay(true);
 }
 
@@ -389,32 +389,32 @@ void WEntry::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
 {
   if( this->focused() ) {
     focus_frame_.render(renderer, width_);
-    target.Draw(text_sprite_);
-    target.Draw(cursor_);
+    target.draw(text_sprite_);
+    target.draw(cursor_);
   } else {
     frame_.render(renderer, width_);
-    target.Draw(text_sprite_);
+    target.draw(text_sprite_);
   }
 }
 
 bool WEntry::onInputEvent(const sf::Event &ev)
 {
-  if( ev.Type == sf::Event::TextEntered ) {
-    sf::Uint32 c = ev.Text.Unicode;
+  if( ev.type == sf::Event::TextEntered ) {
+    sf::Uint32 c = ev.text.unicode;
     if( c >= ' ' && c != 127 ) {  // 127 is DEL sometimes
-      sf::String s = text_.GetString();
-      s.Insert(cursor_pos_++, c);
+      sf::String s = text_.getString();
+      s.insert(cursor_pos_++, c);
       this->setText(s);
       return true;
     }
-  } else if( ev.Type == sf::Event::KeyPressed ) {
-    sf::Keyboard::Key c = ev.Key.Code;
+  } else if( ev.type == sf::Event::KeyPressed ) {
+    sf::Keyboard::Key c = ev.key.code;
     // move
     if( c == sf::Keyboard::Home ) {
       cursor_pos_ = 0;
       this->updateTextDisplay();
     } else if( c == sf::Keyboard::End ) {
-      cursor_pos_ = text_.GetString().GetSize();
+      cursor_pos_ = text_.getString().getSize();
       this->updateTextDisplay();
     } else if( c == sf::Keyboard::Left ) {
       if( cursor_pos_ > 0 ) {
@@ -422,21 +422,21 @@ bool WEntry::onInputEvent(const sf::Event &ev)
         this->updateTextDisplay();
       }
     } else if( c == sf::Keyboard::Right ) {
-      if( cursor_pos_ < text_.GetString().GetSize() ) {
+      if( cursor_pos_ < text_.getString().getSize() ) {
         cursor_pos_++;
         this->updateTextDisplay();
       }
     // edit
     } else if( c == sf::Keyboard::Back ) {
       if( cursor_pos_ > 0 ) {
-        sf::String s = text_.GetString();
-        s.Erase(--cursor_pos_);
+        sf::String s = text_.getString();
+        s.erase(--cursor_pos_);
         this->setText(s);
       }
     } else if( c == sf::Keyboard::Delete ) {
-      if( cursor_pos_ < text_.GetString().GetSize() ) {
-        sf::String s = text_.GetString();
-        s.Erase(cursor_pos_);
+      if( cursor_pos_ < text_.getString().getSize() ) {
+        sf::String s = text_.getString();
+        s.erase(cursor_pos_);
         this->setText(s);
       }
     } else {
@@ -450,20 +450,20 @@ bool WEntry::onInputEvent(const sf::Event &ev)
 void WEntry::focus(bool focused)
 {
   WFocusable::focus(focused);
-  text_sprite_.SetColor(focused ? focus_color_ : color_);
+  text_sprite_.setColor(focused ? focus_color_ : color_);
 }
 
 
 void WEntry::updateTextDisplay(bool force)
 {
-  const size_t len = text_.GetString().GetSize();
+  const size_t len = text_.getString().getSize();
   if( cursor_pos_ > len ) {
     cursor_pos_ = len;
   }
 
-  const float text_width = text_img_.GetWidth();
-  const float cursor_pos_x = text_.GetCharacterPos(cursor_pos_).x;
-  float x = -text_.GetPosition().x;
+  const float text_width = text_img_.getSize().x;
+  const float cursor_pos_x = text_.findCharacterPos(cursor_pos_).x;
+  float x = -text_.getPosition().x;
 
   if( cursor_pos_x - x > text_width ) {
     x = cursor_pos_x - text_width;
@@ -476,13 +476,13 @@ void WEntry::updateTextDisplay(bool force)
     force = true;
   }
 
-  cursor_.SetX(cursor_pos_x-x);
+  cursor_.setX(cursor_pos_x-x);
   // redraw only if needed
   if( force ) {
-    text_img_.Clear(sf::Color(0,0,0,0));
-    text_.SetX(-x);
-    text_img_.Draw(text_);
-    text_img_.Display();
+    text_img_.clear(sf::Color(0,0,0,0));
+    text_.setX(-x);
+    text_img_.draw(text_);
+    text_img_.display();
   }
 }
 
@@ -518,7 +518,7 @@ WChoice::WChoice(const Screen& screen, const std::string& name):
 
   this->applyStyle(&frame_);
   this->applyStyle(&focus_frame_, "Focus");
-  text_.SetColor(color_);
+  text_.setColor(color_);
 }
 
 void WChoice::setItems(const ItemContainer& items)
@@ -534,10 +534,10 @@ void WChoice::setItems(const ItemContainer& items)
 
 void WChoice::select(unsigned int i)
 {
-  text_.SetString(items_[i]);
+  text_.setString(items_[i]);
   index_ = i;
-  sf::FloatRect r = text_.GetRect();
-  text_.SetOrigin(r.Width/2, (text_.GetFont().GetLineSpacing(text_.GetCharacterSize())+2)/2);
+  sf::FloatRect r = text_.getRect();
+  text_.setOrigin(r.width/2, (text_.getFont().getLineSpacing(text_.getCharacterSize())+2)/2);
 }
 
 void WChoice::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
@@ -547,13 +547,13 @@ void WChoice::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
   } else {
     frame_.render(renderer, width_);
   }
-  target.Draw(text_);
+  target.draw(text_);
 }
 
 bool WChoice::onInputEvent(const sf::Event &ev)
 {
-  if( ev.Type == sf::Event::KeyPressed ) {
-    sf::Keyboard::Key c = ev.Key.Code;
+  if( ev.type == sf::Event::KeyPressed ) {
+    sf::Keyboard::Key c = ev.key.code;
     if( c == sf::Keyboard::Left ) {
       this->select( index_ == 0 ? items_.size()-1 : index_-1 );
     } else if( c == sf::Keyboard::Right ) {
@@ -569,7 +569,7 @@ bool WChoice::onInputEvent(const sf::Event &ev)
 void WChoice::focus(bool focused)
 {
   WFocusable::focus(focused);
-  text_.SetColor(focused ? focus_color_ : color_);
+  text_.setColor(focused ? focus_color_ : color_);
 }
 
 

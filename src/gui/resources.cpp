@@ -70,7 +70,7 @@ const sf::Texture *ResourceManager::getImage(const std::string &name)
 
   sf::Texture *img = new sf::Texture;
   std::shared_ptr<sf::Texture> pimg(img);
-  if( ! img->LoadFromFile(this->getResourceFilename(name+".png")) ) {
+  if( ! img->loadFromFile(this->getResourceFilename(name+".png")) ) {
     throw std::runtime_error("failed to load image "+name);
   }
   images_[name] = pimg;
@@ -87,7 +87,7 @@ const sf::Font *ResourceManager::getFont(const std::string &name)
 
   sf::Font *font = new sf::Font;
   std::shared_ptr<sf::Font> pfont(font);
-  if( ! font->LoadFromFile(this->getResourceFilename(name+".ttf")) ) {
+  if( ! font->loadFromFile(this->getResourceFilename(name+".ttf")) ) {
     throw std::runtime_error("failed to load font "+name);
   }
   fonts_[name] = pfont;
@@ -114,10 +114,10 @@ void ImageTile::create(const sf::Texture *img, const sf::IntRect &rect)
 
 void ImageTile::create(const sf::Texture *img, int sx, int sy, int x, int y)
 {
-  assert( img->GetWidth() % sx == 0 );
-  assert( img->GetHeight() % sy == 0 );
-  const int kx = img->GetWidth()  / sx;
-  const int ky = img->GetHeight() / sy;
+  assert( img->getSize().x % sx == 0 );
+  assert( img->getSize().y % sy == 0 );
+  const int kx = img->getSize().x / sx;
+  const int ky = img->getSize().y / sy;
   this->create(img, sf::IntRect(kx*x, ky*y, kx, ky));
 }
 
@@ -145,10 +145,10 @@ void ImageTile::render(sf::Renderer &renderer, float x, float y) const
 
 void ImageTile::setToSprite(sf::Sprite *spr, bool center) const
 {
-  spr->SetTexture(*image_);
-  spr->SetSubRect(rect_);
+  spr->setTexture(*image_);
+  spr->setTextureRect(rect_);
   if( center ) {
-    spr->SetOrigin( rect_.Width/2., rect_.Height/2. );
+    spr->setOrigin( rect_.Width/2., rect_.Height/2. );
   }
 }
 
@@ -297,10 +297,10 @@ void StyleField::load(ResourceManager *res_mgr, const std::string& section)
 
   // Block tiles (and block size)
   img = res_mgr->getImage("BkColor-map");
-  if( img->GetWidth() % color_nb != 0 || img->GetHeight() % 5 != 0 ) {
+  if( img->getSize().x % color_nb != 0 || img->getSize().y % 5 != 0 ) {
     throw std::runtime_error("block map size does not match tile count");
   }
-  bk_size = img->GetHeight()/5;
+  bk_size = img->getSize().y/5;
   tiles_bk_color.resize(color_nb); // create sprites, uninitialized
   for(unsigned int i=0; i<color_nb; i++ ) {
     TilesBkColor &tiles = tiles_bk_color[i];
