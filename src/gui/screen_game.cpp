@@ -461,10 +461,10 @@ FieldDisplay::Label::Label(const StyleField &style, const FieldPos &pos, bool ch
 }
 
 
-void FieldDisplay::Label::Render(sf::RenderTarget &target, sf::Renderer &) const
+void FieldDisplay::Label::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-  target.draw(bg_);
-  target.draw(txt_);
+  target.draw(bg_, states);
+  target.draw(txt_, states);
 }
 
 void FieldDisplay::Label::step()

@@ -95,7 +95,7 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   {
    public:
     Label(const StyleField &style, const FieldPos &pos, bool chain, unsigned int val);
-    virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
     /// Step and update the label.
     void step();
     unsigned int dt() const { return dt_; }
