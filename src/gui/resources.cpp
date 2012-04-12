@@ -1,7 +1,7 @@
 #include <cassert>
 #include <stdexcept>
-#include <SFML/Graphics/Renderer.hpp>
 #include <SFML/Graphics/Sprite.hpp>
+#include <SFML/Graphics/RenderTarget.hpp>
 #include "resources.h"
 
 namespace gui {
@@ -121,26 +121,26 @@ void ImageTile::create(const sf::Texture *img, int sx, int sy, int x, int y)
   this->create(img, sf::IntRect(kx*x, ky*y, kx, ky));
 }
 
-void ImageTile::render(sf::Renderer &renderer, float x, float y, float w, float h) const
+void ImageTile::render(sf::RenderTarget &target, float x, float y, float w, float h) const
 {
-  sf::FloatRect coords = image_->GetTexCoords(rect_);
-  const float left   = coords.Left;
-  const float top    = coords.Top;
-  const float right  = coords.Left + coords.Width;
-  const float bottom = coords.Top  + coords.Height;
+  sf::RenderStates states(image_);
+  const float left   = rect_.left;
+  const float top    = rect_.top;
+  const float right  = rect_.left + rect_.width;
+  const float bottom = rect_.top  + rect_.height;
 
-  renderer.SetTexture(image_);
-  renderer.Begin(sf::Renderer::TriangleStrip);
-    renderer.AddVertex(x,   y,   left,  bottom);
-    renderer.AddVertex(x+w, y,   right, bottom);
-    renderer.AddVertex(x,   y+h, left,  top);
-    renderer.AddVertex(x+w, y+h, right, top);
-  renderer.End();
+  const sf::Vertex vertices[] = {
+    sf::Vertex(sf::Vector2f(x,   y),   sf::Vector2f(left,  bottom)),
+    sf::Vertex(sf::Vector2f(x+w, y),   sf::Vector2f(right, bottom)),
+    sf::Vertex(sf::Vector2f(x,   y+h), sf::Vector2f(left,  top)),
+    sf::Vertex(sf::Vector2f(x+w, y+h), sf::Vector2f(right, top)),
+  };
+  target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::TrianglesStrip, states);
 }
 
-void ImageTile::render(sf::Renderer &renderer, float x, float y) const
+void ImageTile::render(sf::RenderTarget &target, float x, float y) const
 {
-  this->render(renderer, x, y, rect_.Width, rect_.Height);
+  this->render(target, x, y, rect_.width, rect_.height);
 }
 
 void ImageTile::setToSprite(sf::Sprite *spr, bool center) const
@@ -148,7 +148,7 @@ void ImageTile::setToSprite(sf::Sprite *spr, bool center) const
   spr->setTexture(*image_);
   spr->setTextureRect(rect_);
   if( center ) {
-    spr->setOrigin( rect_.Width/2., rect_.Height/2. );
+    spr->setOrigin( rect_.width/2., rect_.height/2. );
   }
 }
 

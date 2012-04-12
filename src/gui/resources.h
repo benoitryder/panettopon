@@ -6,6 +6,7 @@
 #include <string>
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Graphics/Font.hpp>
+#include <SFML/Graphics/VertexArray.hpp>
 #include <istream>
 #include "../util.h"
 #include "../inifile.h"
@@ -50,23 +51,20 @@ class ResourceManager
 
 
 /** @brief Image subpart with rendering capabilities
- *
- * Similar to sf::Sprite but without positioning, scaling, rotating, etc.
  */
 class ImageTile
 {
  public:
   ImageTile();
-  const sf::IntRect &rect() const { return rect_; }
 
   /// Initialize the tile using image subrect
   void create(const sf::Texture *img, const sf::IntRect &rect);
   /// Initialize the tile (x,y) from a (sx,sy) tilemap
   void create(const sf::Texture *img, int sx, int sy, int x, int y);
-  /// Draw the tile at given position, with given size
-  void render(sf::Renderer &renderer, float x, float y, float w, float h) const;
+  /// Draw the tile at given position, with given scaling
+  void render(sf::RenderTarget &target, float x, float y, float kx, float ky) const;
   /// Draw the tile at given position
-  void render(sf::Renderer &renderer, float x, float y) const;
+  void render(sf::RenderTarget &target, float x, float y) const;
   /** @brief Set the tile on a sprite
    *
    * If \e center is \e true, sprite's origin is set to be centred on the tile.
