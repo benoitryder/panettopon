@@ -1,6 +1,7 @@
 #ifndef GUI_RESOURCES_H_
 #define GUI_RESOURCES_H_
 
+#include <memory>
 #include <map>
 #include <string>
 #include <SFML/Graphics/Texture.hpp>
@@ -39,9 +40,9 @@ class ResourceManager
  private:
   std::string res_path_;  ///< Path to resources.
 
-  typedef std::map<std::string, sf::ResourcePtr<sf::Texture> > ImageContainer;
+  typedef std::map<std::string, std::shared_ptr<sf::Texture> > ImageContainer;
   ImageContainer images_;  ///< Loaded images.
-  typedef std::map<std::string, sf::ResourcePtr<sf::Font> > FontContainer;
+  typedef std::map<std::string, std::shared_ptr<sf::Font> > FontContainer;
   FontContainer fonts_;  ///< Loaded fonts
   IniFile style_;  ///< Style configuration
   IniFile lang_;  ///< Language strings

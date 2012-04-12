@@ -65,34 +65,34 @@ const sf::Texture *ResourceManager::getImage(const std::string &name)
 {
   ImageContainer::iterator it = images_.find(name);
   if( it != images_.end() ) {
-    return (*it).second;
+    return (*it).second.get();
   }
 
   sf::Texture *img = new sf::Texture;
-  sf::ResourcePtr<sf::Texture> pimg(img);
+  std::shared_ptr<sf::Texture> pimg(img);
   if( ! img->LoadFromFile(this->getResourceFilename(name+".png")) ) {
     throw std::runtime_error("failed to load image "+name);
   }
   images_[name] = pimg;
 
-  return pimg;
+  return img;
 }
 
 const sf::Font *ResourceManager::getFont(const std::string &name)
 {
   FontContainer::iterator it = fonts_.find(name);
   if( it != fonts_.end() ) {
-    return (*it).second;
+    return (*it).second.get();
   }
 
   sf::Font *font = new sf::Font;
-  sf::ResourcePtr<sf::Font> pfont(font);
+  std::shared_ptr<sf::Font> pfont(font);
   if( ! font->LoadFromFile(this->getResourceFilename(name+".ttf")) ) {
     throw std::runtime_error("failed to load font "+name);
   }
   fonts_[name] = pfont;
 
-  return pfont;
+  return font;
 }
 
 std::string ResourceManager::getLang(const std::string &section, const std::string &key) const
