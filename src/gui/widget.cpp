@@ -170,8 +170,9 @@ WContainer::WContainer(const Screen& screen, const std::string& name):
 {
 }
 
-void WContainer::draw(sf::RenderTarget &target, sf::RenderStates) const
+void WContainer::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
+  states.transform *= getTransform();
   Container::const_iterator it;
   for( it=widgets.begin(); it!=widgets.end(); ++it ) {
     target.draw(*it);
@@ -201,9 +202,10 @@ WFrame::WFrame(const Screen& screen, const std::string& name):
   this->applyStyle(&frame_);
 }
 
-void WFrame::draw(sf::RenderTarget &, sf::RenderStates states) const
+void WFrame::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-  frame_.render(renderer, size_);
+  states.transform *= getTransform();
+  frame_.render(target, size_);
 }
 
 
@@ -244,18 +246,19 @@ WButton::WButton(const Screen& screen, const std::string& name):
 void WButton::setCaption(const std::string &caption)
 {
   caption_.setString(caption);
-  sf::FloatRect r = caption_.getRect();
+  sf::FloatRect r = caption_.getLocalBounds();
   caption_.setOrigin(r.width/2, (caption_.getFont().getLineSpacing(caption_.getCharacterSize())+2)/2);
 }
 
 void WButton::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
+  states.transform *= getTransform();
   if( this->focused() ) {
-    focus_frame_.render(renderer, width_);
+    focus_frame_.render(target, width_);
   } else {
-    frame_.render(renderer, width_);
+    frame_.render(target, width_);
   }
-  target.draw(caption_);
+  target.draw(caption_, states);
 }
 
 bool WButton::onInputEvent(const sf::Event &ev)
@@ -313,14 +316,15 @@ void WLabel::setText(const std::string &text)
   this->setTextAlign(align_); // recompute origin
 }
 
-void WLabel::draw(sf::RenderTarget &target, sf::RenderStates) const
+void WLabel::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-  target.draw(text_);
+  states.transform *= getTransform();
+  target.draw(text_, states);
 }
 
 void WLabel::setTextAlign(int align)
 {
-  sf::FloatRect r = text_.getRect();
+  sf::FloatRect r = text_.getLocalBounds();
   float x;
   if( align == 0 ) {
     x = r.width / 2;
@@ -387,13 +391,14 @@ void WEntry::setText(const std::string &text)
 
 void WEntry::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
+  states.transform *= getTransform();
   if( this->focused() ) {
-    focus_frame_.render(renderer, width_);
-    target.draw(text_sprite_);
-    target.draw(cursor_);
+    focus_frame_.render(target, width_);
+    target.draw(text_sprite_, states);
+    target.draw(cursor_, states);
   } else {
-    frame_.render(renderer, width_);
-    target.draw(text_sprite_);
+    frame_.render(target, width_);
+    target.draw(text_sprite_, states);
   }
 }
 
@@ -480,7 +485,7 @@ void WEntry::updateTextDisplay(bool force)
   // redraw only if needed
   if( force ) {
     text_img_.clear(sf::Color(0,0,0,0));
-    text_.setX(-x);
+    text_.setPosition(-x, 0);
     text_img_.draw(text_);
     text_img_.display();
   }
@@ -559,18 +564,19 @@ void WChoice::select(unsigned int i)
 {
   text_.setString(items_[i]);
   index_ = i;
-  sf::FloatRect r = text_.getRect();
+  sf::FloatRect r = text_.getLocalBounds();
   text_.setOrigin(r.width/2, (text_.getFont().getLineSpacing(text_.getCharacterSize())+2)/2);
 }
 
 void WChoice::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
+  states.transform *= getTransform();
   if( this->focused() ) {
-    focus_frame_.render(renderer, width_);
+    focus_frame_.render(target, width_);
   } else {
-    frame_.render(renderer, width_);
+    frame_.render(target, width_);
   }
-  target.draw(text_);
+  target.draw(text_, states);
 }
 
 bool WChoice::onInputEvent(const sf::Event &ev)

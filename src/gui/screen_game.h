@@ -61,10 +61,10 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   void step();
 
  protected:
-  virtual void Render(sf::RenderTarget &target, sf::Renderer &renderer) const;
+  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
 
  private:
-  void renderBlock(sf::Renderer &renderer, int x, int y) const;
+  void renderBlock(sf::RenderTarget &target, int x, int y) const;
 
   /** @brief Draw a bouncing block
    *
@@ -76,7 +76,7 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
    * Only the symbol part is drawn, to drawing pixels of adjacent tiles because
    * of stretching.
    */
-  void renderBouncingBlock(sf::Renderer &renderer, int x, int y, float bounce, unsigned int color) const;
+  void renderBouncingBlock(sf::RenderTarget &target, int x, int y, float bounce, unsigned int color) const;
 
   const Field &field_;
   const StyleField &style_;

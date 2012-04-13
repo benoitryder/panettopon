@@ -412,7 +412,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   this->applyStyle(&nick_, "Nick");
   nick_.setOrigin(0, (nick_.getFont().getLineSpacing(nick_.getCharacterSize())+2)/2);
   if( searchStyle("NickX", &key) ) {
-    nick_.setX(style.get<float>(key));
+    nick_.setPosition(style.get<float>(key), 0);
   } else {
     throw StyleError(*this, "NickX", "not set");
   }
@@ -420,15 +420,15 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   this->applyStyle(&conf_, "Conf");
   conf_.setOrigin(0, (conf_.getFont().getLineSpacing(conf_.getCharacterSize())+2)/2);
   if( searchStyle("ConfX", &key) ) {
-    conf_.setX(style.get<float>(key));
+    conf_.setPosition(style.get<float>(key), 0);
   } else {
     throw StyleError(*this, "ConfX", "not set");
   }
 
   this->applyStyle(&ready_, "Ready");
-  ready_.setOrigin(ready_.getSize()/2.f);
+  ready_.setOrigin(ready_.getLocalBounds().width/2.f, ready_.getLocalBounds().height/2.f);
   if( searchStyle("ReadyX", &key) ) {
-    ready_.setX(style.get<float>(key));
+    ready_.setPosition(style.get<float>(key), 0);
   } else {
     throw StyleError(*this, "ReadyX", "not set");
   }

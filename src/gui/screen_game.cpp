@@ -123,32 +123,33 @@ FieldDisplay::FieldDisplay(const Field &fld, const StyleField &style):
 }
 
 
-void FieldDisplay::Render(sf::RenderTarget &target, sf::Renderer &renderer) const
+void FieldDisplay::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-  // grid content
-  renderer.PushStates();
+  states.transform *= getTransform();
+  {
+    sf::RenderStates states_bk = states;
     // scale blocks, reverse Y axis
-    renderer.ApplyModelView(sf::Matrix3::Transformation(
-            sf::Vector2f(0,0),
-            sf::Vector2f(0, -(float)style_.bk_size*(lift_offset_-FIELD_HEIGHT-1)),
-            0, sf::Vector2f(style_.bk_size, -(float)style_.bk_size)
-            ));
+    states.transform
+        .translate(0, -(float)style_.bk_size*(lift_offset_-FIELD_HEIGHT-1))
+        .scale(style_.bk_size, -(float)style_.bk_size)
+        ;
     int x, y;
     for( x=0; x<FIELD_WIDTH; x++ ) {
       for( y=1; y<=FIELD_HEIGHT; y++ ) {
-        this->renderBlock(renderer, x, y);
+        this->renderBlock(target, x, y);
       }
       // raising line: darker
-      renderer.SetColor(sf::Color(96,96,96));
-      this->renderBlock(renderer, x, 0);
-      renderer.SetColor(sf::Color::White);
+      //TODO:sfml2 renderer.SetColor(sf::Color(96,96,96));
+      (void)states_bk; //TODO:sfml2
+      this->renderBlock(target, x, 0);
+      //TODO:sfml2 renderer.SetColor(sf::Color::White);
     }
-  renderer.PopStates();
+  }
 
-  target.draw(spr_frame_);
+  target.draw(spr_frame_, states);
 
   // hanging garbages
-  renderer.SetColor(sf::Color(204,102,25)); //XXX:temp
+  //TODO:sfml2 renderer.SetColor(sf::Color(204,102,25)); //XXX:temp
   GbHangingList::const_iterator gb_it;
   unsigned gb_i;  // avoid display "overflow", max: FIELD_WIDTH*2/3
   for(gb_it=gbw_drbs_.begin(), gb_i=0;
@@ -156,15 +157,15 @@ void FieldDisplay::Render(sf::RenderTarget &target, sf::Renderer &renderer) cons
       ++gb_it, gb_i++) {
     target.draw(*gb_it);
   }
-  renderer.SetColor(sf::Color::White); //XXX:temp (cf. above)
+  //TODO:sfml2 renderer.SetColor(sf::Color::White); //XXX:temp (cf. above)
 
   // cursor
-  target.draw(spr_cursor_);
+  target.draw(spr_cursor_, states);
 
   // labels
   LabelContainer::const_iterator it;
   for( it=labels_.begin(); it!=labels_.end(); ++it ) {
-    target.draw( (*it) );
+    target.draw((*it), states);
   }
 }
 
@@ -282,7 +283,7 @@ void FieldDisplay::step()
 }
 
 
-void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
+void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
 {
   const Block &bk = field_.block(x,y);
   if( bk.isNone() || bk.isState(BkColor::CLEARED) ) {
@@ -307,27 +308,27 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
 
     unsigned int crouch_dt = crouch_dt_[x][y];
     if( crouch_dt == 0 ) {
-      tile->render(renderer, x, y, 1, 1);
+      tile->render(target, x, y, 1, 1);
     } else {
       // bounce positions: -1 -> +1 (quick) -> 0 (slow)
       float bounce = ( crouch_dt > CROUCH_DURATION/2 )
         ? 4*(float)(CROUCH_DURATION-crouch_dt)/CROUCH_DURATION-1.0
         : 2*(float)crouch_dt/CROUCH_DURATION;
-      this->renderBouncingBlock(renderer, x, y, bounce, bk.bk_color.color);
+      this->renderBouncingBlock(target, x, y, bounce, bk.bk_color.color);
     }
 
   } else if( bk.isGarbage() ) {
     const StyleField::TilesGb &tiles = style_.tiles_gb;
-    renderer.SetColor(sf::Color(204,102,25)); //XXX:temp
+    //TODO:sfml2 renderer.SetColor(sf::Color(204,102,25)); //XXX:temp
 
     if( bk.bk_garbage.state == BkGarbage::FLASH ) {
       if( (bk.ntick - field_.tick()) % 2 == 0 ) {
-       tiles.mutate.render(renderer, x, y, 1, 1);
+       tiles.mutate.render(target, x, y, 1, 1);
       } else {
-       tiles.flash.render(renderer, x, y, 1, 1);
+       tiles.flash.render(target, x, y, 1, 1);
       }
     } else if( bk.bk_garbage.state == BkGarbage::MUTATE ) {
-      tiles.mutate.render(renderer, x, y, 1, 1);
+      tiles.mutate.render(target, x, y, 1, 1);
     } else {
       const Garbage *gb = bk.bk_garbage.garbage;
       bool center_mark = gb->size.x > 2 && gb->size.y > 1;
@@ -350,7 +351,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
         int ty = ( y == gb->pos.y+gb->size.y-1 ) ? 0 : 2;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(renderer, x, y+0.5, 0.5, 0.5);
+      tile->render(target, x, y+0.5, 0.5, 0.5);
 
       // top right
       if( center_mark &&
@@ -365,7 +366,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
         int ty = ( y == gb->pos.y+gb->size.y-1 ) ? 0 : 2;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(renderer, x+0.5, y+0.5, 0.5, 0.5);
+      tile->render(target, x+0.5, y+0.5, 0.5, 0.5);
 
       // bottom left
       if( center_mark &&
@@ -380,7 +381,7 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
         int ty = ( y == gb->pos.y ) ? 3 : 1;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(renderer, x, y, 0.5, 0.5);
+      tile->render(target, x, y, 0.5, 0.5);
 
       // bottom right
       if( center_mark &&
@@ -395,17 +396,17 @@ void FieldDisplay::renderBlock(sf::Renderer &renderer, int x, int y) const
         int ty = ( y == gb->pos.y              ) ? 3 : 1;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(renderer, x+0.5, y, 0.5, 0.5);
+      tile->render(target, x+0.5, y, 0.5, 0.5);
     }
-    renderer.SetColor(sf::Color::White); //XXX:temp (cf. above)
+    //TODO:sfml2 renderer.SetColor(sf::Color::White); //XXX:temp (cf. above)
   }
 }
 
 
-void FieldDisplay::renderBouncingBlock(sf::Renderer &renderer, int x, int y, float bounce, unsigned int color) const
+void FieldDisplay::renderBouncingBlock(sf::RenderTarget &target, int x, int y, float bounce, unsigned int color) const
 {
   const StyleField::TilesBkColor &tiles = style_.tiles_bk_color[color];
-  tiles.bg.render(renderer, x, y, 1, 1);
+  tiles.bg.render(target, x, y, 1, 1);
 
   float offy, dx, dy;
   if( bounce < 0 ) {
@@ -418,7 +419,7 @@ void FieldDisplay::renderBouncingBlock(sf::Renderer &renderer, int x, int y, flo
     dy = -0.5 * bounce*((float)BOUNCE_HEIGHT_MAX/BOUNCE_SYMBOL_SIZE-1);
   }
 
-  tiles.face.render(renderer, x + dx, y + dy - offy, 1-2*dx, 1-2*dy);
+  tiles.face.render(target, x + dx, y + dy - offy, 1-2*dx, 1-2*dy);
 }
 
 
@@ -443,7 +444,7 @@ FieldDisplay::Label::Label(const StyleField &style, const FieldPos &pos, bool ch
   // initialize text
   txt_.setString(buf);
   txt_.setColor(sf::Color::White);
-  sf::FloatRect txt_rect = txt_.getRect();
+  sf::FloatRect txt_rect = txt_.getLocalBounds();
   float txt_sx = 0.8*style_.bk_size / txt_rect.width;
   float txt_sy = 0.8*style_.bk_size / txt_rect.height;
   if( txt_sx > txt_sy ) {
@@ -518,7 +519,7 @@ void FieldDisplay::GbHanging::draw(sf::RenderTarget &target, sf::RenderStates st
 
 void FieldDisplay::GbHanging::setPosition(int i)
 {
-  this->setPosition((0.75+1.5*i)*style_.bk_size, -0.5*style_.bk_size);
+  this->sf::Transformable::setPosition((0.75+1.5*i)*style_.bk_size, -0.5*style_.bk_size);
 }
 
 void FieldDisplay::GbHanging::step()
@@ -548,7 +549,7 @@ void FieldDisplay::GbHanging::updateText()
   // reset the whole text to have a "fresh" GetRect()
   txt_ = sf::Text(buf);
   txt_.setColor(sf::Color::White);
-  sf::FloatRect txt_rect = txt_.getRect();
+  sf::FloatRect txt_rect = txt_.getLocalBounds();
   float txt_sx = 0.8*style_.bk_size / txt_rect.width;
   float txt_sy = 0.8*style_.bk_size / txt_rect.height;
   if( txt_sx > txt_sy ) {
