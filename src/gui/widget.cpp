@@ -371,9 +371,9 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
     text_margins = style.get<decltype(text_margins)>(key);
   }
   unsigned int text_height = text_.getFont().getLineSpacing(text_.getCharacterSize())+2;
-  text_img_.create(width_-(text_margins.first+text_margins.second), text_height);
+  //TODO:sfml2 text_img_.create(width_-(text_margins.first+text_margins.second), text_height);
   text_sprite_.setOrigin(width_/2.-text_margins.first, text_height/2.);
-  text_sprite_.setTexture(text_img_.getTexture(), true);
+  //TODO:sfml2 text_sprite_.setTexture(text_img_.getTexture(), true);
   text_sprite_.setColor(color_);
   cursor_.setHeight(text_height);
   cursor_.setColor(focus_color_);
@@ -465,6 +465,7 @@ void WEntry::updateTextDisplay(bool force)
   if( cursor_pos_ > len ) {
     cursor_pos_ = len;
   }
+  return; //TODO:sfml2
 
   const float text_width = text_img_.getSize().x;
   const float cursor_pos_x = text_.findCharacterPos(cursor_pos_).x;
