@@ -205,7 +205,7 @@ WFrame::WFrame(const Screen& screen, const std::string& name):
 void WFrame::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
-  frame_.render(target, size_);
+  frame_.render(target, states, size_);
 }
 
 
@@ -254,9 +254,9 @@ void WButton::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   if( this->focused() ) {
-    focus_frame_.render(target, width_);
+    focus_frame_.render(target, states, width_);
   } else {
-    frame_.render(target, width_);
+    frame_.render(target, states, width_);
   }
   target.draw(caption_, states);
 }
@@ -393,11 +393,11 @@ void WEntry::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   if( this->focused() ) {
-    focus_frame_.render(target, width_);
+    focus_frame_.render(target, states, width_);
     target.draw(text_sprite_, states);
     target.draw(cursor_, states);
   } else {
-    frame_.render(target, width_);
+    frame_.render(target, states, width_);
     target.draw(text_sprite_, states);
   }
 }
@@ -572,9 +572,9 @@ void WChoice::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   if( this->focused() ) {
-    focus_frame_.render(target, width_);
+    focus_frame_.render(target, states, width_);
   } else {
-    frame_.render(target, width_);
+    frame_.render(target, states, width_);
   }
   target.draw(text_, states);
 }

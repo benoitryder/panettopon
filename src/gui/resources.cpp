@@ -121,9 +121,9 @@ void ImageTile::create(const sf::Texture *img, int sx, int sy, int x, int y)
   this->create(img, sf::IntRect(kx*x, ky*y, kx, ky));
 }
 
-void ImageTile::render(sf::RenderTarget &target, float x, float y, float w, float h) const
+void ImageTile::render(sf::RenderTarget &target, sf::RenderStates states, float x, float y, float w, float h) const
 {
-  sf::RenderStates states(image_);
+  states.texture = image_;
   const float left   = rect_.left;
   const float top    = rect_.top;
   const float right  = rect_.left + rect_.width;
@@ -138,9 +138,9 @@ void ImageTile::render(sf::RenderTarget &target, float x, float y, float w, floa
   target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::TrianglesStrip, states);
 }
 
-void ImageTile::render(sf::RenderTarget &target, float x, float y) const
+void ImageTile::render(sf::RenderTarget &target, sf::RenderStates states, float x, float y) const
 {
-  this->render(target, x, y, rect_.width, rect_.height);
+  this->render(target, states, x, y, rect_.width, rect_.height);
 }
 
 void ImageTile::setToSprite(sf::Sprite *spr, bool center) const
@@ -165,9 +165,9 @@ void ImageFrame::create(const sf::Texture *img, const sf::IntRect& rect, const s
   inside_ = inside;
 }
 
-void ImageFrame::render(sf::RenderTarget &target, const sf::FloatRect& rect) const
+void ImageFrame::render(sf::RenderTarget &target, sf::RenderStates states, const sf::FloatRect& rect) const
 {
-  sf::RenderStates states(image_);
+  states.texture = image_;
 
   const float img_x0 = rect.left;
   const float img_y0 = rect.top;
@@ -225,9 +225,9 @@ void ImageFrame::render(sf::RenderTarget &target, const sf::FloatRect& rect) con
   target.draw(vertices2, sizeof(vertices2)/sizeof(*vertices2), sf::TrianglesStrip, states);
 }
 
-void ImageFrame::render(sf::RenderTarget &target, const sf::Vector2f& size) const
+void ImageFrame::render(sf::RenderTarget &target, sf::RenderStates states, const sf::Vector2f& size) const
 {
-  this->render(target, sf::FloatRect(-size.x/2, -size.y/2, size.x, size.y));
+  this->render(target, states, sf::FloatRect(-size.x/2, -size.y/2, size.x, size.y));
 }
 
 
@@ -244,9 +244,9 @@ void ImageFrameX::create(const sf::Texture *img, const sf::IntRect& rect, unsign
   inside_width_ = inside_width;
 }
 
-void ImageFrameX::render(sf::RenderTarget &target, const sf::FloatRect& rect) const
+void ImageFrameX::render(sf::RenderTarget &target, sf::RenderStates states, const sf::FloatRect& rect) const
 {
-  sf::RenderStates states(image_);
+  states.texture = image_;
 
   const float img_x0 = rect.left;
   const float img_y0 = rect.top;
@@ -279,9 +279,9 @@ void ImageFrameX::render(sf::RenderTarget &target, const sf::FloatRect& rect) co
   target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::TrianglesStrip, states);
 }
 
-void ImageFrameX::render(sf::RenderTarget &target, float w) const
+void ImageFrameX::render(sf::RenderTarget &target, sf::RenderStates states, float w) const
 {
-  this->render(target, sf::FloatRect(-w/2, -rect_.height/2, w, rect_.height));
+  this->render(target, states, sf::FloatRect(-w/2, -rect_.height/2, w, rect_.height));
 }
 
 

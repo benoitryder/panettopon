@@ -62,9 +62,9 @@ class ImageTile
   /// Initialize the tile (x,y) from a (sx,sy) tilemap
   void create(const sf::Texture *img, int sx, int sy, int x, int y);
   /// Draw the tile at given position, with given scaling
-  void render(sf::RenderTarget &target, float x, float y, float kx, float ky) const;
+  void render(sf::RenderTarget &target, sf::RenderStates states, float x, float y, float kx, float ky) const;
   /// Draw the tile at given position
-  void render(sf::RenderTarget &target, float x, float y) const;
+  void render(sf::RenderTarget &target, sf::RenderStates states, float x, float y) const;
   /** @brief Set the tile on a sprite
    *
    * If \e center is \e true, sprite's origin is set to be centred on the tile.
@@ -90,9 +90,9 @@ class ImageFrame
   /// Initialize the frame using image subrect and frame inside subrect
   void create(const sf::Texture *img, const sf::IntRect& rect, const sf::IntRect& inside);
   /// Draw the frame at given position, with given size
-  void render(sf::RenderTarget &target, const sf::FloatRect& rect) const;
+  void render(sf::RenderTarget &target, sf::RenderStates states, const sf::FloatRect& rect) const;
   /// Draw the frame centered on 0,0 with given size
-  void render(sf::RenderTarget &target, const sf::Vector2f& size) const;
+  void render(sf::RenderTarget &target, sf::RenderStates states, const sf::Vector2f& size) const;
 
  private:
   const sf::Texture *image_;
@@ -109,9 +109,9 @@ class ImageFrameX
   /// Initialize the frame using image subrect and margin
   void create(const sf::Texture *img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width);
   /// Draw the frame at given position, with given size
-  void render(sf::RenderTarget &target, const sf::FloatRect& rect) const;
+  void render(sf::RenderTarget &target, sf::RenderStates states, const sf::FloatRect& rect) const;
   /// Draw the frame centered on 0,0 with given width
-  void render(sf::RenderTarget &target, float w) const;
+  void render(sf::RenderTarget &target, sf::RenderStates states, float w) const;
 
  private:
   const sf::Texture *image_;

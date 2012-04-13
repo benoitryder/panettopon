@@ -129,19 +129,18 @@ void FieldDisplay::draw(sf::RenderTarget &target, sf::RenderStates states) const
   {
     sf::RenderStates states_bk = states;
     // scale blocks, reverse Y axis
-    states.transform
+    states_bk.transform
         .translate(0, -(float)style_.bk_size*(lift_offset_-FIELD_HEIGHT-1))
         .scale(style_.bk_size, -(float)style_.bk_size)
         ;
     int x, y;
     for( x=0; x<FIELD_WIDTH; x++ ) {
       for( y=1; y<=FIELD_HEIGHT; y++ ) {
-        this->renderBlock(target, x, y);
+        this->renderBlock(target, states_bk, x, y);
       }
       // raising line: darker
       //TODO:sfml2 renderer.SetColor(sf::Color(96,96,96));
-      (void)states_bk; //TODO:sfml2
-      this->renderBlock(target, x, 0);
+      this->renderBlock(target, states_bk, x, 0);
       //TODO:sfml2 renderer.SetColor(sf::Color::White);
     }
   }
@@ -155,7 +154,7 @@ void FieldDisplay::draw(sf::RenderTarget &target, sf::RenderStates states) const
   for(gb_it=gbw_drbs_.begin(), gb_i=0;
       gb_it != gbw_drbs_.end() && gb_i<FIELD_HEIGHT*2/3;
       ++gb_it, gb_i++) {
-    target.draw(*gb_it);
+    target.draw(*gb_it, states);
   }
   //TODO:sfml2 renderer.SetColor(sf::Color::White); //XXX:temp (cf. above)
 
@@ -283,7 +282,7 @@ void FieldDisplay::step()
 }
 
 
-void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
+void FieldDisplay::renderBlock(sf::RenderTarget &target, sf::RenderStates states, int x, int y) const
 {
   const Block &bk = field_.block(x,y);
   if( bk.isNone() || bk.isState(BkColor::CLEARED) ) {
@@ -308,13 +307,13 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
 
     unsigned int crouch_dt = crouch_dt_[x][y];
     if( crouch_dt == 0 ) {
-      tile->render(target, x, y, 1, 1);
+      tile->render(target, states, x, y, 1, 1);
     } else {
       // bounce positions: -1 -> +1 (quick) -> 0 (slow)
       float bounce = ( crouch_dt > CROUCH_DURATION/2 )
         ? 4*(float)(CROUCH_DURATION-crouch_dt)/CROUCH_DURATION-1.0
         : 2*(float)crouch_dt/CROUCH_DURATION;
-      this->renderBouncingBlock(target, x, y, bounce, bk.bk_color.color);
+      this->renderBouncingBlock(target, states, x, y, bounce, bk.bk_color.color);
     }
 
   } else if( bk.isGarbage() ) {
@@ -323,12 +322,12 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
 
     if( bk.bk_garbage.state == BkGarbage::FLASH ) {
       if( (bk.ntick - field_.tick()) % 2 == 0 ) {
-       tiles.mutate.render(target, x, y, 1, 1);
+       tiles.mutate.render(target, states, x, y, 1, 1);
       } else {
-       tiles.flash.render(target, x, y, 1, 1);
+       tiles.flash.render(target, states, x, y, 1, 1);
       }
     } else if( bk.bk_garbage.state == BkGarbage::MUTATE ) {
-      tiles.mutate.render(target, x, y, 1, 1);
+      tiles.mutate.render(target, states, x, y, 1, 1);
     } else {
       const Garbage *gb = bk.bk_garbage.garbage;
       bool center_mark = gb->size.x > 2 && gb->size.y > 1;
@@ -351,7 +350,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
         int ty = ( y == gb->pos.y+gb->size.y-1 ) ? 0 : 2;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(target, x, y+0.5, 0.5, 0.5);
+      tile->render(target, states, x, y+0.5, 0.5, 0.5);
 
       // top right
       if( center_mark &&
@@ -366,7 +365,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
         int ty = ( y == gb->pos.y+gb->size.y-1 ) ? 0 : 2;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(target, x+0.5, y+0.5, 0.5, 0.5);
+      tile->render(target, states, x+0.5, y+0.5, 0.5, 0.5);
 
       // bottom left
       if( center_mark &&
@@ -381,7 +380,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
         int ty = ( y == gb->pos.y ) ? 3 : 1;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(target, x, y, 0.5, 0.5);
+      tile->render(target, states, x, y, 0.5, 0.5);
 
       // bottom right
       if( center_mark &&
@@ -396,17 +395,17 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, int x, int y) const
         int ty = ( y == gb->pos.y              ) ? 3 : 1;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(target, x+0.5, y, 0.5, 0.5);
+      tile->render(target, states, x+0.5, y, 0.5, 0.5);
     }
     //TODO:sfml2 renderer.SetColor(sf::Color::White); //XXX:temp (cf. above)
   }
 }
 
 
-void FieldDisplay::renderBouncingBlock(sf::RenderTarget &target, int x, int y, float bounce, unsigned int color) const
+void FieldDisplay::renderBouncingBlock(sf::RenderTarget &target, sf::RenderStates states, int x, int y, float bounce, unsigned int color) const
 {
   const StyleField::TilesBkColor &tiles = style_.tiles_bk_color[color];
-  tiles.bg.render(target, x, y, 1, 1);
+  tiles.bg.render(target, states, x, y, 1, 1);
 
   float offy, dx, dy;
   if( bounce < 0 ) {
@@ -419,7 +418,7 @@ void FieldDisplay::renderBouncingBlock(sf::RenderTarget &target, int x, int y, f
     dy = -0.5 * bounce*((float)BOUNCE_HEIGHT_MAX/BOUNCE_SYMBOL_SIZE-1);
   }
 
-  tiles.face.render(target, x + dx, y + dy - offy, 1-2*dx, 1-2*dy);
+  tiles.face.render(target, states, x + dx, y + dy - offy, 1-2*dx, 1-2*dy);
 }
 
 
