@@ -6,6 +6,7 @@
  */
 
 #ifdef WIN32
+#include <winsock2.h>  // include before windows.h to avoid warning
 #include <windows.h>
 #else
 #include <sys/time.h>
