@@ -116,6 +116,7 @@ int main(int /*argc*/, char **argv)
         switch( opt->short_name ) {
           case 'c':
             conf_file = opt->value.str;
+            break;
           case 'i':
             intfarg = opt->value.str;
             break;
