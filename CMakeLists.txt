@@ -10,7 +10,7 @@ project(Panettopon)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-  list(APPEND CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -std=gnu++11")
+  list(APPEND CMAKE_CXX_FLAGS "-Wall -Wextra -std=gnu++11")
 endif()
 
 if(WIN32)
