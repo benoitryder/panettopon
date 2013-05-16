@@ -410,7 +410,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   std::string key;
 
   this->applyStyle(&nick_, "Nick");
-  nick_.setOrigin(0, (nick_.getFont().getLineSpacing(nick_.getCharacterSize())+2)/2);
+  nick_.setOrigin(0, (nick_.getFont()->getLineSpacing(nick_.getCharacterSize())+2)/2);
   if( searchStyle("NickX", &key) ) {
     nick_.setPosition(style.get<float>(key), 0);
   } else {
@@ -418,7 +418,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   }
 
   this->applyStyle(&conf_, "Conf");
-  conf_.setOrigin(0, (conf_.getFont().getLineSpacing(conf_.getCharacterSize())+2)/2);
+  conf_.setOrigin(0, (conf_.getFont()->getLineSpacing(conf_.getCharacterSize())+2)/2);
   if( searchStyle("ConfX", &key) ) {
     conf_.setPosition(style.get<float>(key), 0);
   } else {

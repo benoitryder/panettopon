@@ -449,7 +449,7 @@ FieldDisplay::Label::Label(const StyleField &style, const FieldPos &pos, bool ch
   if( txt_sx > txt_sy ) {
     txt_sx = txt_sy; // stretch Y, not X
   }
-  txt_.setOrigin(txt_rect.width/2, (txt_.getFont().getLineSpacing(txt_.getCharacterSize())+2)/2);
+  txt_.setOrigin(txt_rect.width/2, (txt_.getFont()->getLineSpacing(txt_.getCharacterSize())+2)/2);
   txt_.setScale(txt_sx, txt_sy); // scale after computations (needed for GetRect())
 
   // initialize sprite
@@ -546,7 +546,7 @@ void FieldDisplay::GbHanging::updateText()
   buf[sizeof(buf)-1] = '\0';
 
   // reset the whole text to have a "fresh" GetRect()
-  txt_ = sf::Text(buf);
+  txt_ = sf::Text(buf, sf::Font()); //TODO load an actual font
   txt_.setColor(sf::Color::White);
   sf::FloatRect txt_rect = txt_.getLocalBounds();
   float txt_sx = 0.8*style_.bk_size / txt_rect.width;
@@ -554,7 +554,7 @@ void FieldDisplay::GbHanging::updateText()
   if( txt_sx > txt_sy ) {
     txt_sx = txt_sy; // stretch Y, not X
   }
-  txt_.setOrigin(txt_rect.width/2, (txt_.getFont().getLineSpacing(txt_.getCharacterSize())+2)/2);
+  txt_.setOrigin(txt_rect.width/2, (txt_.getFont()->getLineSpacing(txt_.getCharacterSize())+2)/2);
   txt_.setScale(txt_sx, txt_sy); // scale after computations (needed)
 }
 

@@ -247,7 +247,7 @@ void WButton::setCaption(const std::string &caption)
 {
   caption_.setString(caption);
   sf::FloatRect r = caption_.getLocalBounds();
-  caption_.setOrigin(r.width/2, (caption_.getFont().getLineSpacing(caption_.getCharacterSize())+2)/2);
+  caption_.setOrigin(r.width/2, (caption_.getFont()->getLineSpacing(caption_.getCharacterSize())+2)/2);
 }
 
 void WButton::draw(sf::RenderTarget &target, sf::RenderStates states) const
@@ -333,7 +333,7 @@ void WLabel::setTextAlign(int align)
   } else if( align > 0 ) {
     x = r.width;
   }
-  text_.setOrigin(x, (text_.getFont().getLineSpacing(text_.getCharacterSize())+2)/2);
+  text_.setOrigin(x, (text_.getFont()->getLineSpacing(text_.getCharacterSize())+2)/2);
   align_ = align;
 }
 
@@ -370,7 +370,7 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   if( searchStyle("TextMarginsX", &key) ) {
     text_margins = style.get<decltype(text_margins)>(key);
   }
-  unsigned int text_height = text_.getFont().getLineSpacing(text_.getCharacterSize())+2;
+  unsigned int text_height = text_.getFont()->getLineSpacing(text_.getCharacterSize())+2;
   //TODO:sfml2 text_img_.create(width_-(text_margins.first+text_margins.second), text_height);
   text_sprite_.setOrigin(width_/2.-text_margins.first, text_height/2.);
   //TODO:sfml2 text_sprite_.setTexture(text_img_.getTexture(), true);
@@ -432,7 +432,7 @@ bool WEntry::onInputEvent(const sf::Event &ev)
         this->updateTextDisplay();
       }
     // edit
-    } else if( c == sf::Keyboard::Back ) {
+    } else if( c == sf::Keyboard::BackSpace ) {
       if( cursor_pos_ > 0 ) {
         sf::String s = text_.getString();
         s.erase(--cursor_pos_);
@@ -566,7 +566,7 @@ void WChoice::select(unsigned int i)
   text_.setString(items_[i]);
   index_ = i;
   sf::FloatRect r = text_.getLocalBounds();
-  text_.setOrigin(r.width/2, (text_.getFont().getLineSpacing(text_.getCharacterSize())+2)/2);
+  text_.setOrigin(r.width/2, (text_.getFont()->getLineSpacing(text_.getCharacterSize())+2)/2);
 }
 
 void WChoice::draw(sf::RenderTarget &target, sf::RenderStates states) const
