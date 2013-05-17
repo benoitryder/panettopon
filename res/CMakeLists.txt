@@ -37,6 +37,6 @@ endif()
 
 
 #TODO install in share/ on Linux
-install(FILES ${GAME_PNGS} ${ICON_PNGS} style.ini DESTINATION res/)
+install(FILES ${GAME_PNGS} ${ICON_PNGS} style.ini FreeSans.ttf DESTINATION res/)
 install(DIRECTORY lang/ DESTINATION res/lang/ FILES_MATCHING PATTERN "*.ini")
 

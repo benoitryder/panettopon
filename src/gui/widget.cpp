@@ -51,6 +51,8 @@ void Widget::applyStyle(sf::Text *text, const std::string prefix)
 
   if( searchStyle(prefix+"Font", &key) ) {
     text->setFont(*res_mgr.getFont(style.get<std::string>(key)));
+  } else {
+    throw StyleError(*this, prefix+"Font", "not set");
   }
   if( searchStyle(prefix+"FontSize", &key) ) {
     text->setCharacterSize(style.get<unsigned int>(key));
