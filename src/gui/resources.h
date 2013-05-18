@@ -23,20 +23,20 @@ class ResourceManager
  public:
   ResourceManager();
   /// Initialize resources, set the resource path.
-  void init(const std::string &path);
+  void init(const std::string& path);
   /// Load language strings.
-  void setLang(const std::string &lang);
+  void setLang(const std::string& lang);
 
   /// Get filename to use for a given resource filename
   std::string getResourceFilename(const std::string& filename) const;
   /// Get an image from its name.
-  const sf::Texture *getImage(const std::string &name);
+  const sf::Texture* getImage(const std::string& name);
   /// Get a font from its name
-  const sf::Font *getFont(const std::string &name);
+  const sf::Font* getFont(const std::string& name);
   /// Style accessors
-  const IniFile &style() const { return style_; }
+  const IniFile& style() const { return style_; }
   /// Get a language string from its section and name
-  std::string getLang(const std::string &section, const std::string &key) const;
+  std::string getLang(const std::string& section, const std::string& key) const;
 
  private:
   std::string res_path_;  ///< Path to resources.
@@ -58,21 +58,21 @@ class ImageTile
   ImageTile();
 
   /// Initialize the tile using image subrect
-  void create(const sf::Texture *img, const sf::IntRect &rect);
+  void create(const sf::Texture* img, const sf::IntRect& rect);
   /// Initialize the tile (x,y) from a (sx,sy) tilemap
-  void create(const sf::Texture *img, int sx, int sy, int x, int y);
+  void create(const sf::Texture* img, int sx, int sy, int x, int y);
   /// Draw the tile at given position, with given scaling
-  void render(sf::RenderTarget &target, sf::RenderStates states, float x, float y, float kx, float ky) const;
+  void render(sf::RenderTarget& target, sf::RenderStates states, float x, float y, float kx, float ky) const;
   /// Draw the tile at given position
-  void render(sf::RenderTarget &target, sf::RenderStates states, float x, float y) const;
+  void render(sf::RenderTarget& target, sf::RenderStates states, float x, float y) const;
   /** @brief Set the tile on a sprite
    *
    * If \e center is \e true, sprite's origin is set to be centred on the tile.
    */
-  void setToSprite(sf::Sprite *spr, bool center=false) const;
+  void setToSprite(sf::Sprite* spr, bool center=false) const;
 
  private:
-  const sf::Texture *image_;
+  const sf::Texture* image_;
   sf::IntRect rect_;
 };
 
@@ -88,14 +88,14 @@ class ImageFrame
  public:
   ImageFrame();
   /// Initialize the frame using image subrect and frame inside subrect
-  void create(const sf::Texture *img, const sf::IntRect& rect, const sf::IntRect& inside);
+  void create(const sf::Texture* img, const sf::IntRect& rect, const sf::IntRect& inside);
   /// Draw the frame at given position, with given size
-  void render(sf::RenderTarget &target, sf::RenderStates states, const sf::FloatRect& rect) const;
+  void render(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& rect) const;
   /// Draw the frame centered on 0,0 with given size
-  void render(sf::RenderTarget &target, sf::RenderStates states, const sf::Vector2f& size) const;
+  void render(sf::RenderTarget& target, sf::RenderStates states, const sf::Vector2f& size) const;
 
  private:
-  const sf::Texture *image_;
+  const sf::Texture* image_;
   sf::IntRect rect_;
   sf::IntRect inside_;
 };
@@ -107,14 +107,14 @@ class ImageFrameX
  public:
   ImageFrameX();
   /// Initialize the frame using image subrect and margin
-  void create(const sf::Texture *img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width);
+  void create(const sf::Texture* img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width);
   /// Draw the frame at given position, with given size
-  void render(sf::RenderTarget &target, sf::RenderStates states, const sf::FloatRect& rect) const;
+  void render(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& rect) const;
   /// Draw the frame centered on 0,0 with given width
-  void render(sf::RenderTarget &target, sf::RenderStates states, float w) const;
+  void render(sf::RenderTarget& target, sf::RenderStates states, float w) const;
 
  private:
-  const sf::Texture *image_;
+  const sf::Texture* image_;
   sf::IntRect rect_;
   unsigned int inside_left_;
   unsigned int inside_width_;
@@ -131,7 +131,7 @@ class StyleField
 {
  public:
   StyleField();
-  void load(ResourceManager *res_mgr, const std::string& section);
+  void load(ResourceManager* res_mgr, const std::string& section);
 
   /// Number of colors
   unsigned int color_nb;
@@ -153,7 +153,7 @@ class StyleField
   } tiles_gb;
 
   /// Field frame
-  const sf::Texture *img_field_frame;
+  const sf::Texture* img_field_frame;
   /// Origin of field blocks in frame (top left corner)
   sf::Vector2f frame_origin;
 

@@ -46,17 +46,17 @@ class Widget: public sf::Drawable, public sf::Transformable
    *
    * @return true if found, false otherwise.
    */
-  bool searchStyle(const std::string& prop, std::string *key) const;
+  bool searchStyle(const std::string& prop, std::string* key) const;
 
  protected:
   /// Search and apply text style
-  void applyStyle(sf::Text *text, const std::string prefix="");
+  void applyStyle(sf::Text* text, const std::string prefix="");
   /// Search and apply ImageFrame style
-  void applyStyle(ImageFrame *frame, const std::string prefix="");
+  void applyStyle(ImageFrame* frame, const std::string prefix="");
   /// Search and apply ImageFrameX style
-  void applyStyle(ImageFrameX *frame, const std::string prefix="");
+  void applyStyle(ImageFrameX* frame, const std::string prefix="");
   /// Search and apply sprite style
-  void applyStyle(sf::Sprite *sprite, const std::string prefix="");
+  void applyStyle(sf::Sprite* sprite, const std::string prefix="");
 
  protected:
   const Screen& screen_;
@@ -80,15 +80,15 @@ class WFocusable: public Widget
 
   WFocusable(const Screen& screen, const std::string& name);
 
-  virtual bool onInputEvent(const sf::Event &) { return false; }
+  virtual bool onInputEvent(const sf::Event&) { return false; }
   bool focused() const { return focused_; }
   virtual void focus(bool focused) { focused_ = focused; }
-  WFocusable *neighbor(Neighbor n) const { return neighbors_[n]; }
-  void setNeighbors(WFocusable *up, WFocusable *down, WFocusable *left, WFocusable *right);
+  WFocusable* neighbor(Neighbor n) const { return neighbors_[n]; }
+  void setNeighbors(WFocusable* up, WFocusable* down, WFocusable* left, WFocusable* right);
 
  private:
   bool focused_;
-  WFocusable *neighbors_[NEIGHBOR_COUNT];
+  WFocusable* neighbors_[NEIGHBOR_COUNT];
 };
 
 
@@ -103,7 +103,7 @@ class WContainer: public Widget
 {
  public:
   WContainer(const Screen& screen, const std::string& name);
-  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
+  virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
  protected:
   virtual const std::string& type() const;
@@ -124,7 +124,7 @@ class WFrame: public Widget
 {
  public:
   WFrame(const Screen& screen, const std::string& name);
-  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
+  virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
  protected:
   virtual const std::string& type() const;
@@ -148,9 +148,9 @@ class WButton: public WFocusable
 {
  public:
   WButton(const Screen& screen, const std::string& name);
-  void setCaption(const std::string &caption);
-  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
-  virtual bool onInputEvent(const sf::Event &);
+  void setCaption(const std::string& caption);
+  virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+  virtual bool onInputEvent(const sf::Event&);
   virtual void focus(bool focused);
   typedef boost::function<void()> Callback;
   void setCallback(Callback cb) { callback_ = cb; }
@@ -180,8 +180,8 @@ class WLabel: public Widget
 {
  public:
   WLabel(const Screen& screen, const std::string& name);
-  void setText(const std::string &caption);
-  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
+  void setText(const std::string& caption);
+  virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
   void setTextAlign(int align);
 
  protected:
@@ -206,9 +206,9 @@ class WEntry: public WFocusable
 {
  public:
   WEntry(const Screen& screen, const std::string& name);
-  void setText(const std::string &caption);
-  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
-  virtual bool onInputEvent(const sf::Event &);
+  void setText(const std::string& caption);
+  virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+  virtual bool onInputEvent(const sf::Event&);
   virtual void focus(bool focused);
   std::string text() const { return text_.getString(); }
 
@@ -224,8 +224,8 @@ class WEntry: public WFocusable
    public:
     Cursor();
     void setHeight(float h);
-    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
-    void setColor(const sf::Color &c);
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+    void setColor(const sf::Color& c);
     float x;
    private:
     sf::Vertex vertices_[2];
@@ -265,8 +265,8 @@ class WChoice: public WFocusable
   unsigned int index() const { return index_; }
   void setItems(const ItemContainer& items);
   void select(unsigned int i);
-  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
-  virtual bool onInputEvent(const sf::Event &);
+  virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+  virtual bool onInputEvent(const sf::Event&);
   virtual void focus(bool focused);
 
  protected:

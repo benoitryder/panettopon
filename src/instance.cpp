@@ -7,7 +7,7 @@
 
 void ServerConf::toDefault()
 {
-  const netplay::PktServerConf &np_conf = netplay::PktServerConf::default_instance();
+  const netplay::PktServerConf& np_conf = netplay::PktServerConf::default_instance();
 #define SERVER_CONF_EXPR_INIT(n,ini) \
   n = np_conf.n();
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_INIT);
@@ -44,13 +44,13 @@ GameInstance::~GameInstance()
 }
 
 
-Player *GameInstance::player(PlId plid)
+Player* GameInstance::player(PlId plid)
 {
   PlayerContainer::iterator it = players_.find(plid);
   return it == players_.end() ? NULL : (*it).second;
 }
 
-Player *GameInstance::player(const Field *fld)
+Player* GameInstance::player(const Field* fld)
 {
   //XXX use a map on the instance to optimize?
   if( fld == NULL ) {
@@ -66,9 +66,9 @@ Player *GameInstance::player(const Field *fld)
 }
 
 
-void GameInstance::doStepPlayer(Player *pl, KeyState keys)
+void GameInstance::doStepPlayer(Player* pl, KeyState keys)
 {
-  Field *fld = pl->field();
+  Field* fld = pl->field();
   assert( !fld->lost() );
   Tick prev_tick = fld->tick();
   assert( prev_tick+1 < match_.tick() + conf_.tk_lag_max );
@@ -82,9 +82,9 @@ void GameInstance::doStepPlayer(Player *pl, KeyState keys)
   observer().onPlayerStep(pl);
 }
 
-void GameInstance::stepRemotePlayer(Player *pl, KeyState keys)
+void GameInstance::stepRemotePlayer(Player* pl, KeyState keys)
 {
-  Field *fld = pl->field();
+  Field* fld = pl->field();
   if( fld->lost() ) {
     throw netplay::CallbackError("field lost, cannot step");
   }
@@ -96,7 +96,7 @@ void GameInstance::stepRemotePlayer(Player *pl, KeyState keys)
 }
 
 
-GameInputScheduler::GameInputScheduler(GameInstance &instance, InputProvider &input, boost::asio::io_service &io_service):
+GameInputScheduler::GameInputScheduler(GameInstance& instance, InputProvider& input, boost::asio::io_service& io_service):
     instance_(instance), input_(input), timer_(io_service)
 {
 }
@@ -110,10 +110,10 @@ void GameInputScheduler::start()
 {
   // get local players
   players_.clear();
-  GameInstance::PlayerContainer &all_players = instance_.players();
+  GameInstance::PlayerContainer& all_players = instance_.players();
   GameInstance::PlayerContainer::iterator it;
   for(it=all_players.begin(); it!=all_players.end(); ++it) {
-    Player *pl = (*it).second;
+    Player* pl = (*it).second;
     if( pl->local() && pl->field() != NULL ) {
       players_.push_back(pl);
     }
@@ -134,7 +134,7 @@ void GameInputScheduler::stop()
 }
 
 
-void GameInputScheduler::onInputTick(const boost::system::error_code &ec)
+void GameInputScheduler::onInputTick(const boost::system::error_code& ec)
 {
   if( ec == boost::asio::error::operation_aborted ) {
     return;
@@ -144,7 +144,7 @@ void GameInputScheduler::onInputTick(const boost::system::error_code &ec)
   for(;;) {
     PlayerContainer::iterator it;
     for(it=players_.begin(); it!=players_.end(); ) {
-      Player *pl = (*it);
+      Player* pl = (*it);
       if( !pl->local() || pl->field() == NULL ) {
         ++it;
         continue;

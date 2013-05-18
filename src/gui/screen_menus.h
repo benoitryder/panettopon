@@ -19,16 +19,16 @@ class GuiInterface;
 class ScreenStart: public ScreenMenu
 {
  public:
-  ScreenStart(GuiInterface &intf);
+  ScreenStart(GuiInterface& intf);
   virtual void enter();
-  virtual bool onInputEvent(const sf::Event &ev);
+  virtual bool onInputEvent(const sf::Event& ev);
 
  private:
   void onJoinServer();
   void onCreateServer();
 
  private:
-  WButton *button_exit_;
+  WButton* button_exit_;
 };
 
 /** @brief Join server (choose host and port).
@@ -42,19 +42,19 @@ class ScreenStart: public ScreenMenu
 class ScreenJoinServer: public ScreenMenu
 {
  public:
-  ScreenJoinServer(GuiInterface &intf);
+  ScreenJoinServer(GuiInterface& intf);
   virtual void enter();
-  virtual bool onInputEvent(const sf::Event &ev);
-  virtual void onPlayerJoined(Player *);
+  virtual bool onInputEvent(const sf::Event& ev);
+  virtual void onPlayerJoined(Player* );
   virtual void onServerDisconnect();
 
  protected:
   void submit();
 
  private:
-  WEntry *entry_host_;
-  WEntry *entry_port_;
-  WEntry *entry_nick_;
+  WEntry* entry_host_;
+  WEntry* entry_port_;
+  WEntry* entry_nick_;
   bool submitting_;
 };
 
@@ -68,17 +68,17 @@ class ScreenJoinServer: public ScreenMenu
 class ScreenCreateServer: public ScreenMenu
 {
  public:
-  ScreenCreateServer(GuiInterface &intf);
+  ScreenCreateServer(GuiInterface& intf);
   virtual void enter();
-  virtual bool onInputEvent(const sf::Event &ev);
+  virtual bool onInputEvent(const sf::Event& ev);
 
  protected:
   void submit();
 
  private:
-  WEntry *entry_port_;
-  WEntry *entry_player_nb_;
-  WEntry *entry_nick_;
+  WEntry* entry_port_;
+  WEntry* entry_player_nb_;
+  WEntry* entry_nick_;
 };
 
 /** @brief Lobby (game preparation).
@@ -93,16 +93,16 @@ class ScreenCreateServer: public ScreenMenu
 class ScreenLobby: public ScreenMenu
 {
  public:
-  ScreenLobby(GuiInterface &intf, Player *pl);
+  ScreenLobby(GuiInterface& intf, Player* pl);
   virtual void enter();
   virtual void redraw();
-  virtual bool onInputEvent(const sf::Event &ev);
+  virtual bool onInputEvent(const sf::Event& ev);
   virtual void onStateChange(GameInstance::State state);
-  virtual void onPlayerJoined(Player *);
-  virtual void onPlayerChangeNick(Player *, const std::string &);
-  virtual void onPlayerReady(Player *);
-  virtual void onPlayerChangeFieldConf(Player *);
-  virtual void onPlayerQuit(Player *);
+  virtual void onPlayerJoined(Player*);
+  virtual void onPlayerChangeNick(Player*, const std::string&);
+  virtual void onPlayerReady(Player*);
+  virtual void onPlayerChangeFieldConf(Player*);
+  virtual void onPlayerQuit(Player*);
 
  private:
   /** @brief Display a row of information for a player.
@@ -116,7 +116,7 @@ class ScreenLobby: public ScreenMenu
   {
    public:
     WPlayerRow(const Screen& screen, const Player& pl);
-    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
     /// Update the widget after player state changes
     void update();
 
@@ -135,8 +135,8 @@ class ScreenLobby: public ScreenMenu
   void updatePlayerRowsPos();
 
  private:
-  Player *player_; ///< Controlled player
-  WButton *button_ready_;
+  Player* player_; ///< Controlled player
+  WButton* button_ready_;
   typedef boost::ptr_map<PlId, WPlayerRow> PlayerRowsContainer;
   PlayerRowsContainer player_rows_;
   sf::Vector2f player_rows_pos_;

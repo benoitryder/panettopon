@@ -4,7 +4,7 @@ find_package(OpenGL REQUIRED)
 
 #XXX fix a segfault bug on some systems
 if(UNIX AND CMAKE_COMPILER_IS_GNUCXX)
-  list(INSERT OPENGL_LIBRARIES 0 stdc++) 
+  list(INSERT OPENGL_LIBRARIES 0 stdc++)
 endif()
 
 

@@ -29,7 +29,7 @@ class ServerSocket;
 class CallbackError: public std::runtime_error
 {
  public:
-  CallbackError(const std::string &s): std::runtime_error(s) {}
+  CallbackError(const std::string& s): std::runtime_error(s) {}
 };
 
 
@@ -40,7 +40,7 @@ class BaseSocket
   /// Maximum packet size (without size indicator)
   static const uint32_t pkt_size_max;
  public:
-  BaseSocket(boost::asio::io_service &io_service);
+  BaseSocket(boost::asio::io_service& io_service);
   virtual ~BaseSocket();
 
   /** @brief Close the socket.
@@ -49,7 +49,7 @@ class BaseSocket
    */
   virtual void close();
 
-  boost::asio::io_service &io_service() { return socket_.get_io_service(); }
+  boost::asio::io_service& io_service() { return socket_.get_io_service(); }
 
  protected:
   boost::asio::ip::tcp::socket socket_;
@@ -59,7 +59,7 @@ class BaseSocket
 class PacketSocket: public BaseSocket
 {
  public:
-  PacketSocket(boost::asio::io_service &io_service);
+  PacketSocket(boost::asio::io_service& io_service);
   virtual ~PacketSocket();
 
  protected:
@@ -67,21 +67,21 @@ class PacketSocket: public BaseSocket
    *
    * On error, the next read/write operation is not prepared.
    */
-  virtual void processError(const std::string &msg, const boost::system::error_code &ec) = 0;
-  void processError(const std::string &msg) { boost::system::error_code ec; processError(msg, ec); }
+  virtual void processError(const std::string& msg, const boost::system::error_code& ec) = 0;
+  void processError(const std::string& msg) { boost::system::error_code ec; processError(msg, ec); }
   /// Process an incoming packet.
-  virtual void processPacket(const Packet &pkt) = 0;
+  virtual void processPacket(const Packet& pkt) = 0;
 
  public:
-  static std::string serializePacket(const Packet &pkt);
+  static std::string serializePacket(const Packet& pkt);
 
   void readNext();
   void writeNext();
-  void writePacket(const Packet &pkt)
+  void writePacket(const Packet& pkt)
   {
     return this->writeRaw(serializePacket(pkt));
   }
-  void writeRaw(const std::string &s);
+  void writeRaw(const std::string& s);
 
   /** @brief Do pending write operations and close.
    *
@@ -90,9 +90,9 @@ class PacketSocket: public BaseSocket
   void closeAfterWrites();
 
  private:
-  void onReadSize(const boost::system::error_code &ec);
-  void onReadData(const boost::system::error_code &ec);
-  void onWrite(const boost::system::error_code &ec);
+  void onReadSize(const boost::system::error_code& ec);
+  void onReadData(const boost::system::error_code& ec);
+  void onWrite(const boost::system::error_code& ec);
 
  private:
   bool delayed_close_;    ///< closeAfterWrites() has been called
@@ -101,7 +101,7 @@ class PacketSocket: public BaseSocket
   //@{
   uint32_t read_size_;    ///< size of the next packet
   char read_size_buf_[sizeof(read_size_)]; ///< buffer for the size of the next read packet
-  char *read_buf_;        ///< buffer for the read packet
+  char* read_buf_;        ///< buffer for the read packet
   size_t read_buf_size_;  ///< allocated size of read_buf_
   //@}
 };
@@ -113,20 +113,20 @@ class PeerSocket: public PacketSocket
 {
   friend class ServerSocket;
  public:
-  PeerSocket(ServerSocket &server);
+  PeerSocket(ServerSocket& server);
   virtual ~PeerSocket() {}
-  boost::asio::ip::tcp::endpoint &peer() { return peer_; }
+  boost::asio::ip::tcp::endpoint& peer() { return peer_; }
 
   /// Close the socket and remove the peer from the server.
   virtual void close();
   /// Send an error notification and close the socket.
-  void sendError(const std::string &msg) { PacketSocket::processError(msg); }
+  void sendError(const std::string& msg) { PacketSocket::processError(msg); }
 
  protected:
-  virtual void processError(const std::string &msg, const boost::system::error_code &ec);
-  virtual void processPacket(const Packet &pkt);
+  virtual void processError(const std::string& msg, const boost::system::error_code& ec);
+  virtual void processPacket(const Packet& pkt);
  private:
-  ServerSocket &server_;
+  ServerSocket& server_;
   boost::asio::ip::tcp::endpoint peer_;
   bool has_error_; ///< Avoid multiple processError() calls.
 };
@@ -140,14 +140,14 @@ class ServerSocket
   struct Observer
   {
     /// Called on client connection.
-    virtual void onPeerConnect(PeerSocket *peer) = 0;
+    virtual void onPeerConnect(PeerSocket* peer) = 0;
     /// Called after a peer disconnection.
-    virtual void onPeerDisconnect(PeerSocket *peer) = 0;
+    virtual void onPeerDisconnect(PeerSocket* peer) = 0;
     /// Called on input packet on a peer.
-    virtual void onPeerPacket(PeerSocket *peer, const Packet &pkt) = 0;
+    virtual void onPeerPacket(PeerSocket* peer, const Packet& pkt) = 0;
   };
 
-  ServerSocket(Observer &obs, boost::asio::io_service &io_service);
+  ServerSocket(Observer& obs, boost::asio::io_service& io_service);
   ~ServerSocket();
 
   /// Start server on a given port.
@@ -156,20 +156,20 @@ class ServerSocket
   bool started() const { return started_; }
   /// Close the server, if not already closed.
   void close();
-  boost::asio::io_service &io_service() { return acceptor_.get_io_service(); }
+  boost::asio::io_service& io_service() { return acceptor_.get_io_service(); }
 
   /// Send a packet to all peers, excepting \e except.
-  void broadcastPacket(const netplay::Packet &pkt, const PeerSocket *except=NULL);
+  void broadcastPacket(const netplay::Packet& pkt, const PeerSocket* except=NULL);
 
  private:
   void acceptNext();
-  void onAccept(const boost::system::error_code &ec);
+  void onAccept(const boost::system::error_code& ec);
   /// Method called asynchronously to delete a peer safely.
-  void doRemovePeer(PeerSocket *peer);
+  void doRemovePeer(PeerSocket* peer);
 
   boost::asio::ip::tcp::acceptor acceptor_;
   bool started_;
-  Observer &observer_;
+  Observer& observer_;
 
   typedef boost::ptr_vector<PeerSocket> PeerSocketContainer;
   /// Sockets of connected accepted clients.
@@ -186,19 +186,19 @@ class ClientSocket: public PacketSocket
   struct Observer
   {
     /// Called on input packet.
-    virtual void onClientPacket(const Packet &pkt) = 0;
+    virtual void onClientPacket(const Packet& pkt) = 0;
     /// Called on server disconnection.
     virtual void onServerDisconnect() = 0;
   };
 
-  ClientSocket(Observer &obs, boost::asio::io_service &io_service);
+  ClientSocket(Observer& obs, boost::asio::io_service& io_service);
   virtual ~ClientSocket();
 
   /** @brief Connect to a server.
    *
    * Timeout is given in milliseconds, -1 to wait indefinitely.
    */
-  void connect(const char *host, int port, int tout);
+  void connect(const char* host, int port, int tout);
   /// Return true if the client is connected.
   bool connected() const { return connected_; }
 
@@ -206,13 +206,13 @@ class ClientSocket: public PacketSocket
   virtual void close();
 
  protected:
-  virtual void processError(const std::string &msg, const boost::system::error_code &ec);
-  virtual void processPacket(const netplay::Packet &pkt);
+  virtual void processError(const std::string& msg, const boost::system::error_code& ec);
+  virtual void processPacket(const netplay::Packet& pkt);
  private:
-  void onTimeout(const boost::system::error_code &ec);
-  void onConnect(const boost::system::error_code &ec);
+  void onTimeout(const boost::system::error_code& ec);
+  void onConnect(const boost::system::error_code& ec);
 
-  Observer &observer_;
+  Observer& observer_;
   boost::asio::monotone_timer timer_; ///< for timeouts
   bool connected_;
 };

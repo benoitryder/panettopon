@@ -22,7 +22,7 @@
 #include <windows.h>
 #include <shellapi.h>
 
-int main(int /*argc*/, char **argv);
+int main(int /*argc*/, char** argv);
 
 /// Wrapper for the standard main function
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
@@ -69,7 +69,7 @@ void usage(void)
  * @retval  2  invalid arguments
  * @retval  3  configuration file error
  */
-int main(int /*argc*/, char **argv)
+int main(int /*argc*/, char** argv)
 {
   try {
     OptGetItem opts[] = {
@@ -81,24 +81,25 @@ int main(int /*argc*/, char **argv)
       { 0, 0, OPTGET_NONE, {} }
     };
 
-    FileLogger *logger = new FileLogger;
+    FileLogger* logger = new FileLogger;
     Logger::setLogger(logger);
 
 
     // Program arguments
-    const char *conf_file = NULL;
-    char *port = NULL;
-    char *host = NULL;
-    const char *nick = NULL;
-    const char *intfarg = NULL;
+    const char* conf_file = NULL;
+    char* port = NULL;
+    char* host = NULL;
+    const char* nick = NULL;
+    const char* intfarg = NULL;
 
-    char *const *opt_args = argv+1;
-    OptGetItem *opt;
+    char* const* opt_args = argv+1;
+    OptGetItem* opt;
     int ret;
     for(;;) {
       ret = optget_parse(opts, &opt_args, &opt);
-      if( ret != OPTGET_OK )
+      if( ret != OPTGET_OK ) {
         break;
+      }
 
       // extra arguments
       if( opt->type == OPTGET_NONE ) {
@@ -161,8 +162,9 @@ int main(int /*argc*/, char **argv)
 
     // load configuration
     IniFile cfg;
-    if( conf_file == NULL && ::access(CONF_FILE_DEFAULT, R_OK) == 0 )
+    if( conf_file == NULL && ::access(CONF_FILE_DEFAULT, R_OK) == 0 ) {
       conf_file = CONF_FILE_DEFAULT; // default config file
+    }
     if( conf_file != NULL ) {
       if( !cfg.load(conf_file) ) {
         LOG("failed to load configuration file");
@@ -170,14 +172,18 @@ int main(int /*argc*/, char **argv)
       }
     }
 
-    if( intfarg != NULL )
+    if( intfarg != NULL ) {
       cfg.set("Global", "Interface", intfarg);
-    if( port != NULL )
+    }
+    if( port != NULL ) {
       cfg.set("Global", "Port", port);
-    if( host != NULL )
+    }
+    if( host != NULL ) {
       cfg.set("Client", "Hostname", host);
-    if( nick != NULL )
+    }
+    if( nick != NULL ) {
       cfg.set("Client", "Nick", nick);
+    }
 
     // init randomness
     ::srand( game_time() );
@@ -206,7 +212,7 @@ int main(int /*argc*/, char **argv)
       return 2;
     }
     return ret ? 0 : 1;
-  } catch(const std::exception &e) {
+  } catch(const std::exception& e) {
     fprintf(stderr, "fatal error: %s\n", e.what());
     return 1;
   }

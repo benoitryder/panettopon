@@ -24,7 +24,7 @@ Widget::Widget(const Screen& screen, const std::string& name):
 
 Widget::~Widget() {}
 
-bool Widget::searchStyle(const std::string& prop, std::string *key) const
+bool Widget::searchStyle(const std::string& prop, std::string* key) const
 {
   if( !name_.empty() ) {
     if( screen_.searchStyle(name_+'.'+prop, key) ) {
@@ -43,7 +43,7 @@ bool Widget::searchStyle(const std::string& prop, std::string *key) const
   return false;
 }
 
-void Widget::applyStyle(sf::Text *text, const std::string prefix)
+void Widget::applyStyle(sf::Text* text, const std::string prefix)
 {
   const IniFile& style = screen_.style();
   ResourceManager& res_mgr = screen_.intf().res_mgr();
@@ -75,14 +75,14 @@ void Widget::applyStyle(sf::Text *text, const std::string prefix)
   }
 }
 
-void Widget::applyStyle(ImageFrame *frame, const std::string prefix)
+void Widget::applyStyle(ImageFrame* frame, const std::string prefix)
 {
   const IniFile& style = screen_.style();
   ResourceManager& res_mgr = screen_.intf().res_mgr();
   std::string key;
 
   if( searchStyle(prefix+"Image", &key) ) {
-    const sf::Texture *img = res_mgr.getImage(style.get<std::string>(key));
+    const sf::Texture* img = res_mgr.getImage(style.get<std::string>(key));
     sf::IntRect rect(0, 0, img->getSize().x, img->getSize().y);
     if( searchStyle(prefix+"ImageRect", &key) ) {
       rect = style.get<sf::IntRect>(key);
@@ -103,14 +103,14 @@ void Widget::applyStyle(ImageFrame *frame, const std::string prefix)
   }
 }
 
-void Widget::applyStyle(ImageFrameX *frame, const std::string prefix)
+void Widget::applyStyle(ImageFrameX* frame, const std::string prefix)
 {
   const IniFile& style = screen_.style();
   ResourceManager& res_mgr = screen_.intf().res_mgr();
   std::string key;
 
   if( searchStyle(prefix+"Image", &key) ) {
-    const sf::Texture *img = res_mgr.getImage(style.get<std::string>(key));
+    const sf::Texture* img = res_mgr.getImage(style.get<std::string>(key));
     sf::IntRect rect(0, 0, img->getSize().x, img->getSize().y);
     if( searchStyle(prefix+"ImageRect", &key) ) {
       rect = style.get<sf::IntRect>(key);
@@ -130,7 +130,7 @@ void Widget::applyStyle(ImageFrameX *frame, const std::string prefix)
   }
 }
 
-void Widget::applyStyle(sf::Sprite *sprite, const std::string prefix)
+void Widget::applyStyle(sf::Sprite* sprite, const std::string prefix)
 {
   const IniFile& style = screen_.style();
   ResourceManager& res_mgr = screen_.intf().res_mgr();
@@ -153,7 +153,7 @@ WFocusable::WFocusable(const Screen& screen, const std::string& name):
   this->setNeighbors(NULL, NULL, NULL, NULL);
 }
 
-void WFocusable::setNeighbors(WFocusable *up, WFocusable *down, WFocusable *left, WFocusable *right)
+void WFocusable::setNeighbors(WFocusable* up, WFocusable* down, WFocusable* left, WFocusable* right)
 {
   neighbors_[NEIGHBOR_UP] = up;
   neighbors_[NEIGHBOR_DOWN] = down;
@@ -172,7 +172,7 @@ WContainer::WContainer(const Screen& screen, const std::string& name):
 {
 }
 
-void WContainer::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void WContainer::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   Container::const_iterator it;
@@ -204,7 +204,7 @@ WFrame::WFrame(const Screen& screen, const std::string& name):
   this->applyStyle(&frame_);
 }
 
-void WFrame::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void WFrame::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   frame_.render(target, states, size_);
@@ -245,14 +245,14 @@ WButton::WButton(const Screen& screen, const std::string& name):
   caption_.setColor(color_);
 }
 
-void WButton::setCaption(const std::string &caption)
+void WButton::setCaption(const std::string& caption)
 {
   caption_.setString(caption);
   sf::FloatRect r = caption_.getLocalBounds();
   caption_.setOrigin(r.width/2, (caption_.getFont()->getLineSpacing(caption_.getCharacterSize())+2)/2);
 }
 
-void WButton::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void WButton::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   if( this->focused() ) {
@@ -263,7 +263,7 @@ void WButton::draw(sf::RenderTarget &target, sf::RenderStates states) const
   target.draw(caption_, states);
 }
 
-bool WButton::onInputEvent(const sf::Event &ev)
+bool WButton::onInputEvent(const sf::Event& ev)
 {
   if( ev.type == sf::Event::KeyPressed ) {
     if( ev.key.code == sf::Keyboard::Return ) {
@@ -312,13 +312,13 @@ WLabel::WLabel(const Screen& screen, const std::string& name):
   }
 }
 
-void WLabel::setText(const std::string &text)
+void WLabel::setText(const std::string& text)
 {
   text_.setString(text);
   this->setTextAlign(align_); // recompute origin
 }
 
-void WLabel::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void WLabel::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   target.draw(text_, states);
@@ -385,13 +385,13 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   this->applyStyle(&focus_frame_, "Focus");
 }
 
-void WEntry::setText(const std::string &text)
+void WEntry::setText(const std::string& text)
 {
   text_.setString(text);
   this->updateTextDisplay(true);
 }
 
-void WEntry::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void WEntry::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   if( this->focused() ) {
@@ -404,7 +404,7 @@ void WEntry::draw(sf::RenderTarget &target, sf::RenderStates states) const
   }
 }
 
-bool WEntry::onInputEvent(const sf::Event &ev)
+bool WEntry::onInputEvent(const sf::Event& ev)
 {
   if( ev.type == sf::Event::TextEntered ) {
     sf::Uint32 c = ev.text.unicode;
@@ -506,13 +506,13 @@ void WEntry::Cursor::setHeight(float h)
   vertices_[1] = sf::Vertex(sf::Vector2f(0, h));
 }
 
-void WEntry::Cursor::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void WEntry::Cursor::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform.translate(x, 0);
   target.draw(vertices_, 2, sf::Lines, states);
 }
 
-void WEntry::Cursor::setColor(const sf::Color &c)
+void WEntry::Cursor::setColor(const sf::Color& c)
 {
   vertices_[0].color = c;
   vertices_[1].color = c;
@@ -571,7 +571,7 @@ void WChoice::select(unsigned int i)
   text_.setOrigin(r.width/2, (text_.getFont()->getLineSpacing(text_.getCharacterSize())+2)/2);
 }
 
-void WChoice::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void WChoice::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   if( this->focused() ) {
@@ -582,7 +582,7 @@ void WChoice::draw(sf::RenderTarget &target, sf::RenderStates states) const
   target.draw(text_, states);
 }
 
-bool WChoice::onInputEvent(const sf::Event &ev)
+bool WChoice::onInputEvent(const sf::Event& ev)
 {
   if( ev.type == sf::Event::KeyPressed ) {
     sf::Keyboard::Key c = ev.key.code;

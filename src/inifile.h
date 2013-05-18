@@ -71,7 +71,7 @@ class IniFile
   /// Retrieve a value, use default if not set
   template <typename T> T get(const std::string& section, const std::string& key, const T& def) const;
   /// Convenient alias to retrieve a string value
-  inline std::string get(const std::string& section, const std::string& key, const char *def) const;
+  inline std::string get(const std::string& section, const std::string& key, const char* def) const;
 
 
  private:
@@ -86,7 +86,7 @@ template <typename T> T IniFile::get(const std::string& key) const
   if( it != entries_.end() ) {
     try {
       return boost::lexical_cast<T>(it->second);
-    } catch(const boost::bad_lexical_cast &) {
+    } catch(const boost::bad_lexical_cast&) {
       throw ParseError(key);
     }
   }
@@ -102,7 +102,7 @@ template <typename T> void IniFile::set(const std::string& key, const T& val)
     } else {
       entries_[key] = sval;
     }
-  } catch(const boost::bad_lexical_cast &) {
+  } catch(const boost::bad_lexical_cast&) {
     throw ConvertError(key);
   }
 }
@@ -126,12 +126,12 @@ template <typename T> T IniFile::get(const std::string& section, const std::stri
 {
   try {
     return get<T>(section, key);
-  } catch(const NotSetError &) {
+  } catch(const NotSetError&) {
     return def;
   }
 }
 
-std::string IniFile::get(const std::string& section, const std::string& key, const char *def) const
+std::string IniFile::get(const std::string& section, const std::string& key, const char* def) const
 {
   return get<std::string>(section, key, def);
 }

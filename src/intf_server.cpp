@@ -10,7 +10,7 @@ BasicServerInterface::BasicServerInterface():
 }
 
 
-bool BasicServerInterface::run(IniFile *cfg)
+bool BasicServerInterface::run(IniFile* cfg)
 {
   boost::asio::io_service io_service;
   ServerInstance instance(*this, io_service);
@@ -22,23 +22,23 @@ bool BasicServerInterface::run(IniFile *cfg)
   return true;
 }
 
-void BasicServerInterface::onChat(Player *pl, const std::string &msg)
+void BasicServerInterface::onChat(Player* pl, const std::string& msg)
 {
   LOG("%s(%u): %s", pl->nick().c_str(), pl->plid(), msg.c_str());
 }
 
-void BasicServerInterface::onPlayerJoined(Player *pl)
+void BasicServerInterface::onPlayerJoined(Player* pl)
 {
   LOG("%s(%u) joined", pl->nick().c_str(), pl->plid());
 }
 
-void BasicServerInterface::onPlayerChangeNick(Player *pl, const std::string &nick)
+void BasicServerInterface::onPlayerChangeNick(Player* pl, const std::string& nick)
 {
   LOG("%s(%u) is now known as %s", nick.c_str(), pl->plid(),
       pl->nick().c_str());
 }
 
-void BasicServerInterface::onPlayerReady(Player *pl)
+void BasicServerInterface::onPlayerReady(Player* pl)
 {
   if( pl->ready() ) {
     LOG("%s(%u) is ready", pl->nick().c_str(), pl->plid());
@@ -47,13 +47,13 @@ void BasicServerInterface::onPlayerReady(Player *pl)
   }
 }
 
-void BasicServerInterface::onPlayerChangeFieldConf(Player *pl)
+void BasicServerInterface::onPlayerChangeFieldConf(Player* pl)
 {
   //TODO log configuration name
   LOG("%s(%u) changed configuration", pl->nick().c_str(), pl->plid());
 }
 
-void BasicServerInterface::onPlayerQuit(Player *pl)
+void BasicServerInterface::onPlayerQuit(Player* pl)
 {
   LOG("%s(%u) has quit", pl->nick().c_str(), pl->plid());
 }
@@ -71,7 +71,7 @@ void BasicServerInterface::onStateChange(GameInstance::State state)
   }
 }
 
-void BasicServerInterface::onPlayerStep(Player *pl)
+void BasicServerInterface::onPlayerStep(Player* pl)
 {
   if( pl->field()->lost() ) {
     LOG("player(%u) lost", pl->plid());

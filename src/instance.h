@@ -59,16 +59,16 @@ class Player
 
   PlId plid() const { return plid_; }
   bool local() const { return local_; }
-  const std::string &nick() const { return nick_; }
-  void setNick(const std::string &v) { nick_ = v; }
+  const std::string& nick() const { return nick_; }
+  void setNick(const std::string& v) { nick_ = v; }
   bool ready() const { return ready_; }
   void setReady(bool v) { ready_ = v; }
   const FieldConf& fieldConf() const { return field_conf_; }
   const std::string& fieldConfName() const { return field_conf_name_; }
   void setFieldConf(const FieldConf& conf, const std::string& name);
-  const Field *field() const { return field_; }
-  Field *field() { return field_; }
-  void setField(Field *fld) { field_ = fld; }
+  const Field* field() const { return field_; }
+  Field* field() { return field_; }
+  void setField(Field* fld) { field_ = fld; }
 
  private:
   PlId plid_;   ///< Player ID
@@ -77,7 +77,7 @@ class Player
   bool ready_;  ///< ready for server state change
   FieldConf field_conf_;
   std::string field_conf_name_;
-  Field *field_;
+  Field* field_;
 };
 
 
@@ -104,21 +104,21 @@ class GameInstance
   struct Observer
   {
     /// Called on chat message.
-    virtual void onChat(Player *pl, const std::string &msg) = 0;
+    virtual void onChat(Player* pl, const std::string& msg) = 0;
     /// Called on new player (even local).
-    virtual void onPlayerJoined(Player *pl) = 0;
+    virtual void onPlayerJoined(Player* pl) = 0;
     /// Called after player's nick change.
-    virtual void onPlayerChangeNick(Player *pl, const std::string &nick) = 0;
+    virtual void onPlayerChangeNick(Player* pl, const std::string& nick) = 0;
     /// Called after player's ready state change.
-    virtual void onPlayerReady(Player *pl) = 0;
+    virtual void onPlayerReady(Player* pl) = 0;
     /// Called after player's field configuration change.
-    virtual void onPlayerChangeFieldConf(Player *pl) = 0;
+    virtual void onPlayerChangeFieldConf(Player* pl) = 0;
     /// Called when a player quit.
-    virtual void onPlayerQuit(Player *pl) = 0;
+    virtual void onPlayerQuit(Player* pl) = 0;
     /// Called on state update.
     virtual void onStateChange(State state) = 0;
     /// Called after a player field step.
-    virtual void onPlayerStep(Player *pl) = 0;
+    virtual void onPlayerStep(Player* pl) = 0;
   };
 
   typedef boost::ptr_map<PlId, Player> PlayerContainer;
@@ -126,41 +126,41 @@ class GameInstance
   GameInstance();
   virtual ~GameInstance();
 
-  const PlayerContainer &players() const { return players_; }
-  PlayerContainer &players() { return players_; }
-  const Match &match() const { return match_; }
+  const PlayerContainer& players() const { return players_; }
+  PlayerContainer& players() { return players_; }
+  const Match& match() const { return match_; }
   State state() const { return state_; }
-  const ServerConf &conf() const { return conf_; }
+  const ServerConf& conf() const { return conf_; }
 
   /** @name Local player operations.
    *
    * Modify the player and send packets, if needed.
    */
   //@{
-  virtual void playerSetNick(Player *pl, const std::string &nick) = 0;
-  virtual void playerSetFieldConf(Player *pl, const FieldConf& conf, const std::string& name) = 0;
-  virtual void playerSetReady(Player *pl, bool ready) = 0;
-  virtual void playerSendChat(Player *pl, const std::string &msg) = 0;
-  virtual void playerStep(Player *pl, KeyState keys) = 0;
-  virtual void playerQuit(Player *pl) = 0;
+  virtual void playerSetNick(Player* pl, const std::string& nick) = 0;
+  virtual void playerSetFieldConf(Player* pl, const FieldConf& conf, const std::string& name) = 0;
+  virtual void playerSetReady(Player* pl, bool ready) = 0;
+  virtual void playerSendChat(Player* pl, const std::string& msg) = 0;
+  virtual void playerStep(Player* pl, KeyState keys) = 0;
+  virtual void playerQuit(Player* pl) = 0;
   //@}
 
   /// Return the player with a given PlId or \e NULL.
-  Player *player(PlId plid);
+  Player* player(PlId plid);
   /// Return the player associated to a given field, or \e NULL.
-  Player *player(const Field *fld);
+  Player* player(const Field* fld);
 
  protected:
   /// Step a player field, update match tick.
-  virtual void doStepPlayer(Player *pl, KeyState keys);
+  virtual void doStepPlayer(Player* pl, KeyState keys);
   /// Like doStepPlayer() but throw netplay::CallbackError.
-  void stepRemotePlayer(Player *pl, KeyState keys);
+  void stepRemotePlayer(Player* pl, KeyState keys);
 
   /**@ brief Observer accessor.
    *
    * Virtual to allow subclassed observers with additional callbacks.
    */
-  virtual Observer &observer() const = 0;
+  virtual Observer& observer() const = 0;
 
   PlayerContainer players_;
   Match match_;
@@ -179,23 +179,23 @@ class GameInputScheduler
  public:
   struct InputProvider {
     /// Return next input for a given player.
-    virtual KeyState getNextInput(Player *pl) = 0;
+    virtual KeyState getNextInput(Player* pl) = 0;
   };
 
-  GameInputScheduler(GameInstance &instance, InputProvider &input_, boost::asio::io_service &io_service);
+  GameInputScheduler(GameInstance& instance, InputProvider& input_, boost::asio::io_service& io_service);
   ~GameInputScheduler();
 
-  GameInstance &instance() const { return instance_; }
+  GameInstance& instance() const { return instance_; }
 
   void start();
   void stop();
 
  private:
-  GameInstance &instance_;
-  InputProvider &input_;
-  void onInputTick(const boost::system::error_code &ec);
+  GameInstance& instance_;
+  InputProvider& input_;
+  void onInputTick(const boost::system::error_code& ec);
 
-  typedef std::vector<Player *> PlayerContainer;
+  typedef std::vector<Player*> PlayerContainer;
   PlayerContainer players_;  ///< Local players still playing.
   boost::posix_time::ptime tick_clock_;
   boost::asio::monotone_timer timer_;

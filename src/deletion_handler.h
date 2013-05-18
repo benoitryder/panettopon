@@ -12,12 +12,12 @@ template <typename T> class deletion_handler
   typedef std::auto_ptr<T> auto_type;
 
   explicit deletion_handler(auto_type ptr): ptr_(ptr) {}
-  explicit deletion_handler(T *ptr): ptr_(ptr) {}
-  const deletion_handler &operator=(const deletion_handler &o)
+  explicit deletion_handler(T* ptr): ptr_(ptr) {}
+  const deletion_handler& operator=(const deletion_handler& o)
   {
     ptr_ = o.ptr_;
   }
-  deletion_handler(const deletion_handler &o)
+  deletion_handler(const deletion_handler& o)
   {
     ptr_ = o.ptr_;
   }

@@ -9,7 +9,7 @@ Screen::StyleError::StyleError(const Screen& s, const std::string& prop, const s
   std::runtime_error("style error for "+s.name_+"."+prop+": "+msg) {}
 
 
-Screen::Screen(GuiInterface &intf, const std::string &name):
+Screen::Screen(GuiInterface& intf, const std::string& name):
     intf_(intf), name_(name)
 {
   const IniFile& style = this->style();
@@ -37,11 +37,11 @@ void Screen::enter() {}
 void Screen::exit() {}
 void Screen::redraw()
 {
-  sf::RenderWindow &w = intf_.window();
+  sf::RenderWindow& w = intf_.window();
   w.draw(background_);
 }
 
-void ScreenMenu::Background::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void ScreenMenu::Background::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   target.clear(color);
   if( img ) {
@@ -60,7 +60,7 @@ void ScreenMenu::Background::draw(sf::RenderTarget &target, sf::RenderStates sta
 }
 
 
-bool Screen::searchStyle(const std::string& prop, std::string *key) const
+bool Screen::searchStyle(const std::string& prop, std::string* key) const
 {
   const IniFile& style = this->style();
   std::string section = name_;
@@ -78,7 +78,7 @@ bool Screen::searchStyle(const std::string& prop, std::string *key) const
 }
 
 
-ScreenMenu::ScreenMenu(GuiInterface &intf, const std::string &name):
+ScreenMenu::ScreenMenu(GuiInterface& intf, const std::string& name):
     Screen(intf, name), container_(*this, ""), focused_(NULL)
 {
 }
@@ -86,12 +86,12 @@ ScreenMenu::ScreenMenu(GuiInterface &intf, const std::string &name):
 void ScreenMenu::redraw()
 {
   Screen::redraw();
-  sf::RenderWindow &w = intf_.window();
+  sf::RenderWindow& w = intf_.window();
   w.draw(container_);
 }
 
 
-bool ScreenMenu::onInputEvent(const sf::Event &ev)
+bool ScreenMenu::onInputEvent(const sf::Event& ev)
 {
   if( focused_ ) {
     if( focused_->onInputEvent(ev) ) {
@@ -102,7 +102,7 @@ bool ScreenMenu::onInputEvent(const sf::Event &ev)
   if( ev.type == sf::Event::KeyPressed ) {
     // move focus
     if( focused_ ) {
-      WFocusable *next_focused = NULL;
+      WFocusable* next_focused = NULL;
       if( ev.key.code == sf::Keyboard::Up ) {
         next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
       } else if( ev.key.code == sf::Keyboard::Down ) {
@@ -134,7 +134,7 @@ bool ScreenMenu::onInputEvent(const sf::Event &ev)
   return false;
 }
 
-void ScreenMenu::focus(WFocusable *w)
+void ScreenMenu::focus(WFocusable* w)
 {
   if( focused_ ) {
     focused_->focus(false);

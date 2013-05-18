@@ -27,16 +27,17 @@ CursesInterface::~CursesInterface()
 }
 
 
-bool CursesInterface::run(IniFile *cfg)
+bool CursesInterface::run(IniFile* cfg)
 {
 #define CONF_LOAD_KEY(n,ini) do{ \
   const std::string s = cfg->get(CONF_SECTION, #ini, ""); \
   if( s.empty() ) break; \
   int key = str2key(s); \
-  if( key == 0 ) \
+  if( key == 0 ) { \
     LOG("invalid conf. value for %s: %s", #ini, s.c_str()); \
-  else \
+  } else { \
     keys_.n = key; \
+  } \
 }while(0)
   CONF_LOAD_KEY(up,    KeyUp   );
   CONF_LOAD_KEY(down,  KeyDown );
@@ -94,8 +95,9 @@ bool CursesInterface::initCurses()
 
   // first log window: whole screen
   wmsg_ = ::subwin(stdscr, 0, 0, 0, 0);
-  if( wmsg_ == NULL )
+  if( wmsg_ == NULL ) {
     return false;
+  }
   ::scrollok(wmsg_, TRUE);
 
   ::touchwin(stdscr);
@@ -108,18 +110,20 @@ bool CursesInterface::initCurses()
 void CursesInterface::endCurses()
 {
   //TODO clean internal display structures
-  if( wmsg_ != NULL )
+  if( wmsg_ != NULL ) {
     ::delwin(wmsg_);
+  }
   wmsg_ = NULL;
   ::endwin();
   ::delwin(stdscr);
 }
 
 
-void CursesInterface::addMessage(int color, const char *fmt, ...)
+void CursesInterface::addMessage(int color, const char* fmt, ...)
 {
-  if( wmsg_ == NULL )
+  if( wmsg_ == NULL ) {
     return;
+  }
 
   int x, y;
   y = x = 0; // initialize x and y to avoid a warning
@@ -142,34 +146,32 @@ void CursesInterface::addMessage(int color, const char *fmt, ...)
   ::doupdate();
 }
 
-int CursesInterface::str2key(const std::string &s)
+int CursesInterface::str2key(const std::string& s)
 {
-  if( s.empty() )
+  if( s.empty() ) {
     return 0;
+  }
   if( s.size() == 1 ) {
     int val = s[0];
-    if( val < ' ' || val > '~' )
+    if( val < ' ' || val > '~' ) {
       return 0;
+    }
     return val | 0x20; // lowercase
   }
-  if( s == "up" )
-    return KEY_UP;
-  if( s == "down" )
-    return KEY_DOWN;
-  if( s == "left" )
-    return KEY_LEFT;
-  if( s == "right" )
-    return KEY_RIGHT;
+  if(s == "up") return KEY_UP;
+  if(s == "down") return KEY_DOWN;
+  if(s == "left") return KEY_LEFT;
+  if(s == "right") return KEY_RIGHT;
   return 0;
 }
 
 
-void CursesInterface::onChat(Player *pl, const std::string &msg)
+void CursesInterface::onChat(Player* pl, const std::string& msg)
 {
   this->addMessage(0, "%s(%u): %s", pl->nick().c_str(), pl->plid(), msg.c_str());
 }
 
-void CursesInterface::onNotification(GameInstance::Severity sev, const std::string &msg)
+void CursesInterface::onNotification(GameInstance::Severity sev, const std::string& msg)
 {
   int c = 0;
   switch( sev ) {
@@ -186,7 +188,7 @@ void CursesInterface::onServerDisconnect()
   io_service_.stop();
 }
 
-void CursesInterface::onPlayerJoined(Player *pl)
+void CursesInterface::onPlayerJoined(Player* pl)
 {
   this->addMessage(2, "%s(%u) joined", pl->nick().c_str(), pl->plid());
   if( pl->local() ) {
@@ -196,13 +198,13 @@ void CursesInterface::onPlayerJoined(Player *pl)
   }
 }
 
-void CursesInterface::onPlayerChangeNick(Player *pl, const std::string &nick)
+void CursesInterface::onPlayerChangeNick(Player* pl, const std::string& nick)
 {
   this->addMessage(2, "%s(%u) is now known as %s",
                    nick.c_str(), pl->plid(), pl->nick().c_str());
 }
 
-void CursesInterface::onPlayerReady(Player *pl)
+void CursesInterface::onPlayerReady(Player* pl)
 {
   if( pl->ready() ) {
     this->addMessage(2, "%s(%u) is ready", pl->nick().c_str(), pl->plid());
@@ -211,12 +213,12 @@ void CursesInterface::onPlayerReady(Player *pl)
   }
 }
 
-void CursesInterface::onPlayerChangeFieldConf(Player *pl)
+void CursesInterface::onPlayerChangeFieldConf(Player* pl)
 {
   this->addMessage(2, "%s(%u) changed configuration", pl->nick().c_str(), pl->plid());
 }
 
-void CursesInterface::onPlayerQuit(Player *pl)
+void CursesInterface::onPlayerQuit(Player* pl)
 {
   this->addMessage(2, "%s(%u) has quit", pl->nick().c_str(), pl->plid());
   if( pl == player_ ) {
@@ -250,11 +252,11 @@ void CursesInterface::onStateChange(GameInstance::State state)
 
     GameInstance::PlayerContainer::const_iterator it;
     for( it=instance_.players().begin(); it!=instance_.players().end(); ++it ) {
-      const Field *fld = (*it).second->field();
+      const Field* fld = (*it).second->field();
       if( fld == NULL ) {
         continue;
       }
-      FieldDisplay *fdp = new FieldDisplay(*this, *fld, fdisplays_.size());
+      FieldDisplay* fdp = new FieldDisplay(*this, *fld, fdisplays_.size());
       fdisplays_.insert(fld, fdp);
       fdp->draw();
     }
@@ -270,7 +272,7 @@ void CursesInterface::onStateChange(GameInstance::State state)
   }
 }
 
-void CursesInterface::onPlayerStep(Player *pl)
+void CursesInterface::onPlayerStep(Player* pl)
 {
   FieldDisplayMap::iterator it = fdisplays_.find(pl->field());
   assert( it != fdisplays_.end() );
@@ -282,7 +284,7 @@ void CursesInterface::onPlayerStep(Player *pl)
   }
 }
 
-KeyState CursesInterface::getNextInput(Player *)
+KeyState CursesInterface::getNextInput(Player*)
 {
   GameKey key = GAME_KEY_NONE;
   for(;;) {
@@ -310,7 +312,7 @@ KeyState CursesInterface::getNextInput(Player *)
 }
 
 
-FieldDisplay::FieldDisplay(CursesInterface &intf, const Field &fld, int slot):
+FieldDisplay::FieldDisplay(CursesInterface& intf, const Field& fld, int slot):
     intf_(intf), field_(fld)
 {
   assert( slot >= 0 );
@@ -350,14 +352,16 @@ void FieldDisplay::draw()
   ::box(wgrid_, 0, 0);
 
   // grid content
-  for( x=0; x<FIELD_WIDTH; x++ )
-    for( y=1; y<=FIELD_HEIGHT; y++ )
+  for( x=0; x<FIELD_WIDTH; x++ ) {
+    for( y=1; y<=FIELD_HEIGHT; y++ ) {
       this->drawBlock(x, y);
+    }
+  }
 
   // player nick (if available)
   ::wcolor_set(wfield_, field_.lost() ? 1 : 2, NULL);
-  Player *pl = intf_.instance_.player(&field_);
-  const char *nick = "???";
+  Player* pl = intf_.instance_.player(&field_);
+  const char* nick = "???";
   if( pl != NULL ) {
     nick = pl->nick().c_str();
   }
@@ -370,24 +374,28 @@ void FieldDisplay::draw()
   const size_t gb_nb = field_.hangingGarbageCount();
   size_t gb_i=0;
   for( gb_i=0, x=0; gb_i<gb_nb && x<FIELD_WIDTH; gb_i++ ) {
-    const Garbage &gb = field_.hangingGarbage(gb_i);
-    if( gb.type == Garbage::TYPE_CHAIN )
+    const Garbage& gb = field_.hangingGarbage(gb_i);
+    if( gb.type == Garbage::TYPE_CHAIN ) {
       x += snprintf(buf+x, sizeof(buf-x), "x%u", gb.size.y);
-    else if( gb.type == Garbage::TYPE_COMBO )
+    } else if( gb.type == Garbage::TYPE_COMBO ) {
       x += snprintf(buf+x, sizeof(buf-x), "%u", gb.size.x);
-    if( x < FIELD_WIDTH )
+    }
+    if( x < FIELD_WIDTH ) {
       buf[x] = ' ';
+    }
     x++;
   }
-  while( x<FIELD_WIDTH )
+  while( x<FIELD_WIDTH ) {
     buf[x++]= ' '; // pad with spaces
+  }
 
   // print formatted output
   ::wmove(wfield_, 0, 1);
   for( x=0; x<FIELD_WIDTH; x++ ) {
     chtype ch = buf[x];
-    if( ch != ' ' )
+    if( ch != ' ' ) {
       ch |= A_REVERSE;
+    }
     ch |= COLOR_PAIR(0);
     ::waddch(wfield_, ch);
   }
@@ -407,8 +415,9 @@ void FieldDisplay::draw()
     buf[sizeof(buf)-1] = '\0';
     int i;
     wmove(wgrid_, FIELD_HEIGHT-it->pos.y+1, it->pos.x*2+2);
-    for( i=0; buf[i]!='\0'; i++ )
+    for( i=0; buf[i]!='\0'; i++ ) {
       waddch(wgrid_, ch|buf[i]);
+    }
   }
 
   ::wnoutrefresh(wgrid_);
@@ -418,7 +427,7 @@ void FieldDisplay::draw()
 
 void FieldDisplay::step()
 {
-  const Field::StepInfo &info = field_.stepInfo();
+  const Field::StepInfo& info = field_.stepInfo();
 
   // labels
 
@@ -450,16 +459,17 @@ void FieldDisplay::step()
 
 void FieldDisplay::drawBlock(int x, int y)
 {
-  const Block &bk = field_.block(x,y);
+  const Block& bk = field_.block(x,y);
 
   chtype chs[2] = {0,0};
   if( bk.isColor() ) {
     chs[0] = COLOR_PAIR(bk.bk_color.color+1);
     if( bk.bk_color.state == BkColor::FLASH ) {
-      if( ((bk.ntick - field_.tick())/4) % 2 == 0 )
+      if( ((bk.ntick - field_.tick())/4) % 2 == 0 ) {
         chs[0] = ':'|A_REVERSE|COLOR_PAIR(0);
-      else
+      } else {
         chs[0] |= ':'|A_REVERSE;
+      }
     } else if( bk.bk_color.state == BkColor::MUTATE ) {
       chs[0] |= ':';
     } else if( bk.bk_color.state == BkColor::CLEARED ) {
@@ -470,36 +480,40 @@ void FieldDisplay::drawBlock(int x, int y)
   } else if( bk.isGarbage() ) {
     chs[0] = COLOR_PAIR(0)|A_REVERSE;
     if( bk.bk_garbage.state == BkGarbage::FLASH ) {
-      if( ((bk.ntick - field_.tick())/4) % 2 == 0 )
+      if( ((bk.ntick - field_.tick())/4) % 2 == 0 ) {
         chs[0] |= ':';
-      else
+      } else {
         chs[0] = ':'|COLOR_PAIR(0);
+      }
     } else if( bk.bk_garbage.state == BkGarbage::MUTATE ) {
       chs[0] |= ':';
     } else {
       chs[1] = chs[0];
-      const Garbage *gb = bk.bk_garbage.garbage;
+      const Garbage* gb = bk.bk_garbage.garbage;
       int c1, c2;
       if( gb->size.y == 1 ) {
         c1 = c2 = ACS_HLINE;
-        if( x == gb->pos.x )
+        if( x == gb->pos.x ) {
           c1 =' ';
-        else if( x == gb->pos.x + gb->size.x-1 )
+        } else if( x == gb->pos.x + gb->size.x-1 ) {
           c2 = ' ';
+        }
       } else {
         c1 = c2 = ' ';
         if( y == gb->pos.y ) {
           c1 = c2 = ACS_HLINE;
-          if( x == gb->pos.x )
+          if( x == gb->pos.x ) {
             c1 = ACS_LLCORNER;
-          else if( x == gb->pos.x + gb->size.x-1 )
+          } else if( x == gb->pos.x + gb->size.x-1 ) {
             c2 = ACS_LRCORNER;
+          }
         } else if( y == gb->pos.y + gb->size.y-1 ) {
           c1 = c2 = ACS_HLINE;
-          if( x == gb->pos.x )
+          if( x == gb->pos.x ) {
             c1 = ACS_ULCORNER;
-          else if( x == gb->pos.x + gb->size.x-1 )
+          } else if( x == gb->pos.x + gb->size.x-1 ) {
             c2 = ACS_URCORNER;
+          }
         } else if( x == gb->pos.x ) {
           c1 = ACS_VLINE;
         } else if( x == gb->pos.x + gb->size.x-1 ) {
@@ -512,23 +526,26 @@ void FieldDisplay::drawBlock(int x, int y)
   } else {
     chs[0] = ' '|COLOR_PAIR(0);
   }
-  if( chs[1] == 0 )
+  if( chs[1] == 0 ) {
     chs[1] = chs[0];
+  }
 
   // swap
   if( bk.swapped ) {
     if( x == field_.swapPos().x ) {
       chs[0] = ' '|COLOR_PAIR(0);
-      const Block &bk2 = field_.block(x+1,y);
+      const Block& bk2 = field_.block(x+1,y);
       if( bk2.isColor() &&
-         (bk.isNone() || field_.swapDelay() > field_.conf().swap_tk*2/3) )
+         (bk.isNone() || field_.swapDelay() > field_.conf().swap_tk*2/3) ) {
         chs[1] = ' '|A_REVERSE|COLOR_PAIR(bk2.bk_color.color+1);
+      }
     } else if( x == field_.swapPos().x+1 ) {
       chs[1] = ' '|COLOR_PAIR(0);
-      const Block &bk2 = field_.block(x-1,y);
+      const Block& bk2 = field_.block(x-1,y);
       if( bk2.isColor() &&
-         (bk.isNone() || field_.swapDelay() > field_.conf().swap_tk*1/3) )
+         (bk.isNone() || field_.swapDelay() > field_.conf().swap_tk*1/3) ) {
         chs[0] = ' '|A_REVERSE|COLOR_PAIR(bk2.bk_color.color+1);
+      }
     }
   }
 
@@ -549,7 +566,7 @@ void FieldDisplay::drawBlock(int x, int y)
 
 const unsigned int FieldDisplay::Label::DURATION = 42;
 
-FieldDisplay::Label::Label(const FieldPos &pos, bool chain, unsigned int val):
+FieldDisplay::Label::Label(const FieldPos& pos, bool chain, unsigned int val):
     pos(pos), chain(chain), val(val), dt(DURATION)
 {
 }
@@ -559,7 +576,7 @@ FieldPos FieldDisplay::matchLabelPos()
   unsigned int x, y;
   for( y=FIELD_HEIGHT; y>0; y-- ) {
     for( x=0; x<FIELD_WIDTH; x++ ) {
-      const Block &bk = field_.block(x,y);
+      const Block& bk = field_.block(x,y);
       if( bk.isState(BkColor::FLASH) &&
          bk.ntick - field_.tick() == field_.conf().flash_tk ) {
         return FieldPos(x,y);

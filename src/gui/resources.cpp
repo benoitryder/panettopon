@@ -12,7 +12,7 @@ ResourceManager::ResourceManager()
 }
 
 
-void ResourceManager::init(const std::string &path)
+void ResourceManager::init(const std::string& path)
 {
   if( !res_path_.empty() ) {
     throw std::runtime_error("resource path already set");
@@ -41,7 +41,7 @@ void ResourceManager::init(const std::string &path)
 }
 
 
-void ResourceManager::setLang(const std::string &lang)
+void ResourceManager::setLang(const std::string& lang)
 {
   if( lang.empty() || lang.find_first_of("/\\.") != std::string::npos ) {
     throw std::invalid_argument("empty resource path");
@@ -61,14 +61,14 @@ std::string ResourceManager::getResourceFilename(const std::string& filename) co
   return res_path_+"/"+filename;
 }
 
-const sf::Texture *ResourceManager::getImage(const std::string &name)
+const sf::Texture* ResourceManager::getImage(const std::string& name)
 {
   ImageContainer::iterator it = images_.find(name);
   if( it != images_.end() ) {
     return (*it).second.get();
   }
 
-  sf::Texture *img = new sf::Texture;
+  sf::Texture* img = new sf::Texture;
   std::shared_ptr<sf::Texture> pimg(img);
   if( ! img->loadFromFile(this->getResourceFilename(name+".png")) ) {
     throw std::runtime_error("failed to load image "+name);
@@ -78,14 +78,14 @@ const sf::Texture *ResourceManager::getImage(const std::string &name)
   return img;
 }
 
-const sf::Font *ResourceManager::getFont(const std::string &name)
+const sf::Font* ResourceManager::getFont(const std::string& name)
 {
   FontContainer::iterator it = fonts_.find(name);
   if( it != fonts_.end() ) {
     return (*it).second.get();
   }
 
-  sf::Font *font = new sf::Font;
+  sf::Font* font = new sf::Font;
   std::shared_ptr<sf::Font> pfont(font);
   if( ! font->loadFromFile(this->getResourceFilename(name+".ttf")) ) {
     throw std::runtime_error("failed to load font "+name);
@@ -95,7 +95,7 @@ const sf::Font *ResourceManager::getFont(const std::string &name)
   return font;
 }
 
-std::string ResourceManager::getLang(const std::string &section, const std::string &key) const
+std::string ResourceManager::getLang(const std::string& section, const std::string& key) const
 {
   return lang_.get<std::string>(section, key);
 }
@@ -106,13 +106,13 @@ ImageTile::ImageTile():
 {
 }
 
-void ImageTile::create(const sf::Texture *img, const sf::IntRect &rect)
+void ImageTile::create(const sf::Texture* img, const sf::IntRect& rect)
 {
   image_ = img;
   rect_ = rect;
 }
 
-void ImageTile::create(const sf::Texture *img, int sx, int sy, int x, int y)
+void ImageTile::create(const sf::Texture* img, int sx, int sy, int x, int y)
 {
   assert( img->getSize().x % sx == 0 );
   assert( img->getSize().y % sy == 0 );
@@ -121,7 +121,7 @@ void ImageTile::create(const sf::Texture *img, int sx, int sy, int x, int y)
   this->create(img, sf::IntRect(kx*x, ky*y, kx, ky));
 }
 
-void ImageTile::render(sf::RenderTarget &target, sf::RenderStates states, float x, float y, float w, float h) const
+void ImageTile::render(sf::RenderTarget& target, sf::RenderStates states, float x, float y, float w, float h) const
 {
   states.texture = image_;
   const float left   = rect_.left;
@@ -138,12 +138,12 @@ void ImageTile::render(sf::RenderTarget &target, sf::RenderStates states, float 
   target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::TrianglesStrip, states);
 }
 
-void ImageTile::render(sf::RenderTarget &target, sf::RenderStates states, float x, float y) const
+void ImageTile::render(sf::RenderTarget& target, sf::RenderStates states, float x, float y) const
 {
   this->render(target, states, x, y, rect_.width, rect_.height);
 }
 
-void ImageTile::setToSprite(sf::Sprite *spr, bool center) const
+void ImageTile::setToSprite(sf::Sprite* spr, bool center) const
 {
   spr->setTexture(*image_);
   spr->setTextureRect(rect_);
@@ -158,14 +158,14 @@ ImageFrame::ImageFrame():
 {
 }
 
-void ImageFrame::create(const sf::Texture *img, const sf::IntRect& rect, const sf::IntRect& inside)
+void ImageFrame::create(const sf::Texture* img, const sf::IntRect& rect, const sf::IntRect& inside)
 {
   image_ = img;
   rect_ = rect;
   inside_ = inside;
 }
 
-void ImageFrame::render(sf::RenderTarget &target, sf::RenderStates states, const sf::FloatRect& rect) const
+void ImageFrame::render(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& rect) const
 {
   states.texture = image_;
 
@@ -225,7 +225,7 @@ void ImageFrame::render(sf::RenderTarget &target, sf::RenderStates states, const
   target.draw(vertices2, sizeof(vertices2)/sizeof(*vertices2), sf::TrianglesStrip, states);
 }
 
-void ImageFrame::render(sf::RenderTarget &target, sf::RenderStates states, const sf::Vector2f& size) const
+void ImageFrame::render(sf::RenderTarget& target, sf::RenderStates states, const sf::Vector2f& size) const
 {
   this->render(target, states, sf::FloatRect(-size.x/2, -size.y/2, size.x, size.y));
 }
@@ -236,7 +236,7 @@ ImageFrameX::ImageFrameX():
 {
 }
 
-void ImageFrameX::create(const sf::Texture *img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width)
+void ImageFrameX::create(const sf::Texture* img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width)
 {
   image_ = img;
   rect_ = rect;
@@ -244,7 +244,7 @@ void ImageFrameX::create(const sf::Texture *img, const sf::IntRect& rect, unsign
   inside_width_ = inside_width;
 }
 
-void ImageFrameX::render(sf::RenderTarget &target, sf::RenderStates states, const sf::FloatRect& rect) const
+void ImageFrameX::render(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& rect) const
 {
   states.texture = image_;
 
@@ -279,7 +279,7 @@ void ImageFrameX::render(sf::RenderTarget &target, sf::RenderStates states, cons
   target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::TrianglesStrip, states);
 }
 
-void ImageFrameX::render(sf::RenderTarget &target, sf::RenderStates states, float w) const
+void ImageFrameX::render(sf::RenderTarget& target, sf::RenderStates states, float w) const
 {
   this->render(target, states, sf::FloatRect(-w/2, -rect_.height/2, w, rect_.height));
 }
@@ -290,15 +290,15 @@ StyleField::StyleField():
 {
 }
 
-void StyleField::load(ResourceManager *res_mgr, const std::string& section)
+void StyleField::load(ResourceManager* res_mgr, const std::string& section)
 {
-  const IniFile &style = res_mgr->style();
+  const IniFile& style = res_mgr->style();
   color_nb = style.get<unsigned int>(section, "ColorNb");
   if( color_nb < 4 ) {
     throw std::runtime_error("ColorNb is too small, must be at least 4");
   }
 
-  const sf::Texture *img;
+  const sf::Texture* img;
 
   // Block tiles (and block size)
   img = res_mgr->getImage("BkColor-map");
@@ -308,7 +308,7 @@ void StyleField::load(ResourceManager *res_mgr, const std::string& section)
   bk_size = img->getSize().y/5;
   tiles_bk_color.resize(color_nb); // create sprites, uninitialized
   for(unsigned int i=0; i<color_nb; i++ ) {
-    TilesBkColor &tiles = tiles_bk_color[i];
+    TilesBkColor& tiles = tiles_bk_color[i];
     tiles.normal.create(img, color_nb, 5, i, 0);
     tiles.bg    .create(img, color_nb, 5, i, 1);
     tiles.face  .create(img, color_nb, 5, i, 2);

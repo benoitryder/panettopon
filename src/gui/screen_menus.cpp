@@ -8,7 +8,7 @@
 namespace gui {
 
 
-ScreenStart::ScreenStart(GuiInterface &intf):
+ScreenStart::ScreenStart(GuiInterface& intf):
     ScreenMenu(intf, "ScreenStart")
 {
 }
@@ -18,11 +18,11 @@ void ScreenStart::enter()
   intf_.stopInstance();
   const ResourceManager& res_mgr = intf_.res_mgr();
 
-  WButton *button_join = new WButton(*this, "JoinServer");
+  WButton* button_join = new WButton(*this, "JoinServer");
   button_join->setCaption(res_mgr.getLang(name_, "JoinServer"));
   container_.widgets.push_back(button_join);
 
-  WButton *button_create = new WButton(*this, "CreateServer");
+  WButton* button_create = new WButton(*this, "CreateServer");
   button_create->setCaption(res_mgr.getLang(name_, "CreateServer"));
   container_.widgets.push_back(button_create);
 
@@ -41,7 +41,7 @@ void ScreenStart::enter()
   this->focus(button_join);
 }
 
-bool ScreenStart::onInputEvent(const sf::Event &ev)
+bool ScreenStart::onInputEvent(const sf::Event& ev)
 {
   if( ScreenMenu::onInputEvent(ev) ) {
     return true;
@@ -70,7 +70,7 @@ void ScreenStart::onCreateServer()
 }
 
 
-ScreenJoinServer::ScreenJoinServer(GuiInterface &intf):
+ScreenJoinServer::ScreenJoinServer(GuiInterface& intf):
     ScreenMenu(intf, "ScreenJoinServer"),
     submitting_(false)
 {
@@ -81,7 +81,7 @@ void ScreenJoinServer::enter()
   const ResourceManager& res_mgr = intf_.res_mgr();
   const IniFile& cfg = intf_.cfg();
 
-  WLabel *label = new WLabel(*this, "HostPortLabel");
+  WLabel* label = new WLabel(*this, "HostPortLabel");
   label->setText(res_mgr.getLang(name_, "HostPort"));
   container_.widgets.push_back(label);
 
@@ -101,7 +101,7 @@ void ScreenJoinServer::enter()
   entry_nick_->setText(cfg.get("Client", "Nick", "Player"));
   container_.widgets.push_back(entry_nick_);
 
-  WButton *button = new WButton(*this, "JoinButton");
+  WButton* button = new WButton(*this, "JoinButton");
   button->setCaption(res_mgr.getLang(name_, "Join"));
   container_.widgets.push_back(button);
 
@@ -114,7 +114,7 @@ void ScreenJoinServer::enter()
   this->focus(entry_host_);
 }
 
-bool ScreenJoinServer::onInputEvent(const sf::Event &ev)
+bool ScreenJoinServer::onInputEvent(const sf::Event& ev)
 {
   if( submitting_ ) {
     return true;  // ignore input
@@ -133,7 +133,7 @@ bool ScreenJoinServer::onInputEvent(const sf::Event &ev)
   return false;
 }
 
-void ScreenJoinServer::onPlayerJoined(Player *pl)
+void ScreenJoinServer::onPlayerJoined(Player* pl)
 {
   if( pl->local() ) {
     intf_.swapScreen(new ScreenLobby(intf_, pl));
@@ -161,7 +161,7 @@ void ScreenJoinServer::submit()
   uint16_t port;
   try {
     port = boost::lexical_cast<uint16_t>(entry_port_->text());
-  } catch(const boost::bad_lexical_cast &) {
+  } catch(const boost::bad_lexical_cast&) {
     LOG("invalid port value: %s", entry_port_->text().c_str());
     return;
   }
@@ -175,7 +175,7 @@ void ScreenJoinServer::submit()
 }
 
 
-ScreenCreateServer::ScreenCreateServer(GuiInterface &intf):
+ScreenCreateServer::ScreenCreateServer(GuiInterface& intf):
     ScreenMenu(intf, "ScreenCreateServer")
 {
 }
@@ -186,7 +186,7 @@ void ScreenCreateServer::enter()
   const IniFile& cfg = intf_.cfg();
   // reload configuration from values
 
-  WLabel *label = new WLabel(*this, "PortLabel");
+  WLabel* label = new WLabel(*this, "PortLabel");
   label->setText(res_mgr.getLang(name_, "Port"));
   container_.widgets.push_back(label);
 
@@ -210,7 +210,7 @@ void ScreenCreateServer::enter()
   entry_player_nb_->setText(cfg.get("Server", "PlayerNumber", ""));
   container_.widgets.push_back(entry_player_nb_);
 
-  WButton *button = new WButton(*this, "CreateButton");
+  WButton* button = new WButton(*this, "CreateButton");
   button->setCaption(res_mgr.getLang(name_, "Create"));
   container_.widgets.push_back(button);
 
@@ -222,7 +222,7 @@ void ScreenCreateServer::enter()
   this->focus(entry_port_);
 }
 
-bool ScreenCreateServer::onInputEvent(const sf::Event &ev)
+bool ScreenCreateServer::onInputEvent(const sf::Event& ev)
 {
   if( ScreenMenu::onInputEvent(ev) ) {
     return true;
@@ -249,14 +249,14 @@ void ScreenCreateServer::submit()
   uint16_t port;
   try {
     port = boost::lexical_cast<uint16_t>(entry_port_->text());
-  } catch(const boost::bad_lexical_cast &) {
+  } catch(const boost::bad_lexical_cast&) {
     LOG("invalid port value: %s", entry_port_->text().c_str());
     return;
   }
   unsigned int player_nb;
   try {
     player_nb = boost::lexical_cast<unsigned int>(entry_player_nb_->text());
-  } catch(const boost::bad_lexical_cast &) {
+  } catch(const boost::bad_lexical_cast&) {
     LOG("invalid player number: %s", entry_player_nb_->text().c_str());
     return;
   }
@@ -265,12 +265,12 @@ void ScreenCreateServer::submit()
   intf_.cfg().set("Client", "Nick", entry_nick_->text());
   intf_.cfg().set("Server", "PlayerNumber", player_nb);
   intf_.startServer(port);
-  Player *pl = intf_.server()->newLocalPlayer(entry_nick_->text());
+  Player* pl = intf_.server()->newLocalPlayer(entry_nick_->text());
   intf_.swapScreen(new ScreenLobby(intf_, pl));
 }
 
 
-ScreenLobby::ScreenLobby(GuiInterface &intf, Player *pl):
+ScreenLobby::ScreenLobby(GuiInterface& intf, Player* pl):
     ScreenMenu(intf, "ScreenLobby"),
     player_(pl)
 {
@@ -319,7 +319,7 @@ void ScreenLobby::redraw()
 }
 
 
-bool ScreenLobby::onInputEvent(const sf::Event &ev)
+bool ScreenLobby::onInputEvent(const sf::Event& ev)
 {
   if( ScreenMenu::onInputEvent(ev) ) {
     return true;
@@ -342,29 +342,29 @@ void ScreenLobby::onStateChange(GameInstance::State state)
   }
 }
 
-void ScreenLobby::onPlayerJoined(Player *pl)
+void ScreenLobby::onPlayerJoined(Player* pl)
 {
   PlId plid = pl->plid(); // intermediate variable to help g++
   player_rows_.insert(plid, new WPlayerRow(*this, *pl));
   this->updatePlayerRowsPos();
 }
 
-void ScreenLobby::onPlayerChangeNick(Player *pl, const std::string &)
+void ScreenLobby::onPlayerChangeNick(Player* pl, const std::string& )
 {
   player_rows_.find(pl->plid())->second->update();
 }
 
-void ScreenLobby::onPlayerReady(Player *pl)
+void ScreenLobby::onPlayerReady(Player* pl)
 {
   player_rows_.find(pl->plid())->second->update();
 }
 
-void ScreenLobby::onPlayerChangeFieldConf(Player *pl)
+void ScreenLobby::onPlayerChangeFieldConf(Player* pl)
 {
   player_rows_.find(pl->plid())->second->update();
 }
 
-void ScreenLobby::onPlayerQuit(Player *pl)
+void ScreenLobby::onPlayerQuit(Player* pl)
 {
   player_rows_.erase(pl->plid());
   this->updatePlayerRowsPos();
@@ -373,7 +373,7 @@ void ScreenLobby::onPlayerQuit(Player *pl)
 
 void ScreenLobby::submit()
 {
-  GameInstance *instance = intf_.instance();
+  GameInstance* instance = intf_.instance();
   assert( instance );
   if( instance->state() == GameInstance::STATE_LOBBY ) {
     instance->playerSetReady(player_, !player_->ready());
@@ -436,7 +436,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   this->update();
 }
 
-void ScreenLobby::WPlayerRow::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void ScreenLobby::WPlayerRow::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   target.draw(nick_, states);
   target.draw(conf_, states);

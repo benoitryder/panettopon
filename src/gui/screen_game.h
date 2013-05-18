@@ -14,19 +14,19 @@ class FieldDisplay;
 class ScreenGame: public Screen, public GameInputScheduler::InputProvider
 {
  public:
-  ScreenGame(GuiInterface &intf, Player *pl);
+  ScreenGame(GuiInterface& intf, Player* pl);
   virtual void enter();
   virtual void exit();
   virtual void redraw();
-  virtual bool onInputEvent(const sf::Event &ev);
-  virtual void onPlayerStep(Player *pl);
+  virtual bool onInputEvent(const sf::Event& ev);
+  virtual void onPlayerStep(Player* pl);
   virtual void onStateChange(GameInstance::State state);
 
   /// InputProvider interface.
-  virtual KeyState getNextInput(Player *pl);
+  virtual KeyState getNextInput(Player* pl);
 
  private:
-  Player *player_;  ///< Local controlled player
+  Player* player_;  ///< Local controlled player
   GameInputScheduler input_scheduler_;
   StyleField style_field_;
   std::auto_ptr<FieldDisplay> fdp_player_; ///< Field display of the local player
@@ -54,17 +54,17 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   static const float BOUNCE_Y_MAX;
 
  public:
-  FieldDisplay(const Field &fld, const StyleField &style);
+  FieldDisplay(const Field& fld, const StyleField& style);
   virtual ~FieldDisplay() {}
 
   /// Update internal display after a step
   void step();
 
  protected:
-  virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
+  virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 
  private:
-  void renderBlock(sf::RenderTarget &target, sf::RenderStates states, int x, int y) const;
+  void renderBlock(sf::RenderTarget& target, sf::RenderStates states, int x, int y) const;
 
   /** @brief Draw a bouncing block
    *
@@ -76,10 +76,10 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
    * Only the symbol part is drawn, to drawing pixels of adjacent tiles because
    * of stretching.
    */
-  void renderBouncingBlock(sf::RenderTarget &target, sf::RenderStates states, int x, int y, float bounce, unsigned int color) const;
+  void renderBouncingBlock(sf::RenderTarget& target, sf::RenderStates states, int x, int y, float bounce, unsigned int color) const;
 
-  const Field &field_;
-  const StyleField &style_;
+  const Field& field_;
+  const StyleField& style_;
   sf::Sprite spr_frame_;
   sf::Sprite spr_cursor_;
 
@@ -94,14 +94,14 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   class Label: public sf::Drawable, public sf::Transformable
   {
    public:
-    Label(const StyleField &style, const FieldPos &pos, bool chain, unsigned int val);
-    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
+    Label(const StyleField& style, const FieldPos& pos, bool chain, unsigned int val);
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
     /// Step and update the label.
     void step();
     unsigned int dt() const { return dt_; }
    private:
     static const unsigned int DURATION;
-    const StyleField &style_;
+    const StyleField& style_;
     sf::Sprite bg_;    ///< Background sprite.
     sf::Text txt_;     ///< Label text.
     unsigned int dt_;  ///< Remaining display time.
@@ -122,8 +122,8 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   class GbHanging: public sf::Drawable, public sf::Transformable
   {
    public:
-    GbHanging(const StyleField &res, const Garbage &gb);
-    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
+    GbHanging(const StyleField& res, const Garbage& gb);
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
     /// Step and update the garbage.
     void step();
     /// Set position from drop order above the field.
@@ -133,8 +133,8 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
     /// Update the text, if needed.
     void updateText();
 
-    const StyleField &style_;
-    const Garbage &gb_;
+    const StyleField& style_;
+    const Garbage& gb_;
     sf::Sprite bg_;  ///< Background sprite.
     sf::Text txt_;   ///< Label text, not used if size_ is 0.
     /// Chain size written in text, 0 if no text.

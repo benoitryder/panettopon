@@ -22,25 +22,25 @@ class CursesInterface: public ClientInstance::Observer,
  public:
   CursesInterface();
   virtual ~CursesInterface();
-  bool run(IniFile *cfg);
+  bool run(IniFile* cfg);
 
   /** @name ClientInstance::Observer methods. */
   //@{
-  virtual void onChat(Player *pl, const std::string &msg);
-  virtual void onPlayerJoined(Player *pl);
-  virtual void onPlayerChangeNick(Player *pl, const std::string &nick);
-  virtual void onPlayerReady(Player *pl);
-  virtual void onPlayerChangeFieldConf(Player *pl);
-  virtual void onPlayerQuit(Player *pl);
+  virtual void onChat(Player* pl, const std::string& msg);
+  virtual void onPlayerJoined(Player* pl);
+  virtual void onPlayerChangeNick(Player* pl, const std::string& nick);
+  virtual void onPlayerReady(Player* pl);
+  virtual void onPlayerChangeFieldConf(Player* pl);
+  virtual void onPlayerQuit(Player* pl);
   virtual void onStateChange(GameInstance::State state);
-  virtual void onPlayerStep(Player *pl);
-  virtual void onNotification(GameInstance::Severity, const std::string &);
+  virtual void onPlayerStep(Player* pl);
+  virtual void onNotification(GameInstance::Severity, const std::string&);
   virtual void onServerDisconnect();
   //@}
-  virtual KeyState getNextInput(Player *pl);
+  virtual KeyState getNextInput(Player* pl);
 
   /// Add a message in given color.
-  void addMessage(int color, const char *fmt, ...);
+  void addMessage(int color, const char* fmt, ...);
 
  private:
 
@@ -50,11 +50,11 @@ class CursesInterface: public ClientInstance::Observer,
   boost::asio::io_service io_service_;
   ClientInstance instance_;
   GameInputScheduler input_scheduler_;
-  Player *player_;
+  Player* player_;
   /// Window for messages.
-  WINDOW *wmsg_;
+  WINDOW* wmsg_;
 
-  typedef boost::ptr_map<const Field *, FieldDisplay> FieldDisplayMap;
+  typedef boost::ptr_map<const Field*, FieldDisplay> FieldDisplayMap;
   FieldDisplayMap fdisplays_;
 
   /// Key bindings.
@@ -65,14 +65,14 @@ class CursesInterface: public ClientInstance::Observer,
   } keys_;
 
   /// Get a key code from a key name, 0 if invalid.
-  static int str2key(const std::string &s);
+  static int str2key(const std::string& s);
 };
 
 
 class FieldDisplay
 {
  public:
-  FieldDisplay(CursesInterface &intf, const Field &fld, int slot);
+  FieldDisplay(CursesInterface& intf, const Field& fld, int slot);
   ~FieldDisplay();
 
   void draw();
@@ -82,17 +82,17 @@ class FieldDisplay
  private:
   void drawBlock(int x, int y);
 
-  CursesInterface &intf_;
-  const Field &field_;
-  WINDOW *wfield_;
-  WINDOW *wgrid_;
+  CursesInterface& intf_;
+  const Field& field_;
+  WINDOW* wfield_;
+  WINDOW* wgrid_;
 
   /** @name Labels. */
   //@{
 
   struct Label {
     static const unsigned int DURATION;
-    Label(const FieldPos &pos, bool chain, unsigned int val);
+    Label(const FieldPos& pos, bool chain, unsigned int val);
     FieldPos pos;      ///< position, in field coordinates
     bool chain;        ///< true for chain, false for combo
     unsigned int val;  ///< combo or chain value

@@ -13,12 +13,12 @@ class ClientInstance: public GameInstance,
   struct Observer: GameInstance::Observer
   {
     /// Called on server notification.
-    virtual void onNotification(Severity sev, const std::string &msg) = 0;
+    virtual void onNotification(Severity sev, const std::string& msg) = 0;
     /// Called on server disconnection.
     virtual void onServerDisconnect() = 0;
   };
 
-  ClientInstance(Observer &obs, boost::asio::io_service &io_service);
+  ClientInstance(Observer& obs, boost::asio::io_service& io_service);
   virtual ~ClientInstance();
 
   /** @brief Connect to a server.
@@ -27,7 +27,7 @@ class ClientInstance: public GameInstance,
    * Once the method returned the client still have to wait for server
    * configuration (or to be rejected).
    */
-  void connect(const char *host, int port, int tout);
+  void connect(const char* host, int port, int tout);
 
   /// Close connection to the server.
   void disconnect();
@@ -37,29 +37,29 @@ class ClientInstance: public GameInstance,
    * The player will not be actually created until the server replies. Events
    * should be observed to known when player creation is completed.
    */
-  void newLocalPlayer(const std::string &nick);
+  void newLocalPlayer(const std::string& nick);
 
   /** @name Local player operations. */
   //@{
-  virtual void playerSetNick(Player *pl, const std::string &nick);
-  virtual void playerSetFieldConf(Player *pl, const FieldConf& conf, const std::string& name);
-  virtual void playerSetReady(Player *pl, bool ready);
-  virtual void playerSendChat(Player *pl, const std::string &msg);
-  virtual void playerStep(Player *pl, KeyState keys);
-  virtual void playerQuit(Player *pl);
+  virtual void playerSetNick(Player* pl, const std::string& nick);
+  virtual void playerSetFieldConf(Player* pl, const FieldConf& conf, const std::string& name);
+  virtual void playerSetReady(Player* pl, bool ready);
+  virtual void playerSendChat(Player* pl, const std::string& msg);
+  virtual void playerStep(Player* pl, KeyState keys);
+  virtual void playerQuit(Player* pl);
   //@}
 
   /** @name ClientSocket::Observer interface. */
   //@{
-  virtual void onClientPacket(const netplay::Packet &pkt);
+  virtual void onClientPacket(const netplay::Packet& pkt);
   virtual void onServerDisconnect();
   //@}
 
  protected:
-  GameInstance::Observer &observer() const { return observer_; }
+  GameInstance::Observer& observer() const { return observer_; }
 
  private:
-  Observer &observer_;
+  Observer& observer_;
 
   /** @name Packet processing.
    *

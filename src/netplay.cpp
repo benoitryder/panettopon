@@ -17,7 +17,7 @@ namespace netplay {
 
 const uint32_t BaseSocket::pkt_size_max = 50*1024;
 
-BaseSocket::BaseSocket(asio::io_service &io_service):
+BaseSocket::BaseSocket(asio::io_service& io_service):
     socket_(io_service)
 {
 }
@@ -35,7 +35,7 @@ void BaseSocket::close()
 }
 
 
-PacketSocket::PacketSocket(asio::io_service &io_service):
+PacketSocket::PacketSocket(asio::io_service& io_service):
     BaseSocket(io_service),
     delayed_close_(false), read_size_(0), read_buf_(NULL), read_buf_size_(0)
 {
@@ -54,10 +54,11 @@ void PacketSocket::closeAfterWrites()
   }
 }
 
-void PacketSocket::onReadSize(const boost::system::error_code &ec)
+void PacketSocket::onReadSize(const boost::system::error_code& ec)
 {
-  if( delayed_close_ || ec == asio::error::operation_aborted )
+  if( delayed_close_ || ec == asio::error::operation_aborted ) {
     return;
+  }
   if( !ec ) {
     uint32_t n_size;
     ::memcpy(&n_size, read_size_buf_, sizeof(n_size));
@@ -89,10 +90,11 @@ void PacketSocket::onReadSize(const boost::system::error_code &ec)
   }
 }
 
-void PacketSocket::onReadData(const boost::system::error_code &ec)
+void PacketSocket::onReadData(const boost::system::error_code& ec)
 {
-  if( delayed_close_ || ec == asio::error::operation_aborted )
+  if( delayed_close_ || ec == asio::error::operation_aborted ) {
     return;
+  }
   if( !ec ) {
     netplay::Packet pkt;
     if( !pkt.ParsePartialFromArray(read_buf_, read_size_) ) {
@@ -106,7 +108,7 @@ void PacketSocket::onReadData(const boost::system::error_code &ec)
       try {
         this->processPacket(pkt);
         this->readNext();
-      } catch(const CallbackError &e) {
+      } catch(const CallbackError& e) {
         LOG("packet processing failed:\n%s", pkt.DebugString().c_str());
         this->processError(std::string("packet processing failed: ")+e.what());
       }
@@ -116,7 +118,7 @@ void PacketSocket::onReadData(const boost::system::error_code &ec)
   }
 }
 
-std::string PacketSocket::serializePacket(const Packet &pkt)
+std::string PacketSocket::serializePacket(const Packet& pkt)
 {
   // prepare buffer
   uint32_t pkt_size = pkt.ByteSize();
@@ -142,10 +144,11 @@ void PacketSocket::readNext()
       boost::bind(&PacketSocket::onReadSize, this, asio::placeholders::error));
 }
 
-void PacketSocket::onWrite(const boost::system::error_code &ec)
+void PacketSocket::onWrite(const boost::system::error_code& ec)
 {
-  if( ec == asio::error::operation_aborted )
+  if( ec == asio::error::operation_aborted ) {
     return;
+  }
   if( !ec ) {
     write_queue_.pop();
     if( ! write_queue_.empty() ) {
@@ -169,7 +172,7 @@ void PacketSocket::writeNext()
       boost::bind(&PacketSocket::onWrite, this, asio::placeholders::error));
 }
 
-void PacketSocket::writeRaw(const std::string &s)
+void PacketSocket::writeRaw(const std::string& s)
 {
   assert( s.size() > 0 && s.size() <= pkt_size_max );
   bool process_next = write_queue_.empty();
@@ -180,13 +183,13 @@ void PacketSocket::writeRaw(const std::string &s)
 }
 
 
-PeerSocket::PeerSocket(ServerSocket &server):
+PeerSocket::PeerSocket(ServerSocket& server):
     PacketSocket(server.io_service()),
     server_(server), has_error_(false)
 {
 }
 
-void PeerSocket::processError(const std::string &msg, const boost::system::error_code &ec)
+void PeerSocket::processError(const std::string& msg, const boost::system::error_code& ec)
 {
   if( has_error_ ) {
     return;
@@ -201,7 +204,7 @@ void PeerSocket::processError(const std::string &msg, const boost::system::error
 
   // send notification
   netplay::Packet pkt;
-  netplay::PktNotification *notif = pkt.mutable_notification();
+  netplay::PktNotification* notif = pkt.mutable_notification();
   notif->set_txt(msg);
   notif->set_severity(netplay::PktNotification::ERROR);
   this->writePacket(pkt);
@@ -209,7 +212,7 @@ void PeerSocket::processError(const std::string &msg, const boost::system::error
   this->closeAfterWrites();
 }
 
-void PeerSocket::processPacket(const netplay::Packet &pkt)
+void PeerSocket::processPacket(const netplay::Packet& pkt)
 {
   server_.observer_.onPeerPacket(this, pkt);
 }
@@ -217,7 +220,7 @@ void PeerSocket::processPacket(const netplay::Packet &pkt)
 void PeerSocket::close()
 {
   PacketSocket::close();
-  ServerSocket::PeerSocketContainer &peers = server_.peers_;
+  ServerSocket::PeerSocketContainer& peers = server_.peers_;
   ServerSocket::PeerSocketContainer::iterator it;
   for(it=peers.begin(); it!=peers.end(); ++it) {
     if( &(*it) == this ) {
@@ -230,7 +233,7 @@ void PeerSocket::close()
 }
 
 
-ServerSocket::ServerSocket(Observer &obs, asio::io_service &io_service):
+ServerSocket::ServerSocket(Observer& obs, asio::io_service& io_service):
     acceptor_(io_service), started_(false), observer_(obs)
 {
 }
@@ -260,7 +263,7 @@ void ServerSocket::close()
 }
 
 
-void ServerSocket::broadcastPacket(const netplay::Packet &pkt, const PeerSocket *except/*=NULL*/)
+void ServerSocket::broadcastPacket(const netplay::Packet& pkt, const PeerSocket* except/*=NULL*/)
 {
   const std::string s = PacketSocket::serializePacket(pkt);
   PeerSocketContainer::iterator it;
@@ -281,21 +284,21 @@ void ServerSocket::acceptNext()
       boost::bind(&ServerSocket::onAccept, this, asio::placeholders::error));
 }
 
-void ServerSocket::onAccept(const boost::system::error_code &ec)
+void ServerSocket::onAccept(const boost::system::error_code& ec)
 {
   if( ec == asio::error::operation_aborted ) {
     return;
   } else if( !ec ) {
     peers_.push_back(peer_accept_);
-    PeerSocket &peer = peers_.back();
+    PeerSocket& peer = peers_.back();
     try {
       peer.socket_.set_option(tcp::no_delay(true));
-    } catch(const boost::exception &e) {
+    } catch(const boost::exception& e) {
       // setting no delay may fail on some systems, ignore error
     }
     try {
       observer_.onPeerConnect(&peer);
-    } catch(const CallbackError &e) {
+    } catch(const CallbackError& e) {
       peer.PacketSocket::processError(std::string("peer connection failed: ")+e.what());
     }
   } else {
@@ -306,14 +309,14 @@ void ServerSocket::onAccept(const boost::system::error_code &ec)
   this->acceptNext();
 }
 
-void ServerSocket::doRemovePeer(PeerSocket *peer)
+void ServerSocket::doRemovePeer(PeerSocket* peer)
 {
   PeerSocketContainer::iterator it;
   for(it=peers_del_.begin(); it!=peers_del_.end(); ++it) {
     if( &(*it) == peer ) {
       try {
         observer_.onPeerDisconnect(peer);
-      } catch(const CallbackError &e) {
+      } catch(const CallbackError& e) {
         LOG("peer disconnect error: %s", e.what());
       }
       io_service().post(deletion_handler<PeerSocket>(peers_del_.release(it).release()));
@@ -324,7 +327,7 @@ void ServerSocket::doRemovePeer(PeerSocket *peer)
 }
 
 
-ClientSocket::ClientSocket(Observer &obs, asio::io_service &io_service):
+ClientSocket::ClientSocket(Observer& obs, asio::io_service& io_service):
     PacketSocket(io_service),
     observer_(obs), timer_(io_service), connected_(false)
 {
@@ -335,7 +338,7 @@ ClientSocket::~ClientSocket()
 }
 
 
-void ClientSocket::connect(const char *host, int port, int tout)
+void ClientSocket::connect(const char* host, int port, int tout)
 {
   tcp::resolver resolver(io_service());
   tcp::resolver::query query(tcp::v4(), host,
@@ -346,7 +349,7 @@ void ClientSocket::connect(const char *host, int port, int tout)
       ep, boost::bind(&ClientSocket::onConnect, this, asio::placeholders::error));
   try {
     socket_.set_option(tcp::no_delay(true));
-  } catch(const boost::exception &e) {
+  } catch(const boost::exception& e) {
     // setting no delay may fail on some systems, ignore error
   }
   if( tout >= 0 ) {
@@ -369,12 +372,12 @@ void ClientSocket::close()
 }
 
 
-void ClientSocket::processPacket(const netplay::Packet &pkt)
+void ClientSocket::processPacket(const netplay::Packet& pkt)
 {
   observer_.onClientPacket(pkt);
 }
 
-void ClientSocket::processError(const std::string &msg, const boost::system::error_code &ec)
+void ClientSocket::processError(const std::string& msg, const boost::system::error_code& ec)
 {
   if( !connected_ ) {
     return; // disconnected by a previous error
@@ -387,14 +390,14 @@ void ClientSocket::processError(const std::string &msg, const boost::system::err
   this->close();
 }
 
-void ClientSocket::onTimeout(const boost::system::error_code &ec)
+void ClientSocket::onTimeout(const boost::system::error_code& ec)
 {
   if( ec != asio::error::operation_aborted ) {
     this->processError("timeout", ec);
   }
 }
 
-void ClientSocket::onConnect(const boost::system::error_code &ec)
+void ClientSocket::onConnect(const boost::system::error_code& ec)
 {
   timer_.cancel();
   if( !ec ) {

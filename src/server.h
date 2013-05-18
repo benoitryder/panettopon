@@ -20,11 +20,11 @@ class ServerInstance: public GameInstance,
  public:
   typedef GameInstance::Observer Observer;
 
-  ServerInstance(GameInstance::Observer &obs, boost::asio::io_service &io_service);
+  ServerInstance(GameInstance::Observer& obs, boost::asio::io_service& io_service);
   virtual ~ServerInstance();
 
   /// Set configuration values from a config file.
-  void loadConf(const IniFile &cfg);
+  void loadConf(const IniFile& cfg);
 
   /// Start server on a given port.
   void startServer(int port);
@@ -32,37 +32,37 @@ class ServerInstance: public GameInstance,
   void stopServer();
 
   /// Create and return a new local player.
-  Player *newLocalPlayer(const std::string &nick);
+  Player* newLocalPlayer(const std::string& nick);
 
   /** @name Local player operations. */
   //@{
-  virtual void playerSetNick(Player *pl, const std::string &nick);
-  virtual void playerSetFieldConf(Player *pl, const FieldConf& conf, const std::string& name);
-  virtual void playerSetReady(Player *pl, bool ready);
-  virtual void playerSendChat(Player *pl, const std::string &msg);
-  virtual void playerStep(Player *pl, KeyState keys);
-  virtual void playerQuit(Player *pl);
+  virtual void playerSetNick(Player* pl, const std::string& nick);
+  virtual void playerSetFieldConf(Player* pl, const FieldConf& conf, const std::string& name);
+  virtual void playerSetReady(Player* pl, bool ready);
+  virtual void playerSendChat(Player* pl, const std::string& msg);
+  virtual void playerStep(Player* pl, KeyState keys);
+  virtual void playerQuit(Player* pl);
   //@}
 
   /** @name ServerSocket::Observer interface. */
   //@{
-  virtual void onPeerConnect(netplay::PeerSocket *peer);
-  virtual void onPeerDisconnect(netplay::PeerSocket *peer);
-  virtual void onPeerPacket(netplay::PeerSocket *peer, const netplay::Packet &pkt);
+  virtual void onPeerConnect(netplay::PeerSocket* peer);
+  virtual void onPeerDisconnect(netplay::PeerSocket* peer);
+  virtual void onPeerPacket(netplay::PeerSocket* peer, const netplay::Packet& pkt);
   //@}
 
   /** @name GarbageDistributor::Observer interface. */
   //@{
-  virtual void onGarbageAdd(const Garbage *gb, unsigned int pos);
-  virtual void onGarbageUpdateSize(const Garbage *gb);
-  virtual void onGarbageDrop(const Garbage *gb);
+  virtual void onGarbageAdd(const Garbage* gb, unsigned int pos);
+  virtual void onGarbageUpdateSize(const Garbage* gb);
+  virtual void onGarbageDrop(const Garbage* gb);
   //@}
 
  protected:
-  GameInstance::Observer &observer() const { return observer_; }
+  GameInstance::Observer& observer() const { return observer_; }
 
  private:
-  Observer &observer_;
+  Observer& observer_;
 
   /// Return next player ID to use.
   PlId nextPlayerId();
@@ -71,7 +71,7 @@ class ServerInstance: public GameInstance,
    *
    * If peer is \e NULL, a local player is created.
    */
-  Player *newPlayer(netplay::PeerSocket *peer, const std::string &nick);
+  Player* newPlayer(netplay::PeerSocket* peer, const std::string& nick);
   /// Remove a player.
   void removePlayer(PlId plid);
 
@@ -86,20 +86,20 @@ class ServerInstance: public GameInstance,
    *
    * If player is not found or is not associated to the peer, it is an error.
    */
-  Player *checkPeerPlayer(PlId plid, const netplay::PeerSocket *peer);
+  Player* checkPeerPlayer(PlId plid, const netplay::PeerSocket* peer);
 
-  void processPktInput(netplay::PeerSocket *peer, const netplay::PktInput& pkt);
-  void processPktGarbageState(netplay::PeerSocket *peer, const netplay::PktGarbageState& pkt);
-  void processPktPlayerJoin(netplay::PeerSocket *peer, const netplay::PktPlayerJoin& pkt);
-  void processPktPlayerConf(netplay::PeerSocket *peer, const netplay::PktPlayerConf& pkt);
-  void processPktPlayerState(netplay::PeerSocket *peer, const netplay::PktPlayerState& pkt);
+  void processPktInput(netplay::PeerSocket* peer, const netplay::PktInput& pkt);
+  void processPktGarbageState(netplay::PeerSocket* peer, const netplay::PktGarbageState& pkt);
+  void processPktPlayerJoin(netplay::PeerSocket* peer, const netplay::PktPlayerJoin& pkt);
+  void processPktPlayerConf(netplay::PeerSocket* peer, const netplay::PktPlayerConf& pkt);
+  void processPktPlayerState(netplay::PeerSocket* peer, const netplay::PktPlayerState& pkt);
   //@}
 
   /// Check if all players are ready and take actions
   void checkAllPlayersReady();
 
   /// Step a player field, process garbages, send Input packets.
-  virtual void doStepPlayer(Player *pl, KeyState keys);
+  virtual void doStepPlayer(Player* pl, KeyState keys);
 
   /// Change state, reset ready flags if needed, send packets.
   void setState(State state);
@@ -108,7 +108,7 @@ class ServerInstance: public GameInstance,
   void startMatch();
   void stopMatch();
 
-  typedef std::map<PlId, netplay::PeerSocket *> PeerContainer;
+  typedef std::map<PlId, netplay::PeerSocket*> PeerContainer;
 
   netplay::ServerSocket socket_;
   GarbageDistributor gb_distributor_;

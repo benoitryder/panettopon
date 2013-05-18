@@ -8,7 +8,7 @@ const unsigned int IniFile::MAX_LINE_SIZE = 4096;
 
 bool IniFile::load(const std::string& fname)
 {
-  FILE *fp = fopen(fname.c_str(), "r");
+  FILE* fp = fopen(fname.c_str(), "r");
   if( fp == NULL ) {
     return false;
   }

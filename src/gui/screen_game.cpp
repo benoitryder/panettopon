@@ -6,7 +6,7 @@
 namespace gui {
 
 
-ScreenGame::ScreenGame(GuiInterface &intf, Player *pl):
+ScreenGame::ScreenGame(GuiInterface& intf, Player* pl):
     Screen(intf, "ScreenGame"),
     player_(pl),
     input_scheduler_(*intf.instance(), *this, intf.io_service()),
@@ -34,7 +34,7 @@ void ScreenGame::exit()
 
 void ScreenGame::redraw()
 {
-  sf::RenderWindow &w = intf_.window();
+  sf::RenderWindow& w = intf_.window();
   w.clear(sf::Color(48,48,48)); //XXX:tmp
   //TODO
   if( fdp_player_.get() ) {
@@ -42,7 +42,7 @@ void ScreenGame::redraw()
   }
 }
 
-bool ScreenGame::onInputEvent(const sf::Event &ev)
+bool ScreenGame::onInputEvent(const sf::Event& ev)
 {
   if( ev.type == sf::Event::KeyPressed ) {
     if( ev.key.code == sf::Keyboard::Escape ) {
@@ -54,7 +54,7 @@ bool ScreenGame::onInputEvent(const sf::Event &ev)
   return false;
 }
 
-void ScreenGame::onPlayerStep(Player *pl)
+void ScreenGame::onPlayerStep(Player* pl)
 {
   if( pl == player_ ) {
     fdp_player_->step();
@@ -77,7 +77,7 @@ void ScreenGame::onStateChange(GameInstance::State state)
 }
 
 
-KeyState ScreenGame::getNextInput(Player *pl)
+KeyState ScreenGame::getNextInput(Player* pl)
 {
   assert( pl == player_ );
   if( !intf_.focused() ) {
@@ -105,7 +105,7 @@ const float FieldDisplay::BOUNCE_Y_MIN       = -48/128.;
 const float FieldDisplay::BOUNCE_Y_MAX       =  60/128.;
 
 
-FieldDisplay::FieldDisplay(const Field &fld, const StyleField &style):
+FieldDisplay::FieldDisplay(const Field& fld, const StyleField& style):
     sf::Drawable(), field_(fld), style_(style)
 {
   ::memset(crouch_dt_, 0, sizeof(crouch_dt_));
@@ -123,7 +123,7 @@ FieldDisplay::FieldDisplay(const Field &fld, const StyleField &style):
 }
 
 
-void FieldDisplay::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   {
@@ -172,7 +172,7 @@ void FieldDisplay::draw(sf::RenderTarget &target, sf::RenderStates states) const
 void FieldDisplay::step()
 {
   // Note: called at init, even if init does not actually steps the field.
-  const Field::StepInfo &info = field_.stepInfo();
+  const Field::StepInfo& info = field_.stepInfo();
 
   lift_offset_ = 1-(float)field_.raiseStep()/field_.conf().raise_steps;
 
@@ -199,7 +199,7 @@ void FieldDisplay::step()
   //TODO update when a block fall?
   for(int x=0; x<FIELD_WIDTH; x++) {
     for(int y=1; y<=FIELD_WIDTH; y++) {
-      const Block &bk = field_.block(x,y);
+      const Block& bk = field_.block(x,y);
       if( bk.isState(BkColor::LAID) ) {
         crouch_dt_[x][y] = CROUCH_DURATION;
       } else if( bk.isState(BkColor::REST) && crouch_dt_[x][y] != 0 ) {
@@ -251,7 +251,7 @@ void FieldDisplay::step()
   for(gb_i=0, gbd_it=gbw_drbs_.begin();
       gb_i<gb_nb && gbd_it!=gbw_drbs_.end();
       gb_i++, ++gbd_it) {
-    const Garbage &gb = field_.hangingGarbage(gb_i);
+    const Garbage& gb = field_.hangingGarbage(gb_i);
     if( gb.gbid != gbd_it->gbid() ) {
       break;
     }
@@ -259,7 +259,7 @@ void FieldDisplay::step()
   }
   // move/insert other garbages
   for( ; gb_i<gb_nb; gb_i++ ) {
-    const Garbage &gb = field_.hangingGarbage(gb_i);
+    const Garbage& gb = field_.hangingGarbage(gb_i);
     // find an already existing drawable
     GbHangingList::iterator gbd_it2;
     for( gbd_it2=gbd_it; gbd_it2!=gbw_drbs_.end() && gb.gbid != gbd_it2->gbid(); ++gbd_it2 ) ;
@@ -282,9 +282,9 @@ void FieldDisplay::step()
 }
 
 
-void FieldDisplay::renderBlock(sf::RenderTarget &target, sf::RenderStates states, int x, int y) const
+void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states, int x, int y) const
 {
-  const Block &bk = field_.block(x,y);
+  const Block& bk = field_.block(x,y);
   if( bk.isNone() || bk.isState(BkColor::CLEARED) ) {
     return;  // nothing to draw
   }
@@ -292,12 +292,13 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, sf::RenderStates states
   sf::Vector2f center( x+0.5, y+0.5 );
 
   if( bk.isColor() ) {
-    const StyleField::TilesBkColor &tiles = style_.tiles_bk_color[bk.bk_color.color];
+    const StyleField::TilesBkColor& tiles = style_.tiles_bk_color[bk.bk_color.color];
 
-    const ImageTile *tile = &tiles.normal; // default
+    const ImageTile* tile = &tiles.normal; // default
     if( bk.bk_color.state == BkColor::FLASH ) {
-      if( (bk.ntick - field_.tick()) % 2 == 0 )
+      if( (bk.ntick - field_.tick()) % 2 == 0 ) {
         tile = &tiles.flash;
+      }
     } else if( bk.bk_color.state == BkColor::MUTATE ) {
       tile = &tiles.mutate;
     } else if( bk.swapped ) {
@@ -317,7 +318,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, sf::RenderStates states
     }
 
   } else if( bk.isGarbage() ) {
-    const StyleField::TilesGb &tiles = style_.tiles_gb;
+    const StyleField::TilesGb& tiles = style_.tiles_gb;
     //TODO:sfml2 renderer.SetColor(sf::Color(204,102,25)); //XXX:temp
 
     if( bk.bk_garbage.state == BkGarbage::FLASH ) {
@@ -329,13 +330,13 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, sf::RenderStates states
     } else if( bk.bk_garbage.state == BkGarbage::MUTATE ) {
       tiles.mutate.render(target, states, x, y, 1, 1);
     } else {
-      const Garbage *gb = bk.bk_garbage.garbage;
+      const Garbage* gb = bk.bk_garbage.garbage;
       bool center_mark = gb->size.x > 2 && gb->size.y > 1;
       const int rel_x = 2*(x-gb->pos.x);
       const int rel_y = 2*(y-gb->pos.y);
 
       // draw 4 sub-tiles
-      const ImageTile *tile;
+      const ImageTile* tile;
 
       // top left
       if( center_mark &&
@@ -402,9 +403,9 @@ void FieldDisplay::renderBlock(sf::RenderTarget &target, sf::RenderStates states
 }
 
 
-void FieldDisplay::renderBouncingBlock(sf::RenderTarget &target, sf::RenderStates states, int x, int y, float bounce, unsigned int color) const
+void FieldDisplay::renderBouncingBlock(sf::RenderTarget& target, sf::RenderStates states, int x, int y, float bounce, unsigned int color) const
 {
-  const StyleField::TilesBkColor &tiles = style_.tiles_bk_color[color];
+  const StyleField::TilesBkColor& tiles = style_.tiles_bk_color[color];
   tiles.bg.render(target, states, x, y, 1, 1);
 
   float offy, dx, dy;
@@ -424,7 +425,7 @@ void FieldDisplay::renderBouncingBlock(sf::RenderTarget &target, sf::RenderState
 
 const unsigned int FieldDisplay::Label::DURATION = 42;
 
-FieldDisplay::Label::Label(const StyleField &style, const FieldPos &pos, bool chain, unsigned int val):
+FieldDisplay::Label::Label(const StyleField& style, const FieldPos& pos, bool chain, unsigned int val):
     style_(style), dt_(DURATION)
 {
   this->setPosition((pos.x+0.5)*style_.bk_size, (FIELD_HEIGHT-pos.y+0.5)*style_.bk_size);
@@ -461,7 +462,7 @@ FieldDisplay::Label::Label(const StyleField &style, const FieldPos &pos, bool ch
 }
 
 
-void FieldDisplay::Label::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void FieldDisplay::Label::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   target.draw(bg_, states);
   target.draw(txt_, states);
@@ -479,7 +480,7 @@ FieldPos FieldDisplay::matchLabelPos()
   unsigned int x, y;
   for( y=FIELD_HEIGHT; y>0; y-- ) {
     for( x=0; x<FIELD_WIDTH; x++ ) {
-      const Block &bk = field_.block(x,y);
+      const Block& bk = field_.block(x,y);
       if( bk.isState(BkColor::FLASH) &&
          bk.ntick - field_.tick() == field_.conf().flash_tk ) {
         return FieldPos(x,y);
@@ -493,7 +494,7 @@ FieldPos FieldDisplay::matchLabelPos()
 
 
 
-FieldDisplay::GbHanging::GbHanging(const StyleField &style, const Garbage &gb):
+FieldDisplay::GbHanging::GbHanging(const StyleField& style, const Garbage& gb):
   style_(style), gb_(gb), txt_size_(0)
 {
   // initialize sprite
@@ -508,7 +509,7 @@ FieldDisplay::GbHanging::GbHanging(const StyleField &style, const Garbage &gb):
   this->updateText();
 }
 
-void FieldDisplay::GbHanging::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void FieldDisplay::GbHanging::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   target.draw(bg_, states);
   if( txt_size_ != 0 ) {

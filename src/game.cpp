@@ -33,7 +33,7 @@ void FieldConf::fromPacket(const netplay::FieldConf& pkt)
   }
 }
 
-void FieldConf::toPacket(netplay::FieldConf *pkt) const
+void FieldConf::toPacket(netplay::FieldConf* pkt) const
 {
 #define FIELD_CONF_EXPR_INIT(n,ini) \
   pkt->set_##n(n);
@@ -100,7 +100,7 @@ void Field::step(KeyState keys)
       break;
     }
   }
-  
+
   bool raise = !this->isSwapping();
   bool stop_dec = true;
 
@@ -113,9 +113,10 @@ void Field::step(KeyState keys)
 
   for( y=1; y<=FIELD_HEIGHT; y++ ) {
     for( x=0; x<FIELD_WIDTH; x++ ) { // order matters, for garbage processing
-      Block *bk = &grid_[x][y];
-      if( bk->isNone() )
+      Block* bk = &grid_[x][y];
+      if( bk->isNone() ) {
         continue;
+      }
 
       // TODO check condition and moment for auto-raise
       if( stop_dec ) {
@@ -130,14 +131,15 @@ void Field::step(KeyState keys)
       }
 
       // swapped block, don't "evolve"
-      if( bk->swapped )
+      if( bk->swapped ) {
         continue;
+      }
 
-      Block *bk2 = &grid_[x][y-1]; // above block
+      Block* bk2 = &grid_[x][y-1]; // above block
 
       // color blocks
       if( bk->isColor() ) {
-        BkColor *bkc = &bk->bk_color;
+        BkColor* bkc = &bk->bk_color;
         if( bkc->state == BkColor::REST ) {
           if( bk2->swapped ) {
             // do nothing
@@ -217,9 +219,10 @@ void Field::step(KeyState keys)
             // above blocks: levitate + chain
             int yy;
             for( yy=y+1; yy<FIELD_HEIGHT; yy++ ) {
-              Block *bk3 = &grid_[x][yy];
-              if( !bk3->isState(BkColor::REST) && !bk3->isState(BkColor::LAID) )
+              Block* bk3 = &grid_[x][yy];
+              if( !bk3->isState(BkColor::REST) && !bk3->isState(BkColor::LAID) ) {
                 break;
+              }
               bk3->bk_color.state = BkColor::LEVITATE;
               bk3->chaining = true;
               bk3->ntick = tick_ + conf_.levitate_tk;
@@ -234,23 +237,24 @@ void Field::step(KeyState keys)
 
       // garbages
       else if( bk->isGarbage() ) {
-        BkGarbage *bkg = &bk->bk_garbage;
-        Garbage *gb = bkg->garbage;
+        BkGarbage* bkg = &bk->bk_garbage;
+        Garbage* gb = bkg->garbage;
         if( bkg->state == BkGarbage::REST ) {
           if( bk2->isNone() || bk2->isState(BkGarbage::FALL) ) {
             // all below blocks are identical
             // Block::NONE and BkGarbage::FALL should not be mixed
             int xx;
             for( xx=gb->pos.x+1; xx<gb->pos.x+gb->size.x; xx++ ) {
-              const Block &bk_it = block(xx,y-1);
+              const Block& bk_it = block(xx,y-1);
               if( bk_it.type != bk2->type ||
                  (bk_it.type == Block::GARBAGE &&
                   bk_it.bk_garbage.state != bk2->bk_garbage.state) ) {
                 break;
               }
             }
-            if( xx == gb->pos.x+gb->size.x )
+            if( xx == gb->pos.x+gb->size.x ) {
               this->setGarbageState(gb, BkGarbage::FALL);
+            }
           }
           // skip processed blocks (before pos.y update)
           //note: does not work if size.y>1 && size.x<FIELD_WIDTH
@@ -259,8 +263,9 @@ void Field::step(KeyState keys)
         } else if( bkg->state == BkGarbage::FALL ) {
           int xx;
           for( xx=gb->pos.x; xx<gb->pos.x+gb->size.x; xx++ ) {
-            if( !block(xx,y-1).isNone() )
+            if( !block(xx,y-1).isNone() ) {
               break;
+            }
           }
           if( xx == gb->pos.x+gb->size.x ) {
             this->fallGarbage(gb);
@@ -303,7 +308,7 @@ void Field::step(KeyState keys)
   uint8_t match[FIELD_WIDTH][FIELD_HEIGHT+1];
   for( x=0; x<FIELD_WIDTH; x++ ) {
     for( y=1; y<=FIELD_HEIGHT; y++ ) {
-      const Block &bk = block(x,y);
+      const Block& bk = block(x,y);
       match[x][y] = bk.isState(BkColor::REST) && !bk.swapped
           ? bk.bk_color.color : 0x80;
     }
@@ -316,36 +321,43 @@ void Field::step(KeyState keys)
     p0 = -1;
     for( y=1; y<=FIELD_HEIGHT; y++ ) {
       uint8_t c = match[x][y] & 0x8f;
-      if( c != 0x80 && (p0 != -1 && c == color) )
+      if( c != 0x80 && (p0 != -1 && c == color) ) {
         continue;
+      }
       // end of group
-      if( p0 != -1 && y-p0 >= 3 )
-        while( p0 < y )
+      if( p0 != -1 && y-p0 >= 3 ) {
+        while( p0 < y ) {
           match[x][p0++] |= 0x40;
+        }
+      }
 
-      if( c == 0x80 )
+      if( c == 0x80 ) {
         p0 = -1;
-      else {
+      } else {
         p0 = y;
         color = c;
       }
     }
     // end of group
-    if( p0 != -1 && y-p0 >= 3 )
-      while( p0 < y )
+    if( p0 != -1 && y-p0 >= 3 ) {
+      while( p0 < y ) {
         match[x][p0++] |= 0x40;
+      }
+    }
   }
   // horizontal
   for( y=1; y<=FIELD_HEIGHT; y++ ) {
     p0 = -1;
     for( x=0; x<FIELD_WIDTH; x++ ) {
       uint8_t c = match[x][y] & 0x8f;
-      if( c != 0x80 && (p0 != -1 && c == color) )
+      if( c != 0x80 && (p0 != -1 && c == color) ) {
         continue;
+      }
       // end of group
       if( p0 != -1 && x-p0 >= 3 ) {
-        while( p0 < x )
+        while( p0 < x ) {
           match[p0++][y] |= 0x40;
+        }
       }
 
       if( c == 0x80 ) {
@@ -357,8 +369,9 @@ void Field::step(KeyState keys)
     }
     // end of group
     if( p0 != -1 && x-p0 >= 3 ) {
-      while( p0 < x )
+      while( p0 < x ) {
         match[p0++][y] |= 0x40;
+      }
     }
   }
 
@@ -366,8 +379,9 @@ void Field::step(KeyState keys)
   bool chained = false;
   for( x=0; x<FIELD_WIDTH; x++ ) {
     for( y=1; y<=FIELD_HEIGHT; y++ ) {
-      if( (match[x][y] & 0x40) == 0 )
+      if( (match[x][y] & 0x40) == 0 ) {
         continue;
+      }
       step_info_.combo++;
       chained = chained || block(x,y).chaining;
     }
@@ -376,9 +390,10 @@ void Field::step(KeyState keys)
   if( step_info_.combo > 0 ) {
     for( x=0; x<FIELD_WIDTH; x++ ) {
       for( y=1; y<=FIELD_HEIGHT; y++ ) {
-        if( (match[x][y] & 0x40) == 0 )
+        if( (match[x][y] & 0x40) == 0 ) {
           continue;
-        Block *bk = &grid_[x][y];
+        }
+        Block* bk = &grid_[x][y];
         assert( bk->isColor() ); // not sure...
         bk->bk_color.state = BkColor::FLASH;
         bk->chaining = chained;
@@ -403,7 +418,7 @@ void Field::step(KeyState keys)
   if( !gbs_drop_.empty() && !full && raise ) {
     LOG("[%p|%u] gb: dropping", this, tick_);
     //TODO drop condition: no drop when flashing/chain
-    Garbage *gb = gbs_drop_.pop_front().release();
+    Garbage* gb = gbs_drop_.pop_front().release();
     gbs_field_.push_back(gb);
     gb->pos.y = FIELD_HEIGHT;
 
@@ -413,14 +428,16 @@ void Field::step(KeyState keys)
     if( gb->type == Garbage::TYPE_CHAIN ) {
       // new chain
       gb->pos.x = 0;
-      for( x=0; x<FIELD_WIDTH; x++ )
+      for( x=0; x<FIELD_WIDTH; x++ ) {
         grid_[x][FIELD_HEIGHT] = bkgb;
+      }
     } else if( gb->type == Garbage::TYPE_COMBO ) {
       // new combo
       int xx = gb_drop_pos_[gb->size.x];
       gb->pos.x = xx;
-      for( x=0; x<gb->size.x; x++ )
+      for( x=0; x<gb->size.x; x++ ) {
         grid_[x+xx][FIELD_HEIGHT] = bkgb;
+      }
 
       // iterate drop pos
       if( 2*gb->size.x > FIELD_WIDTH ) {
@@ -477,22 +494,26 @@ void Field::step(KeyState keys)
   // process key
   if( (keys_input&GAME_KEY_MOVE) && (key_repeat_ == 0 || key_repeat_ >= 10) ) {
     if( keys_input & GAME_KEY_UP ) {
-      if( cursor_.y+1 < FIELD_HEIGHT )
+      if( cursor_.y+1 < FIELD_HEIGHT ) {
         cursor_.y++;
+      }
     } else if( keys_input & GAME_KEY_DOWN ) {
-      if( cursor_.y > 1 )
+      if( cursor_.y > 1 ) {
         cursor_.y--;
+      }
     } else if( keys_input & GAME_KEY_LEFT ) {
-      if( cursor_.x > 0 )
+      if( cursor_.x > 0 ) {
         cursor_.x--;
+      }
     } else if( keys_input & GAME_KEY_RIGHT ) {
-      if( cursor_.x+1 < FIELD_WIDTH-1 )
+      if( cursor_.x+1 < FIELD_WIDTH-1 ) {
         cursor_.x++;
+      }
     }
   } else if( (keys_input & GAME_KEY_SWAP) && key_repeat_ == 0 ) {
-    const FieldPos &p = cursor_;
-    Block *bk1 = &grid_[p.x  ][p.y];
-    Block *bk2 = &grid_[p.x+1][p.y];
+    const FieldPos& p = cursor_;
+    Block* bk1 = &grid_[p.x  ][p.y];
+    Block* bk2 = &grid_[p.x+1][p.y];
 
     if( // swappable
         ( bk1->isNone() || bk1->isState(BkColor::REST) || bk1->isState(BkColor::FALL) ) &&
@@ -530,9 +551,10 @@ void Field::step(KeyState keys)
     Tick tick_pop = tick_ + conf_.pop0_tk;
     for( y=FIELD_HEIGHT; y>0; y-- ) {
       for( x=0; x<FIELD_WIDTH; x++ ) {
-        Block *bk = &grid_[x][y];
-        if( !bk->isState(BkColor::MUTATE) || bk->ntick != 0 )
+        Block* bk = &grid_[x][y];
+        if( !bk->isState(BkColor::MUTATE) || bk->ntick != 0 ) {
           continue;
+        }
         bk->ntick = tick_pop;
         bk->group_pos = --color_pop;
         tick_pop += conf_.pop_tk;
@@ -543,9 +565,10 @@ void Field::step(KeyState keys)
     // ntick already incremented
     for( y=1; y<=FIELD_HEIGHT; y++ ) {
       for( x=FIELD_WIDTH-1; x>=0; x-- ) {
-        Block *bk = &grid_[x][y];
-        if( !bk->isState(BkGarbage::MUTATE) || bk->ntick != 0 )
+        Block* bk = &grid_[x][y];
+        if( !bk->isState(BkGarbage::MUTATE) || bk->ntick != 0 ) {
           continue;
+        }
         bk->ntick = tick_pop;
         bk->group_pos = --garbage_pop;
         tick_pop += conf_.pop_tk;
@@ -576,18 +599,21 @@ void Field::step(KeyState keys)
   }
 
   if( step_info_.combo > 0 ) {
-    if( raise_dt_ < 0 )
+    if( raise_dt_ < 0 ) {
       this->resetAutoRaise(); // cancel manual raise on match
+    }
     // update stop ticks
     if( step_info_.combo > 3 ) {
       unsigned int tk = conf_.stop_combo_0+conf_.stop_combo_k*(step_info_.combo-4);
-      if( tk > stop_dt_ )
+      if( tk > stop_dt_ ) {
         stop_dt_ = tk;
+      }
     }
     if( step_info_.chain > 1 ) {
       unsigned int tk = conf_.stop_chain_0+conf_.stop_chain_k*(step_info_.chain-2);
-      if( tk > stop_dt_ )
+      if( tk > stop_dt_ ) {
         stop_dt_ = tk;
+      }
     }
   } else if( stop_dt_ > 0 && stop_dec ) {
     --stop_dt_;
@@ -604,7 +630,7 @@ void Field::step(KeyState keys)
 }
 
 
-void Field::waitGarbageDrop(Garbage *gb)
+void Field::waitGarbageDrop(Garbage* gb)
 {
   LOG("[%p|%u] waitGarbageDrop(%u)", this, tick_, gb->gbid);
   this->removeHangingGarbage(gb);
@@ -614,18 +640,18 @@ void Field::waitGarbageDrop(Garbage *gb)
 void Field::dropNextGarbage()
 {
   LOG("[%p|%u] dropNextGarbage()", this, tick_);
-  Garbage *gb = gbs_wait_.pop_front().release();
+  Garbage* gb = gbs_wait_.pop_front().release();
   gb->gbid = 0;
   gbs_drop_.push_back(gb);
 }
 
-void Field::insertHangingGarbage(Garbage *gb, unsigned int pos)
+void Field::insertHangingGarbage(Garbage* gb, unsigned int pos)
 {
   LOG("[%p|%u] insertHangingGarbage(%u, %u)", this, tick_, gb->gbid, pos);
   gbs_hang_.insert( gbs_hang_.begin()+pos, gb );
 }
 
-void Field::removeHangingGarbage(Garbage *gb)
+void Field::removeHangingGarbage(Garbage* gb)
 {
   LOG("[%p|%u] removeHangingGarbage(%u)", this, tick_, gb->gbid);
   GarbageList::iterator it;
@@ -644,9 +670,11 @@ void Field::fillRandom(int n)
   // default content, including raising line
   // raising line last, for above-block constraint
   int x, y;
-  for( y=n; y>=0; y-- )
-    for( x=0; x<FIELD_WIDTH; x++ )
+  for( y=n; y>=0; y-- ) {
+    for( x=0; x<FIELD_WIDTH; x++ ) {
       this->setRaiseColor(x, y);
+    }
+  }
 }
 
 void Field::abort()
@@ -655,26 +683,26 @@ void Field::abort()
 }
 
 
-void Field::setGridContentToPacket(google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block> *grid)
+void Field::setGridContentToPacket(google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block>* grid)
 {
   grid->Clear();
   grid->Reserve(FIELD_WIDTH*(FIELD_HEIGHT+1));
   int x, y;
   for( y=0; y<=FIELD_HEIGHT; y++ ) {
     for( x=0; x<FIELD_WIDTH; x++ ) {
-      netplay::PktPlayerField_Block *np_bk = grid->Add();
-      const Block &bk = block(x,y);
+      netplay::PktPlayerField_Block* np_bk = grid->Add();
+      const Block& bk = block(x,y);
       np_bk->set_swapped( bk.swapped );
       np_bk->set_chaining( bk.chaining );
       np_bk->set_ntick( bk.ntick );
       if( bk.type == Block::COLOR ) {
-        netplay::PktPlayerField_BkColor *np_bk_color = np_bk->mutable_bk_color();
-        const BkColor &bk_color = bk.bk_color;
+        netplay::PktPlayerField_BkColor* np_bk_color = np_bk->mutable_bk_color();
+        const BkColor& bk_color = bk.bk_color;
         np_bk_color->set_state( static_cast<netplay::PktPlayerField_BkColor::State>(bk_color.state) );
         np_bk_color->set_color( bk_color.color );
       } else if( bk.type == Block::GARBAGE ) {
-        netplay::PktPlayerField_BkGarbage *np_bk_garbage = np_bk->mutable_bk_garbage();
-        const BkGarbage &bk_garbage = bk.bk_garbage;
+        netplay::PktPlayerField_BkGarbage* np_bk_garbage = np_bk->mutable_bk_garbage();
+        const BkGarbage& bk_garbage = bk.bk_garbage;
         np_bk_garbage->set_state( static_cast<netplay::PktPlayerField_BkGarbage::State>(bk_garbage.state) );
       } else {
         // NONE, do nothing
@@ -683,22 +711,24 @@ void Field::setGridContentToPacket(google::protobuf::RepeatedPtrField<netplay::P
   }
 }
 
-bool Field::setGridContentFromPacket(const google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block> &grid)
+bool Field::setGridContentFromPacket(const google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block>& grid)
 {
-  if( grid.size() != FIELD_WIDTH*(FIELD_HEIGHT+1) )
+  if( grid.size() != FIELD_WIDTH*(FIELD_HEIGHT+1) ) {
     return false;
+  }
   int x, y;
   google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block>::const_iterator it = grid.begin();
   for( y=0; y<=FIELD_HEIGHT; y++ ) {
     for( x=0; x<FIELD_WIDTH; x++ ) {
-      Block *bk = &grid_[x][y];
-      const netplay::PktPlayerField_Block &np_bk = (*it++);
+      Block* bk = &grid_[x][y];
+      const netplay::PktPlayerField_Block& np_bk = (*it++);
       if( np_bk.has_bk_color() ) {
-        if( np_bk.has_bk_garbage() )
+        if( np_bk.has_bk_garbage() ) {
           return false; // mutually exclusive fields
-        const netplay::PktPlayerField_BkColor &np_bk_color = np_bk.bk_color();
+        }
+        const netplay::PktPlayerField_BkColor& np_bk_color = np_bk.bk_color();
         bk->type = Block::COLOR;
-        BkColor *bk_color = &bk->bk_color;
+        BkColor* bk_color = &bk->bk_color;
         bk_color->state = static_cast<BkColor::State>(np_bk_color.state());
         bk_color->color = np_bk_color.color();
       } else if ( np_bk.has_bk_garbage() ) {
@@ -721,12 +751,14 @@ void Field::raise()
   int x;
   for( x=0; x<FIELD_WIDTH; x++ ) {
     int y;
-    for( y=FIELD_HEIGHT; y>0; y-- )
+    for( y=FIELD_HEIGHT; y>0; y-- ) {
       grid_[x][y] = grid_[x][y-1];
+    }
     this->setRaiseColor(x);
   }
-  if( cursor_.y+1 < FIELD_HEIGHT )
+  if( cursor_.y+1 < FIELD_HEIGHT ) {
     cursor_.y++;
+  }
 
   // raise while swapping should not happen, we support it though
   if( this->isSwapping() ) {
@@ -741,8 +773,9 @@ void Field::raise()
   }
 
   boost::ptr_list<Garbage>::iterator gb_it;
-  for( gb_it=gbs_field_.begin(); gb_it!=gbs_field_.end(); ++gb_it )
+  for( gb_it=gbs_field_.begin(); gb_it!=gbs_field_.end(); ++gb_it ) {
     gb_it->pos.y++;
+  }
 
   this->resetAutoRaise();
   raise_step_ = conf_.raise_steps;
@@ -763,23 +796,26 @@ void Field::setRaiseColor(int x, int y)
         raised_lines_ % 2 == 0 ) ) ) ? 2 : 1;
   int bad_color1 = -1;
   if( x >= bad_dx ) {
-    const Block &bk = block(x-bad_dx,y);
-    if( bk.type == Block::COLOR )
+    const Block& bk = block(x-bad_dx,y);
+    if( bk.type == Block::COLOR ) {
       bad_color1 = bk.bk_color.color;
+    }
   }
   int bad_color2 = -1;
   if( y < FIELD_HEIGHT ) {
-    const Block &bk = block(x,y+1);
-    if( bk.type == Block::COLOR )
+    const Block& bk = block(x,y+1);
+    if( bk.type == Block::COLOR ) {
       bad_color2 = bk.bk_color.color;
+    }
   }
 
-  Block *bk = &grid_[x][y];
+  Block* bk = &grid_[x][y];
   bk->type = Block::COLOR;
   for(;;) {
     int color = this->rand() % conf_.color_nb;
-    if( color == bad_color1 || color == bad_color2 )
+    if( color == bad_color1 || color == bad_color2 ) {
       continue;
+    }
     bk->bk_color.color = color;
     break;
   }
@@ -788,15 +824,17 @@ void Field::setRaiseColor(int x, int y)
 }
 
 
-void Field::setGarbageState(const Garbage *gb, BkGarbage::State st)
+void Field::setGarbageState(const Garbage* gb, BkGarbage::State st)
 {
   int x, y;
-  for( x=gb->pos.x; x<gb->pos.x+gb->size.x; x++ )
-    for( y=gb->pos.y; y<gb->pos.y+gb->size.y && y<=FIELD_HEIGHT; y++ )
+  for( x=gb->pos.x; x<gb->pos.x+gb->size.x; x++ ) {
+    for( y=gb->pos.y; y<gb->pos.y+gb->size.y && y<=FIELD_HEIGHT; y++ ) {
       grid_[x][y].bk_garbage.state = st;
+    }
+  }
 }
 
-void Field::fallGarbage(Garbage *gb)
+void Field::fallGarbage(Garbage* gb)
 {
   int x;
   // for chains: no need to modify "middle" lines
@@ -809,23 +847,26 @@ void Field::fallGarbage(Garbage *gb)
 
   if( gb->pos.y+gb->size.y-1 <= FIELD_HEIGHT ) {
     // top line: empty
-    for( x=gb->pos.x; x<gb->pos.x+gb->size.x; x++ )
+    for( x=gb->pos.x; x<gb->pos.x+gb->size.x; x++ ) {
       grid_[x][gb->pos.y+gb->size.y-1] = Block();
+    }
   } else {
     // add new line (at most 1 per frame)
-    Block *bk = &grid_[gb->pos.x][gb->pos.y];
-    for( x=gb->pos.x; x<gb->pos.x+gb->size.x; x++ )
+    Block* bk = &grid_[gb->pos.x][gb->pos.y];
+    for( x=gb->pos.x; x<gb->pos.x+gb->size.x; x++ ) {
       grid_[x][FIELD_HEIGHT] = *bk;
+    }
   }
 
   gb->pos.y--;
 }
 
-void Field::matchGarbage(Block *bk, bool chained)
+void Field::matchGarbage(Block* bk, bool chained)
 {
-  if( !bk->isState(BkGarbage::REST) )
+  if( !bk->isState(BkGarbage::REST) ) {
     return;
-  Garbage *gb = bk->bk_garbage.garbage;
+  }
+  Garbage* gb = bk->bk_garbage.garbage;
 
   // update block states
   Block bk_match;
@@ -837,25 +878,34 @@ void Field::matchGarbage(Block *bk, bool chained)
 
   int x, y;
   for( x=0; x<gb->size.x; x++ ) {
-    for( y=0; y<gb->size.y && gb->pos.y+y<=FIELD_HEIGHT; y++ )
+    for( y=0; y<gb->size.y && gb->pos.y+y<=FIELD_HEIGHT; y++ ) {
       grid_[gb->pos.x+x][gb->pos.y+y] = bk_match;
+    }
     // bottom line: unset garbage field
     grid_[gb->pos.x+x][gb->pos.y].bk_garbage.garbage = NULL;
   }
 
   // match adjacent garbages
-  if( gb->pos.x > 0 )
-    for( y=0; y<gb->size.y && gb->pos.y+y<=FIELD_HEIGHT; y++ )
+  if( gb->pos.x > 0 ) {
+    for( y=0; y<gb->size.y && gb->pos.y+y<=FIELD_HEIGHT; y++ ) {
       this->matchGarbage(&grid_[gb->pos.x-1][gb->pos.y+y], chained);
-  if( gb->pos.x+gb->size.x < FIELD_WIDTH )
-    for( y=0; y<gb->size.y && gb->pos.y+y<=FIELD_HEIGHT; y++ )
+    }
+  }
+  if( gb->pos.x+gb->size.x < FIELD_WIDTH ) {
+    for( y=0; y<gb->size.y && gb->pos.y+y<=FIELD_HEIGHT; y++ ) {
       this->matchGarbage(&grid_[gb->pos.x+gb->size.x][gb->pos.y+y], chained);
-  if( gb->pos.y > 0 )
-    for( x=0; x<gb->size.x; x++ )
+    }
+  }
+  if( gb->pos.y > 0 ) {
+    for( x=0; x<gb->size.x; x++ ) {
       this->matchGarbage(&grid_[gb->pos.x+x][gb->pos.y-1], chained);
-  if( gb->pos.y+gb->size.y <= FIELD_HEIGHT )
-    for( x=0; x<gb->size.x; x++ )
+    }
+  }
+  if( gb->pos.y+gb->size.y <= FIELD_HEIGHT ) {
+    for( x=0; x<gb->size.x; x++ ) {
       this->matchGarbage(&grid_[gb->pos.x+x][gb->pos.y+gb->size.y], chained);
+    }
+  }
 
   // remove/update garbage
   if( --gb->size.y == 0 ) {
@@ -874,16 +924,17 @@ void Field::matchGarbage(Block *bk, bool chained)
 
 void Field::transformGarbage(int x, int y)
 {
-  Block *bk = &grid_[x][y];
+  Block* bk = &grid_[x][y];
   int color = -1;
   if( ++transformed_nb_ == FIELD_WIDTH-1 ) {
     transformed_nb_ = 0;
     // get below color
     int yy;
     for( yy=y-1; yy>=0; yy-- ) {
-      const Block &bk2 = block(x,yy);
-      if( bk2.isNone() )
+      const Block& bk2 = block(x,yy);
+      if( bk2.isNone() ) {
         continue;
+      }
       if( !bk2.isState(BkColor::MUTATE) && !bk2.isState(BkColor::FLASH) ) {
         color = bk2.bk_color.color;
         break;
@@ -892,21 +943,24 @@ void Field::transformGarbage(int x, int y)
   }
 
   // no forced color, draw a random one
-  if( color == -1 )
+  if( color == -1 ) {
     for(;;) {
       color = this->rand() % conf_.color_nb;
       if( x < FIELD_WIDTH-1 ) {
-        const Block &bk2 = block(x+1,y);
-        if( bk2.type == Block::COLOR && color == bk2.bk_color.color )
+        const Block& bk2 = block(x+1,y);
+        if( bk2.type == Block::COLOR && color == bk2.bk_color.color ) {
           continue;
+        }
       }
       if( y > 0 ) { // always true
-        const Block &bk2 = block(x,y-1);
-        if( bk2.type == Block::COLOR && color == bk2.bk_color.color )
+        const Block& bk2 = block(x,y-1);
+        if( bk2.type == Block::COLOR && color == bk2.bk_color.color ) {
           continue;
+        }
       }
       break;
     }
+  }
 
   bk->type = Block::COLOR;
   bk->bk_color.state = BkColor::TRANSFORMED;
@@ -949,15 +1003,15 @@ void Match::stop()
   fields_.clear();
 }
 
-Field *Match::newField(const FieldConf& conf, uint32_t seed)
+Field* Match::newField(const FieldConf& conf, uint32_t seed)
 {
   assert( !started_ );
-  Field *fld = new Field(conf, seed);
+  Field* fld = new Field(conf, seed);
   fields_.push_back(fld);
   return fld;
 }
 
-void Match::removeField(Field *fld)
+void Match::removeField(Field* fld)
 {
   // assert( fld in fields_ );
   fld->abort();
@@ -970,28 +1024,31 @@ void Match::updateTick()
   Tick ret = 0;
   FieldContainer::const_iterator it;
   for( it=fields_.begin(); it!=fields_.end(); ++it ) {
-    if( it->lost() )
+    if( it->lost() ) {
       continue;
-    if( ret == 0 || it->tick() < ret )
+    }
+    if( ret == 0 || it->tick() < ret ) {
       ret = it->tick();
+    }
   }
   // all fields lost, match tick is the max tick
   // it MUST be set to handle draw games
   if( ret == 0 ) {
     for( it=fields_.begin(); it!=fields_.end(); ++it ) {
-      if( it->tick() > ret )
+      if( it->tick() > ret ) {
         ret = it->tick();
+      }
     }
   }
 
   tick_ = ret;
 }
 
-bool Match::updateRanks(std::vector<const Field *> &ranked)
+bool Match::updateRanks(std::vector<const Field*>& ranked)
 {
   // common case: no draw, no simultaneous death, 1 tick at a time
   // ranking algorithm does not have to be optimized for special cases
-  std::vector<Field *> to_rank;
+  std::vector<Field*> to_rank;
   to_rank.reserve(fields_.size());
   unsigned int no_rank_nb = 0;
   FieldContainer::iterator it;
@@ -1012,7 +1069,7 @@ bool Match::updateRanks(std::vector<const Field *> &ranked)
               boost::bind(&Field::tick, _1) <
               boost::bind(&Field::tick, _2));
     unsigned int rank = no_rank_nb - to_rank.size() + 1;
-    std::vector<Field *>::iterator it;
+    std::vector<Field*>::iterator it;
     for( it=to_rank.begin(); it!=to_rank.end(); ++it ) {
       if( it!=to_rank.begin() && (*it)->tick() == (*(it-1))->tick() ) {
         (*it)->setRank( (*(it-1))->rank() );
@@ -1043,7 +1100,7 @@ bool Match::updateRanks(std::vector<const Field *> &ranked)
 }
 
 
-void Match::addGarbage(Garbage *gb, unsigned int pos)
+void Match::addGarbage(Garbage* gb, unsigned int pos)
 {
   assert( gb->to != NULL );
 
@@ -1051,20 +1108,20 @@ void Match::addGarbage(Garbage *gb, unsigned int pos)
   gbs_hang_[gb->gbid] = gb;
 }
 
-void Match::waitGarbageDrop(const Garbage *gb)
+void Match::waitGarbageDrop(const Garbage* gb)
 {
   assert( gb->to != NULL );
 
   auto it = gbs_hang_.find(gb->gbid);
   assert( it != gbs_hang_.end() );
-  Garbage *gb2 = it->second; // same as gb, but not const
+  Garbage* gb2 = it->second; // same as gb, but not const
   gbs_hang_.erase(it);
   gb->to->waitGarbageDrop(gb2);
   gbs_wait_[gb->gbid] = gb2;
 }
 
 
-GarbageDistributor::GarbageDistributor(Match &match, Observer &obs):
+GarbageDistributor::GarbageDistributor(Match& match, Observer& obs):
     match_(match), observer_(obs), current_gbid_(0)
 {
 }
@@ -1077,7 +1134,7 @@ void GarbageDistributor::reset()
   drop_ticks_.clear();
 }
 
-void GarbageDistributor::updateGarbages(Field *fld)
+void GarbageDistributor::updateGarbages(Field* fld)
 {
   // cancel chain garbage
   if( fld->chain() < 2 ) {
@@ -1086,7 +1143,7 @@ void GarbageDistributor::updateGarbages(Field *fld)
 
   // check whether a garbage should be dropped (at most one per step)
   if( fld->hangingGarbageCount() > 0 ) {
-    const Garbage &gb = fld->hangingGarbage(0);
+    const Garbage& gb = fld->hangingGarbage(0);
     GbChainMap::iterator it = gbs_chain_.find(gb.from);
     // don't drop garbage of an active chain
     if( it == gbs_chain_.end() && (*it).second != &gb ) {
@@ -1103,18 +1160,18 @@ void GarbageDistributor::updateGarbages(Field *fld)
   if( info.combo == 0 ) {
     return; // no match, no new garbages
   }
-  const FieldContainer &fields = match_.fields();
+  const FieldContainer& fields = match_.fields();
 
   // check if there is an opponent
   // if there is only one, keep it (faster target choice for 2-player game)
-  Field *single_opponent = NULL;
+  Field* single_opponent = NULL;
   FieldContainer::const_iterator it;
   for( it=fields.begin(); it!=fields.end(); ++it ) {
     //XXX:hack
     // const_iterator return a pointer to a const
     // but we only need the container to be constant, not values
     // so we use ptr_container's base which returns a void** from an iterator
-    Field *it_fld = static_cast<Field*>(*(it.base()));
+    Field* it_fld = static_cast<Field*>(*(it.base()));
     if( it_fld == fld || it->lost() ) {
       continue;
     }
@@ -1125,8 +1182,9 @@ void GarbageDistributor::updateGarbages(Field *fld)
       break;
     }
   }
-  if( single_opponent == NULL && it==fields.end() )
+  if( single_opponent == NULL && it==fields.end() ) {
     return; // no opponent, no target
+  }
 
   // note: opponent count will never increase, we don't have to update targets
 
@@ -1134,7 +1192,7 @@ void GarbageDistributor::updateGarbages(Field *fld)
   // maps it if there is only one opponent
 
   if( info.chain == 2 ) {
-    Field *target_fld = single_opponent;
+    Field* target_fld = single_opponent;
     if( target_fld == NULL ) {
       // get player with the least chain garbages
       GbTargetMap::iterator targets_it = targets_chain_.find(fld);
@@ -1147,7 +1205,7 @@ void GarbageDistributor::updateGarbages(Field *fld)
           it = fields.begin();
         }
         //XXX:hack see static_cast above
-        Field *fld2 = static_cast<Field*>(*(it.base()));
+        Field* fld2 = static_cast<Field*>(*(it.base()));
         if( fld2 == fld || fld2->lost() ) {
           continue;
         }
@@ -1177,7 +1235,7 @@ void GarbageDistributor::updateGarbages(Field *fld)
     // increase chain garbage
     GbChainMap::iterator it = gbs_chain_.find(fld);
     assert( it != gbs_chain_.end() );
-    Garbage *gb = (*it).second;
+    Garbage* gb = (*it).second;
     assert( gb->type == Garbage::TYPE_CHAIN );
     gb->size.y++;
     drop_ticks_[gb] = fld->tick() + fld->conf().gb_hang_tk;
@@ -1187,7 +1245,7 @@ void GarbageDistributor::updateGarbages(Field *fld)
   // combo garbage
   // with a width of 6, values match the original PdP rules
   if( info.combo > 3 ) {
-    Field *target_fld = single_opponent;
+    Field* target_fld = single_opponent;
     if( target_fld == NULL ) {
       // get the next target player
       GbTargetMap::iterator targets_it = targets_combo_.find(fld);
@@ -1236,11 +1294,11 @@ void GarbageDistributor::updateGarbages(Field *fld)
 }
 
 
-void GarbageDistributor::newGarbage(Field *from, Field *to, Garbage::Type type, int size)
+void GarbageDistributor::newGarbage(Field* from, Field* to, Garbage::Type type, int size)
 {
   assert( to != NULL );
 
-  Garbage *gb = new Garbage;
+  Garbage* gb = new Garbage;
   gb->gbid = this->nextGarbageId();
   gb->from = from;
   gb->to = to;
@@ -1251,8 +1309,9 @@ void GarbageDistributor::newGarbage(Field *from, Field *to, Garbage::Type type, 
     gb->size = FieldPos(FIELD_WIDTH, size);
     const unsigned int n = to->hangingGarbageCount();
     for( pos=0; pos<n; pos++ ) {
-      if( to->hangingGarbage(pos).type == Garbage::TYPE_CHAIN )
+      if( to->hangingGarbage(pos).type == Garbage::TYPE_CHAIN ) {
         break;
+      }
     }
   } else if( type == Garbage::TYPE_COMBO ) {
     gb->size = FieldPos(size, 1);
@@ -1277,8 +1336,9 @@ GbId GarbageDistributor::nextGarbageId()
   const Match::GarbageMap gbs_hang = match_.hangingGarbages();
   for(;;) {
     current_gbid_++;
-    if( current_gbid_ <= 0 ) // overflow
+    if( current_gbid_ <= 0 ) { // overflow
       current_gbid_ = 1;
+    }
     if( gbs_hang.find(current_gbid_) == gbs_hang.end() &&
        gbs_wait.find(current_gbid_) == gbs_wait.end() ) {
       break; // not already in use

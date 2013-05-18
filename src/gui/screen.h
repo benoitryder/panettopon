@@ -27,7 +27,7 @@ class Screen
   };
 
  public:
-  Screen(GuiInterface &intf, const std::string &name);
+  Screen(GuiInterface& intf, const std::string& name);
   virtual ~Screen();
   const std::string& name() const { return name_; }
   GuiInterface& intf() const { return intf_; }
@@ -39,19 +39,19 @@ class Screen
   /** @brief Process an event.
    * @return true if processed, false otherwise.
    */
-  virtual bool onInputEvent(const sf::Event &ev) = 0;
+  virtual bool onInputEvent(const sf::Event& ev) = 0;
 
   /** @name Instance observer methods. */
   //@{
-  virtual void onChat(Player *, const std::string &) {}
-  virtual void onPlayerJoined(Player *) {}
-  virtual void onPlayerChangeNick(Player *, const std::string &) {}
-  virtual void onPlayerReady(Player *) {}
-  virtual void onPlayerChangeFieldConf(Player *) {}
-  virtual void onPlayerQuit(Player *) {}
+  virtual void onChat(Player* , const std::string& ) {}
+  virtual void onPlayerJoined(Player* ) {}
+  virtual void onPlayerChangeNick(Player*, const std::string&) {}
+  virtual void onPlayerReady(Player*) {}
+  virtual void onPlayerChangeFieldConf(Player*) {}
+  virtual void onPlayerQuit(Player*) {}
   virtual void onStateChange(GameInstance::State) {}
-  virtual void onPlayerStep(Player *) {}
-  virtual void onNotification(GameInstance::Severity, const std::string &) {}
+  virtual void onPlayerStep(Player*) {}
+  virtual void onNotification(GameInstance::Severity, const std::string&) {}
   virtual void onServerDisconnect() {}
   //@}
 
@@ -62,18 +62,18 @@ class Screen
    *
    * @return true if found, false otherwise.
    */
-  bool searchStyle(const std::string& prop, std::string *key) const;
+  bool searchStyle(const std::string& prop, std::string* key) const;
 
  protected:
-  GuiInterface &intf_;
+  GuiInterface& intf_;
   const std::string name_;
  private:
   /// Dummy drawable, to have a renderer
   class Background: public sf::Drawable {
    public:
     Background(): img(NULL), color(sf::Color::White) {}
-    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
-    const sf::Texture *img;
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+    const sf::Texture* img;
     sf::Color color;
   } background_;
 };
@@ -83,14 +83,14 @@ class Screen
 class ScreenMenu: public Screen
 {
  public:
-  ScreenMenu(GuiInterface &intf, const std::string &name);
+  ScreenMenu(GuiInterface& intf, const std::string& name);
   virtual void redraw();
-  virtual bool onInputEvent(const sf::Event &ev);
-  void focus(WFocusable *w);
+  virtual bool onInputEvent(const sf::Event& ev);
+  void focus(WFocusable* w);
 
  protected:
   WContainer container_;
-  WFocusable *focused_;
+  WFocusable* focused_;
 };
 
 

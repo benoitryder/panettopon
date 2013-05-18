@@ -7,7 +7,7 @@ namespace asio = boost::asio;
 using namespace asio::ip;
 
 
-ClientInstance::ClientInstance(Observer &obs, asio::io_service &io_service):
+ClientInstance::ClientInstance(Observer& obs, asio::io_service& io_service):
     observer_(obs), socket_(*this, io_service)
 {
 }
@@ -16,7 +16,7 @@ ClientInstance::~ClientInstance()
 {
 }
 
-void ClientInstance::connect(const char *host, int port, int tout)
+void ClientInstance::connect(const char* host, int port, int tout)
 {
   LOG("connecting to %s:%d ...", host, port);
   socket_.connect(host, port, tout);
@@ -32,16 +32,16 @@ void ClientInstance::disconnect()
   socket_.close();
 }
 
-void ClientInstance::newLocalPlayer(const std::string &nick)
+void ClientInstance::newLocalPlayer(const std::string& nick)
 {
   netplay::Packet pkt;
-  netplay::PktPlayerJoin *np_join = pkt.mutable_player_join();
+  netplay::PktPlayerJoin* np_join = pkt.mutable_player_join();
   np_join->set_nick(nick);
   socket_.writePacket(pkt);
 }
 
 
-void ClientInstance::playerSetNick(Player *pl, const std::string &nick)
+void ClientInstance::playerSetNick(Player* pl, const std::string& nick)
 {
   assert( pl->local() );
   assert( state_ == STATE_LOBBY && !pl->ready() );
@@ -51,28 +51,28 @@ void ClientInstance::playerSetNick(Player *pl, const std::string &nick)
   pl->setNick(nick);
 
   netplay::Packet pkt;
-  netplay::PktPlayerConf *np_conf = pkt.mutable_player_conf();
+  netplay::PktPlayerConf* np_conf = pkt.mutable_player_conf();
   np_conf->set_plid(pl->plid());
   np_conf->set_nick(nick);
   socket_.writePacket(pkt);
 }
 
-void ClientInstance::playerSetFieldConf(Player *pl, const FieldConf& conf, const std::string& name)
+void ClientInstance::playerSetFieldConf(Player* pl, const FieldConf& conf, const std::string& name)
 {
   assert( pl->local() );
   assert( state_ == STATE_LOBBY && !pl->ready() );
   //TODO compare with current conf/name
 
   netplay::Packet pkt;
-  netplay::PktPlayerConf *np_conf = pkt.mutable_player_conf();
+  netplay::PktPlayerConf* np_conf = pkt.mutable_player_conf();
   np_conf->set_plid(pl->plid());
-  netplay::FieldConf *np_fc = np_conf->mutable_field_conf();
+  netplay::FieldConf* np_fc = np_conf->mutable_field_conf();
   np_fc->set_name(name);
   conf.toPacket(np_fc);
   socket_.writePacket(pkt);
 }
 
-void ClientInstance::playerSetReady(Player *pl, bool ready)
+void ClientInstance::playerSetReady(Player* pl, bool ready)
 {
   assert( pl->local() );
   assert( state_ == STATE_LOBBY || state_ == STATE_READY );
@@ -82,24 +82,24 @@ void ClientInstance::playerSetReady(Player *pl, bool ready)
   pl->setReady(ready);
 
   netplay::Packet pkt;
-  netplay::PktPlayerState *np_state = pkt.mutable_player_state();
+  netplay::PktPlayerState* np_state = pkt.mutable_player_state();
   np_state->set_plid(pl->plid());
   np_state->set_state(netplay::PktPlayerState::READY);
   socket_.writePacket(pkt);
 }
 
-void ClientInstance::playerSendChat(Player *pl, const std::string &msg)
+void ClientInstance::playerSendChat(Player* pl, const std::string& msg)
 {
   assert( pl->local() );
 
   netplay::Packet pkt;
-  netplay::PktChat *np_chat = pkt.mutable_chat();
+  netplay::PktChat* np_chat = pkt.mutable_chat();
   np_chat->set_plid(pl->plid());
   np_chat->set_txt(msg);
   socket_.writePacket(pkt);
 }
 
-void ClientInstance::playerStep(Player *pl, KeyState keys)
+void ClientInstance::playerStep(Player* pl, KeyState keys)
 {
   assert( pl->local() && pl->field() != NULL );
   Tick tk = pl->field()->tick();
@@ -107,26 +107,26 @@ void ClientInstance::playerStep(Player *pl, KeyState keys)
 
   // send packet
   netplay::Packet pkt;
-  netplay::PktInput *np_input = pkt.mutable_input();
+  netplay::PktInput* np_input = pkt.mutable_input();
   np_input->set_plid(pl->plid());
   np_input->set_tick(tk);
   np_input->add_keys(keys);
   socket_.writePacket(pkt);
 }
 
-void ClientInstance::playerQuit(Player *pl)
+void ClientInstance::playerQuit(Player* pl)
 {
   assert( pl->local() );
 
   netplay::Packet pkt;
-  netplay::PktPlayerState *np_state = pkt.mutable_player_state();
+  netplay::PktPlayerState* np_state = pkt.mutable_player_state();
   np_state->set_plid(pl->plid());
   np_state->set_state(netplay::PktPlayerState::LEAVE);
   socket_.writePacket(pkt);
 }
 
 
-void ClientInstance::onClientPacket(const netplay::Packet &pkt)
+void ClientInstance::onClientPacket(const netplay::Packet& pkt)
 {
   if( pkt.has_input() ) {
     this->processPktInput(pkt.input());
@@ -150,15 +150,15 @@ void ClientInstance::onClientPacket(const netplay::Packet &pkt)
     this->processPktPlayerField(pkt.player_field());
 
   } else if( pkt.has_chat() ) {
-    const netplay::PktChat &np_chat = pkt.chat();
-    Player *pl = this->player(np_chat.plid());
+    const netplay::PktChat& np_chat = pkt.chat();
+    Player* pl = this->player(np_chat.plid());
     if( pl == NULL ) {
       throw netplay::CallbackError("invalid player");
     }
     observer_.onChat(pl, np_chat.txt());
 
   } else if( pkt.has_notification() ) {
-    const netplay::PktNotification &np_notification = pkt.notification();
+    const netplay::PktNotification& np_notification = pkt.notification();
     observer_.onNotification(static_cast<GameInstance::Severity>(np_notification.severity()), np_notification.txt());
 
   } else {
@@ -178,14 +178,14 @@ void ClientInstance::processPktInput(const netplay::PktInput& pkt)
   if( state_ != STATE_GAME ) {
     throw netplay::CallbackError("match is not running");
   }
-  Player *pl = this->player(pkt.plid());
+  Player* pl = this->player(pkt.plid());
   if( pl == NULL || pl->field() == NULL ) {
     throw netplay::CallbackError("invalid player");
   }
   if( pl->local() ) {
     return; // already processed
   }
-  Field *fld = pl->field();
+  Field* fld = pl->field();
 
   Tick tick = pkt.tick();
   if( tick < fld->tick() ) {
@@ -208,18 +208,18 @@ void ClientInstance::processPktNewGarbage(const netplay::PktNewGarbage& pkt)
     throw netplay::CallbackError("match is not running");
   }
 
-  Garbage *gb = new Garbage;
+  Garbage* gb = new Garbage;
   std::auto_ptr<Garbage> agb(gb);
   gb->gbid = pkt.gbid();
 
-  Player *pl_to = this->player(pkt.plid_to());
+  Player* pl_to = this->player(pkt.plid_to());
   if( pl_to == NULL || pl_to->field() == NULL ) {
     throw netplay::CallbackError("invalid garbage target");
   }
   gb->to = pl_to->field();
 
   if( pkt.has_plid_from() ) {
-    Player *pl_from = this->player(pkt.plid_from());
+    Player* pl_from = this->player(pkt.plid_from());
     if( pl_from == NULL || pl_from->field() == NULL ) {
       throw netplay::CallbackError("invalid garbage origin");
     }
@@ -258,10 +258,10 @@ void ClientInstance::processPktUpdateGarbage(const netplay::PktUpdateGarbage& pk
   if( it == gbs_hang.end() ) {
     throw netplay::CallbackError("garbage not found");
   }
-  Garbage *gb = (*it).second;
+  Garbage* gb = (*it).second;
 
   if( pkt.has_pos() ) {
-    Player *pl_to = this->player(gb->to);
+    Player* pl_to = this->player(gb->to);
     assert( pl_to != NULL );
 
     if( pkt.has_plid_to() && pkt.plid_to() != pl_to->plid() ) {
@@ -310,13 +310,13 @@ void ClientInstance::processPktGarbageState(const netplay::PktGarbageState& pkt)
     if( it == gbs_hang.end() ) {
       throw netplay::CallbackError("garbage not found");
     }
-    Garbage *gb = (*it).second;
+    Garbage* gb = (*it).second;
     match_.waitGarbageDrop(gb);
-    Player *pl = this->player(gb->to);
+    Player* pl = this->player(gb->to);
     if( pl->local() ) {
       // one of our garbages, drop it
       netplay::Packet pkt_send;
-      netplay::PktGarbageState *np_state = pkt_send.mutable_garbage_state();
+      netplay::PktGarbageState* np_state = pkt_send.mutable_garbage_state();
       np_state->set_gbid( gb->gbid );
       np_state->set_state(netplay::PktGarbageState::DROP);
       socket_.writePacket(pkt_send);
@@ -330,9 +330,9 @@ void ClientInstance::processPktGarbageState(const netplay::PktGarbageState& pkt)
     if( it == gbs_wait.end() ) {
       throw netplay::CallbackError("garbage not found");
     }
-    Garbage *gb = (*it).second;
-    Field *fld = gb->to;
-    Player *pl = this->player(fld);
+    Garbage* gb = (*it).second;
+    Field* fld = gb->to;
+    Player* pl = this->player(fld);
     if( pl == NULL ) {
       throw netplay::CallbackError("invalid player");
     }
@@ -405,7 +405,7 @@ void ClientInstance::processPktServerState(const netplay::PktServerState& pkt)
 
 void ClientInstance::processPktPlayerConf(const netplay::PktPlayerConf& pkt)
 {
-  Player *pl = this->player(pkt.plid());
+  Player* pl = this->player(pkt.plid());
   if( pl == NULL ) {
     // new player
     if( !pkt.has_nick() || !pkt.has_field_conf() ) {
@@ -447,7 +447,7 @@ void ClientInstance::processPktPlayerConf(const netplay::PktPlayerConf& pkt)
 
 void ClientInstance::processPktPlayerState(const netplay::PktPlayerState& pkt)
 {
-  Player *pl = this->player(pkt.plid());
+  Player* pl = this->player(pkt.plid());
   if( pl == NULL ) {
     throw netplay::CallbackError("invalid player");
   }
@@ -481,7 +481,7 @@ void ClientInstance::processPktPlayerRank(const netplay::PktPlayerRank& pkt)
   if( state_ != STATE_GAME ) {
     throw netplay::CallbackError("invalid in current state");
   }
-  Player *pl = this->player(pkt.plid());
+  Player* pl = this->player(pkt.plid());
   if( pl == NULL || pl->field() == NULL ) {
     throw netplay::CallbackError("invalid player");
   }
@@ -494,7 +494,7 @@ void ClientInstance::processPktPlayerField(const netplay::PktPlayerField& pkt)
   if( state_ != STATE_INIT ) {
     throw netplay::CallbackError("invalid in current state");
   }
-  Player *pl = this->player(pkt.plid());
+  Player* pl = this->player(pkt.plid());
   if( pl == NULL ) {
     throw netplay::CallbackError("invalid player");
   }
@@ -502,7 +502,7 @@ void ClientInstance::processPktPlayerField(const netplay::PktPlayerField& pkt)
     throw netplay::CallbackError("field already initialized");
   }
 
-  Field *fld = match_.newField(pl->fieldConf(), pkt.seed());
+  Field* fld = match_.newField(pl->fieldConf(), pkt.seed());
   pl->setField(fld);
   if( pkt.blocks_size() > 0 ) {
     //TODO throw exceptions in setGridContentFromPacket

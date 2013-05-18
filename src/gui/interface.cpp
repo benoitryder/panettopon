@@ -30,7 +30,7 @@ GuiInterface::~GuiInterface()
   this->endDisplay();
 }
 
-bool GuiInterface::run(IniFile *cfg)
+bool GuiInterface::run(IniFile* cfg)
 {
 #define CONF_LOAD(n,ini) \
   window_conf_.n = cfg->get(CONF_SECTION, #ini, window_conf_.n);
@@ -80,7 +80,7 @@ bool GuiInterface::run(IniFile *cfg)
 }
 
 
-void GuiInterface::swapScreen(Screen *screen)
+void GuiInterface::swapScreen(Screen* screen)
 {
   if( screen_.get() ) {
     screen_->exit();
@@ -95,32 +95,32 @@ void GuiInterface::swapScreen(Screen *screen)
 }
 
 
-void GuiInterface::onChat(Player *pl, const std::string &msg)
+void GuiInterface::onChat(Player* pl, const std::string& msg)
 {
   screen_->onChat(pl, msg);
 }
 
-void GuiInterface::onPlayerJoined(Player *pl)
+void GuiInterface::onPlayerJoined(Player* pl)
 {
   screen_->onPlayerJoined(pl);
 }
 
-void GuiInterface::onPlayerChangeNick(Player *pl, const std::string &nick)
+void GuiInterface::onPlayerChangeNick(Player* pl, const std::string& nick)
 {
   screen_->onPlayerChangeNick(pl, nick);
 }
 
-void GuiInterface::onPlayerReady(Player *pl)
+void GuiInterface::onPlayerReady(Player* pl)
 {
   screen_->onPlayerReady(pl);
 }
 
-void GuiInterface::onPlayerChangeFieldConf(Player *pl)
+void GuiInterface::onPlayerChangeFieldConf(Player* pl)
 {
   screen_->onPlayerChangeFieldConf(pl);
 }
 
-void GuiInterface::onPlayerQuit(Player *pl)
+void GuiInterface::onPlayerQuit(Player* pl)
 {
   screen_->onPlayerQuit(pl);
 }
@@ -130,12 +130,12 @@ void GuiInterface::onStateChange(GameInstance::State state)
   screen_->onStateChange(state);
 }
 
-void GuiInterface::onPlayerStep(Player *pl)
+void GuiInterface::onPlayerStep(Player* pl)
 {
   screen_->onPlayerStep(pl);
 }
 
-void GuiInterface::onNotification(GameInstance::Severity sev, const std::string &msg)
+void GuiInterface::onNotification(GameInstance::Severity sev, const std::string& msg)
 {
   screen_->onNotification(sev, msg);
 }
@@ -155,7 +155,7 @@ void GuiInterface::startServer(int port)
   server_instance_->startServer(port);
 }
 
-void GuiInterface::startClient(const std::string &host, int port)
+void GuiInterface::startClient(const std::string& host, int port)
 {
   assert( instance_.get() == NULL );
   client_instance_ = new ClientInstance(*this, io_service_);
@@ -211,10 +211,11 @@ void GuiInterface::endDisplay()
 }
 
 
-void GuiInterface::onRedrawTick(const boost::system::error_code &ec)
+void GuiInterface::onRedrawTick(const boost::system::error_code& ec)
 {
-  if( ec == asio::error::operation_aborted )
+  if( ec == asio::error::operation_aborted ) {
     return;
+  }
 
   if( ! window_.isOpen() ) {
     //TODO

@@ -20,14 +20,13 @@ typedef enum
 typedef struct
 {
   const char short_name;  ///< Short option name (0 if none)
-  const char *long_name;  ///< Long option name (NULL if none)
+  const char* long_name;  ///< Long option name (NULL if none)
   OptGetType type;  ///< Option type
 
   /// Parsed value
-  union
-  {
-    char *str;        ///< String
-    long i;           ///< Integer argument
+  union {
+    char* str;  ///< String
+    long i;  ///< Integer argument
   } value;
 
 } OptGetItem;
@@ -63,7 +62,7 @@ enum OptGetRetValues_
  *
  * @todo Properly process "--".
  */
-int optget_parse(OptGetItem *items, char *const *args[], OptGetItem **get);
+int optget_parse(OptGetItem* items, char* const* args[], OptGetItem** get);
 
 
 /** @brief Parse a single argument.
@@ -72,7 +71,7 @@ int optget_parse(OptGetItem *items, char *const *args[], OptGetItem **get);
  *
  * @return OPTGET_OK on success, OPTGET_ERR_VAL_FMT on error.
  */
-int optget_parse_arg(OptGetItem *get, char *arg);
+int optget_parse_arg(OptGetItem* get, char* arg);
 
 
 #endif
