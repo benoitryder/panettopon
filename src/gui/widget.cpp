@@ -373,9 +373,9 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
     text_margins = style.get<decltype(text_margins)>(key);
   }
   unsigned int text_height = text_.getFont()->getLineSpacing(text_.getCharacterSize())+2;
-  //TODO:sfml2 text_img_.create(width_-(text_margins.first+text_margins.second), text_height);
+  text_img_.create(width_-(text_margins.first+text_margins.second), text_height);
   text_sprite_.setOrigin(width_/2.-text_margins.first, text_height/2.);
-  //TODO:sfml2 text_sprite_.setTexture(text_img_.getTexture(), true);
+  text_sprite_.setTexture(text_img_.getTexture(), true);
   text_sprite_.setColor(color_);
   cursor_.setHeight(text_height);
   cursor_.setColor(focus_color_);
@@ -467,7 +467,6 @@ void WEntry::updateTextDisplay(bool force)
   if( cursor_pos_ > len ) {
     cursor_pos_ = len;
   }
-  return; //TODO:sfml2
 
   const float text_width = text_img_.getSize().x;
   const float cursor_pos_x = text_.findCharacterPos(cursor_pos_).x;
@@ -484,7 +483,7 @@ void WEntry::updateTextDisplay(bool force)
     force = true;
   }
 
-  cursor_.x = cursor_pos_x-x;
+  cursor_.x = cursor_pos_x - x - text_width/2;
   // redraw only if needed
   if( force ) {
     text_img_.clear(sf::Color(0,0,0,0));
@@ -502,8 +501,8 @@ WEntry::Cursor::Cursor():
 
 void WEntry::Cursor::setHeight(float h)
 {
-  vertices_[0] = sf::Vertex(sf::Vector2f(0, 0));
-  vertices_[1] = sf::Vertex(sf::Vector2f(0, h));
+  vertices_[0] = sf::Vertex(sf::Vector2f(0, -h/2));
+  vertices_[1] = sf::Vertex(sf::Vector2f(0, h/2));
 }
 
 void WEntry::Cursor::draw(sf::RenderTarget& target, sf::RenderStates states) const
