@@ -60,7 +60,7 @@ class Widget: public sf::Drawable, public sf::Transformable
 
  protected:
   const Screen& screen_;
-  const std::string& name_;
+  const std::string name_;
 };
 
 
