@@ -9,7 +9,7 @@ namespace gui {
 Widget::StyleError::StyleError(const std::string& prop, const std::string& msg):
   std::runtime_error("style error for "+prop+": "+msg) {}
 Widget::StyleError::StyleError(const Widget& w, const std::string& prop, const std::string& msg):
-  std::runtime_error("style error for "+w.screen_.name()+"."+w.name_+"."+prop+": "+msg) {}
+  std::runtime_error("style error for "+w.screen_.name()+"."+(w.name_.empty()?w.type():w.name_)+"."+prop+": "+msg) {}
 
 
 Widget::Widget(const Screen& screen, const std::string& name):
