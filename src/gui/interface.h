@@ -1,6 +1,7 @@
 #ifndef GUI_INTERFACE_H_
 #define GUI_INTERFACE_H_
 
+#include <memory>
 #include <string>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include "resources.h"
@@ -89,10 +90,10 @@ class GuiInterface: public ClientInstance::Observer
   sf::RenderWindow window_;
   bool focused_;
   ResourceManager res_mgr_;
-  std::auto_ptr<Screen> screen_;
+  std::unique_ptr<Screen> screen_;
   boost::asio::monotone_timer redraw_timer_;
 
-  std::auto_ptr<GameInstance> instance_;
+  std::unique_ptr<GameInstance> instance_;
   ServerInstance* server_instance_;
   ClientInstance* client_instance_;
 };

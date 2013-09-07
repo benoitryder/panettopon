@@ -174,7 +174,7 @@ class ServerSocket
   typedef boost::ptr_vector<PeerSocket> PeerSocketContainer;
   /// Sockets of connected accepted clients.
   PeerSocketContainer peers_;
-  std::auto_ptr<PeerSocket> peer_accept_; ///< currently accepted peer
+  std::unique_ptr<PeerSocket> peer_accept_; ///< currently accepted peer
   PeerSocketContainer peers_del_; ///< Peers planned for deletion
 };
 

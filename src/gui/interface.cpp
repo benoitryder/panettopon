@@ -17,7 +17,7 @@ const std::string GuiInterface::CONF_SECTION("GUI");
 
 GuiInterface::GuiInterface():
     cfg_(NULL), focused_(false), redraw_timer_(io_service_),
-    instance_(NULL), server_instance_(NULL), client_instance_(NULL)
+    instance_(), server_instance_(NULL), client_instance_(NULL)
 {
   window_conf_.redraw_dt = (1000.0/60.0);
   window_conf_.fullscreen = false;
@@ -82,12 +82,12 @@ bool GuiInterface::run(IniFile* cfg)
 
 void GuiInterface::swapScreen(Screen* screen)
 {
-  if( screen_.get() ) {
+  if(screen_) {
     screen_->exit();
-    io_service_.post(deletion_handler<Screen>(screen_.release()));
+    io_service_.post(deletion_handler<Screen>(std::move(screen_)));
   }
   screen_.reset(screen);
-  if( ! screen_.get() ) {
+  if(!screen_) {
     this->endDisplay();
   } else {
     screen_->enter();
@@ -148,7 +148,7 @@ void GuiInterface::onServerDisconnect()
 
 void GuiInterface::startServer(int port)
 {
-  assert( instance_.get() == NULL );
+  assert(!instance_);
   server_instance_ = new ServerInstance(*this, io_service_);
   instance_.reset(server_instance_);
   server_instance_->loadConf(*cfg_);
@@ -157,7 +157,7 @@ void GuiInterface::startServer(int port)
 
 void GuiInterface::startClient(const std::string& host, int port)
 {
-  assert( instance_.get() == NULL );
+  assert(!instance_);
   client_instance_ = new ClientInstance(*this, io_service_);
   instance_.reset(client_instance_);
   client_instance_->connect(host.c_str(), port, 3000);
@@ -165,7 +165,7 @@ void GuiInterface::startClient(const std::string& host, int port)
 
 void GuiInterface::stopInstance()
 {
-  if( instance_.get() == NULL ) {
+  if(!instance_) {
     return; // nothing to do
   }
   if( server_instance_ ) {
@@ -175,7 +175,7 @@ void GuiInterface::stopInstance()
     client_instance_->disconnect();
     client_instance_ = NULL;
   }
-  io_service_.post(deletion_handler<GameInstance>(instance_.release()));
+  io_service_.post(deletion_handler<GameInstance>(std::move(instance_)));
 }
 
 
@@ -244,7 +244,7 @@ void GuiInterface::onRedrawTick(const boost::system::error_code& ec)
     }
   }
 
-  if( screen_.get() ) {  // screen may have been removed by a swapScreen()
+  if(screen_) {  // screen may have been removed by a swapScreen()
     screen_->redraw();
     window_.display();
   }

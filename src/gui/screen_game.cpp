@@ -10,7 +10,7 @@ ScreenGame::ScreenGame(GuiInterface& intf, Player* pl):
     Screen(intf, "ScreenGame"),
     player_(pl),
     input_scheduler_(*intf.instance(), *this, intf.io_service()),
-    fdp_player_(NULL)
+    fdp_player_()
 {
   keys_.up    = sf::Keyboard::Up;
   keys_.down  = sf::Keyboard::Down;
@@ -37,7 +37,7 @@ void ScreenGame::redraw()
   sf::RenderWindow& w = intf_.window();
   w.clear(sf::Color(48,48,48)); //XXX:tmp
   //TODO
-  if( fdp_player_.get() ) {
+  if(fdp_player_) {
     w.draw(*fdp_player_);
   }
 }

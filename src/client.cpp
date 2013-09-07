@@ -208,8 +208,7 @@ void ClientInstance::processPktNewGarbage(const netplay::PktNewGarbage& pkt)
     throw netplay::CallbackError("match is not running");
   }
 
-  Garbage* gb = new Garbage;
-  std::auto_ptr<Garbage> agb(gb);
+  std::unique_ptr<Garbage> gb(new Garbage);
   gb->gbid = pkt.gbid();
 
   Player* pl_to = this->player(pkt.plid_to());
@@ -243,9 +242,7 @@ void ClientInstance::processPktNewGarbage(const netplay::PktNewGarbage& pkt)
   if( pkt.pos() > gb->to->hangingGarbageCount() ) {
     throw netplay::CallbackError("invalid garbage position");
   }
-  agb.release();
-  match_.addGarbage(gb, pkt.pos());
-
+  match_.addGarbage(gb.release(), pkt.pos());
 }
 
 void ClientInstance::processPktUpdateGarbage(const netplay::PktUpdateGarbage& pkt)

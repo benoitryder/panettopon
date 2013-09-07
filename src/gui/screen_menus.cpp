@@ -36,7 +36,7 @@ void ScreenStart::enter()
 
   button_join->setCallback(boost::bind(&ScreenStart::onJoinServer, this));
   button_create->setCallback(boost::bind(&ScreenStart::onCreateServer, this));
-  button_exit_->setCallback(boost::bind(&GuiInterface::swapScreen, &intf_, (gui::Screen*)NULL));
+  button_exit_->setCallback(boost::bind(&GuiInterface::swapScreen, &intf_, nullptr));
 
   this->focus(button_join);
 }
@@ -49,7 +49,7 @@ bool ScreenStart::onInputEvent(const sf::Event& ev)
   if( ev.type == sf::Event::KeyPressed ) {
     if( ev.key.code == sf::Keyboard::Escape ) {
       if( focused_ == button_exit_ ) {
-        intf_.swapScreen(NULL);
+        intf_.swapScreen(nullptr);
       } else {
         this->focus(button_exit_);
       }

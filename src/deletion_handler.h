@@ -9,9 +9,9 @@
 template <typename T> class deletion_handler
 {
  public:
-  typedef std::auto_ptr<T> auto_type;
+  typedef std::unique_ptr<T> ptr_type;
 
-  explicit deletion_handler(auto_type ptr): ptr_(ptr) {}
+  explicit deletion_handler(ptr_type ptr): ptr_(std::move(ptr)) {}
   explicit deletion_handler(T* ptr): ptr_(ptr) {}
   const deletion_handler& operator=(const deletion_handler& o)
   {
@@ -19,7 +19,7 @@ template <typename T> class deletion_handler
   }
   deletion_handler(const deletion_handler& o)
   {
-    ptr_ = o.ptr_;
+    ptr_ = std::move(o.ptr_);
   }
 
   void operator()()
@@ -28,7 +28,7 @@ template <typename T> class deletion_handler
   }
 
  private:
-  mutable auto_type ptr_;
+  mutable ptr_type ptr_;
 };
 
 

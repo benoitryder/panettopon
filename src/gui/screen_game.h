@@ -29,7 +29,7 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
   Player* player_;  ///< Local controlled player
   GameInputScheduler input_scheduler_;
   StyleField style_field_;
-  std::auto_ptr<FieldDisplay> fdp_player_; ///< Field display of the local player
+  std::unique_ptr<FieldDisplay> fdp_player_; ///< Field display of the local player
 
   /// Key bindings.
   struct {

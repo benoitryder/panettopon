@@ -277,8 +277,8 @@ void ServerSocket::broadcastPacket(const netplay::Packet& pkt, const PeerSocket*
 
 void ServerSocket::acceptNext()
 {
-  assert( peer_accept_.get() == NULL );
-  peer_accept_ = std::auto_ptr<PeerSocket>(new PeerSocket(*this));
+  assert(!peer_accept_);
+  peer_accept_.reset(new PeerSocket(*this));
   acceptor_.async_accept(
       peer_accept_->socket_, peer_accept_->peer(),
       boost::bind(&ServerSocket::onAccept, this, asio::placeholders::error));
@@ -289,7 +289,7 @@ void ServerSocket::onAccept(const boost::system::error_code& ec)
   if( ec == asio::error::operation_aborted ) {
     return;
   } else if( !ec ) {
-    peers_.push_back(peer_accept_);
+    peers_.push_back(peer_accept_.release());
     PeerSocket& peer = peers_.back();
     try {
       peer.socket_.set_option(tcp::no_delay(true));
@@ -304,7 +304,7 @@ void ServerSocket::onAccept(const boost::system::error_code& ec)
   } else {
     LOG("accept error: %s", ec.message().c_str());
     peer_accept_->close();
-    io_service().post(deletion_handler<PeerSocket>(peer_accept_));
+    io_service().post(deletion_handler<PeerSocket>(std::move(peer_accept_)));
   }
   this->acceptNext();
 }
