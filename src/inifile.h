@@ -80,13 +80,29 @@ class IniFile
 };
 
 
+/** @brief Convert a configuration string to an object
+ *
+ * The default is to use boost::lexical_cast.
+ *
+ * Since partial function specialization is not permitted, we have to use a
+ * template class to allow specialization for vectors, etc.
+ */
+template <typename T> struct IniFileConverter
+{
+  static T parse(const std::string& value)
+  {
+    return boost::lexical_cast<T>(value);
+  }
+};
+
+
 template <typename T> T IniFile::get(const std::string& key) const
 {
   entries_type::const_iterator it = entries_.find(key);
   if( it != entries_.end() ) {
     try {
-      return boost::lexical_cast<T>(it->second);
-    } catch(const boost::bad_lexical_cast&) {
+      return IniFileConverter<T>::parse(it->second);
+    } catch(const std::exception&) {
       throw ParseError(key);
     }
   }

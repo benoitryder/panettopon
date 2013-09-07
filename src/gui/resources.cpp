@@ -359,10 +359,12 @@ void StyleField::load(ResourceManager* res_mgr, const std::string& section)
 }
 
 
-std::istream& operator>>(std::istream& in, sf::Color& color)
+sf::Color IniFileConverter<sf::Color>::parse(const std::string& value)
 {
+  sf::Color color;
   char c;
   std::string s;
+  std::istringstream in(value);
   in >> c >> s;
   if( in && c == '#' && (s.size() == 6 || s.size() == 8) ) {
     uint32_t argb;
@@ -373,11 +375,8 @@ std::istream& operator>>(std::istream& in, sf::Color& color)
       color.g = (argb>>8) & 0xff;
       color.b = argb & 0xff;
       color.a = s.size() == 6 ? 0xff : (argb>>24) & 0xff;
-      return in;
     }
   }
-  in.clear( in.rdstate() | std::istream::failbit );
-  return in;
+  return color;
 }
-
 

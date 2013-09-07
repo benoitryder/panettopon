@@ -176,54 +176,67 @@ class StyleField
 }
 
 
-/** @name Conversion helpers for style.ini */
+/** @name Conversions for style.ini */
 //@{
-std::istream& operator>>(std::istream& in, sf::Color& color);
 
-template <typename T> std::istream& operator>>(std::istream& in, sf::Rect<T>& rect)
+template <> struct IniFileConverter<sf::Color>
 {
-  T left, top, width, height;
-  char c1, c2, c3;
-  in >> left >> c1 >> top >> c2 >> width >> c3 >> height;
-  if( in && c1 == ',' && c2 == ',' && c3 == ',' && width >= 0 && height >= 0 ) {
-    rect.left = left;
-    rect.top = top;
-    rect.width = width;
-    rect.height = height;
-    return in;
-  }
-  in.clear( in.rdstate() | std::istream::failbit );
-  return in;
-}
+  static sf::Color parse(const std::string& value);
+};
 
-template <typename T> std::istream& operator>>(std::istream& in, sf::Vector2<T>& vect)
+template <typename T> struct IniFileConverter<sf::Rect<T>>
 {
-  T x, y;
-  char c;
-  in >> x >> c >> y;
-  if( in && c == ',' ) {
-    vect.x = x;
-    vect.y = y;
-    return in;
+  static sf::Rect<T> parse(const std::string& value)
+  {
+    sf::Rect<T> rect;
+    T left, top, width, height;
+    char c1, c2, c3;
+    std::istringstream in(value);
+    in >> left >> c1 >> top >> c2 >> width >> c3 >> height;
+    if( in && c1 == ',' && c2 == ',' && c3 == ',' && width >= 0 && height >= 0 ) {
+      rect.left = left;
+      rect.top = top;
+      rect.width = width;
+      rect.height = height;
+    }
+    return rect;
   }
-  in.clear( in.rdstate() | std::istream::failbit );
-  return in;
-}
+};
 
-template <typename T1, typename T2> std::istream& operator>>(std::istream& in, std::pair<T1, T2>& pair)
+template <typename T> struct IniFileConverter<sf::Vector2<T>>
 {
-  T1 v1;
-  T2 v2;
-  char c;
-  in >> v1 >> c >> v2;
-  if( in && c == ',' ) {
-    pair.first = v1;
-    pair.second = v2;
-    return in;
+  static sf::Vector2<T> parse(const std::string& value)
+  {
+    sf::Vector2<T> vect;
+    T x, y;
+    char c;
+    std::istringstream in(value);
+    in >> x >> c >> y;
+    if( in && c == ',' ) {
+      vect.x = x;
+      vect.y = y;
+    }
+    return vect;
   }
-  in.clear( in.rdstate() | std::istream::failbit );
-  return in;
-}
+};
+
+template <typename T1, typename T2> struct IniFileConverter<std::pair<T1, T2>>
+{
+  static std::pair<T1, T2> parse(const std::string& value)
+  {
+    std::pair<T1, T2> pair;
+    T1 v1;
+    T2 v2;
+    char c;
+    std::istringstream in(value);
+    in >> v1 >> c >> v2;
+    if( in && c == ',' ) {
+      pair.first = v1;
+      pair.second = v2;
+    }
+    return pair;
+  }
+};
 
 //@}
 
