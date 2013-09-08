@@ -7,7 +7,7 @@ project(Panettopon)
 ##  General declaration
 ##
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   list(APPEND CMAKE_CXX_FLAGS "-Wall -Wextra -std=gnu++11")
