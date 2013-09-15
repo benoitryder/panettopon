@@ -5,11 +5,8 @@
 
 namespace gui {
 
-Screen::StyleError::StyleError(const Screen& s, const std::string& prop, const std::string& msg):
-  std::runtime_error("style error for "+s.name_+"."+prop+": "+msg) {}
-
-
 Screen::Screen(GuiInterface& intf, const std::string& name):
+    Stylable(intf.res_mgr()),
     intf_(intf), name_(name)
 {
   const IniFile& style = this->style();
@@ -74,7 +71,7 @@ bool Screen::searchStyle(const std::string& prop, std::string* key) const
       return false;
     }
   }
-  throw StyleError(*this, prop, "too many recursive fallbacks");
+  throw Stylable::StyleError(*this, prop, "too many recursive fallbacks");
 }
 
 

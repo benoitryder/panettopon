@@ -1,6 +1,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <SFML/Graphics/Sprite.hpp>
+#include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include "resources.h"
 
@@ -282,6 +283,120 @@ void ImageFrameX::render(sf::RenderTarget& target, sf::RenderStates states, cons
 void ImageFrameX::render(sf::RenderTarget& target, sf::RenderStates states, float w) const
 {
   this->render(target, states, sf::FloatRect(-w/2, -rect_.height/2, w, rect_.height));
+}
+
+
+Stylable::StyleError::StyleError(const std::string& prop, const std::string& msg):
+  std::runtime_error("style error for "+prop+": "+msg) {}
+
+Stylable::StyleError::StyleError(const Stylable& stylable, const std::string& prop, const std::string& msg):
+  std::runtime_error("style error for "+stylable.styleErrorSection()+"."+prop+": "+msg) {}
+
+
+Stylable::Stylable(ResourceManager& res_mgr):
+  res_mgr_(res_mgr)
+{
+}
+
+Stylable::~Stylable() {}
+
+void Stylable::applyStyle(sf::Text* text, const std::string prefix)
+{
+  const IniFile& style = res_mgr_.style();
+  std::string key;
+
+  if( searchStyle(prefix+"Font", &key) ) {
+    text->setFont(*res_mgr_.getFont(style.get<std::string>(key)));
+  } else {
+    throw StyleError(*this, prefix+"Font", "not set");
+  }
+  if( searchStyle(prefix+"FontSize", &key) ) {
+    text->setCharacterSize(style.get<unsigned int>(key));
+  }
+  if( searchStyle(prefix+"FontStyle", &key) ) {
+    const std::string val = style.get<std::string>(key);
+    int txt_style;
+    if( val == "regular" ) {
+      txt_style = sf::Text::Regular;
+    } else if( val == "bold" ) {
+      txt_style = sf::Text::Bold;
+    } else if( val == "italic" ) {
+      txt_style = sf::Text::Italic;
+    } else if( val == "bold,italic" || val == "italic,bold" ) {
+      txt_style = sf::Text::Bold|sf::Text::Italic;
+    } else {
+      throw StyleError(key, "invalid value");
+    }
+    text->setStyle(txt_style);
+  }
+}
+
+void Stylable::applyStyle(ImageFrame* frame, const std::string prefix)
+{
+  const IniFile& style = res_mgr_.style();
+  std::string key;
+
+  if( searchStyle(prefix+"Image", &key) ) {
+    const sf::Texture* img = res_mgr_.getImage(style.get<std::string>(key));
+    sf::IntRect rect(0, 0, img->getSize().x, img->getSize().y);
+    if( searchStyle(prefix+"ImageRect", &key) ) {
+      rect = style.get<sf::IntRect>(key);
+    }
+    sf::IntRect inside;
+    if( searchStyle(prefix+"ImageInside", &key) ) {
+      inside = style.get<sf::IntRect>(key);
+      if( inside.left < 0 || inside.left+inside.width > rect.width
+         || inside.top < 0 || inside.top+inside.height > rect.height ) {
+        throw StyleError(key, "image inside not contained in image size");
+      }
+    } else {
+      throw StyleError(*this, prefix+"ImageInside", "not set");
+    }
+    frame->create(img, rect, inside);
+  } else {
+    throw StyleError(*this, prefix+"Image", "not set");
+  }
+}
+
+void Stylable::applyStyle(ImageFrameX* frame, const std::string prefix)
+{
+  const IniFile& style = res_mgr_.style();
+  std::string key;
+
+  if( searchStyle(prefix+"Image", &key) ) {
+    const sf::Texture* img = res_mgr_.getImage(style.get<std::string>(key));
+    sf::IntRect rect(0, 0, img->getSize().x, img->getSize().y);
+    if( searchStyle(prefix+"ImageRect", &key) ) {
+      rect = style.get<sf::IntRect>(key);
+    }
+    if( searchStyle(prefix+"ImageInside", &key) ) {
+      std::pair<int, int> inside(0,0);
+      inside = style.get<decltype(inside)>(key);
+      if( inside.first < 0 || inside.first+inside.second > rect.width ) {
+        throw StyleError(key, "image inside not contained in image size");
+      }
+      frame->create(img, rect, inside.first, inside.second);
+    } else {
+      throw StyleError(*this, prefix+"ImageInside", "not set");
+    }
+  } else {
+    throw StyleError(*this, prefix+"Image", "not set");
+  }
+}
+
+void Stylable::applyStyle(sf::Sprite* sprite, const std::string prefix)
+{
+  const IniFile& style = res_mgr_.style();
+  std::string key;
+
+  if( searchStyle(prefix+"Image", &key) ) {
+    sprite->setTexture(*res_mgr_.getImage(style.get<std::string>(key)), true);
+  } else {
+    throw StyleError(*this, prefix+"Image", "not set");
+  }
+  if( searchStyle(prefix+"ImageRect", &key) ) {
+    sprite->setTextureRect(style.get<sf::IntRect>(key));
+  }
 }
 
 

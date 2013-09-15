@@ -23,14 +23,9 @@ class Screen;
  *
  * @note Name does not have to be unique and may be empty.
  */
-class Widget: public sf::Drawable, public sf::Transformable
+class Widget: public sf::Drawable, public sf::Transformable, public Stylable
 {
  public:
-  struct StyleError: public std::runtime_error {
-    StyleError(const std::string& prop, const std::string& msg);
-    StyleError(const Widget& w, const std::string& prop, const std::string& msg);
-  };
-
   Widget(const Screen& screen, const std::string& name);
   virtual ~Widget();
 
@@ -46,17 +41,8 @@ class Widget: public sf::Drawable, public sf::Transformable
    *
    * @return true if found, false otherwise.
    */
-  bool searchStyle(const std::string& prop, std::string* key) const;
-
- protected:
-  /// Search and apply text style
-  void applyStyle(sf::Text* text, const std::string prefix="");
-  /// Search and apply ImageFrame style
-  void applyStyle(ImageFrame* frame, const std::string prefix="");
-  /// Search and apply ImageFrameX style
-  void applyStyle(ImageFrameX* frame, const std::string prefix="");
-  /// Search and apply sprite style
-  void applyStyle(sf::Sprite* sprite, const std::string prefix="");
+  virtual bool searchStyle(const std::string& prop, std::string* key) const;
+  virtual std::string styleErrorSection() const;
 
  protected:
   const Screen& screen_;

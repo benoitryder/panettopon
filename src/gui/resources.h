@@ -13,6 +13,7 @@
 
 namespace sf {
   class Sprite;
+  class Text;
 }
 
 namespace gui {
@@ -118,6 +119,48 @@ class ImageFrameX
   sf::IntRect rect_;
   unsigned int inside_left_;
   unsigned int inside_width_;
+};
+
+
+/** @brief Mixin providing facilities to set style on various elements
+ *
+ * The prefix is used in some error messages, to display the name of missing
+ * properties. It should use dotted notation.
+ */
+class Stylable
+{
+ public:
+  struct StyleError: public std::runtime_error {
+    StyleError(const std::string& prop, const std::string& msg);
+    StyleError(const Stylable& stylable, const std::string& prop, const std::string& msg);
+  };
+
+  Stylable(ResourceManager& res_mgr);
+  virtual ~Stylable();
+
+  /** @brief Get style entry key for a given property
+   * @return true if found, false otherwise.
+   */
+  virtual bool searchStyle(const std::string& prop, std::string* key) const = 0;
+  /** @brief Style section to be used in some error message
+   *
+   * This string is used as prefix for style error (e.g. missing property).
+   * It should use dotted notation and be a section on which style values may
+   * be set.
+   */
+  virtual std::string styleErrorSection() const = 0;
+
+  /// Search and apply text style
+  void applyStyle(sf::Text* text, const std::string prefix="");
+  /// Search and apply ImageFrame style
+  void applyStyle(ImageFrame* frame, const std::string prefix="");
+  /// Search and apply ImageFrameX style
+  void applyStyle(ImageFrameX* frame, const std::string prefix="");
+  /// Search and apply sprite style
+  void applyStyle(sf::Sprite* sprite, const std::string prefix="");
+
+ protected:
+  ResourceManager& res_mgr_;
 };
 
 

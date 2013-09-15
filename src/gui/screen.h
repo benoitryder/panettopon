@@ -19,7 +19,7 @@ class GuiInterface;
  * Style properties:
  *  - BackgroundImage, BackgroundColor
  */
-class Screen
+class Screen: public Stylable
 {
  public:
   struct StyleError: public std::runtime_error {
@@ -62,7 +62,8 @@ class Screen
    *
    * @return true if found, false otherwise.
    */
-  bool searchStyle(const std::string& prop, std::string* key) const;
+  virtual bool searchStyle(const std::string& prop, std::string* key) const;
+  virtual std::string styleErrorSection() const { return name_; }
 
  protected:
   GuiInterface& intf_;
