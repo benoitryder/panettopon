@@ -151,13 +151,13 @@ class Stylable
   virtual std::string styleErrorSection() const = 0;
 
   /// Search and apply text style
-  void applyStyle(sf::Text* text, const std::string prefix="");
+  void applyStyle(sf::Text* text, const std::string prefix="") const;
   /// Search and apply ImageFrame style
-  void applyStyle(ImageFrame* frame, const std::string prefix="");
+  void applyStyle(ImageFrame* frame, const std::string prefix="") const;
   /// Search and apply ImageFrameX style
-  void applyStyle(ImageFrameX* frame, const std::string prefix="");
+  void applyStyle(ImageFrameX* frame, const std::string prefix="") const;
   /// Search and apply sprite style
-  void applyStyle(sf::Sprite* sprite, const std::string prefix="");
+  void applyStyle(sf::Sprite* sprite, const std::string prefix="") const;
 
  protected:
   ResourceManager& res_mgr_;

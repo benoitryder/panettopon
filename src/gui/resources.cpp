@@ -300,7 +300,7 @@ Stylable::Stylable(ResourceManager& res_mgr):
 
 Stylable::~Stylable() {}
 
-void Stylable::applyStyle(sf::Text* text, const std::string prefix)
+void Stylable::applyStyle(sf::Text* text, const std::string prefix) const
 {
   const IniFile& style = res_mgr_.style();
   std::string key;
@@ -331,7 +331,7 @@ void Stylable::applyStyle(sf::Text* text, const std::string prefix)
   }
 }
 
-void Stylable::applyStyle(ImageFrame* frame, const std::string prefix)
+void Stylable::applyStyle(ImageFrame* frame, const std::string prefix) const
 {
   const IniFile& style = res_mgr_.style();
   std::string key;
@@ -358,7 +358,7 @@ void Stylable::applyStyle(ImageFrame* frame, const std::string prefix)
   }
 }
 
-void Stylable::applyStyle(ImageFrameX* frame, const std::string prefix)
+void Stylable::applyStyle(ImageFrameX* frame, const std::string prefix) const
 {
   const IniFile& style = res_mgr_.style();
   std::string key;
@@ -384,7 +384,7 @@ void Stylable::applyStyle(ImageFrameX* frame, const std::string prefix)
   }
 }
 
-void Stylable::applyStyle(sf::Sprite* sprite, const std::string prefix)
+void Stylable::applyStyle(sf::Sprite* sprite, const std::string prefix) const
 {
   const IniFile& style = res_mgr_.style();
   std::string key;
