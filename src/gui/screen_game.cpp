@@ -550,7 +550,8 @@ void FieldDisplay::GbHanging::updateText()
   buf[sizeof(buf)-1] = '\0';
 
   // reset the whole text to have a "fresh" GetRect()
-  txt_ = sf::Text(buf, sf::Font()); //TODO load an actual font
+  //XXX store/cache text style information on StyleField
+  style_.applyStyle(&txt_, "Garbage");
   txt_.setColor(sf::Color::White);
   sf::FloatRect txt_rect = txt_.getLocalBounds();
   float txt_sx = 0.8*style_.bk_size / txt_rect.width;
