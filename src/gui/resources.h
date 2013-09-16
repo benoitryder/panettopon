@@ -170,11 +170,14 @@ class Stylable
  *  - ColorNb: number of colors in block map
  *  - FrameOrigin: origin of field blocks in frame
  */
-class StyleField
+class StyleField: public Stylable
 {
  public:
-  StyleField();
-  void load(ResourceManager* res_mgr, const std::string& section);
+  StyleField(ResourceManager& res_mgr);
+  void load(const std::string& section);
+
+  virtual bool searchStyle(const std::string& prop, std::string* key) const;
+  virtual std::string styleErrorSection() const { return style_section_; }
 
   /// Number of colors
   unsigned int color_nb;
@@ -213,6 +216,9 @@ class StyleField
     ImageTile blocks[FIELD_WIDTH];
     ImageTile line;
   } tiles_gb_hanging;
+
+ protected:
+  std::string style_section_;
 };
 
 

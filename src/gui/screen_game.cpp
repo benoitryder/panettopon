@@ -10,6 +10,7 @@ ScreenGame::ScreenGame(GuiInterface& intf, Player* pl):
     Screen(intf, "ScreenGame"),
     player_(pl),
     input_scheduler_(*intf.instance(), *this, intf.io_service()),
+    style_field_(intf.res_mgr()),
     fdp_player_()
 {
   keys_.up    = sf::Keyboard::Up;
@@ -22,7 +23,7 @@ ScreenGame::ScreenGame(GuiInterface& intf, Player* pl):
 
 void ScreenGame::enter()
 {
-  style_field_.load(&intf_.res_mgr(), "ScreenGame.Field");
+  style_field_.load("ScreenGame.Field");
   assert( player_ );
 }
 
