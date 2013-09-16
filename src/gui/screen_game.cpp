@@ -467,6 +467,7 @@ FieldDisplay::Sign::Sign(const StyleField& style, const FieldPos& pos, bool chai
 
 void FieldDisplay::Sign::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
+  states.transform *= getTransform();
   target.draw(bg_, states);
   target.draw(txt_, states);
 }
