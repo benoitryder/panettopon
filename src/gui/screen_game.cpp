@@ -443,6 +443,8 @@ FieldDisplay::Sign::Sign(const StyleField& style, const FieldPos& pos, bool chai
   buf[sizeof(buf)-1] = '\0';
 
   // initialize text
+  //XXX store/cache text style information on StyleField
+  style_.applyStyle(&txt_, "Sign");
   txt_.setString(buf);
   txt_.setColor(sf::Color::White);
   sf::FloatRect txt_rect = txt_.getLocalBounds();
