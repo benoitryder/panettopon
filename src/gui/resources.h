@@ -203,10 +203,10 @@ class StyleField
   /// Cursor (two positions)
   ImageTile tiles_cursor[2];
 
-  /// Labels (combo and chain)
-  struct TilesLabels {
+  /// Signs (combo and chain)
+  struct TilesSigns {
     ImageTile combo, chain;
-  } tiles_labels;
+  } tiles_signs;
 
   /// Hanging garbages
   struct TilesGbHanging {

@@ -5,7 +5,7 @@ find_package(Inkscape REQUIRED)
 INKSCAPE_CONVERT_SVG2PNG(GAME_PNGS res.svg 
   DPI 45
   BkColor-map BkGarbage-map
-  SwapCursor Labels
+  SwapCursor Signs
   GbHanging-map Field-Frame
   Menu-map Menu-Background
   )

@@ -88,30 +88,30 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   /// Per-block crouching state
   unsigned int crouch_dt_[FIELD_WIDTH][FIELD_HEIGHT+1];
 
-  /** @name Labels */
+  /** @name Signs */
   //@{
 
-  class Label: public sf::Drawable, public sf::Transformable
+  class Sign: public sf::Drawable, public sf::Transformable
   {
    public:
-    Label(const StyleField& style, const FieldPos& pos, bool chain, unsigned int val);
+    Sign(const StyleField& style, const FieldPos& pos, bool chain, unsigned int val);
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-    /// Step and update the label.
+    /// Step and update the sign.
     void step();
     unsigned int dt() const { return dt_; }
    private:
     static const unsigned int DURATION;
     const StyleField& style_;
     sf::Sprite bg_;    ///< Background sprite.
-    sf::Text txt_;     ///< Label text.
+    sf::Text txt_;     ///< Sign text.
     unsigned int dt_;  ///< Remaining display time.
   };
 
-  typedef std::deque<Label> LabelContainer;
-  LabelContainer labels_;
+  typedef std::deque<Sign> SignContainer;
+  SignContainer signs_;
 
   /// Return top-left match position
-  FieldPos matchLabelPos();
+  FieldPos matchSignPos();
 
   //@}
 
@@ -136,7 +136,7 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
     const StyleField& style_;
     const Garbage& gb_;
     sf::Sprite bg_;  ///< Background sprite.
-    sf::Text txt_;   ///< Label text, not used if size_ is 0.
+    sf::Text txt_;   ///< Sign text, not used if size_ is 0.
     /// Chain size written in text, 0 if no text.
     int txt_size_;
   };

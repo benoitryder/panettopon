@@ -456,10 +456,10 @@ void StyleField::load(ResourceManager* res_mgr, const std::string& section)
   tiles_cursor[0].create(img, 1, 2, 0, 0);
   tiles_cursor[1].create(img, 1, 2, 0, 1);
 
-  // Labels
-  img = res_mgr->getImage("Labels");
-  tiles_labels.combo.create(img, 2, 1, 0, 0);
-  tiles_labels.chain.create(img, 2, 1, 1, 0);
+  // Signs
+  img = res_mgr->getImage("Signs");
+  tiles_signs.combo.create(img, 2, 1, 0, 0);
+  tiles_signs.chain.create(img, 2, 1, 1, 0);
 
   // Hanging garbages
   img = res_mgr->getImage("GbHanging-map");

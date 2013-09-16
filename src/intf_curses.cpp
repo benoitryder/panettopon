@@ -400,9 +400,9 @@ void FieldDisplay::draw()
     ::waddch(wfield_, ch);
   }
 
-  // labels
-  LabelContainer::iterator it;
-  for( it=labels_.begin(); it!=labels_.end(); ++it ) {
+  // signs
+  SignContainer::iterator it;
+  for( it=signs_.begin(); it!=signs_.end(); ++it ) {
     char buf[5];
     chtype ch = A_REVERSE|A_BLINK;
     if( it->chain ) {
@@ -429,29 +429,29 @@ void FieldDisplay::step()
 {
   const Field::StepInfo& info = field_.stepInfo();
 
-  // labels
+  // signs
 
   // update display time
-  LabelContainer::iterator it;
-  for( it=labels_.begin(); it!=labels_.end(); ++it ) {
+  SignContainer::iterator it;
+  for( it=signs_.begin(); it!=signs_.end(); ++it ) {
     it->dt--;
   }
-  // remove expired labels
-  while( !labels_.empty() && labels_.front().dt == 0 ) {
-    labels_.pop_front();
+  // remove expired signs
+  while( !signs_.empty() && signs_.front().dt == 0 ) {
+    signs_.pop_front();
   }
-  // create new labels, if needed
+  // create new signs, if needed
   if( info.combo != 0 ) {
-    FieldPos pos = this->matchLabelPos();
+    FieldPos pos = this->matchSignPos();
     if( pos.y < FIELD_HEIGHT ) {
-      pos.y++; // display label above top matching block, if possible
+      pos.y++; // display sign above top matching block, if possible
     }
     if( info.chain > 1 ) {
-      labels_.push_back( Label(pos, true, info.chain) );
+      signs_.push_back( Sign(pos, true, info.chain) );
       pos.y--;
     }
     if( info.combo > 3 ) {
-      labels_.push_back( Label(pos, false, info.combo) );
+      signs_.push_back( Sign(pos, false, info.combo) );
     }
   }
 }
@@ -564,14 +564,14 @@ void FieldDisplay::drawBlock(int x, int y)
 }
 
 
-const unsigned int FieldDisplay::Label::DURATION = 42;
+const unsigned int FieldDisplay::Sign::DURATION = 42;
 
-FieldDisplay::Label::Label(const FieldPos& pos, bool chain, unsigned int val):
+FieldDisplay::Sign::Sign(const FieldPos& pos, bool chain, unsigned int val):
     pos(pos), chain(chain), val(val), dt(DURATION)
 {
 }
 
-FieldPos FieldDisplay::matchLabelPos()
+FieldPos FieldDisplay::matchSignPos()
 {
   unsigned int x, y;
   for( y=FIELD_HEIGHT; y>0; y-- ) {

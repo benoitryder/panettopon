@@ -87,23 +87,23 @@ class FieldDisplay
   WINDOW* wfield_;
   WINDOW* wgrid_;
 
-  /** @name Labels. */
+  /** @name Signs. */
   //@{
 
-  struct Label {
+  struct Sign {
     static const unsigned int DURATION;
-    Label(const FieldPos& pos, bool chain, unsigned int val);
+    Sign(const FieldPos& pos, bool chain, unsigned int val);
     FieldPos pos;      ///< position, in field coordinates
     bool chain;        ///< true for chain, false for combo
     unsigned int val;  ///< combo or chain value
     unsigned int dt;   ///< remaining display time
   };
 
-  typedef std::deque<Label> LabelContainer;
-  LabelContainer labels_;
+  typedef std::deque<Sign> SignContainer;
+  SignContainer labels_;
 
   /// Return top-left match position.
-  FieldPos matchLabelPos();
+  FieldPos matchSignPos();
 
   //@}
 };

@@ -161,9 +161,9 @@ void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
   // cursor
   target.draw(spr_cursor_, states);
 
-  // labels
-  LabelContainer::const_iterator it;
-  for( it=labels_.begin(); it!=labels_.end(); ++it ) {
+  // signs
+  SignContainer::const_iterator it;
+  for( it=signs_.begin(); it!=signs_.end(); ++it ) {
     target.draw((*it), states);
   }
 }
@@ -210,29 +210,29 @@ void FieldDisplay::step()
     }
   }
 
-  // labels
+  // signs
 
   // update
-  LabelContainer::iterator it;
-  for( it=labels_.begin(); it!=labels_.end(); ++it ) {
+  SignContainer::iterator it;
+  for( it=signs_.begin(); it!=signs_.end(); ++it ) {
     it->step();
   }
-  // remove expired labels
-  while( !labels_.empty() && labels_.front().dt() == 0 ) {
-    labels_.pop_front();
+  // remove expired signs
+  while( !signs_.empty() && signs_.front().dt() == 0 ) {
+    signs_.pop_front();
   }
-  // create new labels, if needed
+  // create new signs, if needed
   if( info.combo != 0 ) {
-    FieldPos pos = this->matchLabelPos();
+    FieldPos pos = this->matchSignPos();
     if( pos.y < FIELD_HEIGHT ) {
-      pos.y++; // display label above top matching block, if possible
+      pos.y++; // display sign above top matching block, if possible
     }
     if( info.chain > 1 ) {
-      labels_.push_back( Label(style_, pos, true, info.chain) );
+      signs_.push_back( Sign(style_, pos, true, info.chain) );
       pos.y--;
     }
     if( info.combo > 3 ) {
-      labels_.push_back( Label(style_, pos, false, info.combo) );
+      signs_.push_back( Sign(style_, pos, false, info.combo) );
     }
   }
 
@@ -423,16 +423,16 @@ void FieldDisplay::renderBouncingBlock(sf::RenderTarget& target, sf::RenderState
 }
 
 
-const unsigned int FieldDisplay::Label::DURATION = 42;
+const unsigned int FieldDisplay::Sign::DURATION = 42;
 
-FieldDisplay::Label::Label(const StyleField& style, const FieldPos& pos, bool chain, unsigned int val):
+FieldDisplay::Sign::Sign(const StyleField& style, const FieldPos& pos, bool chain, unsigned int val):
     style_(style), dt_(DURATION)
 {
   this->setPosition((pos.x+0.5)*style_.bk_size, (FIELD_HEIGHT-pos.y+0.5)*style_.bk_size);
-  //XXX:hack space between combo and chain labels for a same match
+  //XXX:hack space between combo and chain signs for a same match
   this->move(0, -0.1*style_.bk_size);
 
-  // prepare label text
+  // prepare sign text
   char buf[5];
   if( chain) {
     ::snprintf(buf, sizeof(buf), "x%u", val);
@@ -455,27 +455,27 @@ FieldDisplay::Label::Label(const StyleField& style, const FieldPos& pos, bool ch
 
   // initialize sprite
   if( chain ) {
-    style_.tiles_labels.chain.setToSprite(&bg_, true);
+    style_.tiles_signs.chain.setToSprite(&bg_, true);
   } else {
-    style_.tiles_labels.combo.setToSprite(&bg_, true);
+    style_.tiles_signs.combo.setToSprite(&bg_, true);
   }
 }
 
 
-void FieldDisplay::Label::draw(sf::RenderTarget& target, sf::RenderStates states) const
+void FieldDisplay::Sign::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   target.draw(bg_, states);
   target.draw(txt_, states);
 }
 
-void FieldDisplay::Label::step()
+void FieldDisplay::Sign::step()
 {
   dt_--;
-  this->move(0, -0.5*style_.bk_size/Label::DURATION);
+  this->move(0, -0.5*style_.bk_size/Sign::DURATION);
 }
 
 
-FieldPos FieldDisplay::matchLabelPos()
+FieldPos FieldDisplay::matchSignPos()
 {
   unsigned int x, y;
   for( y=FIELD_HEIGHT; y>0; y-- ) {
@@ -541,7 +541,7 @@ void FieldDisplay::GbHanging::updateText()
   }
   txt_size_ = gb_.size.y;
 
-  // prepare label text
+  // prepare sign text
   char buf[5];
   ::snprintf(buf, sizeof(buf), "x%u", txt_size_);
   buf[sizeof(buf)-1] = '\0';

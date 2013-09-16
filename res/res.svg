@@ -195,15 +195,15 @@
       <path d="m 0,-8.7846 A 24,24 0, 0,0 -12,-12 l -32,0 0,24 32,0 0,32 24,0 0,-32 32,0 0,-24 -32,0 A 24,24 0 0,0 0,-8.7846 z" />
     </symbol>
 
-    <!-- Labels -->
-    <symbol id="Label-bg">
+    <!-- Signs -->
+    <symbol id="Sign-bg">
       <rect class="lbl-bg"
         x="-64" y="-64"
         width="128" height="128"
         rx="16" ry="16"
         />
     </symbol>
-    <symbol id="Label-fg">
+    <symbol id="Sign-fg">
       <rect class="lbl-fg"
         x="-56" y="-56"
         width="112" height="112"
@@ -324,8 +324,8 @@
         stroke: none;
       }
       .lbl-fg { stroke: none; }
-      #Label-Chain .lbl-fg { fill: green; }
-      #Label-Combo .lbl-fg { fill: red; }
+      #Sign-Chain .lbl-fg { fill: green; }
+      #Sign-Combo .lbl-fg { fill: red; }
 
 
       #Field-Frame {
@@ -674,19 +674,19 @@
     </g>
   </g>
 
-  <g id="Labels"
+  <g id="Signs"
     transform="translate(928,828)">
-    <g id="Label-Chain"
+    <g id="Sign-Chain"
       class="lbl"
       transform="translate(-64,-64)">
-      <use class="lbl-bg" xlink:href="#Label-bg" />
-      <use class="lbl-fg" xlink:href="#Label-fg" />
+      <use class="lbl-bg" xlink:href="#Sign-bg" />
+      <use class="lbl-fg" xlink:href="#Sign-fg" />
     </g>
-    <g id="Label-Combo"
+    <g id="Sign-Combo"
       class="lbl"
       transform="translate(64,-64)">
-      <use class="lbl-bg" xlink:href="#Label-bg" />
-      <use class="lbl-fg" xlink:href="#Label-fg" />
+      <use class="lbl-bg" xlink:href="#Sign-bg" />
+      <use class="lbl-fg" xlink:href="#Sign-fg" />
     </g>
   </g>
 
