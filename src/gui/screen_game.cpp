@@ -78,9 +78,8 @@ void ScreenGame::onStateChange(GameInstance::State state)
 }
 
 
-KeyState ScreenGame::getNextInput(Player* pl)
+KeyState ScreenGame::getNextInput(Player* /*pl*/)
 {
-  assert( pl == player_ );
   if( !intf_.focused() ) {
     return GAME_KEY_NONE;
   }

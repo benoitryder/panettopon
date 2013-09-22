@@ -24,6 +24,7 @@ class ScreenStart: public ScreenMenu
   virtual bool onInputEvent(const sf::Event& ev);
 
  private:
+  void onDebugStart();
   void onJoinServer();
   void onCreateServer();
 

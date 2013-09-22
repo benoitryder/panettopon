@@ -39,6 +39,20 @@ void ScreenStart::enter()
   button_exit_->setCallback(boost::bind(&GuiInterface::swapScreen, &intf_, nullptr));
 
   this->focus(button_join);
+
+  // "Debug start" button, only when debug mode is enabled
+  if(intf_.cfg().get<bool>("Global", "Debug", false)) {
+    WButton* button_debugstart = new WButton(*this, "DebugStart");
+    button_debugstart->setCaption(res_mgr.getLang(name_, "DebugStart"));
+    container_.widgets.push_back(button_debugstart);
+
+    button_debugstart->setNeighbors(button_exit_, button_join, NULL, NULL);
+    button_debugstart->setCallback(boost::bind(&ScreenStart::onDebugStart, this));
+    button_join->setNeighbors(button_debugstart, button_create, NULL, NULL);
+    button_exit_->setNeighbors(button_create, button_debugstart, NULL, NULL);
+
+    this->focus(button_debugstart);
+  }
 }
 
 bool ScreenStart::onInputEvent(const sf::Event& ev)
@@ -57,6 +71,23 @@ bool ScreenStart::onInputEvent(const sf::Event& ev)
     }
   }
   return false;
+}
+
+void ScreenStart::onDebugStart()
+{
+  // create server and players
+  intf_.startServer(intf_.cfg().get<uint16_t>("Global", "Port"));
+  Player* pl1 = intf_.server()->newLocalPlayer("Player 1");
+  Player* pl2 = intf_.server()->newLocalPlayer("Player 2");
+  // swap to screen game
+  intf_.swapScreen(new ScreenGame(intf_, pl1));
+  // lobby: players are ready
+  GameInstance* instance = intf_.instance();
+  instance->playerSetReady(pl1, true);
+  instance->playerSetReady(pl2, true);
+  // game start: players are ready (again)
+  instance->playerSetReady(pl1, true);
+  instance->playerSetReady(pl2, true);
 }
 
 void ScreenStart::onJoinServer()
