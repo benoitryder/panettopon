@@ -190,8 +190,7 @@ bool GuiInterface::initDisplay()
       );
   window_.setKeyRepeatEnabled(true);
   window_.setActive();
-  //XXX assume a GainedFocus event when a window is created with focus
-  focused_ = false;
+  focused_ = true;
 
   // load icon
   sf::Image icon;
