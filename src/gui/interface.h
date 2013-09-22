@@ -85,6 +85,7 @@ class GuiInterface: public ClientInstance::Observer
 
   bool initDisplay();
   void endDisplay();
+  void enterFirstScreen();
   void onRedrawTick(const boost::system::error_code& ec);
 
   sf::RenderWindow window_;

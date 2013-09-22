@@ -64,8 +64,8 @@ bool GuiInterface::run(IniFile* cfg)
     this->endDisplay();
     return false;
   }
-  // create the first screen
-  this->swapScreen(new ScreenStart(*this));
+  // postpone swap to the first screen to have access to cfg in enter()
+  io_service_.post(boost::bind(&GuiInterface::enterFirstScreen, this));
 
   boost::posix_time::time_duration dt = boost::posix_time::milliseconds(window_conf_.redraw_dt);
   redraw_timer_.expires_from_now(dt);
@@ -210,6 +210,10 @@ void GuiInterface::endDisplay()
   window_.close();
 }
 
+void GuiInterface::enterFirstScreen()
+{
+  this->swapScreen(new ScreenStart(*this));
+}
 
 void GuiInterface::onRedrawTick(const boost::system::error_code& ec)
 {
