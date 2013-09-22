@@ -63,9 +63,9 @@ class ImageTile
   /// Initialize the tile (x,y) from a (sx,sy) tilemap
   void create(const sf::Texture* img, int sx, int sy, int x, int y);
   /// Draw the tile at given position, with given scaling
-  void render(sf::RenderTarget& target, sf::RenderStates states, float x, float y, float kx, float ky) const;
+  void render(sf::RenderTarget& target, sf::RenderStates states, float x, float y, float kx, float ky, const sf::Color& c=sf::Color::White) const;
   /// Draw the tile at given position
-  void render(sf::RenderTarget& target, sf::RenderStates states, float x, float y) const;
+  void render(sf::RenderTarget& target, sf::RenderStates states, float x, float y, const sf::Color& c=sf::Color::White) const;
   /** @brief Set the tile on a sprite
    *
    * If \e center is \e true, sprite's origin is set to be centred on the tile.

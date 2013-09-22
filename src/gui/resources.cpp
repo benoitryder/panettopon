@@ -122,7 +122,7 @@ void ImageTile::create(const sf::Texture* img, int sx, int sy, int x, int y)
   this->create(img, sf::IntRect(kx*x, ky*y, kx, ky));
 }
 
-void ImageTile::render(sf::RenderTarget& target, sf::RenderStates states, float x, float y, float w, float h) const
+void ImageTile::render(sf::RenderTarget& target, sf::RenderStates states, float x, float y, float w, float h, const sf::Color& c) const
 {
   states.texture = image_;
   const float left   = rect_.left;
@@ -131,17 +131,17 @@ void ImageTile::render(sf::RenderTarget& target, sf::RenderStates states, float 
   const float bottom = rect_.top  + rect_.height;
 
   const sf::Vertex vertices[] = {
-    sf::Vertex(sf::Vector2f(x,   y),   sf::Vector2f(left,  bottom)),
-    sf::Vertex(sf::Vector2f(x+w, y),   sf::Vector2f(right, bottom)),
-    sf::Vertex(sf::Vector2f(x,   y+h), sf::Vector2f(left,  top)),
-    sf::Vertex(sf::Vector2f(x+w, y+h), sf::Vector2f(right, top)),
+    sf::Vertex(sf::Vector2f(x,   y),   c, sf::Vector2f(left,  bottom)),
+    sf::Vertex(sf::Vector2f(x+w, y),   c, sf::Vector2f(right, bottom)),
+    sf::Vertex(sf::Vector2f(x,   y+h), c, sf::Vector2f(left,  top)),
+    sf::Vertex(sf::Vector2f(x+w, y+h), c, sf::Vector2f(right, top)),
   };
   target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::TrianglesStrip, states);
 }
 
-void ImageTile::render(sf::RenderTarget& target, sf::RenderStates states, float x, float y) const
+void ImageTile::render(sf::RenderTarget& target, sf::RenderStates states, float x, float y, const sf::Color& c) const
 {
-  this->render(target, states, x, y, rect_.width, rect_.height);
+  this->render(target, states, x, y, rect_.width, rect_.height, c);
 }
 
 void ImageTile::setToSprite(sf::Sprite* spr, bool center) const
