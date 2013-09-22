@@ -136,20 +136,15 @@ void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
         ;
     int x, y;
     for( x=0; x<FIELD_WIDTH; x++ ) {
-      for( y=1; y<=FIELD_HEIGHT; y++ ) {
+      for( y=0; y<=FIELD_HEIGHT; y++ ) {
         this->renderBlock(target, states_bk, x, y);
       }
-      // raising line: darker
-      //TODO:sfml2 renderer.SetColor(sf::Color(96,96,96));
-      this->renderBlock(target, states_bk, x, 0);
-      //TODO:sfml2 renderer.SetColor(sf::Color::White);
     }
   }
 
   target.draw(spr_frame_, states);
 
   // hanging garbages
-  //TODO:sfml2 renderer.SetColor(sf::Color(204,102,25)); //XXX:temp
   GbHangingList::const_iterator gb_it;
   unsigned gb_i;  // avoid display "overflow", max: FIELD_WIDTH*2/3
   for(gb_it=gbw_drbs_.begin(), gb_i=0;
@@ -157,7 +152,6 @@ void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
       ++gb_it, gb_i++) {
     target.draw(*gb_it, states);
   }
-  //TODO:sfml2 renderer.SetColor(sf::Color::White); //XXX:temp (cf. above)
 
   // cursor
   target.draw(spr_cursor_, states);
@@ -309,7 +303,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
 
     unsigned int crouch_dt = crouch_dt_[x][y];
     if( crouch_dt == 0 ) {
-      tile->render(target, states, x, y, 1, 1);
+      tile->render(target, states, x, y, 1, 1, y ? sf::Color::White : sf::Color(96,96,96));
     } else {
       // bounce positions: -1 -> +1 (quick) -> 0 (slow)
       float bounce = ( crouch_dt > CROUCH_DURATION/2 )
@@ -320,7 +314,6 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
 
   } else if( bk.isGarbage() ) {
     const StyleField::TilesGb& tiles = style_.tiles_gb;
-    //TODO:sfml2 renderer.SetColor(sf::Color(204,102,25)); //XXX:temp
 
     if( bk.bk_garbage.state == BkGarbage::FLASH ) {
       if( (bk.ntick - field_.tick()) % 2 == 0 ) {
@@ -399,7 +392,6 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
       }
       tile->render(target, states, x+0.5, y, 0.5, 0.5);
     }
-    //TODO:sfml2 renderer.SetColor(sf::Color::White); //XXX:temp (cf. above)
   }
 }
 
