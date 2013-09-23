@@ -1,3 +1,4 @@
+#include <memory>
 #include "server.h"
 #include "netplay.pb.h"
 #include "inifile.h"
@@ -337,15 +338,15 @@ void ServerInstance::onGarbageDrop(const Garbage* gb)
 
 Player* ServerInstance::newPlayer(netplay::PeerSocket* peer, const std::string& nick)
 {
-  //TODO protected pointer
-  Player* pl = new Player(this->nextPlayerId(), peer==NULL);
+  auto pl_unique = std::unique_ptr<Player>(new Player(this->nextPlayerId(), peer==NULL));
+  Player* pl = pl_unique.get();
   LOG("init player: %d", pl->plid());
   pl->setNick(nick);
   auto fc_it = conf_.field_confs.begin(); //TODO:temp default configuration
   pl->setFieldConf(fc_it->second, fc_it->first);
   // put accepted player with his friends
   PlId plid = pl->plid(); // use a temporary value to help g++
-  players_.insert(plid, pl);
+  players_.insert(plid, pl_unique.release());
   if( peer != NULL ) {
     peers_[plid] = peer; // associate the player to its peer
   }
