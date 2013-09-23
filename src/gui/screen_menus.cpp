@@ -469,6 +469,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
 
 void ScreenLobby::WPlayerRow::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
+  states.transform *= getTransform();
   target.draw(nick_, states);
   target.draw(conf_, states);
   if( player_.ready() ) {
