@@ -2,6 +2,7 @@
 #define SERVER_H_
 
 #include <map>
+#include <memory>
 #include "instance.h"
 #include "netplay.h"
 #include "game.h"
@@ -110,7 +111,7 @@ class ServerInstance: public GameInstance,
 
   typedef std::map<PlId, netplay::PeerSocket*> PeerContainer;
 
-  netplay::ServerSocket socket_;
+  std::shared_ptr<netplay::ServerSocket> socket_;
   GarbageDistributor gb_distributor_;
   PeerContainer peers_;
   PlId current_plid_;

@@ -11,10 +11,11 @@
 
 #include <stdint.h>
 #include <string>
+#include <memory>
+#include <vector>
 #include <queue>
 #include <stdexcept>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/ptr_container/ptr_vector.hpp>
 #include "monotone_timer.hpp"
 
 
@@ -34,7 +35,7 @@ class CallbackError: public std::runtime_error
 
 
 /// Base socket for both server and clients.
-class BaseSocket
+class BaseSocket: public std::enable_shared_from_this<BaseSocket>
 {
  protected:
   /// Maximum packet size (without size indicator)
@@ -126,14 +127,14 @@ class PeerSocket: public PacketSocket
   virtual void processError(const std::string& msg, const boost::system::error_code& ec);
   virtual void processPacket(const Packet& pkt);
  private:
-  ServerSocket& server_;
+  ServerSocket* server_;
   boost::asio::ip::tcp::endpoint peer_;
   bool has_error_; ///< Avoid multiple processError() calls.
 };
 
 
 /// Socket for server.
-class ServerSocket
+class ServerSocket: public std::enable_shared_from_this<ServerSocket>
 {
   friend class PeerSocket;
  public:
@@ -164,18 +165,15 @@ class ServerSocket
  private:
   void acceptNext();
   void onAccept(const boost::system::error_code& ec);
-  /// Method called asynchronously to delete a peer safely.
-  void doRemovePeer(PeerSocket* peer);
 
   boost::asio::ip::tcp::acceptor acceptor_;
   bool started_;
   Observer& observer_;
 
-  typedef boost::ptr_vector<PeerSocket> PeerSocketContainer;
+  typedef std::vector<std::shared_ptr<PeerSocket>> PeerSocketContainer;
   /// Sockets of connected accepted clients.
   PeerSocketContainer peers_;
-  std::unique_ptr<PeerSocket> peer_accept_; ///< currently accepted peer
-  PeerSocketContainer peers_del_; ///< Peers planned for deletion
+  std::shared_ptr<PeerSocket> peer_accept_; ///< currently accepted peer
 };
 
 

@@ -1,6 +1,7 @@
 #ifndef CLIENT_H_
 #define CLIENT_H_
 
+#include <memory>
 #include "instance.h"
 #include "netplay.h"
 
@@ -81,7 +82,7 @@ class ClientInstance: public GameInstance,
 
   void stopMatch();
 
-  netplay::ClientSocket socket_;
+  std::shared_ptr<netplay::ClientSocket> socket_;
 };
 
 #endif

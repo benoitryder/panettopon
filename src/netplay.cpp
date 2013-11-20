@@ -1,11 +1,9 @@
 #include <cstring>
-#include <boost/bind.hpp>
+#include <functional>
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
-#include <boost/asio/placeholders.hpp>
 #include "netplay.h"
 #include "netplay.pb.h"
-#include "deletion_handler.h"
 #include "log.h"
 
 
@@ -14,6 +12,7 @@ using namespace asio::ip;
 
 
 namespace netplay {
+
 
 const uint32_t BaseSocket::pkt_size_max = 50*1024;
 
@@ -81,9 +80,10 @@ void PacketSocket::onReadSize(const boost::system::error_code& ec)
         }
         read_buf_ = new char[read_buf_size_];
       }
+      auto self = std::static_pointer_cast<PacketSocket>(shared_from_this());
       asio::async_read(
           socket_, asio::buffer(read_buf_, read_size_),
-          boost::bind(&PacketSocket::onReadData, this, asio::placeholders::error));
+          std::bind(&PacketSocket::onReadData, self, std::placeholders::_1));
     }
   } else {
     this->processError("read error", ec);
@@ -139,9 +139,10 @@ std::string PacketSocket::serializePacket(const Packet& pkt)
 
 void PacketSocket::readNext()
 {
+  auto self = std::static_pointer_cast<PacketSocket>(shared_from_this());
   asio::async_read(
       socket_, asio::buffer(read_size_buf_, sizeof(read_size_buf_)),
-      boost::bind(&PacketSocket::onReadSize, this, asio::placeholders::error));
+      std::bind(&PacketSocket::onReadSize, self, std::placeholders::_1));
 }
 
 void PacketSocket::onWrite(const boost::system::error_code& ec)
@@ -167,9 +168,10 @@ void PacketSocket::onWrite(const boost::system::error_code& ec)
 
 void PacketSocket::writeNext()
 {
+  auto self = std::static_pointer_cast<PacketSocket>(shared_from_this());
   asio::async_write(
       socket_, asio::buffer(write_queue_.front()),
-      boost::bind(&PacketSocket::onWrite, this, asio::placeholders::error));
+      std::bind(&PacketSocket::onWrite, self, std::placeholders::_1));
 }
 
 void PacketSocket::writeRaw(const std::string& s)
@@ -185,7 +187,7 @@ void PacketSocket::writeRaw(const std::string& s)
 
 PeerSocket::PeerSocket(ServerSocket& server):
     PacketSocket(server.io_service()),
-    server_(server), has_error_(false)
+    server_(&server), has_error_(false)
 {
 }
 
@@ -214,22 +216,27 @@ void PeerSocket::processError(const std::string& msg, const boost::system::error
 
 void PeerSocket::processPacket(const netplay::Packet& pkt)
 {
-  server_.observer_.onPeerPacket(this, pkt);
+  if(server_) {
+    server_->observer_.onPeerPacket(this, pkt);
+  }
 }
 
 void PeerSocket::close()
 {
   PacketSocket::close();
-  ServerSocket::PeerSocketContainer& peers = server_.peers_;
-  ServerSocket::PeerSocketContainer::iterator it;
-  for(it=peers.begin(); it!=peers.end(); ++it) {
-    if( &(*it) == this ) {
-      server_.peers_del_.push_back(peers.release(it).release());
-      io_service().post(boost::bind(&ServerSocket::doRemovePeer, &server_, this));
-      return;
+  // remove from server peers
+  if(server_) {
+    ServerSocket::PeerSocketContainer& peers = server_->peers_;
+    for(auto it=peers.begin(); it!=peers.end(); ++it) {
+      if( (*it).get() == this ) {
+        peers.erase(it);
+        server_->observer_.onPeerDisconnect((*it).get());
+        server_ = nullptr;
+        return;
+      }
     }
+    assert( !"peer not found" );
   }
-  assert( !"peer not found" );
 }
 
 
@@ -260,6 +267,10 @@ void ServerSocket::close()
   if( acceptor_.is_open() ) {
     acceptor_.close();
   }
+  // close all peers
+  while(!peers_.empty()) {
+    peers_.back()->close();
+  }
 }
 
 
@@ -267,9 +278,9 @@ void ServerSocket::broadcastPacket(const netplay::Packet& pkt, const PeerSocket*
 {
   const std::string s = PacketSocket::serializePacket(pkt);
   PeerSocketContainer::iterator it;
-  for( it=peers_.begin(); it!=peers_.end(); ++it ) {
-    if( &(*it) != except ) {
-      (*it).writeRaw(s);
+  for(auto& peer : peers_) {
+    if(peer.get() != except) {
+      peer->writeRaw(s);
     }
   }
 }
@@ -278,10 +289,11 @@ void ServerSocket::broadcastPacket(const netplay::Packet& pkt, const PeerSocket*
 void ServerSocket::acceptNext()
 {
   assert(!peer_accept_);
-  peer_accept_.reset(new PeerSocket(*this));
+  peer_accept_ = std::make_shared<PeerSocket>(*this);
+  auto self = shared_from_this();
   acceptor_.async_accept(
       peer_accept_->socket_, peer_accept_->peer(),
-      boost::bind(&ServerSocket::onAccept, this, asio::placeholders::error));
+      std::bind(&ServerSocket::onAccept, self, std::placeholders::_1));
 }
 
 void ServerSocket::onAccept(const boost::system::error_code& ec)
@@ -289,8 +301,9 @@ void ServerSocket::onAccept(const boost::system::error_code& ec)
   if( ec == asio::error::operation_aborted ) {
     return;
   } else if( !ec ) {
-    peers_.push_back(peer_accept_.release());
-    PeerSocket& peer = peers_.back();
+    peers_.push_back(peer_accept_);
+    peer_accept_.reset();
+    PeerSocket& peer = *peers_.back();
     try {
       peer.socket_.set_option(tcp::no_delay(true));
     } catch(const boost::exception& e) {
@@ -304,26 +317,9 @@ void ServerSocket::onAccept(const boost::system::error_code& ec)
   } else {
     LOG("accept error: %s", ec.message().c_str());
     peer_accept_->close();
-    io_service().post(deletion_handler<PeerSocket>(std::move(peer_accept_)));
+    peer_accept_.reset();
   }
   this->acceptNext();
-}
-
-void ServerSocket::doRemovePeer(PeerSocket* peer)
-{
-  PeerSocketContainer::iterator it;
-  for(it=peers_del_.begin(); it!=peers_del_.end(); ++it) {
-    if( &(*it) == peer ) {
-      try {
-        observer_.onPeerDisconnect(peer);
-      } catch(const CallbackError& e) {
-        LOG("peer disconnect error: %s", e.what());
-      }
-      io_service().post(deletion_handler<PeerSocket>(peers_del_.release(it).release()));
-      return;
-    }
-  }
-  assert( !"peer not found" );
 }
 
 
@@ -345,8 +341,9 @@ void ClientSocket::connect(const char* host, int port, int tout)
                              "0"); // port cannot be an integer :(
   tcp::endpoint ep = *resolver.resolve(query);
   ep.port(port); // set port now
+  auto self = std::static_pointer_cast<ClientSocket>(shared_from_this());
   socket_.async_connect(
-      ep, boost::bind(&ClientSocket::onConnect, this, asio::placeholders::error));
+      ep, std::bind(&ClientSocket::onConnect, self, std::placeholders::_1));
   try {
     socket_.set_option(tcp::no_delay(true));
   } catch(const boost::exception& e) {
@@ -354,8 +351,7 @@ void ClientSocket::connect(const char* host, int port, int tout)
   }
   if( tout >= 0 ) {
     timer_.expires_from_now(boost::posix_time::milliseconds(tout));
-    timer_.async_wait(boost::bind(&ClientSocket::onTimeout, this,
-                                  asio::placeholders::error));
+    timer_.async_wait(std::bind(&ClientSocket::onTimeout, self, std::placeholders::_1));
   }
 
   connected_ = true;

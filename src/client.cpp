@@ -1,4 +1,3 @@
-#include <boost/asio/placeholders.hpp>
 #include "client.h"
 #include "game.h"
 #include "log.h"
@@ -8,18 +7,21 @@ using namespace asio::ip;
 
 
 ClientInstance::ClientInstance(Observer& obs, asio::io_service& io_service):
-    observer_(obs), socket_(*this, io_service)
+    observer_(obs), socket_(std::make_shared<netplay::ClientSocket>(*this, io_service))
 {
 }
 
 ClientInstance::~ClientInstance()
 {
+  if(socket) {
+    socket_->close();
+  }
 }
 
 void ClientInstance::connect(const char* host, int port, int tout)
 {
   LOG("connecting to %s:%d ...", host, port);
-  socket_.connect(host, port, tout);
+  socket_->connect(host, port, tout);
   LOG("connected");
   state_ = STATE_LOBBY;
   conf_.toDefault();
@@ -29,7 +31,8 @@ void ClientInstance::disconnect()
 {
   //XXX send a proper "quit" message
   state_ = STATE_NONE;
-  socket_.close();
+  socket_->close();
+  socket_.reset();
 }
 
 void ClientInstance::newLocalPlayer(const std::string& nick)
@@ -37,7 +40,7 @@ void ClientInstance::newLocalPlayer(const std::string& nick)
   netplay::Packet pkt;
   netplay::PktPlayerJoin* np_join = pkt.mutable_player_join();
   np_join->set_nick(nick);
-  socket_.writePacket(pkt);
+  socket_->writePacket(pkt);
 }
 
 
@@ -54,7 +57,7 @@ void ClientInstance::playerSetNick(Player* pl, const std::string& nick)
   netplay::PktPlayerConf* np_conf = pkt.mutable_player_conf();
   np_conf->set_plid(pl->plid());
   np_conf->set_nick(nick);
-  socket_.writePacket(pkt);
+  socket_->writePacket(pkt);
 }
 
 void ClientInstance::playerSetFieldConf(Player* pl, const FieldConf& conf, const std::string& name)
@@ -69,7 +72,7 @@ void ClientInstance::playerSetFieldConf(Player* pl, const FieldConf& conf, const
   netplay::FieldConf* np_fc = np_conf->mutable_field_conf();
   np_fc->set_name(name);
   conf.toPacket(np_fc);
-  socket_.writePacket(pkt);
+  socket_->writePacket(pkt);
 }
 
 void ClientInstance::playerSetReady(Player* pl, bool ready)
@@ -85,7 +88,7 @@ void ClientInstance::playerSetReady(Player* pl, bool ready)
   netplay::PktPlayerState* np_state = pkt.mutable_player_state();
   np_state->set_plid(pl->plid());
   np_state->set_state(netplay::PktPlayerState::READY);
-  socket_.writePacket(pkt);
+  socket_->writePacket(pkt);
 }
 
 void ClientInstance::playerSendChat(Player* pl, const std::string& msg)
@@ -96,7 +99,7 @@ void ClientInstance::playerSendChat(Player* pl, const std::string& msg)
   netplay::PktChat* np_chat = pkt.mutable_chat();
   np_chat->set_plid(pl->plid());
   np_chat->set_txt(msg);
-  socket_.writePacket(pkt);
+  socket_->writePacket(pkt);
 }
 
 void ClientInstance::playerStep(Player* pl, KeyState keys)
@@ -111,7 +114,7 @@ void ClientInstance::playerStep(Player* pl, KeyState keys)
   np_input->set_plid(pl->plid());
   np_input->set_tick(tk);
   np_input->add_keys(keys);
-  socket_.writePacket(pkt);
+  socket_->writePacket(pkt);
 }
 
 void ClientInstance::playerQuit(Player* pl)
@@ -122,7 +125,7 @@ void ClientInstance::playerQuit(Player* pl)
   netplay::PktPlayerState* np_state = pkt.mutable_player_state();
   np_state->set_plid(pl->plid());
   np_state->set_state(netplay::PktPlayerState::LEAVE);
-  socket_.writePacket(pkt);
+  socket_->writePacket(pkt);
 }
 
 
@@ -316,7 +319,7 @@ void ClientInstance::processPktGarbageState(const netplay::PktGarbageState& pkt)
       netplay::PktGarbageState* np_state = pkt_send.mutable_garbage_state();
       np_state->set_gbid( gb->gbid );
       np_state->set_state(netplay::PktGarbageState::DROP);
-      socket_.writePacket(pkt_send);
+      socket_->writePacket(pkt_send);
       gb->to->dropNextGarbage();
     }
 
