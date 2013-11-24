@@ -147,7 +147,7 @@ void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
   GbHangingList::const_iterator gb_it;
   unsigned gb_i;  // avoid display "overflow", max: FIELD_WIDTH*2/3
   for(gb_it=gbw_drbs_.begin(), gb_i=0;
-      gb_it != gbw_drbs_.end() && gb_i<FIELD_HEIGHT*2/3;
+      gb_it != gbw_drbs_.end() && gb_i<FIELD_WIDTH*2/3;
       ++gb_it, gb_i++) {
     target.draw(*gb_it, states);
   }
@@ -506,6 +506,7 @@ FieldDisplay::GbHanging::GbHanging(const StyleField& style, const Garbage& gb):
 
 void FieldDisplay::GbHanging::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
+  states.transform *= getTransform();
   target.draw(bg_, states);
   if( txt_size_ != 0 ) {
     target.draw(txt_, states);
