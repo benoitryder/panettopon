@@ -11,6 +11,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   list(APPEND CMAKE_CXX_FLAGS "-Wall -Wextra -std=gnu++11")
+  if(BUILD_STATIC)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+  endif()
 endif()
 
 if(WIN32)
