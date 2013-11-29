@@ -245,6 +245,8 @@
 
     <style type="text/css"><![CDATA[
 
+      svg { overflow: visible; }
+
       .bk-bg { stroke: none; }
       .bk-flash .bk-fg { fill: white; }
       .bk-mutate .bk-face { fill: none; }
