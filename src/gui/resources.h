@@ -167,7 +167,8 @@ class Stylable
 /** @brief Container for field display resources
  *
  * Style entries:
- *  - ColorNb: number of colors in block map
+ *  - Color.Neutral: neutral block/field color
+ *  - Color.N: block/field color N
  *  - FrameOrigin: origin of field blocks in frame
  */
 class StyleField: public Stylable
@@ -179,8 +180,8 @@ class StyleField: public Stylable
   virtual bool searchStyle(const std::string& prop, std::string* key) const;
   virtual std::string styleErrorSection() const { return style_section_; }
 
-  /// Number of colors
-  unsigned int color_nb;
+  /// List of block/field colors
+  std::vector<sf::Color> colors;
   /// Block pixel size
   unsigned int bk_size;
 

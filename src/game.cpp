@@ -286,7 +286,7 @@ void Field::step(KeyState keys)
             // ntick and group_pos are set below
             garbage_pop++;
           } else if( bkg->state == BkGarbage::MUTATE ) {
-            if( bkg->garbage == NULL ) {
+            if( y < gb->pos.y ) {
               this->transformGarbage(x, y);
             } else {
               bkg->state = BkGarbage::TRANSFORMED;
@@ -880,8 +880,6 @@ void Field::matchGarbage(Block* bk, bool chained)
     for( y=0; y<gb->size.y && gb->pos.y+y<=FIELD_HEIGHT; y++ ) {
       grid_[gb->pos.x+x][gb->pos.y+y] = bk_match;
     }
-    // bottom line: unset garbage field
-    grid_[gb->pos.x+x][gb->pos.y].bk_garbage.garbage = NULL;
   }
 
   // match adjacent garbages
@@ -906,19 +904,8 @@ void Field::matchGarbage(Block* bk, bool chained)
     }
   }
 
-  // remove/update garbage
-  if( --gb->size.y == 0 ) {
-    // ptr_list uses objects but we need to compare pointers
-    boost::ptr_list<Garbage>::iterator it;
-    for( it=gbs_field_.begin(); it!=gbs_field_.end(); ++it ) {
-      if( &(*it) == gb ) {
-        gbs_field_.erase(it);
-        break;
-      }
-    }
-  } else {
-    gb->pos.y++;
-  }
+  gb->size.y--;
+  gb->pos.y++;
 }
 
 void Field::transformGarbage(int x, int y)
@@ -958,6 +945,19 @@ void Field::transformGarbage(int x, int y)
         }
       }
       break;
+    }
+  }
+
+  // remove garbage if it was its last block
+  Garbage* gb = bk->bk_garbage.garbage;
+  if( gb->size.y == 0 && x == gb->pos.x ) {
+    // ptr_list uses objects but we need to compare pointers
+    boost::ptr_list<Garbage>::iterator it;
+    for( it=gbs_field_.begin(); it!=gbs_field_.end(); ++it ) {
+      if( &(*it) == gb ) {
+        gbs_field_.erase(it);
+        break;
+      }
     }
   }
 

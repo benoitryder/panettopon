@@ -125,13 +125,12 @@ FieldDisplay::FieldDisplay(const Field& fld, const StyleField& style):
     sf::Drawable(), field_(fld), style_(style)
 {
   ::memset(crouch_dt_, 0, sizeof(crouch_dt_));
-  //TODO:recup
-  //this->setPosition( slot * 2*style.img_field_frame.getSize().x, 0 );
   this->setOrigin(style_.bk_size*FIELD_WIDTH/2, style_.bk_size*FIELD_HEIGHT/2);
 
   spr_frame_.setTexture(*style_.img_field_frame);
   spr_frame_.setOrigin(style_.frame_origin.x, style_.frame_origin.y);
   spr_frame_.setScale(2,2);
+  spr_frame_.setColor(style_.colors[field_.fldid()]);
 
   style_.tiles_cursor[0].setToSprite(&spr_cursor_, true);
 
@@ -343,17 +342,19 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
 
   } else if( bk.isGarbage() ) {
     const StyleField::TilesGb& tiles = style_.tiles_gb;
+    const Garbage* gb = bk.bk_garbage.garbage;
+    //XXX gb is reset before being transformed
+    const sf::Color& color = style_.colors[(gb && gb->from) ? gb->from->fldid() : 0];
 
     if( bk.bk_garbage.state == BkGarbage::FLASH ) {
       if( (bk.ntick - field_.tick()) % 2 == 0 ) {
-       tiles.mutate.render(target, states, x, y, 1, 1);
+       tiles.mutate.render(target, states, x, y, 1, 1, color);
       } else {
-       tiles.flash.render(target, states, x, y, 1, 1);
+       tiles.flash.render(target, states, x, y, 1, 1, color);
       }
     } else if( bk.bk_garbage.state == BkGarbage::MUTATE ) {
-      tiles.mutate.render(target, states, x, y, 1, 1);
+      tiles.mutate.render(target, states, x, y, 1, 1, color);
     } else {
-      const Garbage* gb = bk.bk_garbage.garbage;
       bool center_mark = gb->size.x > 2 && gb->size.y > 1;
       const int rel_x = 2*(x-gb->pos.x);
       const int rel_y = 2*(y-gb->pos.y);
@@ -374,7 +375,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
         int ty = ( y == gb->pos.y+gb->size.y-1 ) ? 0 : 2;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(target, states, x, y+0.5, 0.5, 0.5);
+      tile->render(target, states, x, y+0.5, 0.5, 0.5, color);
 
       // top right
       if( center_mark &&
@@ -389,7 +390,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
         int ty = ( y == gb->pos.y+gb->size.y-1 ) ? 0 : 2;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(target, states, x+0.5, y+0.5, 0.5, 0.5);
+      tile->render(target, states, x+0.5, y+0.5, 0.5, 0.5, color);
 
       // bottom left
       if( center_mark &&
@@ -404,7 +405,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
         int ty = ( y == gb->pos.y ) ? 3 : 1;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(target, states, x, y, 0.5, 0.5);
+      tile->render(target, states, x, y, 0.5, 0.5, color);
 
       // bottom right
       if( center_mark &&
@@ -419,7 +420,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
         int ty = ( y == gb->pos.y              ) ? 3 : 1;
         tile = &tiles.tiles[tx][ty];
       }
-      tile->render(target, states, x+0.5, y, 0.5, 0.5);
+      tile->render(target, states, x+0.5, y, 0.5, 0.5, color);
     }
   }
 }
@@ -530,6 +531,9 @@ FieldDisplay::GbHanging::GbHanging(const StyleField& style, const Garbage& gb):
   } else {
     //TODO not handled yet
   }
+  const sf::Color& color = style_.colors[gb_.from ? gb_.from->fldid() : 0];
+  txt_.setColor(color);
+  bg_.setColor(color);
 
   this->updateText();
 }
@@ -575,7 +579,6 @@ void FieldDisplay::GbHanging::updateText()
   // reset the whole text to have a "fresh" GetRect()
   //XXX store/cache text style information on StyleField
   style_.applyStyle(&txt_, "Garbage");
-  txt_.setColor(sf::Color::White);
   sf::FloatRect txt_rect = txt_.getLocalBounds();
   float txt_sx = 0.8*style_.bk_size / txt_rect.width;
   float txt_sy = 0.8*style_.bk_size / txt_rect.height;

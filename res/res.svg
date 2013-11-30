@@ -24,14 +24,15 @@
   <defs>
     <!--
 
-    Colors: light / dark
+    Colors: dark / light
       1: #5a0000 / #ef1010
       2: #005a00 / #00e700
       3: #006b6b / #00efef
       4: #524a00 / #dede00
       5: #42008c / #d618ff
       6: #000094 / #3963ff
-      g: #a0a0a0 / #5a5a5a
+      g: #5a5a5a / #a0a0a0
+      n: #5a5a5a / #a0a0a0
 
     -->
 
@@ -136,7 +137,7 @@
     <!-- Garbage parts -->
     <linearGradient id="BkGarbage-gradient"
       x1="0.45" y1="0.45" x2="0.55" y2="0.55">
-      <stop offset="0" stop-color="#505050" />
+      <stop offset="0" stop-color="#a0a0a0" />
       <stop offset="1" stop-color="black" />
     </linearGradient>
     <linearGradient id="BkGarbage-gradient-inverse"
@@ -215,7 +216,7 @@
 
     <!-- Filter for 3D light effect on border -->
     <filter id="Field-Frame-blur" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1" result="blur"/>
     </filter>
 
     <!-- RJ45 socket (units: mm) -->
@@ -335,11 +336,11 @@
 
 
       #Field-Frame-border-bg {
-        fill: #202020;
+        fill: #404040;
       }
 
       #Field-Frame-border-fg {
-        fill: white;
+        fill: #e0e0e0;
       }
 
 

@@ -410,7 +410,16 @@ void StyleField::load(const std::string& section)
 {
   style_section_ = section;
   const IniFile& style = res_mgr_.style();
-  color_nb = style.get<unsigned int>(section, "ColorNb");
+
+  colors.push_back(style.get<sf::Color>(section, "Color.Neutral"));
+  for(unsigned int i=1; i<=16; ++i) {
+    const std::string key = "Color." + std::to_string(i);
+    if(!style.has(section, key)) {
+      break;
+    }
+    colors.push_back(style.get<sf::Color>(section, key));
+  }
+  unsigned int color_nb = colors.size() - 1;
   if( color_nb < 4 ) {
     throw std::runtime_error("ColorNb is too small, must be at least 4");
   }
