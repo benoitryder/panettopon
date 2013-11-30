@@ -5,7 +5,7 @@
 #include "log.h"
 
 
-boost::scoped_ptr<Logger> Logger::logger_;
+std::unique_ptr<Logger> Logger::logger_;
 
 void Logger::flog(const char* fmt, ...)
 {
@@ -39,8 +39,7 @@ void Logger::glog(const char* fmt, ...)
 
 void Logger::setLogger(Logger* logger)
 {
-  boost::scoped_ptr<Logger> new_ptr(logger);
-  logger_.swap(new_ptr);
+  logger_.reset(logger);
 }
 
 

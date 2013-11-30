@@ -1,4 +1,4 @@
-#include <boost/bind.hpp>
+#include <functional>
 #include "screen_menus.h"
 #include "screen_game.h"
 #include "interface.h"
@@ -34,9 +34,9 @@ void ScreenStart::enter()
   button_create->setNeighbors(button_join, button_exit_, NULL, NULL);
   button_exit_->setNeighbors(button_create, button_join, NULL, NULL);
 
-  button_join->setCallback(boost::bind(&ScreenStart::onJoinServer, this));
-  button_create->setCallback(boost::bind(&ScreenStart::onCreateServer, this));
-  button_exit_->setCallback(boost::bind(&GuiInterface::swapScreen, &intf_, nullptr));
+  button_join->setCallback(std::bind(&ScreenStart::onJoinServer, this));
+  button_create->setCallback(std::bind(&ScreenStart::onCreateServer, this));
+  button_exit_->setCallback(std::bind(&GuiInterface::swapScreen, &intf_, nullptr));
 
   this->focus(button_join);
 
@@ -47,7 +47,7 @@ void ScreenStart::enter()
     container_.widgets.push_back(button_debugstart);
 
     button_debugstart->setNeighbors(button_exit_, button_join, NULL, NULL);
-    button_debugstart->setCallback(boost::bind(&ScreenStart::onDebugStart, this));
+    button_debugstart->setCallback(std::bind(&ScreenStart::onDebugStart, this));
     button_join->setNeighbors(button_debugstart, button_create, NULL, NULL);
     button_exit_->setNeighbors(button_create, button_debugstart, NULL, NULL);
 
@@ -315,7 +315,7 @@ void ScreenLobby::enter()
 
   button_ready_ = new WButton(*this, "Ready");
   button_ready_->setCaption(res_mgr.getLang(name_, "Ready"));
-  button_ready_->setCallback(boost::bind(&ScreenLobby::submit, this));
+  button_ready_->setCallback(std::bind(&ScreenLobby::submit, this));
   container_.widgets.push_back(button_ready_);
 
   button_ready_->setNeighbors(NULL, NULL, NULL, NULL);

@@ -1,5 +1,4 @@
-#include <boost/bind.hpp>
-#include <boost/asio/placeholders.hpp>
+#include <functional>
 #include "instance.h"
 #include "netplay.h"
 #include "log.h"
@@ -123,8 +122,7 @@ void GameInputScheduler::start()
   boost::posix_time::time_duration dt = boost::posix_time::microseconds(instance_.conf().tk_usec);
   tick_clock_ = boost::posix_time::microsec_clock::universal_time() + dt;
   timer_.expires_from_now(dt);
-  timer_.async_wait(boost::bind(&GameInputScheduler::onInputTick, this,
-                                boost::asio::placeholders::error));
+  timer_.async_wait(std::bind(&GameInputScheduler::onInputTick, this, std::placeholders::_1));
 }
 
 void GameInputScheduler::stop()
@@ -176,8 +174,7 @@ void GameInputScheduler::onInputTick(const boost::system::error_code& ec)
     boost::posix_time::ptime now = boost::posix_time::microsec_clock::universal_time();
     if( tick_clock_ >= now ) {
       timer_.expires_from_now(tick_clock_ - now);
-      timer_.async_wait(boost::bind(&GameInputScheduler::onInputTick, this,
-                                    boost::asio::placeholders::error));
+      timer_.async_wait(std::bind(&GameInputScheduler::onInputTick, this, std::placeholders::_1));
       break;
     }
   }

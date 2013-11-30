@@ -6,7 +6,7 @@
  */
 
 #include <cstdarg>
-#include <boost/scoped_ptr.hpp>
+#include <memory>
 
 /// Logging macro, for convenience.
 #define LOG (::Logger::glog)
@@ -32,7 +32,7 @@ class Logger
 
  private:
   /// Global logger instance.
-  static boost::scoped_ptr<Logger> logger_;
+  static std::unique_ptr<Logger> logger_;
 };
 
 

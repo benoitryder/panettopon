@@ -1,5 +1,3 @@
-#include <boost/bind.hpp>
-#include <boost/asio/placeholders.hpp>
 #include "interface.h"
 #include "screen_menus.h"
 #include "../inifile.h"
@@ -65,12 +63,11 @@ bool GuiInterface::run(IniFile* cfg)
     return false;
   }
   // postpone swap to the first screen to have access to cfg in enter()
-  io_service_.post(boost::bind(&GuiInterface::enterFirstScreen, this));
+  io_service_.post(std::bind(&GuiInterface::enterFirstScreen, this));
 
   boost::posix_time::time_duration dt = boost::posix_time::milliseconds(window_conf_.redraw_dt);
   redraw_timer_.expires_from_now(dt);
-  redraw_timer_.async_wait(boost::bind(&GuiInterface::onRedrawTick, this,
-                                       asio::placeholders::error));
+  redraw_timer_.async_wait(std::bind(&GuiInterface::onRedrawTick, this, std::placeholders::_1));
 
   assert( cfg_ == NULL );
   cfg_ = cfg;
@@ -253,8 +250,7 @@ void GuiInterface::onRedrawTick(const boost::system::error_code& ec)
   }
 
   redraw_timer_.expires_from_now(next_redraw - boost::posix_time::microsec_clock::universal_time());
-  redraw_timer_.async_wait(boost::bind(&GuiInterface::onRedrawTick, this,
-                                       asio::placeholders::error));
+  redraw_timer_.async_wait(std::bind(&GuiInterface::onRedrawTick, this, std::placeholders::_1));
 }
 
 

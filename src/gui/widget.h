@@ -1,8 +1,8 @@
 #ifndef GUI_WIDGET_H_
 #define GUI_WIDGET_H_
 
+#include <functional>
 #include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/function.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RenderTexture.hpp>
@@ -138,7 +138,7 @@ class WButton: public WFocusable
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
   virtual bool onInputEvent(const sf::Event&);
   virtual void focus(bool focused);
-  typedef boost::function<void()> Callback;
+  typedef std::function<void()> Callback;
   void setCallback(Callback cb) { callback_ = cb; }
 
  protected:

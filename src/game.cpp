@@ -1,4 +1,3 @@
-#include <boost/bind.hpp>
 #include "game.h"
 #include "netplay.h"
 #include "log.h"
@@ -1065,9 +1064,7 @@ bool Match::updateRanks(std::vector<const Field*>& ranked)
 
   if( !to_rank.empty() ) {
     // best player first (lowest tick)
-    std::sort(to_rank.begin(), to_rank.end(),
-              boost::bind(&Field::tick, _1) <
-              boost::bind(&Field::tick, _2));
+    std::sort(to_rank.begin(), to_rank.end(), [](const Field* a, const Field* b) { return a->tick() < b->tick(); });
     unsigned int rank = no_rank_nb - to_rank.size() + 1;
     std::vector<Field*>::iterator it;
     for( it=to_rank.begin(); it!=to_rank.end(); ++it ) {
