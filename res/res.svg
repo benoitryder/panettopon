@@ -213,6 +213,10 @@
 
     <!-- Field parts -->
 
+    <!-- Filter for 3D light effect on border -->
+    <filter id="Field-Frame-blur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+    </filter>
 
     <!-- RJ45 socket (units: mm) -->
     <symbol id="RJ45-socket"
@@ -330,9 +334,12 @@
       #Sign-Combo .lbl-fg { fill: red; }
 
 
-      #Field-Frame {
+      #Field-Frame-border-bg {
         fill: #202020;
-        stroke: #606060;
+      }
+
+      #Field-Frame-border-fg {
+        fill: white;
       }
 
 
@@ -751,22 +758,30 @@
       width="452" height="900"
       style="stroke: none; fill: none;"
       />
-    <!-- drawn clockwise -->
-    <path
-      transform="translate(226,450)"
-      fill-rule="evenodd" stroke-width="8"
-      d="
-      M -196,-384 a 4,4 0,0,1  4,-4
-      h    384    a 4,4 0,0,1  4, 4
-      v    768    a 4,4 0,0,1 -4, 4
-      h   -384    a 4,4 0,0,1 -4,-4
-      z
-      M -220,-432 a 12,12 0,0,1  12,-12
-      h    416    a 12,12 0,0,1  12, 12
-      v    864    a 12,12 0,0,1 -12, 12
-      h   -416    a 12,12 0,0,1 -12,-12
-      z
-      " />
+    <g id="Field-Frame-border"
+      transform="translate(226,450)">
+      <path id="Field-Frame-border-bg"
+        fill-rule="evenodd" stroke-width="0"
+        d="
+        M -192,-384 h 384 v 768 h -384 z
+        M -200,-386 a 6,6 0,0,1  6,-6
+        h    388    a 6,6 0,0,1  6, 6
+        v    772    a 6,6 0,0,1 -6, 6
+        h   -388    a 6,6 0,0,1 -6,-6
+        z
+        " />
+      <path id="Field-Frame-border-fg"
+        fill-rule="evenodd" stroke-width="0"
+        filter="url(#Field-Frame-blur)"
+        d="
+        M -194,-386 h 388 v 772 h -388 z
+        M -198,-386 a 4,4 0,0,1  4,-4
+        h    388    a 4,4 0,0,1  4, 4
+        v    772    a 4,4 0,0,1 -4, 4
+        h   -388    a 4,4 0,0,1 -4,-4
+        z
+        " />
+    </g>
   </g>
 
 
