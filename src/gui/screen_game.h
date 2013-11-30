@@ -30,7 +30,7 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
   Player* player_;  ///< Local controlled player
   GameInputScheduler input_scheduler_;
   StyleField style_field_;
-  typedef boost::ptr_map<PlId, FieldDisplay> FieldDisplayContainer;
+  typedef boost::ptr_map<FldId, FieldDisplay> FieldDisplayContainer;
   FieldDisplayContainer field_displays_;
 
   /// Key bindings.

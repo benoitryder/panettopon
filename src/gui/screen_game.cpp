@@ -66,24 +66,20 @@ void ScreenGame::onStateChange(GameInstance::State state)
   if( state == GameInstance::STATE_LOBBY ) {
     intf_.swapScreen(new ScreenLobby(intf_, player_));
   } else if( state == GameInstance::STATE_READY ) {
+    const auto& fields = intf_.instance()->match().fields();
     // compute values for field display position and size
     const float field_width = style_field_.bk_size * (FIELD_WIDTH+2);
     const float field_height = style_field_.bk_size * (FIELD_HEIGHT+4);
-    const unsigned int nfields = intf_.instance()->match().fields().size();
     const auto screen_size = intf_.window().getView().getSize();
-    const float dx = screen_size.x / nfields;
+    const float dx = screen_size.x / fields.size();
     const float scale = std::min(dx / field_width, screen_size.y / field_height);
 
     // create a field display for each playing player
-    float x = (-0.5*nfields + 0.5) * dx;
-    for(auto pair : intf_.instance()->players()) {
-      Player* pl = pair.second;
-      if(!pl->field()) {
-        continue; // not playing
-      }
-      PlId plid = pl->plid(); // intermediate variable because a ref is required
-      FieldDisplay* fdp = new FieldDisplay(*pl->field(), style_field_);
-      field_displays_.insert(plid, fdp);
+    float x = (-0.5*fields.size() + 0.5) * dx;
+    for(const auto& field : fields) {
+      FldId fldid = field.fldid(); // intermediate variable because a ref is required
+      FieldDisplay* fdp = new FieldDisplay(field, style_field_);
+      field_displays_.insert(fldid, fdp);
       fdp->scale(scale, scale);
       fdp->move(x, 0);
       x += dx;

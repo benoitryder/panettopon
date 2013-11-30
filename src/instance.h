@@ -68,6 +68,7 @@ class Player
   void setFieldConf(const FieldConf& conf, const std::string& name);
   const Field* field() const { return field_; }
   Field* field() { return field_; }
+  FldId fldid() const { return field_ ? field_->fldid() : 0; }
   void setField(Field* fld) { field_ = fld; }
 
  private:

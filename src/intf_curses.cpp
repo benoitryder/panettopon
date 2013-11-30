@@ -250,14 +250,9 @@ void CursesInterface::onStateChange(GameInstance::State state)
     assert( wmsg_ != NULL ); //XXX error
     ::scrollok(wmsg_, TRUE);
 
-    GameInstance::PlayerContainer::const_iterator it;
-    for( it=instance_.players().begin(); it!=instance_.players().end(); ++it ) {
-      const Field* fld = (*it).second->field();
-      if( fld == NULL ) {
-        continue;
-      }
-      FieldDisplay* fdp = new FieldDisplay(*this, *fld, fdisplays_.size());
-      fdisplays_.insert(fld, fdp);
+    for(const auto& field : intf_.instance()->match().fields()) {
+      FieldDisplay* fdp = new FieldDisplay(*this, field, fdisplays_.size());
+      fdisplays_.insert(field, fdp);
       fdp->draw();
     }
     ::redrawwin(stdscr);

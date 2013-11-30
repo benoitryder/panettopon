@@ -42,8 +42,8 @@ void FieldConf::toPacket(netplay::FieldConf* pkt) const
 }
 
 
-Field::Field(const FieldConf& conf, uint32_t seed):
-    seed_(seed), rank_(0), conf_(conf)
+Field::Field(FldId fldid, const FieldConf& conf, uint32_t seed):
+    fldid_(fldid), seed_(seed), rank_(0), conf_(conf)
 {
   ::memset(grid_, 0, sizeof(grid_));
 }
@@ -1002,10 +1002,10 @@ void Match::stop()
   fields_.clear();
 }
 
-Field* Match::newField(const FieldConf& conf, uint32_t seed)
+Field* Match::addField(const FieldConf& conf, uint32_t seed)
 {
   assert( !started_ );
-  Field* fld = new Field(conf, seed);
+  Field* fld = new Field(fields_.size()+1, conf, seed);
   fields_.push_back(fld);
   return fld;
 }

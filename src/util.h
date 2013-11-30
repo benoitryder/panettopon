@@ -23,6 +23,12 @@ typedef uint32_t Tick;
 /// Player ID (not null).
 typedef uint32_t PlId;
 
+/** @brief Field ID (not null).
+ *
+ * All field IDs of a match are contiguous.
+ */
+typedef uint32_t FldId;
+
 /// Garbage ID (not null).
 typedef uint32_t GbId;
 

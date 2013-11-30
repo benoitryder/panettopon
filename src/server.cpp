@@ -617,7 +617,7 @@ void ServerInstance::prepareMatch()
     if( ! pl->ready() ) {
       continue;
     }
-    Field* fld = match_.newField(pl->fieldConf(), seed);
+    Field* fld = match_.addField(pl->fieldConf(), seed);
     pl->setField(fld);
     fld->fillRandom(6);
 

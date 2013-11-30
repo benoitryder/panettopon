@@ -196,9 +196,10 @@ class Field
   };
   typedef boost::ptr_deque<Garbage> GarbageList;
 
-  Field(const FieldConf& conf, uint32_t seed);
+  Field(FldId fldid, const FieldConf& conf, uint32_t seed);
   ~Field();
 
+  FldId fldid() const { return fldid_; }
   Tick tick() const { return tick_; }
   bool lost() const { return lost_; }
   int32_t seed() const { return seed_; }
@@ -345,6 +346,8 @@ class Field
    */
   uint32_t rand();
 
+  /// Field index, different for each field of a match.
+  FldId fldid_;
   /// Cursor position (left block).
   FieldPos cursor_;
   /// Current swap (left block), if swapping
@@ -421,7 +424,7 @@ class Match
   /// Stop the match, remove fields.
   void stop();
   /// Create and return a new field.
-  Field* newField(const FieldConf& conf, uint32_t seed);
+  Field* addField(const FieldConf& conf, uint32_t seed);
   /** @brief Make a field abort.
    *
    * Remove the field but don't destroy nor rank it.

@@ -502,7 +502,7 @@ void ClientInstance::processPktPlayerField(const netplay::PktPlayerField& pkt)
     throw netplay::CallbackError("field already initialized");
   }
 
-  Field* fld = match_.newField(pl->fieldConf(), pkt.seed());
+  Field* fld = match_.addField(pl->fieldConf(), pkt.seed());
   pl->setField(fld);
   if( pkt.blocks_size() > 0 ) {
     //TODO throw exceptions in setGridContentFromPacket
