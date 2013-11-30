@@ -1,6 +1,7 @@
 #ifndef GUI_SCREEN_GAME_H_
 #define GUI_SCREEN_GAME_H_
 
+#include <boost/ptr_container/ptr_map.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include "screen.h"
 #include "resources.h"
@@ -29,7 +30,8 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
   Player* player_;  ///< Local controlled player
   GameInputScheduler input_scheduler_;
   StyleField style_field_;
-  std::unique_ptr<FieldDisplay> fdp_player_; ///< Field display of the local player
+  typedef boost::ptr_map<PlId, FieldDisplay> FieldDisplayContainer;
+  FieldDisplayContainer field_displays_;
 
   /// Key bindings.
   struct {

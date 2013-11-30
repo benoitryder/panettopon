@@ -329,7 +329,7 @@ void ScreenLobby::enter()
   GameInstance::PlayerContainer::const_iterator plit;
   for( plit=players.begin(); plit!=players.end(); ++plit ) {
     const Player& pl = *(*plit).second;
-    PlId plid = pl.plid(); // intermediate variable to help g++
+    PlId plid = pl.plid(); // intermediate variable because a ref is required
     player_rows_.insert(plid, new WPlayerRow(*this, pl));
   }
 

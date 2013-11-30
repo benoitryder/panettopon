@@ -10,8 +10,7 @@ ScreenGame::ScreenGame(GuiInterface& intf, Player* pl):
     Screen(intf, "ScreenGame"),
     player_(pl),
     input_scheduler_(*intf.instance(), *this, intf.io_service()),
-    style_field_(intf.res_mgr()),
-    fdp_player_()
+    style_field_(intf.res_mgr())
 {
   keys_.up    = sf::Keyboard::Up;
   keys_.down  = sf::Keyboard::Down;
@@ -30,16 +29,15 @@ void ScreenGame::enter()
 void ScreenGame::exit()
 {
   input_scheduler_.stop();
-  fdp_player_.reset();
+  field_displays_.clear();
 }
 
 void ScreenGame::redraw()
 {
   sf::RenderWindow& w = intf_.window();
   w.clear(sf::Color(48,48,48)); //XXX:tmp
-  //TODO
-  if(fdp_player_) {
-    w.draw(*fdp_player_);
+  for(const auto& pair : field_displays_) {
+    w.draw(*pair.second);
   }
 }
 
@@ -57,8 +55,9 @@ bool ScreenGame::onInputEvent(const sf::Event& ev)
 
 void ScreenGame::onPlayerStep(Player* pl)
 {
-  if( pl == player_ ) {
-    fdp_player_->step();
+  auto fdp = field_displays_.find(pl->plid());
+  if(fdp != field_displays_.end()) {
+    (*fdp).second->step();
   }
 }
 
@@ -67,10 +66,31 @@ void ScreenGame::onStateChange(GameInstance::State state)
   if( state == GameInstance::STATE_LOBBY ) {
     intf_.swapScreen(new ScreenLobby(intf_, player_));
   } else if( state == GameInstance::STATE_READY ) {
-    assert( player_->field() );
-    fdp_player_.reset(new FieldDisplay(*player_->field(), style_field_));
-    fdp_player_->setScale(0.5, 0.5);
+    // compute values for field display position and size
+    const float field_width = style_field_.bk_size * (FIELD_WIDTH+2);
+    const float field_height = style_field_.bk_size * (FIELD_HEIGHT+4);
+    const unsigned int nfields = intf_.instance()->match().fields().size();
+    const auto screen_size = intf_.window().getView().getSize();
+    const float dx = screen_size.x / nfields;
+    const float scale = std::min(dx / field_width, screen_size.y / field_height);
+
+    // create a field display for each playing player
+    float x = (-0.5*nfields + 0.5) * dx;
+    for(auto pair : intf_.instance()->players()) {
+      Player* pl = pair.second;
+      if(!pl->field()) {
+        continue; // not playing
+      }
+      PlId plid = pl->plid(); // intermediate variable because a ref is required
+      FieldDisplay* fdp = new FieldDisplay(*pl->field(), style_field_);
+      field_displays_.insert(plid, fdp);
+      fdp->scale(scale, scale);
+      fdp->move(x, 0);
+      x += dx;
+    }
+
     intf_.instance()->playerSetReady(player_, true);
+
   } else if( state == GameInstance::STATE_GAME ) {
     LOG("match start");
     input_scheduler_.start();
