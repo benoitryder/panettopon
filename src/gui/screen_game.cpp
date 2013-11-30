@@ -127,18 +127,32 @@ void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   {
-    sf::RenderStates states_bk = states;
-    // scale blocks, reverse Y axis
-    states_bk.transform
-        .translate(0, -(float)style_.bk_size*(lift_offset_-FIELD_HEIGHT-1))
-        .scale(style_.bk_size, -(float)style_.bk_size)
-        ;
+    // change view to clip rendered block to the fied area
+    // use field position and size in relative screen coordinates
+    sf::View view_orig = target.getView();
+    sf::View view(sf::Vector2f(FIELD_WIDTH/2, FIELD_HEIGHT/2), sf::Vector2f(FIELD_WIDTH, FIELD_HEIGHT));
+    sf::FloatRect field_rect = states.transform.transformRect(sf::FloatRect(
+            0, 0,
+            style_.bk_size*FIELD_WIDTH, style_.bk_size*FIELD_HEIGHT));
+    view.setViewport(sf::FloatRect(
+            (field_rect.left - view_orig.getCenter().x) / view_orig.getSize().x + 0.5,
+            (field_rect.top - view_orig.getCenter().y) / view_orig.getSize().y + 0.5,
+            field_rect.width / view_orig.getSize().x,
+            field_rect.height / view_orig.getSize().y));
+    target.setView(view);
+
+    // use a new render state, scaled one block size
+    sf::RenderStates states_bk;
+    // lift blocks, reverse Y axis
+    states_bk.transform.translate(0, -lift_offset_+FIELD_HEIGHT+1).scale(1, -1);
     int x, y;
     for( x=0; x<FIELD_WIDTH; x++ ) {
       for( y=0; y<=FIELD_HEIGHT; y++ ) {
         this->renderBlock(target, states_bk, x, y);
       }
     }
+
+    target.setView(view_orig);
   }
 
   target.draw(spr_frame_, states);
