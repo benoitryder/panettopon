@@ -455,28 +455,15 @@ FieldDisplay::Sign::Sign(const StyleField& style, const FieldPos& pos, bool chai
   //XXX:hack space between combo and chain signs for a same match
   this->move(0, -0.1*style_.bk_size);
 
-  // prepare sign text
-  char buf[5];
-  if( chain) {
-    ::snprintf(buf, sizeof(buf), "x%u", val);
-  } else {
-    ::snprintf(buf, sizeof(buf), "%u", val);
-  }
-  buf[sizeof(buf)-1] = '\0';
-
   // initialize text
   //XXX store/cache text style information on StyleField
   style_.applyStyle(&txt_, "Sign");
-  txt_.setString(buf);
+  txt_.setString(chain ? 'x'+std::to_string(val) : std::to_string(val));
   txt_.setColor(sf::Color::White);
   sf::FloatRect txt_rect = txt_.getLocalBounds();
-  float txt_sx = 0.8*style_.bk_size / txt_rect.width;
-  float txt_sy = 0.8*style_.bk_size / txt_rect.height;
-  if( txt_sx > txt_sy ) {
-    txt_sx = txt_sy; // stretch Y, not X
-  }
-  txt_.setOrigin(txt_rect.width/2, (txt_.getFont()->getLineSpacing(txt_.getCharacterSize())+2)/2);
-  txt_.setScale(txt_sx, txt_sy); // scale after computations (needed for GetRect())
+  float txt_sx = std::min(1.0, 0.8*style_.bk_size / txt_rect.width);
+  txt_.setOrigin(txt_rect.left + txt_rect.width/2, txt_rect.top + txt_rect.height/2);
+  txt_.setScale(txt_sx, 1);
 
   // initialize sprite
   if( chain ) {
@@ -531,9 +518,10 @@ FieldDisplay::GbHanging::GbHanging(const StyleField& style, const Garbage& gb):
   } else {
     //TODO not handled yet
   }
-  const sf::Color& color = style_.colors[gb_.from ? gb_.from->fldid() : 0];
-  txt_.setColor(color);
-  bg_.setColor(color);
+  bg_.setColor(style_.colors[gb_.from ? gb_.from->fldid() : 0]);
+  //XXX store/cache text style information on StyleField
+  style_.applyStyle(&txt_, "Garbage");
+  txt_.setColor(sf::Color::White);
 
   this->updateText();
 }
@@ -571,22 +559,12 @@ void FieldDisplay::GbHanging::updateText()
   }
   txt_size_ = gb_.size.y;
 
-  // prepare sign text
-  char buf[5];
-  ::snprintf(buf, sizeof(buf), "x%u", txt_size_);
-  buf[sizeof(buf)-1] = '\0';
-
-  // reset the whole text to have a "fresh" GetRect()
-  //XXX store/cache text style information on StyleField
-  style_.applyStyle(&txt_, "Garbage");
+  txt_.setString('x'+std::to_string(txt_size_));
+  txt_.setScale(1, 1); // reset scale before getting rect
   sf::FloatRect txt_rect = txt_.getLocalBounds();
-  float txt_sx = 0.8*style_.bk_size / txt_rect.width;
-  float txt_sy = 0.8*style_.bk_size / txt_rect.height;
-  if( txt_sx > txt_sy ) {
-    txt_sx = txt_sy; // stretch Y, not X
-  }
-  txt_.setOrigin(txt_rect.width/2, (txt_.getFont()->getLineSpacing(txt_.getCharacterSize())+2)/2);
-  txt_.setScale(txt_sx, txt_sy); // scale after computations (needed)
+  float txt_sx = std::min(1.0, 0.8*style_.bk_size / txt_rect.width);
+  txt_.setOrigin(txt_rect.left + txt_rect.width/2, txt_rect.top + txt_rect.height/2);
+  txt_.setScale(txt_sx, 1); // scale after computations (needed)
 }
 
 
