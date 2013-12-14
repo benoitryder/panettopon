@@ -83,11 +83,11 @@ void ScreenStart::onDebugStart()
   intf_.swapScreen(new ScreenGame(intf_, pl1));
   // lobby: players are ready
   GameInstance* instance = intf_.instance();
-  instance->playerSetReady(pl1, true);
-  instance->playerSetReady(pl2, true);
+  instance->playerSetState(pl1, Player::State::LOBBY_READY);
+  instance->playerSetState(pl2, Player::State::LOBBY_READY);
   // game start: players are ready (again)
-  instance->playerSetReady(pl1, true);
-  instance->playerSetReady(pl2, true);
+  instance->playerSetState(pl1, Player::State::GAME_READY);
+  instance->playerSetState(pl2, Player::State::GAME_READY);
 }
 
 void ScreenStart::onJoinServer()
@@ -366,9 +366,9 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
 
 void ScreenLobby::onStateChange(GameInstance::State state)
 {
-  if( state == GameInstance::STATE_LOBBY ) {
+  if(state == GameInstance::State::LOBBY) {
     this->updateReadyButtonCaption();
-  } else if( state == GameInstance::STATE_INIT ) {
+  } else if(state == GameInstance::State::GAME_INIT) {
     intf_.swapScreen(new ScreenGame(intf_, player_));
   }
 }
@@ -385,9 +385,14 @@ void ScreenLobby::onPlayerChangeNick(Player* pl, const std::string& )
   player_rows_.find(pl->plid())->second->update();
 }
 
-void ScreenLobby::onPlayerReady(Player* pl)
+void ScreenLobby::onPlayerStateChange(Player* pl, Player::State)
 {
-  player_rows_.find(pl->plid())->second->update();
+  if(pl->state() == Player::State::QUIT) {
+    player_rows_.erase(pl->plid());
+    this->updatePlayerRowsPos();
+  } else {
+    player_rows_.find(pl->plid())->second->update();
+  }
 }
 
 void ScreenLobby::onPlayerChangeFieldConf(Player* pl)
@@ -395,26 +400,20 @@ void ScreenLobby::onPlayerChangeFieldConf(Player* pl)
   player_rows_.find(pl->plid())->second->update();
 }
 
-void ScreenLobby::onPlayerQuit(Player* pl)
-{
-  player_rows_.erase(pl->plid());
-  this->updatePlayerRowsPos();
-}
-
 
 void ScreenLobby::submit()
 {
   GameInstance* instance = intf_.instance();
   assert( instance );
-  if( instance->state() == GameInstance::STATE_LOBBY ) {
-    instance->playerSetReady(player_, !player_->ready());
+  if(instance->state() == GameInstance::State::LOBBY) {
+    instance->playerSetState(player_, player_->state() == Player::State::LOBBY ? Player::State::LOBBY_READY : Player::State::LOBBY);
     this->updateReadyButtonCaption();
   }
 }
 
 void ScreenLobby::updateReadyButtonCaption()
 {
-  const std::string caption = player_->ready() ? "Waiting" : "Ready";
+  const std::string caption = player_->state() == Player::State::LOBBY_READY ? "Waiting" : "Ready";
   button_ready_->setCaption(intf_.res_mgr().getLang("ScreenLobby", caption));
 }
 
@@ -472,7 +471,7 @@ void ScreenLobby::WPlayerRow::draw(sf::RenderTarget& target, sf::RenderStates st
   states.transform *= getTransform();
   target.draw(nick_, states);
   target.draw(conf_, states);
-  if( player_.ready() ) {
+  if(player_.state() == Player::State::LOBBY_READY) {
     target.draw(ready_, states);
   }
 }

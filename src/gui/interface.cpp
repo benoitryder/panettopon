@@ -107,19 +107,14 @@ void GuiInterface::onPlayerChangeNick(Player* pl, const std::string& nick)
   screen_->onPlayerChangeNick(pl, nick);
 }
 
-void GuiInterface::onPlayerReady(Player* pl)
+void GuiInterface::onPlayerStateChange(Player* pl, Player::State state)
 {
-  screen_->onPlayerReady(pl);
+  screen_->onPlayerStateChange(pl, state);
 }
 
 void GuiInterface::onPlayerChangeFieldConf(Player* pl)
 {
   screen_->onPlayerChangeFieldConf(pl);
-}
-
-void GuiInterface::onPlayerQuit(Player* pl)
-{
-  screen_->onPlayerQuit(pl);
 }
 
 void GuiInterface::onStateChange(GameInstance::State state)

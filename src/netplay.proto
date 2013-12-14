@@ -74,7 +74,7 @@ message FieldConf {
 ////  Server
 
 // Set server configuration
-// Only valid in LOBBY server state.
+// Only valid in LOBBY client state.
 // If field_confs is empty, current field configurations are not updated.
 message PktServerConf {
   optional uint32 pl_nb_max    = 1 [default =     2];
@@ -86,10 +86,10 @@ message PktServerConf {
 // Change server state
 message PktServerState {
   enum State {
-    LOBBY = 1; // no active match
-    INIT  = 2; // match init are being sent
-    READY = 3; // init done, waiting for players to be ready
-    GAME  = 4; // match is running
+    LOBBY = 1;  // no active match
+    GAME_INIT = 2;  // match init are being sent
+    GAME_READY = 3;  // init done, waiting for players to be ready
+    GAME = 4;  // match is running
   }
   required State state = 1;
 }
@@ -114,12 +114,15 @@ message PktPlayerConf {
 }
 
 // Change player state
-// The ready state must be automatically reset when server state changes.
 message PktPlayerState {
   enum State {
-    LEAVE = 1;
-    PREPARE = 2;
-    READY = 3;
+    QUIT = 1;  // left or is leaving the server
+    LOBBY = 2;  // in the lobby
+    LOBBY_READY = 3;  // in the lobby, ready to play
+    GAME_READY = 5;  // init done, waiting for other players to be ready
+    // states set on server state change, not needed in protocol
+    GAME_INIT = 4;  // initializing game
+    GAME = 6;  // in game
   }
   required uint32 plid = 1;
   required State state = 2;

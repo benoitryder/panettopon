@@ -38,11 +38,14 @@ void BasicServerInterface::onPlayerChangeNick(Player* pl, const std::string& nic
       pl->nick().c_str());
 }
 
-void BasicServerInterface::onPlayerReady(Player* pl)
+void BasicServerInterface::onPlayerStateChange(Player* pl, Player::State state)
 {
-  if( pl->ready() ) {
+  Player::State new_state = pl->state();
+  if(new_state == Player::State::QUIT) {
+    LOG("%s(%u) has quit", pl->nick().c_str(), pl->plid());
+  } else if(new_state == Player::State::LOBBY_READY || new_state == Player::State::GAME_READY) {
     LOG("%s(%u) is ready", pl->nick().c_str(), pl->plid());
-  } else {
+  } else if(state == Player::State::LOBBY_READY || state == Player::State::GAME_READY) {
     LOG("%s(%u) is not ready anymore", pl->nick().c_str(), pl->plid());
   }
 }
@@ -53,20 +56,15 @@ void BasicServerInterface::onPlayerChangeFieldConf(Player* pl)
   LOG("%s(%u) changed configuration", pl->nick().c_str(), pl->plid());
 }
 
-void BasicServerInterface::onPlayerQuit(Player* pl)
-{
-  LOG("%s(%u) has quit", pl->nick().c_str(), pl->plid());
-}
-
 void BasicServerInterface::onStateChange(GameInstance::State state)
 {
-  if( state == GameInstance::STATE_LOBBY ) {
+  if(state == GameInstance::State::LOBBY) {
     LOG("match end");
-  } else if( state == GameInstance::STATE_INIT ) {
+  } else if(state == GameInstance::State::GAME_INIT) {
     LOG("match init");
-  } else if( state == GameInstance::STATE_READY ) {
+  } else if(state == GameInstance::State::GAME_READY) {
     LOG("match ready");
-  } else if( state == GameInstance::STATE_GAME ) {
+  } else if(state == GameInstance::State::GAME) {
     LOG("match start");
   }
 }

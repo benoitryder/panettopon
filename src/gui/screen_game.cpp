@@ -63,9 +63,10 @@ void ScreenGame::onPlayerStep(Player* pl)
 
 void ScreenGame::onStateChange(GameInstance::State state)
 {
-  if( state == GameInstance::STATE_LOBBY ) {
+  if(state == GameInstance::State::LOBBY) {
     intf_.swapScreen(new ScreenLobby(intf_, player_));
-  } else if( state == GameInstance::STATE_READY ) {
+
+  } else if(state == GameInstance::State::GAME_READY) {
     const auto& fields = intf_.instance()->match().fields();
     // compute values for field display position and size
     const float field_width = style_field_.bk_size * (FIELD_WIDTH+2);
@@ -85,9 +86,9 @@ void ScreenGame::onStateChange(GameInstance::State state)
       x += dx;
     }
 
-    intf_.instance()->playerSetReady(player_, true);
+    intf_.instance()->playerSetState(player_, Player::State::GAME_READY);
 
-  } else if( state == GameInstance::STATE_GAME ) {
+  } else if(state == GameInstance::State::GAME) {
     LOG("match start");
     input_scheduler_.start();
   }

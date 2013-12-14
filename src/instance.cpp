@@ -17,7 +17,7 @@ void ServerConf::toDefault()
 
 
 Player::Player(PlId plid, bool local):
-    plid_(plid), local_(local), ready_(false), field_(NULL)
+    plid_(plid), local_(local), state_(State::NONE), field_(NULL)
 {
   assert( plid > 0 );
 }
@@ -34,7 +34,7 @@ void Player::setFieldConf(const FieldConf& conf, const std::string& name)
 
 
 GameInstance::GameInstance():
-    state_(STATE_NONE)
+    state_(State::NONE)
 {
 }
 

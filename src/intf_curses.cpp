@@ -194,7 +194,7 @@ void CursesInterface::onPlayerJoined(Player* pl)
   if( pl->local() ) {
     assert( player_ == NULL );
     player_ = pl;
-    instance_.playerSetReady(player_, true);
+    instance_.playerSetState(player_, Player::State::LOBBY_READY);
   }
 }
 
@@ -204,11 +204,18 @@ void CursesInterface::onPlayerChangeNick(Player* pl, const std::string& nick)
                    nick.c_str(), pl->plid(), pl->nick().c_str());
 }
 
-void CursesInterface::onPlayerReady(Player* pl)
+void CursesInterface::onPlayerStateChange(Player* pl, Player::State state)
 {
-  if( pl->ready() ) {
+  Player::State new_state = pl->state();
+  if(new_state == Player::State::QUIT) {
+    this->addMessage(2, "%s(%u) has quit", pl->nick().c_str(), pl->plid());
+    if(pl == player_) {
+      player_ = NULL;
+      io_service_.stop();
+    }
+  } else if(new_state == Player::State::LOBBY_READY || new_state == Player::State::GAME_READY) {
     this->addMessage(2, "%s(%u) is ready", pl->nick().c_str(), pl->plid());
-  } else {
+  } else if(state == Player::State::LOBBY_READY || state == Player::State::GAME_READY) {
     this->addMessage(2, "%s(%u) is not ready anymore", pl->nick().c_str(), pl->plid());
   }
 }
@@ -218,28 +225,20 @@ void CursesInterface::onPlayerChangeFieldConf(Player* pl)
   this->addMessage(2, "%s(%u) changed configuration", pl->nick().c_str(), pl->plid());
 }
 
-void CursesInterface::onPlayerQuit(Player* pl)
-{
-  this->addMessage(2, "%s(%u) has quit", pl->nick().c_str(), pl->plid());
-  if( pl == player_ ) {
-    player_ = NULL;
-    io_service_.stop();
-  }
-}
-
 void CursesInterface::onStateChange(GameInstance::State state)
 {
-  if( state == GameInstance::STATE_LOBBY ) {
+  if(state == GameInstance::State::LOBBY) {
     input_scheduler_.stop();
     this->addMessage(2, "match end");
     fdisplays_.clear();
     if( player_ != NULL ) {
-      instance_.playerSetReady(player_, true);
+      instance_.playerSetState(player_, Player::State::LOBBY_READY);
     }
-  } else if( state == GameInstance::STATE_INIT ) {
+
+  } else if(state == GameInstance::State::GAME_INIT) {
     this->addMessage(2, "match init");
 
-  } else if( state == GameInstance::STATE_READY ) {
+  } else if(state == GameInstance::State::GAME_READY) {
     this->addMessage(2, "match ready");
     assert( fdisplays_.empty() );
     ::clear();
@@ -259,10 +258,10 @@ void CursesInterface::onStateChange(GameInstance::State state)
     ::redrawwin(stdscr);
     ::refresh();
     if( player_ != NULL ) {
-      instance_.playerSetReady(player_, true);
+      instance_.playerSetState(player_, Player::State::GAME_READY);
     }
 
-  } else if( state == GameInstance::STATE_GAME ) {
+  } else if(state == GameInstance::State::GAME) {
     LOG("START");
     input_scheduler_.start();
   }

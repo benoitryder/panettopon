@@ -39,10 +39,9 @@ class ServerInstance: public GameInstance,
   //@{
   virtual void playerSetNick(Player* pl, const std::string& nick);
   virtual void playerSetFieldConf(Player* pl, const FieldConf& conf, const std::string& name);
-  virtual void playerSetReady(Player* pl, bool ready);
+  virtual void playerSetState(Player* pl, Player::State state);
   virtual void playerSendChat(Player* pl, const std::string& msg);
   virtual void playerStep(Player* pl, KeyState keys);
-  virtual void playerQuit(Player* pl);
   //@}
 
   /** @name ServerSocket::Observer interface. */

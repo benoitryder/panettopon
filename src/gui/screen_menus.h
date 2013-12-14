@@ -101,9 +101,8 @@ class ScreenLobby: public ScreenMenu
   virtual void onStateChange(GameInstance::State state);
   virtual void onPlayerJoined(Player*);
   virtual void onPlayerChangeNick(Player*, const std::string&);
-  virtual void onPlayerReady(Player*);
+  virtual void onPlayerStateChange(Player*, Player::State);
   virtual void onPlayerChangeFieldConf(Player*);
-  virtual void onPlayerQuit(Player*);
 
  private:
   /** @brief Display a row of information for a player.

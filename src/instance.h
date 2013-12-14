@@ -54,6 +54,19 @@ struct ServerConf
 class Player
 {
  public:
+  /** @brief Player states
+   * @note Values match protobuf ones.
+   */
+  enum class State {
+    NONE = 0,  ///< not started
+    QUIT = 1,  ///< left os is leaving the server
+    LOBBY,  ///< in the lobby
+    LOBBY_READY,  ///< in the lobby, ready to play
+    GAME_INIT,  ///< initializing game
+    GAME_READY,  ///< game initialization complete
+    GAME,  ///< in game
+  };
+
   Player(PlId plid, bool local);
   virtual ~Player();
 
@@ -61,8 +74,8 @@ class Player
   bool local() const { return local_; }
   const std::string& nick() const { return nick_; }
   void setNick(const std::string& v) { nick_ = v; }
-  bool ready() const { return ready_; }
-  void setReady(bool v) { ready_ = v; }
+  State state() const { return state_; }
+  void setState(State v) { state_ = v; }
   const FieldConf& fieldConf() const { return field_conf_; }
   const std::string& fieldConfName() const { return field_conf_name_; }
   void setFieldConf(const FieldConf& conf, const std::string& name);
@@ -75,7 +88,7 @@ class Player
   PlId plid_;   ///< Player ID
   bool local_;  ///< \e true for local players
   std::string nick_;
-  bool ready_;  ///< ready for server state change
+  State state_;  ///< player actual state
   FieldConf field_conf_;
   std::string field_conf_name_;
   Field* field_;
@@ -87,12 +100,12 @@ class Player
 class GameInstance
 {
  public:
-  enum State {
-    STATE_NONE = 0,  ///< not started
-    STATE_LOBBY,
-    STATE_INIT,
-    STATE_READY,
-    STATE_GAME,
+  enum class State {
+    NONE = 0,  ///< not started
+    LOBBY,
+    GAME_INIT,
+    GAME_READY,
+    GAME,
   };
 
   enum Severity {
@@ -110,12 +123,10 @@ class GameInstance
     virtual void onPlayerJoined(Player* pl) = 0;
     /// Called after player's nick change.
     virtual void onPlayerChangeNick(Player* pl, const std::string& nick) = 0;
-    /// Called after player's ready state change.
-    virtual void onPlayerReady(Player* pl) = 0;
+    /// Called after state update, with old state as parameter
+    virtual void onPlayerStateChange(Player* pl, Player::State state) = 0;
     /// Called after player's field configuration change.
     virtual void onPlayerChangeFieldConf(Player* pl) = 0;
-    /// Called when a player quit.
-    virtual void onPlayerQuit(Player* pl) = 0;
     /// Called on state update.
     virtual void onStateChange(State state) = 0;
     /// Called after a player field step.
@@ -140,10 +151,9 @@ class GameInstance
   //@{
   virtual void playerSetNick(Player* pl, const std::string& nick) = 0;
   virtual void playerSetFieldConf(Player* pl, const FieldConf& conf, const std::string& name) = 0;
-  virtual void playerSetReady(Player* pl, bool ready) = 0;
+  virtual void playerSetState(Player* pl, Player::State state) = 0;
   virtual void playerSendChat(Player* pl, const std::string& msg) = 0;
   virtual void playerStep(Player* pl, KeyState keys) = 0;
-  virtual void playerQuit(Player* pl) = 0;
   //@}
 
   /// Return the player with a given PlId or \e NULL.

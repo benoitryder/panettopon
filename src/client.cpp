@@ -23,14 +23,14 @@ void ClientInstance::connect(const char* host, int port, int tout)
   LOG("connecting to %s:%d ...", host, port);
   socket_->connect(host, port, tout);
   LOG("connected");
-  state_ = STATE_LOBBY;
+  state_ = State::LOBBY;
   conf_.toDefault();
 }
 
 void ClientInstance::disconnect()
 {
   //XXX send a proper "quit" message
-  state_ = STATE_NONE;
+  state_ = State::NONE;
   socket_->close();
   socket_.reset();
 }
@@ -47,7 +47,7 @@ void ClientInstance::newLocalPlayer(const std::string& nick)
 void ClientInstance::playerSetNick(Player* pl, const std::string& nick)
 {
   assert( pl->local() );
-  assert( state_ == STATE_LOBBY && !pl->ready() );
+  assert(pl->state() == Player::State::LOBBY);
   if( nick == pl->nick() ) {
     return; // nothing to do
   }
@@ -63,7 +63,7 @@ void ClientInstance::playerSetNick(Player* pl, const std::string& nick)
 void ClientInstance::playerSetFieldConf(Player* pl, const FieldConf& conf, const std::string& name)
 {
   assert( pl->local() );
-  assert( state_ == STATE_LOBBY && !pl->ready() );
+  assert(pl->state() == Player::State::LOBBY);
   //TODO compare with current conf/name
 
   netplay::Packet pkt;
@@ -75,19 +75,25 @@ void ClientInstance::playerSetFieldConf(Player* pl, const FieldConf& conf, const
   socket_->writePacket(pkt);
 }
 
-void ClientInstance::playerSetReady(Player* pl, bool ready)
+void ClientInstance::playerSetState(Player* pl, Player::State state)
 {
   assert( pl->local() );
-  assert( state_ == STATE_LOBBY || state_ == STATE_READY );
-  if( pl->ready() == ready ) {
-    return; // already ready, do nothing
+  if(pl->state() == state) {
+    return;  // no change
   }
-  pl->setReady(ready);
+
+  // QUIT: set state immediately
+  if(state == Player::State::QUIT) {
+    Player::State old_state = pl->state();
+    pl->setState(state);
+    LOG("%s(%u): state set to QUIT", pl->nick().c_str(), pl->plid());
+    observer_.onPlayerStateChange(pl, old_state);
+  }
 
   netplay::Packet pkt;
   netplay::PktPlayerState* np_state = pkt.mutable_player_state();
   np_state->set_plid(pl->plid());
-  np_state->set_state(netplay::PktPlayerState::READY);
+  np_state->set_state(static_cast<netplay::PktPlayerState::State>(state));
   socket_->writePacket(pkt);
 }
 
@@ -114,17 +120,6 @@ void ClientInstance::playerStep(Player* pl, KeyState keys)
   np_input->set_plid(pl->plid());
   np_input->set_tick(tk);
   np_input->add_keys(keys);
-  socket_->writePacket(pkt);
-}
-
-void ClientInstance::playerQuit(Player* pl)
-{
-  assert( pl->local() );
-
-  netplay::Packet pkt;
-  netplay::PktPlayerState* np_state = pkt.mutable_player_state();
-  np_state->set_plid(pl->plid());
-  np_state->set_state(netplay::PktPlayerState::LEAVE);
   socket_->writePacket(pkt);
 }
 
@@ -178,7 +173,7 @@ void ClientInstance::onServerDisconnect()
 
 void ClientInstance::processPktInput(const netplay::PktInput& pkt)
 {
-  if( state_ != STATE_GAME ) {
+  if(state_ != State::GAME) {
     throw netplay::CallbackError("match is not running");
   }
   Player* pl = this->player(pkt.plid());
@@ -207,7 +202,7 @@ void ClientInstance::processPktInput(const netplay::PktInput& pkt)
 
 void ClientInstance::processPktNewGarbage(const netplay::PktNewGarbage& pkt)
 {
-  if( state_ != STATE_GAME ) {
+  if(state_ != State::GAME) {
     throw netplay::CallbackError("match is not running");
   }
 
@@ -250,7 +245,7 @@ void ClientInstance::processPktNewGarbage(const netplay::PktNewGarbage& pkt)
 
 void ClientInstance::processPktUpdateGarbage(const netplay::PktUpdateGarbage& pkt)
 {
-  if( state_ != STATE_GAME ) {
+  if(state_ != State::GAME) {
     throw netplay::CallbackError("match is not running");
   }
   const Match::GarbageMap gbs_hang = match_.hangingGarbages();
@@ -297,7 +292,7 @@ void ClientInstance::processPktUpdateGarbage(const netplay::PktUpdateGarbage& pk
 
 void ClientInstance::processPktGarbageState(const netplay::PktGarbageState& pkt)
 {
-  if( state_ != STATE_GAME ) {
+  if(state_ != State::GAME) {
     throw netplay::CallbackError("match is not running");
   }
 
@@ -347,7 +342,7 @@ void ClientInstance::processPktGarbageState(const netplay::PktGarbageState& pkt)
 
 void ClientInstance::processPktServerConf(const netplay::PktServerConf& pkt)
 {
-  if( state_ != STATE_LOBBY ) {
+  if(state_ != State::LOBBY) {
     throw netplay::CallbackError("invalid in current state");
   }
 #define SERVER_CONF_EXPR_PKT(n,ini) \
@@ -375,31 +370,47 @@ void ClientInstance::processPktServerState(const netplay::PktServerState& pkt)
 {
   //TODO check whether state change is valid
   State new_state = static_cast<State>(pkt.state());
-  if( new_state == state_ ) {
+  if(new_state == state_) {
     return; // nothing to do, should not happen though
   }
-  // automatically reset ready flag
-  PlayerContainer::iterator it;
-  for( it=players_.begin(); it!=players_.end(); ++it ) {
-    (*it).second->setReady(false);
-  }
 
-  if( new_state == STATE_INIT ) {
+  if(new_state == State::GAME_INIT) {
     if( match_.started() ) {
       this->stopMatch();
     }
     state_ = new_state;
+    // implicit player state changes
+    for(auto const& p : players_) {
+      if(p.second->state() == Player::State::LOBBY_READY) {
+        p.second->setState(Player::State::GAME_INIT);
+      }
+    }
+    LOG("client: state set to GAME_INIT");
     observer_.onStateChange(state_);
-  } else if( new_state == STATE_READY ) {
+
+  } else if(new_state == State::GAME_READY) {
     state_ = new_state;
+    LOG("client: state set to GAME_READY");
     // init fields for match
     match_.start();
     observer_.onStateChange(state_);
-  } else if( new_state == STATE_GAME ) {
+
+  } else if(new_state == State::GAME) {
     state_ = new_state;
+    // implicit player state changes
+    for(auto const& p : players_) {
+      if(p.second->state() == Player::State::GAME_READY) {
+        p.second->setState(Player::State::GAME);
+      }
+    }
+
+    LOG("client: state set to GAME");
     observer_.onStateChange(state_);
-  } else if( new_state == STATE_LOBBY ) {
-    this->stopMatch();
+
+  } else if(new_state == State::LOBBY) {
+    if(match_.started()) {
+      this->stopMatch();
+    }
   }
 }
 
@@ -413,6 +424,7 @@ void ClientInstance::processPktPlayerConf(const netplay::PktPlayerConf& pkt)
     }
     //TODO check we asked for a new local player
     pl = new Player(pkt.plid(), pkt.join());
+    pl->setState(Player::State::LOBBY);
     pl->setNick( pkt.nick() );
     PlId plid = pl->plid(); // use a temporary value to help g++
     players_.insert(plid, pl);
@@ -448,37 +460,58 @@ void ClientInstance::processPktPlayerConf(const netplay::PktPlayerConf& pkt)
 void ClientInstance::processPktPlayerState(const netplay::PktPlayerState& pkt)
 {
   Player* pl = this->player(pkt.plid());
-  if( pl == NULL ) {
+  if(pl == NULL) {
     throw netplay::CallbackError("invalid player");
   }
-
-  netplay::PktPlayerState::State state = pkt.state();
-  if( state == netplay::PktPlayerState::LEAVE ) {
-    observer_.onPlayerQuit(pl);
-    if( pl->field() != NULL ) {
-      match_.removeField(pl->field());
-      pl->setField(NULL);
-    }
-    players_.erase(pl->plid());
-  } else if( state == netplay::PktPlayerState::PREPARE ) {
-    if( state_ != STATE_LOBBY ) {
-      throw netplay::CallbackError("invalid in current state");
-    }
-    if( pl->ready() ) {
-      pl->setReady(false);
-      observer_.onPlayerReady(pl);
-    }
-  } else if( state == netplay::PktPlayerState::READY ) {
-    if( !pl->ready() ) {
-      pl->setReady(true);
-      observer_.onPlayerReady(pl);
-    }
+  if(pl->state() == Player::State::QUIT) {
+    return;  // quitting player cannot be modified
   }
+
+  Player::State new_state = static_cast<Player::State>(pkt.state());
+  Player::State old_state = pl->state();
+  if(new_state == old_state) {
+    return;  // no change
+  }
+
+  bool state_valid = false;
+  switch(new_state) {
+    case Player::State::QUIT:
+      //TODO allow to not remove the player
+      if(pl->field() != NULL) {
+        match_.removeField(pl->field());
+        pl->setField(NULL);
+      }
+      players_.erase(pl->plid());
+      state_valid = true;
+      break;
+    case Player::State::LOBBY:
+      state_valid = state_ == State::LOBBY || state_ == State::GAME;
+      break;
+    case Player::State::LOBBY_READY:
+      state_valid = state_ == State::LOBBY;
+      break;
+
+    case Player::State::GAME_READY:
+      state_valid = state_ == State::GAME_READY && old_state == Player::State::GAME_INIT;
+      break;
+    case Player::State::GAME_INIT:
+    case Player::State::GAME:
+    default:
+      throw netplay::CallbackError("unsettable state");
+  }
+
+  if(!state_valid) {
+    throw netplay::CallbackError("invalid new state");
+  }
+
+  pl->setState(new_state);
+  LOG("%s(%u): state set to %d", pl->nick().c_str(), pl->plid(), static_cast<int>(new_state));
+  observer_.onPlayerStateChange(pl, old_state);
 }
 
 void ClientInstance::processPktPlayerRank(const netplay::PktPlayerRank& pkt)
 {
-  if( state_ != STATE_GAME ) {
+  if(state_ != State::GAME) {
     throw netplay::CallbackError("invalid in current state");
   }
   Player* pl = this->player(pkt.plid());
@@ -491,7 +524,7 @@ void ClientInstance::processPktPlayerRank(const netplay::PktPlayerRank& pkt)
 void ClientInstance::processPktPlayerField(const netplay::PktPlayerField& pkt)
 {
   //XXX support sending of current game fields to new clients
-  if( state_ != STATE_INIT ) {
+  if(state_ != State::GAME_INIT) {
     throw netplay::CallbackError("invalid in current state");
   }
   Player* pl = this->player(pkt.plid());
@@ -520,7 +553,8 @@ void ClientInstance::stopMatch()
     (*it).second->setField(NULL);
   }
   match_.stop();
-  state_ = STATE_LOBBY;
+  state_ = State::LOBBY;
+  LOG("client: state set to LOBBY");
   observer_.onStateChange(state_);
 }
 
