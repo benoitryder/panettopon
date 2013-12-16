@@ -13,7 +13,7 @@ ClientInstance::ClientInstance(Observer& obs, asio::io_service& io_service):
 
 ClientInstance::~ClientInstance()
 {
-  if(socket) {
+  if(socket_) {
     socket_->close();
   }
 }
