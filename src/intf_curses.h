@@ -100,7 +100,7 @@ class FieldDisplay
   };
 
   typedef std::deque<Sign> SignContainer;
-  SignContainer labels_;
+  SignContainer signs_;
 
   /// Return top-left match position.
   FieldPos matchSignPos();
