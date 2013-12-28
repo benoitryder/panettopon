@@ -749,12 +749,13 @@ void ServerInstance::doStepPlayer(Player* pl, KeyState keys)
   bool end_of_match = match_.updateRanks(ranked);
   netplay::PktPlayerRank* np_rank = pkt_send.mutable_player_rank();
   std::vector<const Field*>::iterator it;
-  for(it=ranked.begin(); it!=ranked.end(); ++it) {
-    Player* pl = this->player(*it);
+  for(auto const& fld : ranked) {
+    Player* pl = this->player(fld);
+    LOG("%s(%u): ranked %u", pl->nick().c_str(), pl->plid(), fld->rank());
     // don't send packet for aborted fields (no player)
     if( pl != NULL ) {
       np_rank->set_plid( pl->plid() );
-      np_rank->set_rank( (*it)->rank() );
+      np_rank->set_rank( fld->rank() );
       socket_->broadcastPacket(pkt_send);
     }
   }

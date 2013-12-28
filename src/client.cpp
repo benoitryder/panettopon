@@ -519,6 +519,7 @@ void ClientInstance::processPktPlayerRank(const netplay::PktPlayerRank& pkt)
     throw netplay::CallbackError("invalid player");
   }
   pl->field()->setRank(pkt.rank()); //TODO may fail if already set
+  LOG("%s(%u): ranked %u", pl->nick().c_str(), pl->plid(), pl->field()->rank());
 }
 
 void ClientInstance::processPktPlayerField(const netplay::PktPlayerField& pkt)
