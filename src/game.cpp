@@ -1083,7 +1083,7 @@ bool Match::updateRanks(std::vector<const Field*>& ranked)
   if( no_rank_nb < 2 ) {
     FieldContainer::iterator it;
     for( it=fields_.begin(); it!=fields_.end(); ++it ) {
-      if( (*it).rank() == 0 ) {
+      if( (*it).rank() != 0 ) {
         continue;
       }
       it->setRank(1);
