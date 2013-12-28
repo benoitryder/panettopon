@@ -409,13 +409,13 @@ void Field::step(KeyState keys)
     if( chained ) {
       step_info_.chain = ++chain_;
     }
-    LOG("[%p|%u] match +%d x%d", this, tick_, step_info_.combo, step_info_.chain);
+    LOG("[%u|%u] match +%d x%d", fldid_, tick_, step_info_.combo, step_info_.chain);
   }
 
 
   // Process dropping garbages
   if( !gbs_drop_.empty() && !full && raise ) {
-    LOG("[%p|%u] gb: dropping", this, tick_);
+    LOG("[%u|%u] gb: dropping", fldid_, tick_);
     //TODO drop condition: no drop when flashing/chain
     Garbage* gb = gbs_drop_.pop_front().release();
     gbs_field_.push_back(gb);
@@ -592,7 +592,7 @@ void Field::step(KeyState keys)
       }
     }
     if( cancel ) {
-      LOG("[%p|%u] end of chain", this, tick_);
+      LOG("[%u|%u] end of chain", fldid_, tick_);
       chain_ = 1;
     }
   }
@@ -619,7 +619,7 @@ void Field::step(KeyState keys)
   } else if( !full && raise && stop_dt_ == 0 && raise_dt_ != 0 ) {
     if( raise_dt_ < 0 || --raise_dt_ == 0 ) {
       if( --raise_step_ == 0 ) {
-        LOG("[%p|%u] raise (%s)", this, tick_, raise_dt_<0 ? "manual" : "auto");
+        LOG("[%u|%u] raise (%s)", fldid_, tick_, raise_dt_<0 ? "manual" : "auto");
         this->raise();
       } else if( raise_dt_ == 0 ) {
         this->resetAutoRaise();
@@ -631,14 +631,14 @@ void Field::step(KeyState keys)
 
 void Field::waitGarbageDrop(Garbage* gb)
 {
-  LOG("[%p|%u] waitGarbageDrop(%u)", this, tick_, gb->gbid);
+  LOG("[%u|%u] waitGarbageDrop(%u)", fldid_, tick_, gb->gbid);
   this->removeHangingGarbage(gb);
   gbs_wait_.push_back(gb);
 }
 
 void Field::dropNextGarbage()
 {
-  LOG("[%p|%u] dropNextGarbage()", this, tick_);
+  LOG("[%u|%u] dropNextGarbage()", fldid_, tick_);
   Garbage* gb = gbs_wait_.pop_front().release();
   gb->gbid = 0;
   gbs_drop_.push_back(gb);
@@ -646,13 +646,13 @@ void Field::dropNextGarbage()
 
 void Field::insertHangingGarbage(Garbage* gb, unsigned int pos)
 {
-  LOG("[%p|%u] insertHangingGarbage(%u, %u)", this, tick_, gb->gbid, pos);
+  LOG("[%u|%u] insertHangingGarbage(%u, %u)", fldid_, tick_, gb->gbid, pos);
   gbs_hang_.insert( gbs_hang_.begin()+pos, gb );
 }
 
 void Field::removeHangingGarbage(Garbage* gb)
 {
-  LOG("[%p|%u] removeHangingGarbage(%u)", this, tick_, gb->gbid);
+  LOG("[%u|%u] removeHangingGarbage(%u)", fldid_, tick_, gb->gbid);
   GarbageList::iterator it;
   for( it=gbs_hang_.begin(); it!=gbs_hang_.end(); ++it ) {
     if( &(*it) == gb ) {
