@@ -98,7 +98,7 @@ class ScreenLobby: public ScreenMenu
   virtual void enter();
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event& ev);
-  virtual void onStateChange(GameInstance::State state);
+  virtual void onStateChange();
   virtual void onPlayerJoined(Player*);
   virtual void onPlayerChangeNick(Player*, const std::string&);
   virtual void onPlayerStateChange(Player*);

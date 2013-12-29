@@ -225,8 +225,9 @@ void CursesInterface::onPlayerChangeFieldConf(Player* pl)
   this->addMessage(2, "%s(%u) changed configuration", pl->nick().c_str(), pl->plid());
 }
 
-void CursesInterface::onStateChange(GameInstance::State state)
+void CursesInterface::onStateChange()
 {
+  auto state = instance_.state();
   if(state == GameInstance::State::LOBBY) {
     input_scheduler_.stop();
     this->addMessage(2, "match end");

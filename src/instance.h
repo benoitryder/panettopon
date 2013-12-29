@@ -128,7 +128,7 @@ class GameInstance
     /// Called after player's field configuration change.
     virtual void onPlayerChangeFieldConf(Player* pl) = 0;
     /// Called on state update.
-    virtual void onStateChange(State state) = 0;
+    virtual void onStateChange() = 0;
     /// Called after a player field step.
     virtual void onPlayerStep(Player* pl) = 0;
   };

@@ -385,14 +385,14 @@ void ClientInstance::processPktServerState(const netplay::PktServerState& pkt)
       }
     }
     LOG("client: state set to GAME_INIT");
-    observer_.onStateChange(state_);
+    observer_.onStateChange();
 
   } else if(new_state == State::GAME_READY) {
     state_ = new_state;
     LOG("client: state set to GAME_READY");
     // init fields for match
     match_.start();
-    observer_.onStateChange(state_);
+    observer_.onStateChange();
 
   } else if(new_state == State::GAME) {
     state_ = new_state;
@@ -404,7 +404,7 @@ void ClientInstance::processPktServerState(const netplay::PktServerState& pkt)
     }
 
     LOG("client: state set to GAME");
-    observer_.onStateChange(state_);
+    observer_.onStateChange();
 
   } else if(new_state == State::LOBBY) {
     if(match_.started()) {
@@ -555,6 +555,6 @@ void ClientInstance::stopMatch()
   match_.stop();
   state_ = State::LOBBY;
   LOG("client: state set to LOBBY");
-  observer_.onStateChange(state_);
+  observer_.onStateChange();
 }
 

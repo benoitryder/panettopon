@@ -56,8 +56,9 @@ void BasicServerInterface::onPlayerChangeFieldConf(Player* pl)
   LOG("%s(%u) changed configuration", pl->nick().c_str(), pl->plid());
 }
 
-void BasicServerInterface::onStateChange(GameInstance::State state)
+void BasicServerInterface::onStateChange()
 {
+  auto state = instance_->state();
   if(state == GameInstance::State::LOBBY) {
     LOG("match end");
   } else if(state == GameInstance::State::GAME_INIT) {

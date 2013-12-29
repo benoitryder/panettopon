@@ -364,8 +364,9 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
   return false;
 }
 
-void ScreenLobby::onStateChange(GameInstance::State state)
+void ScreenLobby::onStateChange()
 {
+  auto state = intf_.instance()->state();
   if(state == GameInstance::State::LOBBY) {
     this->updateReadyButtonCaption();
   } else if(state == GameInstance::State::GAME_INIT) {

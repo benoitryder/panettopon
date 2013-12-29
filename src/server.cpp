@@ -661,7 +661,7 @@ void ServerInstance::setState(State state)
 
   state_ = state;
   LOG("server: state set to %d", static_cast<int>(state));
-  observer_.onStateChange(state);
+  observer_.onStateChange();
 }
 
 void ServerInstance::prepareMatch()

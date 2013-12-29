@@ -48,7 +48,7 @@ class Screen: public Stylable
   virtual void onPlayerChangeNick(Player*, const std::string&) {}
   virtual void onPlayerStateChange(Player*) {}
   virtual void onPlayerChangeFieldConf(Player*) {}
-  virtual void onStateChange(GameInstance::State) {}
+  virtual void onStateChange() {}
   virtual void onPlayerStep(Player*) {}
   virtual void onNotification(GameInstance::Severity, const std::string&) {}
   virtual void onServerDisconnect() {}

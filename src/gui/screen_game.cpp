@@ -61,8 +61,9 @@ void ScreenGame::onPlayerStep(Player* pl)
   }
 }
 
-void ScreenGame::onStateChange(GameInstance::State state)
+void ScreenGame::onStateChange()
 {
+  auto state = intf_.instance()->state();
   if(state == GameInstance::State::LOBBY) {
     intf_.swapScreen(new ScreenLobby(intf_, player_));
 

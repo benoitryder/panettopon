@@ -117,9 +117,9 @@ void GuiInterface::onPlayerChangeFieldConf(Player* pl)
   screen_->onPlayerChangeFieldConf(pl);
 }
 
-void GuiInterface::onStateChange(GameInstance::State state)
+void GuiInterface::onStateChange()
 {
-  screen_->onStateChange(state);
+  screen_->onStateChange();
 }
 
 void GuiInterface::onPlayerStep(Player* pl)
