@@ -421,15 +421,12 @@ class Match
 
   /// Start the match, init fields.
   void start();
-  /// Stop the match, remove fields.
+  /// Stop the match, preserve fields and end state
   void stop();
+  /// Clear match fields and other state information
+  void clear();
   /// Create and return a new field.
   Field* addField(const FieldConf& conf, uint32_t seed);
-  /** @brief Make a field abort.
-   *
-   * Remove the field but don't destroy nor rank it.
-   */
-  void removeField(Field* fld);
 
   /** @brief Return the match tick.
    *

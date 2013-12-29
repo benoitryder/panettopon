@@ -48,6 +48,11 @@ bool ScreenGame::onInputEvent(const sf::Event& ev)
       intf_.swapScreen(new ScreenStart(intf_));
       return true;
     }
+  } else if(intf_.instance()->state() == GameInstance::State::LOBBY) {
+    if(ev.key.code == sf::Keyboard::Return) {
+      intf_.swapScreen(new ScreenLobby(intf_, player_));
+      return true;
+    }
   }
 
   return false;
@@ -65,7 +70,7 @@ void ScreenGame::onStateChange()
 {
   auto state = intf_.instance()->state();
   if(state == GameInstance::State::LOBBY) {
-    intf_.swapScreen(new ScreenLobby(intf_, player_));
+    input_scheduler_.stop();
 
   } else if(state == GameInstance::State::GAME_READY) {
     const auto& fields = intf_.instance()->match().fields();

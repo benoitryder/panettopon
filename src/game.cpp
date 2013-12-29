@@ -997,6 +997,11 @@ void Match::stop()
 {
   assert( started_ );
   started_ = false;
+}
+
+void Match::clear()
+{
+  assert(!started_);
   gbs_hang_.clear();
   gbs_wait_.clear();
   fields_.clear();
@@ -1008,13 +1013,6 @@ Field* Match::addField(const FieldConf& conf, uint32_t seed)
   Field* fld = new Field(fields_.size()+1, conf, seed);
   fields_.push_back(fld);
   return fld;
-}
-
-void Match::removeField(Field* fld)
-{
-  // assert( fld in fields_ );
-  fld->abort();
-  this->updateTick(); // field lost, tick must be updated
 }
 
 void Match::updateTick()
@@ -1056,7 +1054,6 @@ bool Match::updateRanks(std::vector<const Field*>& ranked)
       continue;
     }
     no_rank_nb++;
-    //XXX rank aborted fields in Match::removeField() ?
     if( it->lost() && it->tick() <= tick_ ) {
       to_rank.push_back(&(*it));
     }

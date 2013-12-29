@@ -374,9 +374,7 @@ void ClientInstance::processPktServerState(const netplay::PktServerState& pkt)
   }
 
   if(new_state == State::GAME_INIT) {
-    if( match_.started() ) {
-      this->stopMatch();
-    }
+    match_.clear();
     state_ = new_state;
     // implicit player state changes
     for(auto const& p : players_) {
@@ -475,9 +473,9 @@ void ClientInstance::processPktPlayerState(const netplay::PktPlayerState& pkt)
   bool state_valid = false;
   switch(new_state) {
     case Player::State::QUIT:
-      //TODO allow to not remove the player
       if(pl->field() != NULL) {
-        match_.removeField(pl->field());
+        pl->field()->abort();
+        match_.updateTick(); // field lost, tick must be updated
         pl->setField(NULL);
       }
       players_.erase(pl->plid());

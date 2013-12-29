@@ -101,6 +101,9 @@ class ServerInstance: public GameInstance,
   /// Step a player field, process garbages, send Input packets.
   virtual void doStepPlayer(Player* pl, KeyState keys);
 
+  /// Update fields ranks, stop the match if needed
+  void updateRanks();
+
   /// Change state, reset ready flags if needed, send packets.
   void setState(State state);
 

@@ -164,6 +164,13 @@ void ServerInstance::playerSetState(Player* pl, Player::State state)
   bool state_valid = false;
   switch(state) {
     case Player::State::QUIT:
+      if(pl->field() != NULL) {
+        pl->field()->abort();
+        match_.updateTick(); // field lost, tick must be updated
+        pl->setField(NULL);
+      }
+      players_.erase(pl->plid());
+      state_valid = true;
       //TODO special processing
     case Player::State::LOBBY:
       state_valid = state_ == State::LOBBY || state_ == State::GAME;
@@ -406,17 +413,20 @@ void ServerInstance::removePlayer(PlId plid)
   observer_.onPlayerStateChange(pl);
   players_.erase(plid);
   peers_.erase(plid);
+
+  // update ranks (this will stop match if necessary)
+  // the ranking message must to be sent before the QUIT or the player
+  // will not exist anymore on client side
+  if(state_ == State::GAME) {
+    this->updateRanks();
+  }
+
   // tell other players
   netplay::Packet pkt;
   netplay::PktPlayerState* np_state = pkt.mutable_player_state();
   np_state->set_plid(plid);
   np_state->set_state(netplay::PktPlayerState::QUIT);
   socket_->broadcastPacket(pkt);
-  // only one player left: abort the game
-  if( players_.size() < 2 ) {
-    //TODO only if match is started
-    this->stopMatch();
-  }
 }
 
 
@@ -562,10 +572,10 @@ void ServerInstance::processPktPlayerState(netplay::PeerSocket* peer, const netp
   bool state_valid = false;
   switch(new_state) {
     case Player::State::QUIT:
-      //TODO allow to not completely remove the player
       this->removePlayer(pl->plid()); // note: don't disconnect the peer
-      state_valid = true;
-      break;
+      // QUIT state is broadcasted by removePlayer(), don't send it twice
+      this->checkAllPlayersReady();
+      return;
     case Player::State::LOBBY:
       state_valid = state_ == State::LOBBY || state_ == State::GAME;
       break;
@@ -669,6 +679,7 @@ void ServerInstance::prepareMatch()
   LOG("prepare match");
   //XXX check ready player count (there should be at least 1 player)
 
+  match_.clear();
   this->setState(State::GAME_INIT);
 
   int seed = ::rand(); // common seed for all fields
@@ -743,22 +754,26 @@ void ServerInstance::doStepPlayer(Player* pl, KeyState keys)
   //TODO check for clients which never send back the drop packets
   gb_distributor_.updateGarbages(pl->field());
 
-  // ranking
+  this->updateRanks();
+}
+
+
+void ServerInstance::updateRanks()
+{
   std::vector<const Field*> ranked;
   bool end_of_match = match_.updateRanks(ranked);
+
+  netplay::Packet pkt_send;
   netplay::PktPlayerRank* np_rank = pkt_send.mutable_player_rank();
-  std::vector<const Field*>::iterator it;
   for(auto const& fld : ranked) {
     Player* pl = this->player(fld);
+    assert(pl);
     LOG("%s(%u): ranked %u", pl->nick().c_str(), pl->plid(), fld->rank());
-    // don't send packet for aborted fields (no player)
-    if( pl != NULL ) {
-      np_rank->set_plid( pl->plid() );
-      np_rank->set_rank( fld->rank() );
-      socket_->broadcastPacket(pkt_send);
-    }
+    np_rank->set_plid(pl->plid());
+    np_rank->set_rank(fld->rank());
+    socket_->broadcastPacket(pkt_send);
   }
-  if( end_of_match ) {
+  if(end_of_match) {
     this->stopMatch();
   }
 }
