@@ -101,7 +101,7 @@ class ScreenLobby: public ScreenMenu
   virtual void onStateChange(GameInstance::State state);
   virtual void onPlayerJoined(Player*);
   virtual void onPlayerChangeNick(Player*, const std::string&);
-  virtual void onPlayerStateChange(Player*, Player::State);
+  virtual void onPlayerStateChange(Player*);
   virtual void onPlayerChangeFieldConf(Player*);
 
  private:

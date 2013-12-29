@@ -188,7 +188,7 @@ void ServerInstance::playerSetState(Player* pl, Player::State state)
 
   pl->setState(state);
   LOG("%s(%u): state set to %d", pl->nick().c_str(), pl->plid(), static_cast<int>(state));
-  observer_.onPlayerStateChange(pl, old_state);
+  observer_.onPlayerStateChange(pl);
 
   netplay::Packet pkt;
   netplay::PktPlayerState* np_state = pkt.mutable_player_state();
@@ -401,10 +401,9 @@ void ServerInstance::removePlayer(PlId plid)
 {
   Player* pl = this->player(plid);
   assert( pl != NULL );
-  Player::State old_state = pl->state();
   pl->setState(Player::State::QUIT);
   LOG("%s(%u): state set to QUIT", pl->nick().c_str(), pl->plid());
-  observer_.onPlayerStateChange(pl, old_state);
+  observer_.onPlayerStateChange(pl);
   players_.erase(plid);
   peers_.erase(plid);
   // tell other players
@@ -589,7 +588,7 @@ void ServerInstance::processPktPlayerState(netplay::PeerSocket* peer, const netp
 
   pl->setState(new_state);
   LOG("%s(%u): state set to %d", pl->nick().c_str(), pl->plid(), static_cast<int>(new_state));
-  observer_.onPlayerStateChange(pl, old_state);
+  observer_.onPlayerStateChange(pl);
 
   netplay::Packet pkt_send;
   *pkt_send.mutable_player_state() = pkt;

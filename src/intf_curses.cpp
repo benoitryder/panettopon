@@ -204,19 +204,19 @@ void CursesInterface::onPlayerChangeNick(Player* pl, const std::string& nick)
                    nick.c_str(), pl->plid(), pl->nick().c_str());
 }
 
-void CursesInterface::onPlayerStateChange(Player* pl, Player::State state)
+void CursesInterface::onPlayerStateChange(Player* pl)
 {
-  Player::State new_state = pl->state();
-  if(new_state == Player::State::QUIT) {
+  Player::State state = pl->state();
+  if(state == Player::State::QUIT) {
     this->addMessage(2, "%s(%u) has quit", pl->nick().c_str(), pl->plid());
     if(pl == player_) {
       player_ = NULL;
       io_service_.stop();
     }
-  } else if(new_state == Player::State::LOBBY_READY || new_state == Player::State::GAME_READY) {
-    this->addMessage(2, "%s(%u) is ready", pl->nick().c_str(), pl->plid());
   } else if(state == Player::State::LOBBY_READY || state == Player::State::GAME_READY) {
-    this->addMessage(2, "%s(%u) is not ready anymore", pl->nick().c_str(), pl->plid());
+    this->addMessage(2, "%s(%u) is ready", pl->nick().c_str(), pl->plid());
+  } else if(state == Player::State::LOBBY && instance_.state() == GameInstance::State::LOBBY) {
+    this->addMessage(2, "%s(%u) is not ready", pl->nick().c_str(), pl->plid());
   }
 }
 

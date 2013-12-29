@@ -15,7 +15,7 @@ class BasicServerInterface: public ServerInstance::Observer
   virtual void onChat(Player* pl, const std::string& msg);
   virtual void onPlayerJoined(Player* pl);
   virtual void onPlayerChangeNick(Player* pl, const std::string& nick);
-  virtual void onPlayerStateChange(Player* pl, Player::State state);
+  virtual void onPlayerStateChange(Player* pl);
   virtual void onPlayerChangeFieldConf(Player* pl);
   virtual void onStateChange(GameInstance::State state);
   virtual void onPlayerStep(Player* pl);

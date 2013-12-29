@@ -123,8 +123,8 @@ class GameInstance
     virtual void onPlayerJoined(Player* pl) = 0;
     /// Called after player's nick change.
     virtual void onPlayerChangeNick(Player* pl, const std::string& nick) = 0;
-    /// Called after state update, with old state as parameter
-    virtual void onPlayerStateChange(Player* pl, Player::State state) = 0;
+    /// Called after state update
+    virtual void onPlayerStateChange(Player* pl) = 0;
     /// Called after player's field configuration change.
     virtual void onPlayerChangeFieldConf(Player* pl) = 0;
     /// Called on state update.

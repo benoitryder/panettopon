@@ -385,7 +385,7 @@ void ScreenLobby::onPlayerChangeNick(Player* pl, const std::string& )
   player_rows_.find(pl->plid())->second->update();
 }
 
-void ScreenLobby::onPlayerStateChange(Player* pl, Player::State)
+void ScreenLobby::onPlayerStateChange(Player* pl)
 {
   if(pl->state() == Player::State::QUIT) {
     player_rows_.erase(pl->plid());

@@ -84,10 +84,9 @@ void ClientInstance::playerSetState(Player* pl, Player::State state)
 
   // QUIT: set state immediately
   if(state == Player::State::QUIT) {
-    Player::State old_state = pl->state();
     pl->setState(state);
     LOG("%s(%u): state set to QUIT", pl->nick().c_str(), pl->plid());
-    observer_.onPlayerStateChange(pl, old_state);
+    observer_.onPlayerStateChange(pl);
   }
 
   netplay::Packet pkt;
@@ -506,7 +505,7 @@ void ClientInstance::processPktPlayerState(const netplay::PktPlayerState& pkt)
 
   pl->setState(new_state);
   LOG("%s(%u): state set to %d", pl->nick().c_str(), pl->plid(), static_cast<int>(new_state));
-  observer_.onPlayerStateChange(pl, old_state);
+  observer_.onPlayerStateChange(pl);
 }
 
 void ClientInstance::processPktPlayerRank(const netplay::PktPlayerRank& pkt)

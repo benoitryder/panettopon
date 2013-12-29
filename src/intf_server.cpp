@@ -38,15 +38,15 @@ void BasicServerInterface::onPlayerChangeNick(Player* pl, const std::string& nic
       pl->nick().c_str());
 }
 
-void BasicServerInterface::onPlayerStateChange(Player* pl, Player::State state)
+void BasicServerInterface::onPlayerStateChange(Player* pl)
 {
-  Player::State new_state = pl->state();
-  if(new_state == Player::State::QUIT) {
+  Player::State state = pl->state();
+  if(state == Player::State::QUIT) {
     LOG("%s(%u) has quit", pl->nick().c_str(), pl->plid());
-  } else if(new_state == Player::State::LOBBY_READY || new_state == Player::State::GAME_READY) {
-    LOG("%s(%u) is ready", pl->nick().c_str(), pl->plid());
   } else if(state == Player::State::LOBBY_READY || state == Player::State::GAME_READY) {
-    LOG("%s(%u) is not ready anymore", pl->nick().c_str(), pl->plid());
+    LOG("%s(%u) is ready", pl->nick().c_str(), pl->plid());
+  } else if(state == Player::State::LOBBY && instance_->state() == GameInstance::State::LOBBY) {
+    LOG("%s(%u) is not ready", pl->nick().c_str(), pl->plid());
   }
 }
 
