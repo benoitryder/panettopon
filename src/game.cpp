@@ -1184,8 +1184,6 @@ void GarbageDistributor::updateGarbages(Field* fld)
   }
 
   // note: opponent count will never increase, we don't have to update targets
-
-  void updateTick();
   // maps it if there is only one opponent
 
   if( info.chain == 2 ) {
