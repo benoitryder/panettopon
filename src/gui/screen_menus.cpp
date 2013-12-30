@@ -325,12 +325,14 @@ void ScreenLobby::enter()
   player_rows_dy_ = style.get<float>(name_, "PlayerRowsDY");
 
   // add already connected players
-  const GameInstance::PlayerContainer& players = intf_.instance()->players();
-  GameInstance::PlayerContainer::const_iterator plit;
-  for( plit=players.begin(); plit!=players.end(); ++plit ) {
-    const Player& pl = *(*plit).second;
+  // set state of local players to LOBBY
+  for(auto const& p : intf_.instance()->players()) {
+    Player& pl = *p.second;
     PlId plid = pl.plid(); // intermediate variable because a ref is required
     player_rows_.insert(plid, new WPlayerRow(*this, pl));
+    if(pl.local()) {
+      intf_.instance()->playerSetState(&pl, Player::State::LOBBY);
+    }
   }
 
   this->updateReadyButtonCaption();
