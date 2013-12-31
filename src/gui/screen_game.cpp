@@ -325,7 +325,9 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
     const StyleField::TilesBkColor& tiles = style_.tiles_bk_color[bk.bk_color.color];
 
     const ImageTile* tile = &tiles.normal; // default
-    if( bk.bk_color.state == BkColor::FLASH ) {
+    if(field_.lost()) {
+      tile = &tiles.mutate;
+    } else if( bk.bk_color.state == BkColor::FLASH ) {
       if( (bk.ntick - field_.tick()) % 2 == 0 ) {
         tile = &tiles.flash;
       }
@@ -337,7 +339,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
     }
 
     unsigned int crouch_dt = crouch_dt_[x][y];
-    if( crouch_dt == 0 ) {
+    if(crouch_dt == 0 || field_.lost()) {
       tile->render(target, states, x, y, 1, 1, y ? sf::Color::White : sf::Color(96,96,96));
     } else {
       // bounce positions: -1 -> +1 (quick) -> 0 (slow)
