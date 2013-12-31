@@ -43,7 +43,9 @@ void FieldConf::toPacket(netplay::FieldConf* pkt) const
 
 
 Field::Field(FldId fldid, const FieldConf& conf, uint32_t seed):
-    fldid_(fldid), seed_(seed), rank_(0), conf_(conf)
+    fldid_(fldid), seed_(seed), rank_(0),
+    enable_swap_(true), enable_raise_(true),
+    conf_(conf)
 {
   ::memset(grid_, 0, sizeof(grid_));
 }
@@ -100,7 +102,7 @@ void Field::step(KeyState keys)
     }
   }
 
-  bool raise = !this->isSwapping();
+  bool raise = enable_raise_ && !this->isSwapping();
   bool stop_dec = true;
 
   unsigned int color_pop = 0; // a group will pop if != 0
@@ -488,6 +490,12 @@ void Field::step(KeyState keys)
     keys_input = (key_state_^keys)&keys;
     // update key state
     key_state_ = keys;
+  }
+  if(!enable_swap_) {
+    keys_input &= ~GAME_KEY_SWAP;
+  }
+  if(!enable_raise_) {
+    keys_input &= ~GAME_KEY_RAISE;
   }
 
   // process key

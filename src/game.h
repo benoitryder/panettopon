@@ -212,6 +212,9 @@ class Field
   unsigned int rank() const { return rank_; }
   unsigned int raiseStep() const { return raise_step_; }
 
+  void enableSwap(bool v) { enable_swap_ = v; }
+  void enableRaise(bool v) { enable_raise_ = v; }
+
   const StepInfo& stepInfo() const { return step_info_; }
   const FieldConf& conf() const { return conf_; }
   const Block& block(uint8_t x, uint8_t y) const {
@@ -362,6 +365,9 @@ class Field
   bool lost_;           ///< True if field lost
   Tick lost_dt_;        ///< Time with screen full before losing, or 0
   unsigned int rank_;   ///< Rank (1 is 1st), 0 if didn't lost yet
+
+  bool enable_swap_;  ///< Enable swapping
+  bool enable_raise_;  ///< Enable raising the field
 
   /** @brief Field content.
    *
