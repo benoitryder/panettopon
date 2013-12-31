@@ -30,6 +30,9 @@ struct ServerConf
    */
   uint32_t tk_lag_max;
 
+  /// Duration of start countdown
+  uint32_t tk_start_countdown;
+
   /// Field configurations indexed by their name
   std::map<std::string, FieldConf> field_confs;
 };
@@ -43,6 +46,7 @@ struct ServerConf
   expr(pl_nb_max,    PlayerNumber ); \
   expr(tk_usec,      TickPeriod   ); \
   expr(tk_lag_max,   LagTicksLimit); \
+  expr(tk_start_countdown, StartCountdownTicks); \
 }
 
 

@@ -80,6 +80,7 @@ message PktServerConf {
   optional uint32 pl_nb_max    = 1 [default =     2];
   optional uint32 tk_usec      = 2 [default = 16667]; // 60Hz
   optional uint32 tk_lag_max   = 3 [default =    60]; // 1s (at 60Hz)
+  optional uint32 tk_start_countdown = 4 [default = 180]; // 3s (at 60Hz)
   repeated FieldConf field_confs = 10;
 }
 

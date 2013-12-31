@@ -72,6 +72,8 @@ void Field::initMatch()
   ::memset(gb_drop_pos_, 0, sizeof(gb_drop_pos_));
 
   step_info_ = StepInfo();
+  enable_swap_ = false;
+  enable_raise_ = false;
 
   this->resetAutoRaise();
   raise_step_ = conf_.raise_steps;

@@ -72,6 +72,12 @@ void GameInstance::doStepPlayer(Player* pl, KeyState keys)
   Tick prev_tick = fld->tick();
   assert( prev_tick+1 < match_.tick() + conf_.tk_lag_max );
 
+  if(prev_tick == conf_.tk_start_countdown) {
+    // end of start countdown
+    fld->enableSwap(true);
+    fld->enableRaise(true);
+  }
+
   fld->step(keys);
   if( prev_tick == match_.tick() ) {
     // don't update tick_ when it will obviously not be modified
