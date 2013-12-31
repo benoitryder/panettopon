@@ -125,10 +125,10 @@ void ImageTile::create(const sf::Texture* img, int sx, int sy, int x, int y)
 void ImageTile::render(sf::RenderTarget& target, sf::RenderStates states, float x, float y, float w, float h, const sf::Color& c) const
 {
   states.texture = image_;
-  const float left   = rect_.left;
-  const float top    = rect_.top;
-  const float right  = rect_.left + rect_.width;
-  const float bottom = rect_.top  + rect_.height;
+  const float left   = rect_.left + 0.1;
+  const float top    = rect_.top + 0.1;
+  const float right  = rect_.left + rect_.width - 0.1;
+  const float bottom = rect_.top  + rect_.height - 0.1;
 
   const sf::Vertex vertices[] = {
     sf::Vertex(sf::Vector2f(x,   y),   c, sf::Vector2f(left,  bottom)),
