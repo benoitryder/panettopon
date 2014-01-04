@@ -1,5 +1,5 @@
 
-find_package(SFML 2.0 COMPONENTS graphics window system REQUIRED)
+find_package(SFML 2.1 COMPONENTS graphics window system REQUIRED)
 find_package(OpenGL REQUIRED)
 
 #XXX fix a segfault bug on some systems
