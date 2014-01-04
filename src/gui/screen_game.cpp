@@ -139,6 +139,20 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
   spr_frame_.setScale(2,2);
   spr_frame_.setColor(style_.colors[field_.fldid()]);
 
+  // start countdown
+  {
+    std::string key;
+    style_.applyStyle(&text_start_countdown_, "StartCountdown");
+    // use a dummy string to center the text
+    text_start_countdown_.setString("0.0");
+    sf::FloatRect r = text_start_countdown_.getLocalBounds();
+    text_start_countdown_.setOrigin(r.width/2, 0);
+    text_start_countdown_.setPosition(style_.bk_size * FIELD_WIDTH/2, style_.bk_size * 2);
+    if(style_.searchStyle("Color", &key)) {
+      text_start_countdown_.setColor(style_.res_mgr().style().get<sf::Color>(key));
+    }
+  }
+
   style_.tiles_cursor[0].setToSprite(&spr_cursor_, true);
 
   this->step();  // not a step, but do the work
@@ -196,6 +210,9 @@ void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
   for( it=signs_.begin(); it!=signs_.end(); ++it ) {
     target.draw((*it), states);
   }
+
+  // start countdown (empty text when expired)
+  target.draw(text_start_countdown_, states);
 }
 
 
@@ -308,6 +325,17 @@ void FieldDisplay::step()
   // remove remaining garbages (those removed)
   if( gbd_it != gbw_drbs_.end() ) {
     gbw_drbs_.erase(gbd_it, gbw_drbs_.end());
+  }
+
+  // start countdown
+  const ServerConf& server_conf = intf_.instance()->conf();
+  if(field_.tick() < server_conf.tk_start_countdown) {
+    unsigned int ticks = server_conf.tk_start_countdown - field_.tick();
+    char buf[5];
+    ::snprintf(buf, sizeof(buf), "%3.2f", (ticks * server_conf.tk_usec)/1000000.);
+    text_start_countdown_.setString(buf);
+  } else if(field_.tick() == server_conf.tk_start_countdown) {
+    text_start_countdown_.setString("");
   }
 }
 
