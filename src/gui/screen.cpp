@@ -1,3 +1,6 @@
+#ifdef WIN32
+#include <winsock2.h>  // workaround for boost bug
+#endif
 #include <GL/gl.h>
 #include "screen.h"
 #include "interface.h"

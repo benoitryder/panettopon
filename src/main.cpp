@@ -1,3 +1,9 @@
+#ifdef WIN32
+#include <winsock2.h>  // workaround for boost bug
+#include <windows.h>
+#else
+#include <sys/time.h>
+#endif
 #include <unistd.h>
 #include <cstdio>
 #include "inifile.h"
@@ -18,8 +24,25 @@
 /// Default config file.
 #define CONF_FILE_DEFAULT  "panettopon.ini"
 
+
+/// Return current time (used to initialize randomness)
+inline int64_t current_time(void)
+{
+#ifdef WIN32
+  LARGE_INTEGER freq;
+  LARGE_INTEGER t;
+  QueryPerformanceFrequency(&freq);
+  QueryPerformanceCounter(&t);
+  return 1000000*t.QuadPart/freq.QuadPart;
+#else
+  struct timeval tv;
+  gettimeofday(&tv, 0);
+  return tv.tv_sec*1000000 + tv.tv_usec;
+#endif
+}
+
+
 #ifdef USE_WINMAIN
-#include <windows.h>
 #include <shellapi.h>
 
 int main(int /*argc*/, char** argv);
@@ -186,7 +209,7 @@ int main(int /*argc*/, char** argv)
     }
 
     // init randomness
-    ::srand( game_time() );
+    ::srand( current_time() );
 
     const std::string intfstr = cfg.get("Global", "Interface", "server");
 #ifndef WITHOUT_INTF_SERVER
