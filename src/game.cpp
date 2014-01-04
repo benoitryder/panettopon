@@ -1,3 +1,4 @@
+#include <memory>
 #include "game.h"
 #include "netplay.h"
 #include "log.h"
@@ -1301,7 +1302,8 @@ void GarbageDistributor::newGarbage(Field* from, Field* to, Garbage::Type type, 
 {
   assert( to != NULL );
 
-  Garbage* gb = new Garbage;
+  std::unique_ptr<Garbage> gb_unique(new Garbage);
+  Garbage* gb = gb_unique.get();
   gb->gbid = this->nextGarbageId();
   gb->from = from;
   gb->to = to;
@@ -1321,10 +1323,11 @@ void GarbageDistributor::newGarbage(Field* from, Field* to, Garbage::Type type, 
     pos = to->hangingGarbageCount(); // push back
   } else {
     assert( !"not supported yet" );
+    return;
   }
   drop_ticks_[gb] = to->tick() + to->conf().gb_hang_tk;
 
-  match_.addGarbage(gb, pos);
+  match_.addGarbage(gb_unique.release(), pos);
   if( type == Garbage::TYPE_CHAIN ) {
     gbs_chain_[from] = gb;
   }
