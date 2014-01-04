@@ -482,6 +482,13 @@ void Field::step(KeyState keys)
 
   // Input keys, one action per frame
 
+  if(!enable_swap_) {
+    keys &= ~GAME_KEY_SWAP;
+  }
+  if(!enable_raise_) {
+    keys &= ~GAME_KEY_RAISE;
+  }
+
   KeyState keys_input = keys; // candidate processed keys
   if( keys == key_state_ ) {
     //XXX:minor overflow check
@@ -492,12 +499,6 @@ void Field::step(KeyState keys)
     keys_input = (key_state_^keys)&keys;
     // update key state
     key_state_ = keys;
-  }
-  if(!enable_swap_) {
-    keys_input &= ~GAME_KEY_SWAP;
-  }
-  if(!enable_raise_) {
-    keys_input &= ~GAME_KEY_RAISE;
   }
 
   // process key
