@@ -138,6 +138,8 @@ class Stylable
   Stylable(ResourceManager& res_mgr);
   virtual ~Stylable();
 
+  const ResourceManager& res_mgr() const { return res_mgr_; }
+
   /** @brief Get style entry key for a given property
    * @return true if found, false otherwise.
    */

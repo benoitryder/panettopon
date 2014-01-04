@@ -85,7 +85,7 @@ void ScreenGame::onStateChange()
     float x = (-0.5*fields.size() + 0.5) * dx;
     for(const auto& field : fields) {
       FldId fldid = field.fldid(); // intermediate variable because a ref is required
-      FieldDisplay* fdp = new FieldDisplay(field, style_field_);
+      FieldDisplay* fdp = new FieldDisplay(intf_, field, style_field_);
       field_displays_.insert(fldid, fdp);
       fdp->scale(scale, scale);
       fdp->move(x, 0);
@@ -128,8 +128,8 @@ const float FieldDisplay::BOUNCE_Y_MIN       = -48/128.;
 const float FieldDisplay::BOUNCE_Y_MAX       =  60/128.;
 
 
-FieldDisplay::FieldDisplay(const Field& fld, const StyleField& style):
-    sf::Drawable(), field_(fld), style_(style)
+FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const StyleField& style):
+    sf::Drawable(), intf_(intf), field_(fld), style_(style)
 {
   ::memset(crouch_dt_, 0, sizeof(crouch_dt_));
   this->setOrigin(style_.bk_size*FIELD_WIDTH/2, style_.bk_size*FIELD_HEIGHT/2);
