@@ -97,7 +97,7 @@ WFrame::WFrame(const Screen& screen, const std::string& name):
     throw StyleError(*this, "Size", "not set");
   }
 
-  this->applyStyle(&frame_);
+  this->applyStyle(frame_);
 }
 
 void WFrame::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -118,7 +118,7 @@ WButton::WButton(const Screen& screen, const std::string& name):
   const IniFile& style = screen_.style();
   std::string key;
 
-  this->applyStyle(&caption_);
+  this->applyStyle(caption_);
 
   if( searchStyle("Color", &key) ) {
     color_ = style.get<sf::Color>(key);
@@ -136,8 +136,8 @@ WButton::WButton(const Screen& screen, const std::string& name):
     throw StyleError(*this, "Width", "not set");
   }
 
-  this->applyStyle(&frame_);
-  this->applyStyle(&focus_frame_, "Focus");
+  this->applyStyle(frame_);
+  this->applyStyle(focus_frame_, "Focus");
   caption_.setColor(color_);
 }
 
@@ -190,7 +190,7 @@ WLabel::WLabel(const Screen& screen, const std::string& name):
   const IniFile& style = screen_.style();
   std::string key;
 
-  this->applyStyle(&text_);
+  this->applyStyle(text_);
   if( searchStyle("Color", &key) ) {
     text_.setColor(style.get<sf::Color>(key));
   }
@@ -247,7 +247,7 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   const IniFile& style = screen_.style();
   std::string key;
 
-  this->applyStyle(&text_);
+  this->applyStyle(text_);
 
   if( searchStyle("Color", &key) ) {
     color_ = style.get<sf::Color>(key);
@@ -277,8 +277,8 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   cursor_.setColor(focus_color_);
   cursor_.x = text_sprite_.getOrigin().x;
 
-  this->applyStyle(&frame_);
-  this->applyStyle(&focus_frame_, "Focus");
+  this->applyStyle(frame_);
+  this->applyStyle(focus_frame_, "Focus");
 }
 
 void WEntry::setText(const std::string& text)
@@ -424,7 +424,7 @@ WChoice::WChoice(const Screen& screen, const std::string& name):
   const IniFile& style = screen_.style();
   std::string key;
 
-  this->applyStyle(&text_);
+  this->applyStyle(text_);
 
   if( searchStyle("Color", &key) ) {
     color_ = style.get<sf::Color>(key);
@@ -442,8 +442,8 @@ WChoice::WChoice(const Screen& screen, const std::string& name):
     throw StyleError(*this, "Width", "not set");
   }
 
-  this->applyStyle(&frame_);
-  this->applyStyle(&focus_frame_, "Focus");
+  this->applyStyle(frame_);
+  this->applyStyle(focus_frame_, "Focus");
   text_.setColor(color_);
 }
 

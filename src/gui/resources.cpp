@@ -154,6 +154,17 @@ void ImageTile::setToSprite(sf::Sprite* spr, bool center) const
 }
 
 
+void ImageFrame::Style::apply(ImageFrame& o)
+{
+  o.create(image, rect, inside);
+}
+
+void ImageFrameX::Style::apply(ImageFrameX& o)
+{
+  o.create(image, rect, inside_left, inside_width);
+}
+
+
 ImageFrame::ImageFrame():
     image_(NULL)
 {
@@ -286,6 +297,26 @@ void ImageFrameX::render(sf::RenderTarget& target, sf::RenderStates states, floa
 }
 
 
+void StyleText::apply(sf::Text& o)
+{
+  if(!font) {
+    throw std::runtime_error("text style font not set");
+  }
+  o.setFont(*font);
+  o.setCharacterSize(size);
+  o.setBorderWidth(border_width);
+  o.setStyle(style);
+  o.setColor(color);
+  o.setBorderColor(border_color);
+}
+
+void StyleSprite::apply(sf::Sprite& o)
+{
+  o.setTexture(*image, true);
+  o.setTextureRect(rect);
+}
+
+
 Stylable::StyleError::StyleError(const std::string& prop, const std::string& msg):
   std::runtime_error("style error for "+prop+": "+msg) {}
 
@@ -300,22 +331,27 @@ Stylable::Stylable(ResourceManager& res_mgr):
 
 Stylable::~Stylable() {}
 
-void Stylable::applyStyle(sf::Text* text, const std::string prefix) const
+void Stylable::loadStyle(StyleText& style, const std::string prefix) const
 {
-  const IniFile& style = res_mgr_.style();
+  const IniFile& ini = res_mgr_.style();
   std::string key;
 
-  if( searchStyle(prefix+"Font", &key) ) {
-    text->setFont(*res_mgr_.getFont(style.get<std::string>(key)));
-  } else {
+  if(searchStyle(prefix+"Font", &key)) {
+    style.font = res_mgr_.getFont(ini.get<std::string>(key));
+  } else if(!style.font) {
     throw StyleError(*this, prefix+"Font", "not set");
   }
-  if( searchStyle(prefix+"FontSize", &key) ) {
-    text->setCharacterSize(style.get<unsigned int>(key));
+
+  if(searchStyle(prefix+"FontSize", &key)) {
+    style.size = ini.get<unsigned int>(key);
   }
-  if( searchStyle(prefix+"FontStyle", &key) ) {
-    const std::string val = style.get<std::string>(key);
-    int txt_style;
+  if(searchStyle(prefix+"FontBorderWidth", &key)) {
+    style.border_width = ini.get<unsigned int>(key);
+  }
+
+  if(searchStyle(prefix+"FontStyle", &key)) {
+    const std::string val = ini.get<std::string>(key);
+    unsigned int txt_style;
     if( val == "regular" ) {
       txt_style = sf::Text::Regular;
     } else if( val == "bold" ) {
@@ -327,75 +363,86 @@ void Stylable::applyStyle(sf::Text* text, const std::string prefix) const
     } else {
       throw StyleError(key, "invalid value");
     }
-    text->setStyle(txt_style);
+    style.style = txt_style;
+  }
+
+  if(searchStyle(prefix+"FontColor", &key)) {
+    style.color = ini.get<sf::Color>(key);
+  }
+  if(searchStyle(prefix+"FontBorderColor", &key)) {
+    style.border_color = ini.get<sf::Color>(key);
   }
 }
 
-void Stylable::applyStyle(ImageFrame* frame, const std::string prefix) const
+void Stylable::loadStyle(ImageFrame::Style& style, const std::string prefix) const
 {
-  const IniFile& style = res_mgr_.style();
+  const IniFile& ini = res_mgr_.style();
   std::string key;
 
-  if( searchStyle(prefix+"Image", &key) ) {
-    const sf::Texture* img = res_mgr_.getImage(style.get<std::string>(key));
-    sf::IntRect rect(0, 0, img->getSize().x, img->getSize().y);
-    if( searchStyle(prefix+"ImageRect", &key) ) {
-      rect = style.get<sf::IntRect>(key);
+  if(searchStyle(prefix+"Image", &key)) {
+    style.image = res_mgr_.getImage(ini.get<std::string>(key));
+    if(searchStyle(prefix+"ImageRect", &key)) {
+      style.rect = ini.get<sf::IntRect>(key);
+    } else {
+      style.rect = sf::IntRect(0, 0, style.image->getSize().x, style.image->getSize().y);
     }
-    sf::IntRect inside;
-    if( searchStyle(prefix+"ImageInside", &key) ) {
-      inside = style.get<sf::IntRect>(key);
-      if( inside.left < 0 || inside.left+inside.width > rect.width
-         || inside.top < 0 || inside.top+inside.height > rect.height ) {
+    if(searchStyle(prefix+"ImageInside", &key)) {
+      sf::IntRect inside = ini.get<sf::IntRect>(key);
+      if(inside.left < 0 || inside.left+inside.width > style.rect.width ||
+         inside.top < 0 || inside.top+inside.height > style.rect.height) {
         throw StyleError(key, "image inside not contained in image size");
       }
+      style.inside = inside;
     } else {
       throw StyleError(*this, prefix+"ImageInside", "not set");
     }
-    frame->create(img, rect, inside);
-  } else {
+  } else if(!style.image) {
     throw StyleError(*this, prefix+"Image", "not set");
   }
 }
 
-void Stylable::applyStyle(ImageFrameX* frame, const std::string prefix) const
+void Stylable::loadStyle(ImageFrameX::Style& style, const std::string prefix) const
 {
-  const IniFile& style = res_mgr_.style();
+  const IniFile& ini = res_mgr_.style();
   std::string key;
 
-  if( searchStyle(prefix+"Image", &key) ) {
-    const sf::Texture* img = res_mgr_.getImage(style.get<std::string>(key));
-    sf::IntRect rect(0, 0, img->getSize().x, img->getSize().y);
-    if( searchStyle(prefix+"ImageRect", &key) ) {
-      rect = style.get<sf::IntRect>(key);
+  if(searchStyle(prefix+"Image", &key)) {
+    style.image = res_mgr_.getImage(ini.get<std::string>(key));
+    if(searchStyle(prefix+"ImageRect", &key)) {
+      style.rect = ini.get<sf::IntRect>(key);
+    } else {
+      style.rect = sf::IntRect(0, 0, style.image->getSize().x, style.image->getSize().y);
     }
-    if( searchStyle(prefix+"ImageInside", &key) ) {
+    if(searchStyle(prefix+"ImageInside", &key)) {
       std::pair<int, int> inside(0,0);
-      inside = style.get<decltype(inside)>(key);
-      if( inside.first < 0 || inside.first+inside.second > rect.width ) {
+      inside = ini.get<decltype(inside)>(key);
+      if(inside.first < 0 || inside.first+inside.second > style.rect.width) {
         throw StyleError(key, "image inside not contained in image size");
       }
-      frame->create(img, rect, inside.first, inside.second);
+      style.inside_left = inside.first;
+      style.inside_width = inside.second;
     } else {
       throw StyleError(*this, prefix+"ImageInside", "not set");
     }
-  } else {
+  } else if(!style.image) {
     throw StyleError(*this, prefix+"Image", "not set");
   }
 }
 
-void Stylable::applyStyle(sf::Sprite* sprite, const std::string prefix) const
+void Stylable::loadStyle(StyleSprite& style, const std::string prefix) const
 {
-  const IniFile& style = res_mgr_.style();
+  const IniFile& ini = res_mgr_.style();
   std::string key;
 
-  if( searchStyle(prefix+"Image", &key) ) {
-    sprite->setTexture(*res_mgr_.getImage(style.get<std::string>(key)), true);
+  if(searchStyle(prefix+"Image", &key)) {
+    style.image = res_mgr_.getImage(ini.get<std::string>(key));
+    if(searchStyle(prefix+"ImageRect", &key)) {
+      style.rect = ini.get<sf::IntRect>(key);
+    } else {
+      style.rect = sf::IntRect(0, 0, style.image->getSize().x, style.image->getSize().y);
+    }
   } else {
     throw StyleError(*this, prefix+"Image", "not set");
-  }
-  if( searchStyle(prefix+"ImageRect", &key) ) {
-    sprite->setTextureRect(style.get<sf::IntRect>(key));
   }
 }
 

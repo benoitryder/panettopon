@@ -142,7 +142,7 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
   // start countdown
   {
     std::string key;
-    style_.applyStyle(&text_start_countdown_, "StartCountdown");
+    style_.applyStyle(text_start_countdown_, "StartCountdown");
     // use a dummy string to center the text
     text_start_countdown_.setString("0.0");
     sf::FloatRect r = text_start_countdown_.getLocalBounds();
@@ -494,7 +494,7 @@ FieldDisplay::Sign::Sign(const StyleField& style, const FieldPos& pos, bool chai
 
   // initialize text
   //XXX store/cache text style information on StyleField
-  style_.applyStyle(&txt_, "Sign");
+  style_.applyStyle(txt_, "Sign");
   txt_.setString(chain ? 'x'+std::to_string(val) : std::to_string(val));
   txt_.setColor(sf::Color::White);
   sf::FloatRect txt_rect = txt_.getLocalBounds();
@@ -557,7 +557,7 @@ FieldDisplay::GbHanging::GbHanging(const StyleField& style, const Garbage& gb):
   }
   bg_.setColor(style_.colors[gb_.from ? gb_.from->fldid() : 0]);
   //XXX store/cache text style information on StyleField
-  style_.applyStyle(&txt_, "Garbage");
+  style_.applyStyle(txt_, "Garbage");
   txt_.setColor(sf::Color::White);
 
   this->updateText();

@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 #include <SFML/Graphics/Texture.hpp>
-#include <SFML/Graphics/Font.hpp>
+#include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/VertexArray.hpp>
 #include <istream>
 #include "../util.h"
@@ -87,6 +87,14 @@ class ImageTile
 class ImageFrame
 {
  public:
+  struct Style {
+    const sf::Texture* image = nullptr;
+    sf::IntRect rect;
+    sf::IntRect inside;
+    /// Apply style to an object
+    void apply(ImageFrame& o);
+  };
+
   ImageFrame();
   /// Initialize the frame using image subrect and frame inside subrect
   void create(const sf::Texture* img, const sf::IntRect& rect, const sf::IntRect& inside);
@@ -106,6 +114,15 @@ class ImageFrame
 class ImageFrameX
 {
  public:
+  struct Style {
+    const sf::Texture* image = nullptr;
+    sf::IntRect rect;
+    unsigned int inside_left;
+    unsigned int inside_width;
+    /// Apply style to an object
+    void apply(ImageFrameX& o);
+  };
+
   ImageFrameX();
   /// Initialize the frame using image subrect and margin
   void create(const sf::Texture* img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width);
@@ -120,6 +137,36 @@ class ImageFrameX
   unsigned int inside_left_;
   unsigned int inside_width_;
 };
+
+
+/// Container for text style
+struct StyleText
+{
+  const sf::Font* font = nullptr;
+  unsigned int size = 30;
+  unsigned int border_width = 0;
+  unsigned int style = sf::Text::Regular;
+  sf::Color color = sf::Color::White;
+  sf::Color border_color = sf::Color::Black;
+
+  /// Apply style to a Text object
+  void apply(sf::Text& o);
+};
+
+/// Container for sprite style
+struct StyleSprite
+{
+  const sf::Texture* image;
+  sf::IntRect rect;
+  /// Apply style to a Sprite object
+  void apply(sf::Sprite& o);
+};
+
+
+/// Retrieve style container from object type
+template <class T> struct StyleType { typedef typename T::Style container; };
+template <> struct StyleType<sf::Text> { typedef StyleText container; };
+template <> struct StyleType<sf::Sprite> { typedef StyleSprite container; };
 
 
 /** @brief Mixin providing facilities to set style on various elements
@@ -152,14 +199,20 @@ class Stylable
    */
   virtual std::string styleErrorSection() const = 0;
 
-  /// Search and apply text style
-  void applyStyle(sf::Text* text, const std::string prefix="") const;
-  /// Search and apply ImageFrame style
-  void applyStyle(ImageFrame* frame, const std::string prefix="") const;
-  /// Search and apply ImageFrameX style
-  void applyStyle(ImageFrameX* frame, const std::string prefix="") const;
-  /// Search and apply sprite style
-  void applyStyle(sf::Sprite* sprite, const std::string prefix="") const;
+  /// Load text style
+  void loadStyle(StyleText& style, const std::string prefix="") const;
+  /// Load ImageFrame style
+  void loadStyle(ImageFrame::Style& style, const std::string prefix="") const;
+  /// Load ImageFrameX style
+  void loadStyle(ImageFrameX::Style& style, const std::string prefix="") const;
+  /// Load sprite style
+  void loadStyle(StyleSprite& style, const std::string prefix="") const;
+  /// Helper to load then apply a style
+  template <class T> void applyStyle(T& o, const std::string prefix="") const {
+    typename StyleType<T>::container style;
+    loadStyle(style, prefix);
+    style.apply(o);
+  }
 
  protected:
   ResourceManager& res_mgr_;

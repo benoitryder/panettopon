@@ -442,7 +442,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   const IniFile& style = screen_.style();
   std::string key;
 
-  this->applyStyle(&nick_, "Nick");
+  this->applyStyle(nick_, "Nick");
   nick_.setOrigin(0, (nick_.getFont()->getLineSpacing(nick_.getCharacterSize())+2)/2);
   if( searchStyle("NickX", &key) ) {
     nick_.setPosition(style.get<float>(key), 0);
@@ -450,7 +450,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
     throw StyleError(*this, "NickX", "not set");
   }
 
-  this->applyStyle(&conf_, "Conf");
+  this->applyStyle(conf_, "Conf");
   conf_.setOrigin(0, (conf_.getFont()->getLineSpacing(conf_.getCharacterSize())+2)/2);
   if( searchStyle("ConfX", &key) ) {
     conf_.setPosition(style.get<float>(key), 0);
@@ -458,7 +458,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
     throw StyleError(*this, "ConfX", "not set");
   }
 
-  this->applyStyle(&ready_, "Ready");
+  this->applyStyle(ready_, "Ready");
   ready_.setOrigin(ready_.getLocalBounds().width/2.f, ready_.getLocalBounds().height/2.f);
   if( searchStyle("ReadyX", &key) ) {
     ready_.setPosition(style.get<float>(key), 0);
