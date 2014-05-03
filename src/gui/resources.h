@@ -139,7 +139,16 @@ class ImageFrameX
 };
 
 
-/// Container for text style
+/** @brief Container for text style
+ *
+ * Style properties:
+ *  - Font
+ *  - FontSize
+ *  - FontBorderWidth
+ *  - FontStyle
+ *  - FontColor
+ *  - FontBordercolor
+ */
 struct StyleText
 {
   const sf::Font* font = nullptr;
@@ -153,7 +162,12 @@ struct StyleText
   void apply(sf::Text& o);
 };
 
-/// Container for sprite style
+/** @brief Container for sprite style
+ *
+ * Style properties:
+ *  - Image
+ *  - ImageRect
+ */
 struct StyleSprite
 {
   const sf::Texture* image;

@@ -124,11 +124,11 @@ class WFrame: public Widget
 /** @brief Text button with image background
  *
  * Style properties:
- *  - Font, FontSize, FontStyle
- *  - Color, FocusColor
  *  - Width
- *  - Image, ImageRect, ImageInside
- *  - FocusImage, FocusImageRect, FocusImageInside
+ *  - Text.* : see StyleText
+ *  - Frame : see ImageFrameX
+ *  - Focus.Text.* : see StyleText
+ *  - Focus.Frame : see ImageFrameX
  */
 class WButton: public WFocusable
 {
