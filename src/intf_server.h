@@ -19,6 +19,7 @@ class BasicServerInterface: public ServerInstance::Observer
   virtual void onPlayerChangeFieldConf(Player* pl);
   virtual void onStateChange();
   virtual void onPlayerStep(Player* pl);
+  virtual void onPlayerRanked(Player* pl);
   //@}
 
  private:

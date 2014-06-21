@@ -517,6 +517,7 @@ void ClientInstance::processPktPlayerRank(const netplay::PktPlayerRank& pkt)
   }
   pl->field()->setRank(pkt.rank()); //TODO may fail if already set
   LOG("%s(%u): ranked %u", pl->nick().c_str(), pl->plid(), pl->field()->rank());
+  observer_.onPlayerRanked(pl);
 }
 
 void ClientInstance::processPktPlayerField(const netplay::PktPlayerField& pkt)

@@ -127,6 +127,11 @@ void GuiInterface::onPlayerStep(Player* pl)
   screen_->onPlayerStep(pl);
 }
 
+void GuiInterface::onPlayerRanked(Player* pl)
+{
+  screen_->onPlayerRanked(pl);
+}
+
 void GuiInterface::onNotification(GameInstance::Severity sev, const std::string& msg)
 {
   screen_->onNotification(sev, msg);

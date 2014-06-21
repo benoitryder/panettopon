@@ -77,3 +77,8 @@ void BasicServerInterface::onPlayerStep(Player* pl)
   }
 }
 
+void BasicServerInterface::onPlayerRanked(Player* pl)
+{
+  LOG("player(%u) ranked %d", pl->plid(), pl->field()->rank());
+}
+

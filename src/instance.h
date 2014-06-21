@@ -135,6 +135,8 @@ class GameInstance
     virtual void onStateChange() = 0;
     /// Called after a player field step.
     virtual void onPlayerStep(Player* pl) = 0;
+    /// Called when a player rank is set.
+    virtual void onPlayerRanked(Player* pl) = 0;
   };
 
   typedef boost::ptr_map<PlId, Player> PlayerContainer;

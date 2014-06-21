@@ -50,6 +50,7 @@ class Screen: public Stylable
   virtual void onPlayerChangeFieldConf(Player*) {}
   virtual void onStateChange() {}
   virtual void onPlayerStep(Player*) {}
+  virtual void onPlayerRanked(Player*) {}
   virtual void onNotification(GameInstance::Severity, const std::string&) {}
   virtual void onServerDisconnect() {}
   //@}
