@@ -47,12 +47,12 @@ void ServerInstance::loadConf(const IniFile& cfg)
   assert( ! socket_->started() );
   //XXX signed/unsigned and type boundaries not checked
 #define SERVER_CONF_EXPR_LOAD(n,ini) \
-  conf_.n = cfg.get(CONF_SECTION, #ini, conf_.n);
+  conf_.n = cfg.get({CONF_SECTION, #ini}, conf_.n);
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_LOAD);
 #undef SERVER_CONF_EXPR_LOAD
 
   conf_.field_confs.clear();
-  const std::string s_conf = cfg.get(CONF_SECTION, "FieldConfsList", "");
+  const std::string s_conf = cfg.get({CONF_SECTION, "FieldConfsList"}, "");
   if( !s_conf.empty() ) {
     size_t pos = 0;
     for(;;) {
@@ -64,10 +64,10 @@ void ServerInstance::loadConf(const IniFile& cfg)
       const std::string field_conf_section = CONF_SECTION+".FieldConfs"+name;
       FieldConf* fc = &conf_.field_confs[name];
 #define FIELD_CONF_EXPR_INIT(n,ini) \
-      fc->n = cfg.get<decltype(fc->n)>(field_conf_section, #ini);
+      fc->n = cfg.get<decltype(fc->n)>({field_conf_section, #ini});
       FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
 #undef FIELD_CONF_EXPR_INIT
-      const std::string s_raise_adjacent = cfg.get<std::string>(field_conf_section, "RaiseAdjacent");
+      const std::string s_raise_adjacent = cfg.get<std::string>({field_conf_section, "RaiseAdjacent"});
       if( s_raise_adjacent == "never" ) {
         fc->raise_adjacent = FieldConf::ADJACENT_NEVER;
       } else if( s_raise_adjacent == "always" ) {

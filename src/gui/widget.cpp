@@ -11,9 +11,9 @@ Widget::Widget(const Screen& screen, const std::string& name):
     screen_(screen), name_(name)
 {
   const IniFile& style = screen_.style();
-  const std::string section = screen_.name()+'.'+name_;
-  if( style.has(section, "Pos") ) {
-    this->setPosition(style.get<sf::Vector2f>(section, "Pos"));
+  const std::string key = IniFile::join(screen_.name(), name_, "Pos");
+  if(style.has(key)) {
+    this->setPosition(style.get<sf::Vector2f>(key));
   }
 }
 

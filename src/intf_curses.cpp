@@ -30,7 +30,7 @@ CursesInterface::~CursesInterface()
 bool CursesInterface::run(IniFile* cfg)
 {
 #define CONF_LOAD_KEY(n,ini) do{ \
-  const std::string s = cfg->get(CONF_SECTION, #ini, ""); \
+  const std::string s = cfg->get({CONF_SECTION, #ini}, ""); \
   if( s.empty() ) break; \
   int key = str2key(s); \
   if( key == 0 ) { \
@@ -48,15 +48,15 @@ bool CursesInterface::run(IniFile* cfg)
   CONF_LOAD_KEY(quit,  KeyQuit );
 #undef CONF_LOAD_KEY
 
-  int port = cfg->get<int>("Global", "Port", DEFAULT_PNP_PORT);
-  const std::string host = cfg->get("Client", "Hostname", "localhost");
+  int port = cfg->get<int>("Global.Port", DEFAULT_PNP_PORT);
+  const std::string host = cfg->get("Client.Hostname", "localhost");
 
   if( !this->initCurses() ) {
     LOG("terminal initialization failed");
     return false;
   }
   instance_.connect(host.c_str(), port, 3000);
-  instance_.newLocalPlayer(cfg->get("Client", "Nick", "Player"));
+  instance_.newLocalPlayer(cfg->get("Client.Nick", "Player"));
 
   io_service_.run();
   return true;

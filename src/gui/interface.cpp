@@ -31,12 +31,12 @@ GuiInterface::~GuiInterface()
 bool GuiInterface::run(IniFile* cfg)
 {
 #define CONF_LOAD(n,ini) \
-  window_conf_.n = cfg->get(CONF_SECTION, #ini, window_conf_.n);
+  window_conf_.n = cfg->get({CONF_SECTION, #ini}, window_conf_.n);
   CONF_LOAD(fullscreen,    Fullscreen);
   CONF_LOAD(screen_width,  ScreenWidth);
   CONF_LOAD(screen_height, ScreenHeight);
 #undef CONF_LOAD
-  float f = cfg->get(CONF_SECTION, "FPS", 60.0);
+  float f = cfg->get({CONF_SECTION, "FPS"}, 60.0);
   //XXX default not based on the cfg value set in constructor
   if( f <= 0 ) {
     LOG("invalid conf. value for FPS: %f", f);
@@ -44,16 +44,16 @@ bool GuiInterface::run(IniFile* cfg)
     window_conf_.redraw_dt = (1000.0/f);
   }
 
-  res_mgr_.init(cfg->get(CONF_SECTION, "ResPath", "./res"));
+  res_mgr_.init(cfg->get({CONF_SECTION, "ResPath"}, "./res"));
   // set some default values
-  if( !cfg->has("Global", "Port") ) {
-    cfg->set("Global", "Port", DEFAULT_PNP_PORT);
+  if(!cfg->has("Global.Port")) {
+    cfg->set("Global.Port", DEFAULT_PNP_PORT);
   }
-  if( !cfg->has("Client", "Hostname") ) {
-    cfg->set("Client", "Hostname", "localhost");
+  if(!cfg->has("Client.Hostname")) {
+    cfg->set("Client.Hostname", "localhost");
   }
-  if( !cfg->has("Client", "Nick") ) {
-    cfg->set("Client", "Nick", "Player");
+  if(!cfg->has("Client.Nick")) {
+    cfg->set("Client.Nick", "Player");
   }
 
   // start display loop

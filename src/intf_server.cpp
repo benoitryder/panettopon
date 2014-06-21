@@ -16,7 +16,7 @@ bool BasicServerInterface::run(IniFile* cfg)
   ServerInstance instance(*this, io_service);
   instance_ = &instance;
   instance.loadConf(*cfg);
-  instance.startServer( cfg->get<int>("Global", "Port", DEFAULT_PNP_PORT) );
+  instance.startServer( cfg->get<int>("Global.Port", DEFAULT_PNP_PORT) );
   io_service.run();
   instance_ = NULL;
   return true;

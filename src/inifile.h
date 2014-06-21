@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 #include <stdexcept>
+#include <initializer_list>
 #include <boost/lexical_cast.hpp>
 
 
@@ -47,6 +48,8 @@ class IniFile
         std::runtime_error("failed to convert value: "+key) {}
   };
 
+  typedef std::initializer_list<const std::string> Path;
+
   /// Create an empty INI file content.
   IniFile() {}
   /// Load config from a file, add it to current content.
@@ -60,19 +63,25 @@ class IniFile
   template <typename T> void set(const std::string& key, const T& val);
   /// Unset a value
   void unset(const std::string& key);
+  /// Retrieve a value, use default if not set
+  template <typename T> T get(const std::string& key, const T& def) const;
+  /// Convenient alias to retrieve a string value
+  inline std::string get(const std::string& key, const char* def) const;
 
-  /** @name Aliases for access by section and key */
+  /** @name Aliases for access by split key path */
   //@{
-  inline bool has(const std::string& section, const std::string& key) const;
-  template <typename T> T get(const std::string& section, const std::string& key) const;
-  template <typename T> void set(const std::string& section, const std::string& key, const T& val);
+  inline bool has(Path path) const;
+  template <typename T> T get(Path path) const;
+  template <typename T> void set(Path path, const T& val);
+  inline void unset(Path path);
+  template <typename T> T get(Path path, const T& def) const;
+  inline std::string get(Path path, const char* def) const;
   //@}
 
-  /// Retrieve a value, use default if not set
-  template <typename T> T get(const std::string& section, const std::string& key, const T& def) const;
-  /// Convenient alias to retrieve a string value
-  inline std::string get(const std::string& section, const std::string& key, const char* def) const;
-
+  /// Build a key from a split key path
+  static std::string join(Path path);
+  /// Alternate join to avoid the need of brackets
+  template <typename ...T> static std::string join(T... t) { return join({t...}); }
 
  private:
   typedef std::map<std::string, std::string> entries_type;
@@ -123,33 +132,49 @@ template <typename T> void IniFile::set(const std::string& key, const T& val)
   }
 }
 
-bool IniFile::has(const std::string& section, const std::string& key) const
-{
-  return has(section+'.'+key);
-}
-
-template <typename T> T IniFile::get(const std::string& section, const std::string& key) const
-{
-  return get<T>(section+'.'+key);
-}
-
-template <typename T> void IniFile::set(const std::string& section, const std::string& key, const T& val)
-{
-  set<T>(section+'.'+key, val);
-}
-
-template <typename T> T IniFile::get(const std::string& section, const std::string& key, const T& def) const
+template <typename T> T IniFile::get(const std::string& key, const T& def) const
 {
   try {
-    return get<T>(section, key);
+    return get<T>(key);
   } catch(const NotSetError&) {
     return def;
   }
 }
 
-std::string IniFile::get(const std::string& section, const std::string& key, const char* def) const
+std::string IniFile::get(const std::string& key, const char* def) const
 {
-  return get<std::string>(section, key, def);
+  return get<std::string>(key, def);
+}
+
+
+bool IniFile::has(Path path) const
+{
+  return has(join(path));
+}
+
+template <typename T> T IniFile::get(Path path) const
+{
+  return get<T>(join(path));
+}
+
+template <typename T> void IniFile::set(Path path, const T& val)
+{
+  set<T>(join(path), val);
+}
+
+void IniFile::unset(Path path)
+{
+  unset(join(path));
+}
+
+template <typename T> T IniFile::get(Path path, const T& def) const
+{
+  return get<T>(join(path), def);
+}
+
+inline std::string IniFile::get(Path path, const char* def) const
+{
+  return get<std::string>(join(path), def);
 }
 
 

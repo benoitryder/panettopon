@@ -98,7 +98,7 @@ const sf::Font* ResourceManager::getFont(const std::string& name)
 
 std::string ResourceManager::getLang(const std::string& section, const std::string& key) const
 {
-  return lang_.get<std::string>(section, key);
+  return lang_.get<std::string>({section, key});
 }
 
 
@@ -458,13 +458,13 @@ void StyleField::load(const std::string& section)
   style_section_ = section;
   const IniFile& style = res_mgr_.style();
 
-  colors.push_back(style.get<sf::Color>(section, "Color.Neutral"));
+  colors.push_back(style.get<sf::Color>({section, "Color.Neutral"}));
   for(unsigned int i=1; i<=16; ++i) {
-    const std::string key = "Color." + std::to_string(i);
-    if(!style.has(section, key)) {
+    std::string key = IniFile::join(section, "Color", std::to_string(i));
+    if(!style.has(key)) {
       break;
     }
-    colors.push_back(style.get<sf::Color>(section, key));
+    colors.push_back(style.get<sf::Color>(key));
   }
   unsigned int color_nb = colors.size() - 1;
   if( color_nb < 4 ) {
@@ -507,7 +507,7 @@ void StyleField::load(const std::string& section)
 
   // Frame
   img_field_frame = res_mgr_.getImage("Field-Frame");
-  frame_origin = style.get<sf::Vector2f>(section, "FrameOrigin");
+  frame_origin = style.get<sf::Vector2f>({section, "FrameOrigin"});
 
   // Cursor
   img = res_mgr_.getImage("SwapCursor");
@@ -531,8 +531,9 @@ void StyleField::load(const std::string& section)
 
 bool StyleField::searchStyle(const std::string& prop, std::string* key) const
 {
-  if( res_mgr_.style().has(style_section_, prop) ) {
-    *key = style_section_+'.'+prop;
+  std::string s = IniFile::join(style_section_, prop);
+  if( res_mgr_.style().has(s) ) {
+    *key = s;
     return true;
   }
   return false;

@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
+#include <sstream>
 #include "inifile.h"
 
 
@@ -134,4 +135,19 @@ void IniFile::unset(const std::string& key)
 {
   entries_.erase(key);
 }
+
+
+std::string IniFile::join(Path path)
+{
+  std::ostringstream str;
+  auto it = path.begin();
+  if(it != path.end()) {
+    str << *it;
+    for(++it; it!=path.end(); ++it) {
+      str << '.' << *it;
+    }
+  }
+  return str.str();
+}
+
 

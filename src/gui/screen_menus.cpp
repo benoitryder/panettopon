@@ -41,7 +41,7 @@ void ScreenStart::enter()
   this->focus(button_join);
 
   // "Debug start" button, only when debug mode is enabled
-  if(intf_.cfg().get<bool>("Global", "Debug", false)) {
+  if(intf_.cfg().get<bool>("Global.Debug", false)) {
     WButton* button_debugstart = new WButton(*this, "DebugStart");
     button_debugstart->setCaption(res_mgr.getLang(name_, "DebugStart"));
     container_.widgets.push_back(button_debugstart);
@@ -76,7 +76,7 @@ bool ScreenStart::onInputEvent(const sf::Event& ev)
 void ScreenStart::onDebugStart()
 {
   // create server and players
-  intf_.startServer(intf_.cfg().get<uint16_t>("Global", "Port"));
+  intf_.startServer(intf_.cfg().get<uint16_t>("Global.Port"));
   Player* pl1 = intf_.server()->newLocalPlayer("Player 1");
   Player* pl2 = intf_.server()->newLocalPlayer("Player 2");
   // swap to screen game
@@ -117,11 +117,11 @@ void ScreenJoinServer::enter()
   container_.widgets.push_back(label);
 
   entry_host_ = new WEntry(*this, "HostEntry");
-  entry_host_->setText(cfg.get("Client", "Hostname", ""));
+  entry_host_->setText(cfg.get("Client.Hostname", ""));
   container_.widgets.push_back(entry_host_);
 
   entry_port_ = new WEntry(*this, "PortEntry");
-  entry_port_->setText(cfg.get("Global", "Port", ""));
+  entry_port_->setText(cfg.get("Global.Port", ""));
   container_.widgets.push_back(entry_port_);
 
   label = new WLabel(*this, "NickLabel");
@@ -129,7 +129,7 @@ void ScreenJoinServer::enter()
   container_.widgets.push_back(label);
 
   entry_nick_ = new WEntry(*this, "NickEntry");
-  entry_nick_->setText(cfg.get("Client", "Nick", "Player"));
+  entry_nick_->setText(cfg.get("Client.Nick", "Player"));
   container_.widgets.push_back(entry_nick_);
 
   WButton* button = new WButton(*this, "JoinButton");
@@ -197,9 +197,9 @@ void ScreenJoinServer::submit()
     return;
   }
 
-  intf_.cfg().set("Client", "Hostname", entry_host_->text());
-  intf_.cfg().set("Global", "Port", port);
-  intf_.cfg().set("Client", "Nick", entry_nick_->text());
+  intf_.cfg().set("Client.Hostname", entry_host_->text());
+  intf_.cfg().set("Global.Port", port);
+  intf_.cfg().set("Client.Nick", entry_nick_->text());
   intf_.startClient(entry_host_->text(), port);
   intf_.client()->newLocalPlayer(entry_nick_->text());
   submitting_ = true;
@@ -222,7 +222,7 @@ void ScreenCreateServer::enter()
   container_.widgets.push_back(label);
 
   entry_port_ = new WEntry(*this, "PortEntry");
-  entry_port_->setText(cfg.get("Global", "Port", ""));
+  entry_port_->setText(cfg.get("Global.Port", ""));
   container_.widgets.push_back(entry_port_);
 
   label = new WLabel(*this, "NickLabel");
@@ -230,7 +230,7 @@ void ScreenCreateServer::enter()
   container_.widgets.push_back(label);
 
   entry_nick_ = new WEntry(*this, "NickEntry");
-  entry_nick_->setText(cfg.get("Client", "Nick", ""));
+  entry_nick_->setText(cfg.get("Client.Nick", ""));
   container_.widgets.push_back(entry_nick_);
 
   label = new WLabel(*this, "PlayerNbLabel");
@@ -238,7 +238,7 @@ void ScreenCreateServer::enter()
   container_.widgets.push_back(label);
 
   entry_player_nb_ = new WEntry(*this, "PlayerNbEntry");
-  entry_player_nb_->setText(cfg.get("Server", "PlayerNumber", ""));
+  entry_player_nb_->setText(cfg.get("Server.PlayerNumber", ""));
   container_.widgets.push_back(entry_player_nb_);
 
   WButton* button = new WButton(*this, "CreateButton");
@@ -292,9 +292,9 @@ void ScreenCreateServer::submit()
     return;
   }
 
-  intf_.cfg().set("Global", "Port", port);
-  intf_.cfg().set("Client", "Nick", entry_nick_->text());
-  intf_.cfg().set("Server", "PlayerNumber", player_nb);
+  intf_.cfg().set("Global.Port", port);
+  intf_.cfg().set("Client.Nick", entry_nick_->text());
+  intf_.cfg().set("Server.PlayerNumber", player_nb);
   intf_.startServer(port);
   Player* pl = intf_.server()->newLocalPlayer(entry_nick_->text());
   intf_.swapScreen(new ScreenLobby(intf_, pl));
@@ -321,8 +321,8 @@ void ScreenLobby::enter()
   button_ready_->setNeighbors(NULL, NULL, NULL, NULL);
 
   const IniFile& style = this->style();
-  player_rows_pos_ = style.get<sf::Vector2f>(name_, "PlayerRowsPos");
-  player_rows_dy_ = style.get<float>(name_, "PlayerRowsDY");
+  player_rows_pos_ = style.get<sf::Vector2f>({name_, "PlayerRowsPos"});
+  player_rows_dy_ = style.get<float>({name_, "PlayerRowsDY"});
 
   // add already connected players
   // set state of local players to LOBBY

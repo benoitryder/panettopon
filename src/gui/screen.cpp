@@ -65,12 +65,13 @@ bool Screen::searchStyle(const std::string& prop, std::string* key) const
   const IniFile& style = this->style();
   std::string section = name_;
   for( int i=0; i<10; i++ ) {
-    if( style.has(section, prop) ) {
-      *key = section+'.'+prop;
+    std::string s = IniFile::join(section, prop);
+    if(style.has(s)) {
+      *key = s;
       return true;
     }
-    section = style.get(section, "Fallback", "");
-    if( section.empty() ) {
+    section = style.get({section, "Fallback"}, "");
+    if(section.empty()) {
       return false;
     }
   }

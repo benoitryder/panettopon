@@ -196,22 +196,22 @@ int main(int /*argc*/, char** argv)
     }
 
     if( intfarg != NULL ) {
-      cfg.set("Global", "Interface", intfarg);
+      cfg.set("Global.Interface", intfarg);
     }
     if( port != NULL ) {
-      cfg.set("Global", "Port", port);
+      cfg.set("Global.Port", port);
     }
     if( host != NULL ) {
-      cfg.set("Client", "Hostname", host);
+      cfg.set("Client.Hostname", host);
     }
     if( nick != NULL ) {
-      cfg.set("Client", "Nick", nick);
+      cfg.set("Client.Nick", nick);
     }
 
     // init randomness
     ::srand( current_time() );
 
-    const std::string intfstr = cfg.get("Global", "Interface", "server");
+    const std::string intfstr = cfg.get("Global.Interface", "server");
 #ifndef WITHOUT_INTF_SERVER
     if( intfstr == "server" ) {
       BasicServerInterface intf;
