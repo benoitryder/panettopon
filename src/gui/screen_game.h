@@ -12,6 +12,62 @@ class GuiInterface;
 class FieldDisplay;
 
 
+/** @brief Style for a field display
+ *
+ * Style entries:
+ *  - Color.Neutral: neutral block/field color
+ *  - Color.N: block/field color N
+ *  - FrameOrigin: origin of field blocks in frame
+ */
+struct StyleField
+{
+  /// List of block/field colors
+  std::vector<sf::Color> colors;
+  /// Block pixel size
+  unsigned int bk_size = 0;
+
+  /// Tile group for block of a given color
+  struct TilesBkColor {
+    ImageTile normal, bg, face, flash, mutate;
+  };
+  /// Color blocks
+  std::vector<TilesBkColor> tiles_bk_color;
+
+  /// Garbages
+  struct TilesGb {
+    ImageTile tiles[4][4];
+    ImageTile center[2][2];
+    ImageTile mutate, flash;
+  } tiles_gb;
+
+  /// Field frame
+  const sf::Texture* img_field_frame = nullptr;
+  /// Origin of field blocks in frame (top left corner)
+  sf::Vector2f frame_origin;
+
+  /// Cursor (two positions)
+  ImageTile tiles_cursor[2];
+
+  /// Signs (combo and chain)
+  struct TilesSigns {
+    ImageTile combo, chain;
+  } tiles_signs;
+  StyleText sign_style;
+
+  /// Hanging garbages
+  struct TilesGbHanging {
+    ImageTile blocks[FIELD_WIDTH];
+    ImageTile line;
+  } tiles_gb_hanging;
+  StyleText gb_hanging_style;
+
+  /// Start countdown
+  StyleText start_countdown_style;
+
+  void load(const StyleLoader& loader);
+};
+
+
 class ScreenGame: public Screen, public GameInputScheduler::InputProvider
 {
  public:

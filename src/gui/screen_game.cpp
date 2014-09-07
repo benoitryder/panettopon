@@ -6,11 +6,91 @@
 namespace gui {
 
 
+void StyleField::load(const StyleLoader& loader)
+{
+  ResourceManager& res_mgr = loader.res_mgr();
+  std::string key;
+
+  colors.push_back(loader.getStyle<sf::Color>("Color.Neutral"));
+  for(unsigned int i=1; i<=16; ++i) {
+    sf::Color color;
+    if(!loader.fetchStyle({"Color", std::to_string(i)}, color)) {
+      break;
+    }
+    colors.push_back(color);
+  }
+  unsigned int color_nb = colors.size() - 1;
+  if(color_nb < 4) {
+    throw std::runtime_error("ColorNb is too small, must be at least 4");
+  }
+
+  const sf::Texture* img;
+
+  // Block tiles (and block size)
+  img = res_mgr.getImage("BkColor-map");
+  if(img->getSize().x % color_nb != 0 || img->getSize().y % 5 != 0) {
+    throw std::runtime_error("block map size does not match tile count");
+  }
+  bk_size = img->getSize().y/5;
+  tiles_bk_color.resize(color_nb); // create sprites, uninitialized
+  for(unsigned int i=0; i<color_nb; i++) {
+    TilesBkColor& tiles = tiles_bk_color[i];
+    tiles.normal.create(img, color_nb, 5, i, 0);
+    tiles.bg    .create(img, color_nb, 5, i, 1);
+    tiles.face  .create(img, color_nb, 5, i, 2);
+    tiles.flash .create(img, color_nb, 5, i, 3);
+    tiles.mutate.create(img, color_nb, 5, i, 4);
+  }
+
+  // Garbages
+  img = res_mgr.getImage("BkGarbage-map");
+  for(int x=0; x<4; x++) {
+    for(int y=0; y<4; y++) {
+      tiles_gb.tiles[x][y].create(img, 8, 4, x, y);
+    }
+  }
+  //XXX center: setRepeat(true)
+  for(int x=0; x<2; x++) {
+    for(int y=0; y<2; y++) {
+      tiles_gb.center[x][y].create(img, 8, 4, 4+x, y);
+    }
+  }
+  tiles_gb.mutate.create(img, 4, 2, 3, 0);
+  tiles_gb.flash .create(img, 4, 2, 3, 1);
+
+  // Frame
+  img_field_frame = res_mgr.getImage("Field-Frame");
+  frame_origin = loader.getStyle<sf::Vector2f>("FrameOrigin");
+
+  // Cursor
+  img = res_mgr.getImage("SwapCursor");
+  tiles_cursor[0].create(img, 1, 2, 0, 0);
+  tiles_cursor[1].create(img, 1, 2, 0, 1);
+
+  // Signs
+  img = res_mgr.getImage("Signs");
+  tiles_signs.combo.create(img, 2, 1, 0, 0);
+  tiles_signs.chain.create(img, 2, 1, 1, 0);
+  sign_style.load(StyleLoaderPrefix(loader, "Sign"));
+
+  // Hanging garbages
+  img = res_mgr.getImage("GbHanging-map");
+  const size_t gb_hanging_sx = FIELD_WIDTH/2; // on 2 rows
+  for(int i=0; i<FIELD_WIDTH; i++) {
+    tiles_gb_hanging.blocks[i].create(img, gb_hanging_sx+1, 2, i%gb_hanging_sx, i/gb_hanging_sx);
+  }
+  tiles_gb_hanging.line.create(img, gb_hanging_sx+1, 2, gb_hanging_sx, 0);
+  gb_hanging_style.load(StyleLoaderPrefix(loader, "Garbage"));
+
+  // Start countdown
+  start_countdown_style.load(StyleLoaderPrefix(loader, "StartCountdown"));
+}
+
+
 ScreenGame::ScreenGame(GuiInterface& intf, Player* pl):
     Screen(intf, "ScreenGame"),
     player_(pl),
-    input_scheduler_(*intf.instance(), *this, intf.io_service()),
-    style_field_(intf.res_mgr())
+    input_scheduler_(*intf.instance(), *this, intf.io_service())
 {
   keys_.up    = sf::Keyboard::Up;
   keys_.down  = sf::Keyboard::Down;
@@ -22,7 +102,7 @@ ScreenGame::ScreenGame(GuiInterface& intf, Player* pl):
 
 void ScreenGame::enter()
 {
-  style_field_.load("ScreenGame.Field");
+  style_field_.load(StyleLoaderPrefix(*this, "Field"));
   assert( player_ );
 }
 
@@ -141,16 +221,12 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
 
   // start countdown
   {
-    std::string key;
-    style_.applyStyle(text_start_countdown_, "StartCountdown");
+    style_.start_countdown_style.apply(text_start_countdown_);
     // use a dummy string to center the text
     text_start_countdown_.setString("0.0");
     sf::FloatRect r = text_start_countdown_.getLocalBounds();
     text_start_countdown_.setOrigin(r.width/2, 0);
     text_start_countdown_.setPosition(style_.bk_size * FIELD_WIDTH/2, style_.bk_size * 2);
-    if(style_.searchStyle("Color", &key)) {
-      text_start_countdown_.setColor(style_.res_mgr().style().get<sf::Color>(key));
-    }
   }
 
   style_.tiles_cursor[0].setToSprite(&spr_cursor_, true);
@@ -493,8 +569,7 @@ FieldDisplay::Sign::Sign(const StyleField& style, const FieldPos& pos, bool chai
   this->move(0, -0.1*style_.bk_size);
 
   // initialize text
-  //XXX store/cache text style information on StyleField
-  style_.applyStyle(txt_, "Sign");
+  style_.sign_style.apply(txt_);
   txt_.setString(chain ? 'x'+std::to_string(val) : std::to_string(val));
   txt_.setColor(sf::Color::White);
   sf::FloatRect txt_rect = txt_.getLocalBounds();
@@ -557,7 +632,7 @@ FieldDisplay::GbHanging::GbHanging(const StyleField& style, const Garbage& gb):
   }
   bg_.setColor(style_.colors[gb_.from ? gb_.from->fldid() : 0]);
   //XXX store/cache text style information on StyleField
-  style_.applyStyle(txt_, "Garbage");
+  style_.gb_hanging_style.apply(txt_);
   txt_.setColor(sf::Color::White);
 
   this->updateText();

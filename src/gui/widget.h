@@ -9,7 +9,7 @@
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Shape.hpp>
-#include "resources.h"
+#include "style.h"
 
 namespace gui {
 
@@ -23,7 +23,7 @@ class Screen;
  *
  * @note Name does not have to be unique and may be empty.
  */
-class Widget: public sf::Drawable, public sf::Transformable, public Stylable
+class Widget: public sf::Drawable, public sf::Transformable, public StyleLoader
 {
  public:
   Widget(const Screen& screen, const std::string& name);
@@ -32,6 +32,7 @@ class Widget: public sf::Drawable, public sf::Transformable, public Stylable
   /// Return the widget type as a string.
   virtual const std::string& type() const = 0;
 
+  virtual ResourceManager& res_mgr() const;
   /** @brief Get style entry key for a given property.
    *
    * The requested property is searched in the following sections (in order):
@@ -41,7 +42,7 @@ class Widget: public sf::Drawable, public sf::Transformable, public Stylable
    *
    * @return true if found, false otherwise.
    */
-  virtual bool searchStyle(const std::string& prop, std::string* key) const;
+  virtual bool searchStyle(const std::string& prop, std::string& key) const;
   virtual std::string styleErrorSection() const;
 
  protected:

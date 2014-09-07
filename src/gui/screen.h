@@ -19,13 +19,8 @@ class GuiInterface;
  * Style properties:
  *  - BackgroundImage, BackgroundColor
  */
-class Screen: public Stylable
+class Screen: public StyleLoader
 {
- public:
-  struct StyleError: public std::runtime_error {
-    StyleError(const Screen& s, const std::string& prop, const std::string& msg);
-  };
-
  public:
   Screen(GuiInterface& intf, const std::string& name);
   virtual ~Screen();
@@ -55,6 +50,7 @@ class Screen: public Stylable
   virtual void onServerDisconnect() {}
   //@}
 
+  virtual ResourceManager& res_mgr() const;
   /** @brief Get style entry key for a given property.
    *
    * The requested property is searched in the screen's section and
@@ -62,7 +58,7 @@ class Screen: public Stylable
    *
    * @return true if found, false otherwise.
    */
-  virtual bool searchStyle(const std::string& prop, std::string* key) const;
+  virtual bool searchStyle(const std::string& prop, std::string& key) const;
   virtual std::string styleErrorSection() const { return name_; }
 
  protected:

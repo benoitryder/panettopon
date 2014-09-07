@@ -7,7 +7,6 @@
 namespace gui {
 
 Widget::Widget(const Screen& screen, const std::string& name):
-    Stylable(screen.intf().res_mgr()),
     screen_(screen), name_(name)
 {
   const IniFile& style = screen_.style();
@@ -19,20 +18,25 @@ Widget::Widget(const Screen& screen, const std::string& name):
 
 Widget::~Widget() {}
 
-bool Widget::searchStyle(const std::string& prop, std::string* key) const
+ResourceManager& Widget::res_mgr() const
 {
-  if( !name_.empty() ) {
-    if( screen_.searchStyle(name_+'.'+prop, key) ) {
+  return screen_.intf().res_mgr();
+}
+
+bool Widget::searchStyle(const std::string& prop, std::string& key) const
+{
+  if(!name_.empty()) {
+    if(screen_.StyleLoader::searchStyle({name_, prop}, key)) {
       return true;
     }
   }
-  if( screen_.searchStyle(this->type()+'.'+prop, key) ) {
+  if(screen_.StyleLoader::searchStyle({this->type(), prop}, key)) {
     return true;
   }
   const IniFile& style = screen_.style();
-  std::string s = this->type()+'.'+prop;
-  if( style.has(s) ) {
-    *key = s;
+  std::string s = IniFile::join(this->type(), prop);
+  if(style.has(s)) {
+    key = s;
     return true;
   }
   return false;
@@ -86,15 +90,11 @@ const std::string& WFrame::type() const {
 WFrame::WFrame(const Screen& screen, const std::string& name):
     Widget(screen, name)
 {
-  const IniFile& style = screen_.style();
   std::string key;
-  if( searchStyle("Size", &key) ) {
-    size_ = style.get<sf::Vector2f>(key);
-    if( size_.x <= 0 || size_.y <= 0 ) {
-      throw StyleError(key, "invalid value");
-    }
-  } else {
-    throw StyleError(*this, "Size", "not set");
+
+  size_ = getStyle<sf::Vector2f>("Size", key);
+  if(size_.x <= 0 || size_.y <= 0) {
+    throw StyleError(key, "invalid value");
   }
 
   this->applyStyle(frame_);
@@ -115,29 +115,20 @@ const std::string& WButton::type() const {
 WButton::WButton(const Screen& screen, const std::string& name):
     WFocusable(screen, name), callback_(NULL)
 {
-  const IniFile& style = screen_.style();
   std::string key;
 
   this->applyStyle(caption_);
 
-  if( searchStyle("Color", &key) ) {
-    color_ = style.get<sf::Color>(key);
-  }
-  if( searchStyle("FocusColor", &key) ) {
-    focus_color_ = style.get<sf::Color>(key);
-  }
+  fetchStyle<sf::Color>("Color", color_);
+  StyleLoaderPrefix(*this, "Focus", true).fetchStyle("Color", focus_color_);
 
-  if( searchStyle("Width", &key) ) {
-    width_ = style.get<float>(key);
-    if( width_ <= 0 ) {
-      throw StyleError(key, "value must be positive");
-    }
-  } else {
-    throw StyleError(*this, "Width", "not set");
+  width_ = getStyle<float>("Width", key);
+  if(width_ <= 0) {
+    throw StyleError(key, "value must be positive");
   }
 
   this->applyStyle(frame_);
-  this->applyStyle(focus_frame_, "Focus");
+  StyleLoaderPrefix(*this, "Focus", true).applyStyle(focus_frame_);
   caption_.setColor(color_);
 }
 
@@ -191,10 +182,10 @@ WLabel::WLabel(const Screen& screen, const std::string& name):
   std::string key;
 
   this->applyStyle(text_);
-  if( searchStyle("Color", &key) ) {
+  if(searchStyle("Color", key)) {
     text_.setColor(style.get<sf::Color>(key));
   }
-  if( searchStyle("TextAlign", &key) ) {
+  if(searchStyle("TextAlign", key)) {
     const std::string align = style.get<std::string>(key);
     if( align == "left" ) {
       align_ = -1;
@@ -244,30 +235,20 @@ const std::string& WEntry::type() const {
 WEntry::WEntry(const Screen& screen, const std::string& name):
     WFocusable(screen, name), cursor_pos_(0)
 {
-  const IniFile& style = screen_.style();
   std::string key;
 
   this->applyStyle(text_);
 
-  if( searchStyle("Color", &key) ) {
-    color_ = style.get<sf::Color>(key);
-  }
-  if( searchStyle("FocusColor", &key) ) {
-    focus_color_ = style.get<sf::Color>(key);
+  fetchStyle<sf::Color>("Color", color_);
+  StyleLoaderPrefix(*this, "Focus", true).fetchStyle("Color", focus_color_);
+
+  width_ = getStyle<float>("Width", key);
+  if(width_ <= 0) {
+    throw StyleError(key, "value must be positive");
   }
 
-  if( searchStyle("Width", &key) ) {
-    width_ = style.get<float>(key);
-    if( width_ <= 0 ) {
-      throw StyleError(key, "value must be positive");
-    }
-  } else {
-    throw StyleError(*this, "Width", "not set");
-  }
   std::pair<unsigned int, unsigned int> text_margins(0, 0);
-  if( searchStyle("TextMarginsX", &key) ) {
-    text_margins = style.get<decltype(text_margins)>(key);
-  }
+  fetchStyle<decltype(text_margins)>("TextMarginsX", text_margins);
   unsigned int text_height = text_.getFont()->getLineSpacing(text_.getCharacterSize())+2;
   text_img_.create(width_-(text_margins.first+text_margins.second), text_height);
   text_sprite_.setOrigin(width_/2.-text_margins.first, text_height/2.);
@@ -278,7 +259,7 @@ WEntry::WEntry(const Screen& screen, const std::string& name):
   cursor_.x = text_sprite_.getOrigin().x;
 
   this->applyStyle(frame_);
-  this->applyStyle(focus_frame_, "Focus");
+  StyleLoaderPrefix(*this, "Focus", true).applyStyle(focus_frame_);
 }
 
 void WEntry::setText(const std::string& text)
@@ -421,29 +402,20 @@ const std::string& WChoice::type() const {
 WChoice::WChoice(const Screen& screen, const std::string& name):
     WFocusable(screen, name)
 {
-  const IniFile& style = screen_.style();
   std::string key;
 
   this->applyStyle(text_);
 
-  if( searchStyle("Color", &key) ) {
-    color_ = style.get<sf::Color>(key);
-  }
-  if( searchStyle("FocusColor", &key) ) {
-    focus_color_ = style.get<sf::Color>(key);
-  }
+  fetchStyle<sf::Color>("Color", color_);
+  StyleLoaderPrefix(*this, "Focus", true).fetchStyle("Color", focus_color_);
 
-  if( searchStyle("Width", &key) ) {
-    width_ = style.get<float>(key);
-    if( width_ <= 0 ) {
-      throw StyleError(key, "value must be positive");
-    }
-  } else {
-    throw StyleError(*this, "Width", "not set");
+  width_ = getStyle<float>("Width", key);
+  if(width_ <= 0) {
+    throw StyleError(key, "value must be positive");
   }
 
   this->applyStyle(frame_);
-  this->applyStyle(focus_frame_, "Focus");
+  StyleLoaderPrefix(*this, "Focus", true).applyStyle(focus_frame_);
   text_.setColor(color_);
 }
 

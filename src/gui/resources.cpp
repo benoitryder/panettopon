@@ -1,9 +1,11 @@
 #include <cassert>
 #include <stdexcept>
+#include <SFML/Graphics/Texture.hpp>
+#include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include "resources.h"
+#include "style.h"
 
 namespace gui {
 
@@ -154,17 +156,6 @@ void ImageTile::setToSprite(sf::Sprite* spr, bool center) const
 }
 
 
-void ImageFrame::Style::apply(ImageFrame& o)
-{
-  o.create(image, rect, inside);
-}
-
-void ImageFrameX::Style::apply(ImageFrameX& o)
-{
-  o.create(image, rect, inside_left, inside_width);
-}
-
-
 ImageFrame::ImageFrame():
     image_(NULL)
 {
@@ -243,6 +234,29 @@ void ImageFrame::render(sf::RenderTarget& target, sf::RenderStates states, const
 }
 
 
+void ImageFrame::Style::load(const StyleLoader& loader)
+{
+  ResourceManager& res_mgr = loader.res_mgr();
+  std::string key;
+
+  image = res_mgr.getImage(loader.getStyle<std::string>("Image"));
+  if(!loader.fetchStyle("ImageRect", rect)) {
+    rect = sf::IntRect(0, 0, image->getSize().x, image->getSize().y);
+  }
+
+  inside = loader.getStyle<decltype(inside)>("ImageInside", key);
+  if(inside.left < 0 || inside.left+inside.width > rect.width ||
+     inside.top < 0 || inside.top+inside.height > rect.height) {
+    throw StyleError(key, "image inside not contained in image size");
+  }
+}
+
+void ImageFrame::Style::apply(ImageFrame& o) const
+{
+  o.create(image, rect, inside);
+}
+
+
 ImageFrameX::ImageFrameX():
     image_(NULL)
 {
@@ -297,246 +311,27 @@ void ImageFrameX::render(sf::RenderTarget& target, sf::RenderStates states, floa
 }
 
 
-void StyleText::apply(sf::Text& o)
+void ImageFrameX::Style::load(const StyleLoader& loader)
 {
-  if(!font) {
-    throw std::runtime_error("text style font not set");
-  }
-  o.setFont(*font);
-  o.setCharacterSize(size);
-  o.setBorderWidth(border_width);
-  o.setStyle(style);
-  o.setColor(color);
-  o.setBorderColor(border_color);
-}
-
-void StyleSprite::apply(sf::Sprite& o)
-{
-  o.setTexture(*image, true);
-  o.setTextureRect(rect);
-}
-
-
-Stylable::StyleError::StyleError(const std::string& prop, const std::string& msg):
-  std::runtime_error("style error for "+prop+": "+msg) {}
-
-Stylable::StyleError::StyleError(const Stylable& stylable, const std::string& prop, const std::string& msg):
-  std::runtime_error("style error for "+stylable.styleErrorSection()+"."+prop+": "+msg) {}
-
-
-Stylable::Stylable(ResourceManager& res_mgr):
-  res_mgr_(res_mgr)
-{
-}
-
-Stylable::~Stylable() {}
-
-void Stylable::loadStyle(StyleText& style, const std::string prefix) const
-{
-  const IniFile& ini = res_mgr_.style();
+  ResourceManager& res_mgr = loader.res_mgr();
   std::string key;
 
-  if(searchStyle(prefix+"Font", &key)) {
-    style.font = res_mgr_.getFont(ini.get<std::string>(key));
-  } else if(!style.font) {
-    throw StyleError(*this, prefix+"Font", "not set");
+  image = res_mgr.getImage(loader.getStyle<std::string>("Image"));
+  if(!loader.fetchStyle("ImageRect", rect)) {
+    rect = sf::IntRect(0, 0, image->getSize().x, image->getSize().y);
   }
 
-  if(searchStyle(prefix+"FontSize", &key)) {
-    style.size = ini.get<unsigned int>(key);
+  std::pair<int, int> inside = loader.getStyle<decltype(inside)>("ImageInside", key);
+  if(inside.first < 0 || inside.first+inside.second > rect.width) {
+    throw StyleError(key, "image inside not contained in image size");
   }
-  if(searchStyle(prefix+"FontBorderWidth", &key)) {
-    style.border_width = ini.get<unsigned int>(key);
-  }
-
-  if(searchStyle(prefix+"FontStyle", &key)) {
-    const std::string val = ini.get<std::string>(key);
-    unsigned int txt_style;
-    if( val == "regular" ) {
-      txt_style = sf::Text::Regular;
-    } else if( val == "bold" ) {
-      txt_style = sf::Text::Bold;
-    } else if( val == "italic" ) {
-      txt_style = sf::Text::Italic;
-    } else if( val == "bold,italic" || val == "italic,bold" ) {
-      txt_style = sf::Text::Bold|sf::Text::Italic;
-    } else {
-      throw StyleError(key, "invalid value");
-    }
-    style.style = txt_style;
-  }
-
-  if(searchStyle(prefix+"FontColor", &key)) {
-    style.color = ini.get<sf::Color>(key);
-  }
-  if(searchStyle(prefix+"FontBorderColor", &key)) {
-    style.border_color = ini.get<sf::Color>(key);
-  }
+  inside_left = inside.first;
+  inside_width = inside.second;
 }
 
-void Stylable::loadStyle(ImageFrame::Style& style, const std::string prefix) const
+void ImageFrameX::Style::apply(ImageFrameX& o) const
 {
-  const IniFile& ini = res_mgr_.style();
-  std::string key;
-
-  if(searchStyle(prefix+"Image", &key)) {
-    style.image = res_mgr_.getImage(ini.get<std::string>(key));
-    if(searchStyle(prefix+"ImageRect", &key)) {
-      style.rect = ini.get<sf::IntRect>(key);
-    } else {
-      style.rect = sf::IntRect(0, 0, style.image->getSize().x, style.image->getSize().y);
-    }
-    if(searchStyle(prefix+"ImageInside", &key)) {
-      sf::IntRect inside = ini.get<sf::IntRect>(key);
-      if(inside.left < 0 || inside.left+inside.width > style.rect.width ||
-         inside.top < 0 || inside.top+inside.height > style.rect.height) {
-        throw StyleError(key, "image inside not contained in image size");
-      }
-      style.inside = inside;
-    } else {
-      throw StyleError(*this, prefix+"ImageInside", "not set");
-    }
-  } else if(!style.image) {
-    throw StyleError(*this, prefix+"Image", "not set");
-  }
-}
-
-void Stylable::loadStyle(ImageFrameX::Style& style, const std::string prefix) const
-{
-  const IniFile& ini = res_mgr_.style();
-  std::string key;
-
-  if(searchStyle(prefix+"Image", &key)) {
-    style.image = res_mgr_.getImage(ini.get<std::string>(key));
-    if(searchStyle(prefix+"ImageRect", &key)) {
-      style.rect = ini.get<sf::IntRect>(key);
-    } else {
-      style.rect = sf::IntRect(0, 0, style.image->getSize().x, style.image->getSize().y);
-    }
-    if(searchStyle(prefix+"ImageInside", &key)) {
-      std::pair<int, int> inside(0,0);
-      inside = ini.get<decltype(inside)>(key);
-      if(inside.first < 0 || inside.first+inside.second > style.rect.width) {
-        throw StyleError(key, "image inside not contained in image size");
-      }
-      style.inside_left = inside.first;
-      style.inside_width = inside.second;
-    } else {
-      throw StyleError(*this, prefix+"ImageInside", "not set");
-    }
-  } else if(!style.image) {
-    throw StyleError(*this, prefix+"Image", "not set");
-  }
-}
-
-void Stylable::loadStyle(StyleSprite& style, const std::string prefix) const
-{
-  const IniFile& ini = res_mgr_.style();
-  std::string key;
-
-  if(searchStyle(prefix+"Image", &key)) {
-    style.image = res_mgr_.getImage(ini.get<std::string>(key));
-    if(searchStyle(prefix+"ImageRect", &key)) {
-      style.rect = ini.get<sf::IntRect>(key);
-    } else {
-      style.rect = sf::IntRect(0, 0, style.image->getSize().x, style.image->getSize().y);
-    }
-  } else {
-    throw StyleError(*this, prefix+"Image", "not set");
-  }
-}
-
-
-StyleField::StyleField(ResourceManager& res_mgr):
-    Stylable(res_mgr),
-    bk_size(0), img_field_frame(NULL)
-{
-}
-
-void StyleField::load(const std::string& section)
-{
-  style_section_ = section;
-  const IniFile& style = res_mgr_.style();
-
-  colors.push_back(style.get<sf::Color>({section, "Color.Neutral"}));
-  for(unsigned int i=1; i<=16; ++i) {
-    std::string key = IniFile::join(section, "Color", std::to_string(i));
-    if(!style.has(key)) {
-      break;
-    }
-    colors.push_back(style.get<sf::Color>(key));
-  }
-  unsigned int color_nb = colors.size() - 1;
-  if( color_nb < 4 ) {
-    throw std::runtime_error("ColorNb is too small, must be at least 4");
-  }
-
-  const sf::Texture* img;
-
-  // Block tiles (and block size)
-  img = res_mgr_.getImage("BkColor-map");
-  if( img->getSize().x % color_nb != 0 || img->getSize().y % 5 != 0 ) {
-    throw std::runtime_error("block map size does not match tile count");
-  }
-  bk_size = img->getSize().y/5;
-  tiles_bk_color.resize(color_nb); // create sprites, uninitialized
-  for(unsigned int i=0; i<color_nb; i++ ) {
-    TilesBkColor& tiles = tiles_bk_color[i];
-    tiles.normal.create(img, color_nb, 5, i, 0);
-    tiles.bg    .create(img, color_nb, 5, i, 1);
-    tiles.face  .create(img, color_nb, 5, i, 2);
-    tiles.flash .create(img, color_nb, 5, i, 3);
-    tiles.mutate.create(img, color_nb, 5, i, 4);
-  }
-
-  // Garbages
-  img = res_mgr_.getImage("BkGarbage-map");
-  for(int x=0; x<4; x++) {
-    for(int y=0; y<4; y++) {
-      tiles_gb.tiles[x][y].create(img, 8, 4, x, y);
-    }
-  }
-  //XXX center: setRepeat(true)
-  for(int x=0; x<2; x++) {
-    for(int y=0; y<2; y++) {
-      tiles_gb.center[x][y].create(img, 8, 4, 4+x, y);
-    }
-  }
-  tiles_gb.mutate.create(img, 4, 2, 3, 0);
-  tiles_gb.flash .create(img, 4, 2, 3, 1);
-
-  // Frame
-  img_field_frame = res_mgr_.getImage("Field-Frame");
-  frame_origin = style.get<sf::Vector2f>({section, "FrameOrigin"});
-
-  // Cursor
-  img = res_mgr_.getImage("SwapCursor");
-  tiles_cursor[0].create(img, 1, 2, 0, 0);
-  tiles_cursor[1].create(img, 1, 2, 0, 1);
-
-  // Signs
-  img = res_mgr_.getImage("Signs");
-  tiles_signs.combo.create(img, 2, 1, 0, 0);
-  tiles_signs.chain.create(img, 2, 1, 1, 0);
-
-  // Hanging garbages
-  img = res_mgr_.getImage("GbHanging-map");
-  const size_t gb_hanging_sx = FIELD_WIDTH/2; // on 2 rows
-  for(int i=0; i<FIELD_WIDTH; i++) {
-    tiles_gb_hanging.blocks[i].create(img, gb_hanging_sx+1, 2, i%gb_hanging_sx, i/gb_hanging_sx);
-  }
-  tiles_gb_hanging.line.create(img, gb_hanging_sx+1, 2, gb_hanging_sx, 0);
-}
-
-
-bool StyleField::searchStyle(const std::string& prop, std::string* key) const
-{
-  std::string s = IniFile::join(style_section_, prop);
-  if( res_mgr_.style().has(s) ) {
-    *key = s;
-    return true;
-  }
-  return false;
+  o.create(image, rect, inside_left, inside_width);
 }
 
 

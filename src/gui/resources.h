@@ -4,19 +4,20 @@
 #include <memory>
 #include <map>
 #include <string>
-#include <SFML/Graphics/Texture.hpp>
-#include <SFML/Graphics/Text.hpp>
-#include <SFML/Graphics/VertexArray.hpp>
 #include <istream>
 #include "../util.h"
 #include "../inifile.h"
 
 namespace sf {
-  class Sprite;
+  class Font;
   class Text;
+  class Texture;
+  class Sprite;
 }
 
 namespace gui {
+
+class StyleLoader;
 
 
 class ResourceManager
@@ -91,8 +92,8 @@ class ImageFrame
     const sf::Texture* image = nullptr;
     sf::IntRect rect;
     sf::IntRect inside;
-    /// Apply style to an object
-    void apply(ImageFrame& o);
+    void load(const StyleLoader& loader);
+    void apply(ImageFrame& o) const;
   };
 
   ImageFrame();
@@ -119,8 +120,8 @@ class ImageFrameX
     sf::IntRect rect;
     unsigned int inside_left;
     unsigned int inside_width;
-    /// Apply style to an object
-    void apply(ImageFrameX& o);
+    void load(const StyleLoader& loader);
+    void apply(ImageFrameX& o) const;
   };
 
   ImageFrameX();
@@ -136,159 +137,6 @@ class ImageFrameX
   sf::IntRect rect_;
   unsigned int inside_left_;
   unsigned int inside_width_;
-};
-
-
-/** @brief Container for text style
- *
- * Style properties:
- *  - Font
- *  - FontSize
- *  - FontBorderWidth
- *  - FontStyle
- *  - FontColor
- *  - FontBordercolor
- */
-struct StyleText
-{
-  const sf::Font* font = nullptr;
-  unsigned int size = 30;
-  unsigned int border_width = 0;
-  unsigned int style = sf::Text::Regular;
-  sf::Color color = sf::Color::White;
-  sf::Color border_color = sf::Color::Black;
-
-  /// Apply style to a Text object
-  void apply(sf::Text& o);
-};
-
-/** @brief Container for sprite style
- *
- * Style properties:
- *  - Image
- *  - ImageRect
- */
-struct StyleSprite
-{
-  const sf::Texture* image;
-  sf::IntRect rect;
-  /// Apply style to a Sprite object
-  void apply(sf::Sprite& o);
-};
-
-
-/// Retrieve style container from object type
-template <class T> struct StyleType { typedef typename T::Style container; };
-template <> struct StyleType<sf::Text> { typedef StyleText container; };
-template <> struct StyleType<sf::Sprite> { typedef StyleSprite container; };
-
-
-/** @brief Mixin providing facilities to set style on various elements
- *
- * The prefix is used in some error messages, to display the name of missing
- * properties. It should use dotted notation.
- */
-class Stylable
-{
- public:
-  struct StyleError: public std::runtime_error {
-    StyleError(const std::string& prop, const std::string& msg);
-    StyleError(const Stylable& stylable, const std::string& prop, const std::string& msg);
-  };
-
-  Stylable(ResourceManager& res_mgr);
-  virtual ~Stylable();
-
-  const ResourceManager& res_mgr() const { return res_mgr_; }
-
-  /** @brief Get style entry key for a given property
-   * @return true if found, false otherwise.
-   */
-  virtual bool searchStyle(const std::string& prop, std::string* key) const = 0;
-  /** @brief Style section to be used in some error message
-   *
-   * This string is used as prefix for style error (e.g. missing property).
-   * It should use dotted notation and be a section on which style values may
-   * be set.
-   */
-  virtual std::string styleErrorSection() const = 0;
-
-  /// Load text style
-  void loadStyle(StyleText& style, const std::string prefix="") const;
-  /// Load ImageFrame style
-  void loadStyle(ImageFrame::Style& style, const std::string prefix="") const;
-  /// Load ImageFrameX style
-  void loadStyle(ImageFrameX::Style& style, const std::string prefix="") const;
-  /// Load sprite style
-  void loadStyle(StyleSprite& style, const std::string prefix="") const;
-  /// Helper to load then apply a style
-  template <class T> void applyStyle(T& o, const std::string prefix="") const {
-    typename StyleType<T>::container style;
-    loadStyle(style, prefix);
-    style.apply(o);
-  }
-
- protected:
-  ResourceManager& res_mgr_;
-};
-
-
-/** @brief Container for field display resources
- *
- * Style entries:
- *  - Color.Neutral: neutral block/field color
- *  - Color.N: block/field color N
- *  - FrameOrigin: origin of field blocks in frame
- */
-class StyleField: public Stylable
-{
- public:
-  StyleField(ResourceManager& res_mgr);
-  void load(const std::string& section);
-
-  virtual bool searchStyle(const std::string& prop, std::string* key) const;
-  virtual std::string styleErrorSection() const { return style_section_; }
-
-  /// List of block/field colors
-  std::vector<sf::Color> colors;
-  /// Block pixel size
-  unsigned int bk_size;
-
-  /// Tile group for block of a given color
-  struct TilesBkColor {
-    ImageTile normal, bg, face, flash, mutate;
-  };
-  /// Color blocks
-  std::vector<TilesBkColor> tiles_bk_color;
-
-  /// Garbages
-  struct TilesGb {
-    ImageTile tiles[4][4];
-    ImageTile center[2][2];
-    ImageTile mutate, flash;
-  } tiles_gb;
-
-  /// Field frame
-  const sf::Texture* img_field_frame;
-  /// Origin of field blocks in frame (top left corner)
-  sf::Vector2f frame_origin;
-
-  /// Cursor (two positions)
-  ImageTile tiles_cursor[2];
-
-  /// Signs (combo and chain)
-  struct TilesSigns {
-    ImageTile combo, chain;
-  } tiles_signs;
-
-  /// Hanging garbages
-  struct TilesGbHanging {
-    ImageTile blocks[FIELD_WIDTH];
-    ImageTile line;
-  } tiles_gb_hanging;
-
- protected:
-  std::string style_section_;
 };
 
 

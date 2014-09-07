@@ -11,7 +11,7 @@ endif()
 # Set variables for parent scope
 
 set(PNP_INTF_GUI_SRCS
-  interface.cpp resources.cpp screen.cpp widget.cpp
+  interface.cpp resources.cpp style.cpp screen.cpp widget.cpp
   screen_menus.cpp screen_game.cpp
   PARENT_SCOPE
   )

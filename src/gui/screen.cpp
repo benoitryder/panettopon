@@ -9,21 +9,17 @@
 namespace gui {
 
 Screen::Screen(GuiInterface& intf, const std::string& name):
-    Stylable(intf.res_mgr()),
     intf_(intf), name_(name)
 {
-  const IniFile& style = this->style();
-  std::string key;
-  if( searchStyle("BackgroundImage", &key) ) {
-    background_.img = intf_.res_mgr().getImage(style.get<std::string>(key));
+  std::string val;
+  if(fetchStyle<std::string>("BackgroundImage", val)) {
+    background_.img = intf_.res_mgr().getImage(val);
     //XXX assume that the background image always needs wrapping
     sf::Texture::bind(background_.img);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   }
-  if( searchStyle("BackgroundColor", &key) ) {
-    background_.color = style.get<sf::Color>(key);
-  }
+  fetchStyle<sf::Color>("BackgroundColor", background_.color);
 }
 
 Screen::~Screen() {}
@@ -60,14 +56,19 @@ void ScreenMenu::Background::draw(sf::RenderTarget& target, sf::RenderStates sta
 }
 
 
-bool Screen::searchStyle(const std::string& prop, std::string* key) const
+ResourceManager& Screen::res_mgr() const
+{
+  return intf_.res_mgr();
+}
+
+bool Screen::searchStyle(const std::string& prop, std::string& key) const
 {
   const IniFile& style = this->style();
   std::string section = name_;
   for( int i=0; i<10; i++ ) {
     std::string s = IniFile::join(section, prop);
     if(style.has(s)) {
-      *key = s;
+      key = s;
       return true;
     }
     section = style.get({section, "Fallback"}, "");
@@ -75,7 +76,7 @@ bool Screen::searchStyle(const std::string& prop, std::string* key) const
       return false;
     }
   }
-  throw Stylable::StyleError(*this, prop, "too many recursive fallbacks");
+  throw StyleError(*this, prop, "too many recursive fallbacks");
 }
 
 
