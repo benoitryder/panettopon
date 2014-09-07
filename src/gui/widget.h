@@ -104,7 +104,7 @@ class WContainer: public Widget
 /** @brief Widget wrapping an ImageFrame.
  *
  * Style properties:
- *  - Image, ImageRect, ImageInside
+ *  - ImageFrame properties
  *  - Size
  */
 class WFrame: public Widget
@@ -125,15 +125,24 @@ class WFrame: public Widget
 /** @brief Text button with image background
  *
  * Style properties:
+ *  - StyleText properties
+ *  - ImageFrameX properties
  *  - Width
- *  - Text.* : see StyleText
- *  - Frame : see ImageFrameX
- *  - Focus.Text.* : see StyleText
- *  - Focus.Frame : see ImageFrameX
+ *  - Focus.*: all properties
  */
 class WButton: public WFocusable
 {
  public:
+  struct Style {
+    StyleText text;
+    ImageFrameX::Style frame;
+    sf::Color color;
+    float width;
+
+    void load(const StyleLoader& loader);
+    void apply(WButton& o);
+  };
+
   WButton(const Screen& screen, const std::string& name);
   void setCaption(const std::string& caption);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
@@ -148,10 +157,9 @@ class WButton: public WFocusable
  private:
   sf::Text caption_;  ///< Button caption
   ImageFrameX frame_;
-  ImageFrameX focus_frame_;
-  sf::Color color_;
-  sf::Color focus_color_;
   float width_;
+  Style style_;
+  Style style_focus_;
   Callback callback_;
 };
 
@@ -159,8 +167,7 @@ class WButton: public WFocusable
 /** @brief Simple text widget
  *
  * Style properties:
- *  - Font, FontSize, FontStyle
- *  - Color
+ *  - StyleText properties
  *  - TextAlign: left, center, right
  */
 class WLabel: public Widget
@@ -183,15 +190,27 @@ class WLabel: public Widget
 /** @brief Text field
  *
  * Style properties:
- *  - Font, FontSize, FontStyle
- *  - Color, FocusColor
+ *  - StyleText properties
+ *  - ImageFrameX properties
  *  - Width
- *  - BgImage, BgImageRect, BgImageInside
  *  - TextMarginsX: left and right margin for text
+ *  - Focus.*
  */
 class WEntry: public WFocusable
 {
  public:
+  struct Style {
+    StyleText text;
+    ImageFrameX::Style frame;
+    sf::Color color;
+    float width;
+    float text_margin_left;
+    float text_margin_right;
+
+    void load(const StyleLoader& loader);
+    void apply(WEntry& o);
+  };
+
   WEntry(const Screen& screen, const std::string& name);
   void setText(const std::string& caption);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
@@ -224,11 +243,10 @@ class WEntry: public WFocusable
   sf::Sprite text_sprite_;
   Cursor cursor_;
   ImageFrameX frame_;
-  ImageFrameX focus_frame_;
-  sf::Color color_;
-  sf::Color focus_color_;
-  float width_;
   unsigned int cursor_pos_;  ///< cursor position, in the complete string
+  float width_;
+  Style style_;
+  Style style_focus_;
 };
 
 
@@ -237,14 +255,24 @@ class WEntry: public WFocusable
  * Similar to a drop-down list, unless it does not drop-down.
  *
  * Style properties:
- *  - Font, FontSize, FontStyle
- *  - Color, FocusColor
+ *  - StyleText properties
+ *  - ImageFrameX properties
  *  - Width
- *  - BgImage, BgImageRect, BgImageInside
+ *  - Focus.*
  */
 class WChoice: public WFocusable
 {
  public:
+  struct Style {
+    StyleText text;
+    ImageFrameX::Style frame;
+    sf::Color color;
+    float width;
+
+    void load(const StyleLoader& loader);
+    void apply(WChoice& o);
+  };
+
   typedef std::vector<std::string> ItemContainer;
 
   WChoice(const Screen& screen, const std::string& name);
@@ -262,12 +290,11 @@ class WChoice: public WFocusable
  private:
   ItemContainer items_;
   unsigned int index_;
-  ImageFrameX frame_;
-  ImageFrameX focus_frame_;
   sf::Text text_;
-  sf::Color color_;
-  sf::Color focus_color_;
+  ImageFrameX frame_;
   float width_;
+  Style style_;
+  Style style_focus_;
 };
 
 

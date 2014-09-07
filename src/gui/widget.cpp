@@ -115,21 +115,9 @@ const std::string& WButton::type() const {
 WButton::WButton(const Screen& screen, const std::string& name):
     WFocusable(screen, name), callback_(NULL)
 {
-  std::string key;
-
-  this->applyStyle(caption_);
-
-  fetchStyle<sf::Color>("Color", color_);
-  StyleLoaderPrefix(*this, "Focus", true).fetchStyle("Color", focus_color_);
-
-  width_ = getStyle<float>("Width", key);
-  if(width_ <= 0) {
-    throw StyleError(key, "value must be positive");
-  }
-
-  this->applyStyle(frame_);
-  StyleLoaderPrefix(*this, "Focus", true).applyStyle(focus_frame_);
-  caption_.setColor(color_);
+  style_.load(*this);
+  style_focus_.load(StyleLoaderPrefix(*this, "Focus", true));
+  style_.apply(*this);
 }
 
 void WButton::setCaption(const std::string& caption)
@@ -142,11 +130,7 @@ void WButton::setCaption(const std::string& caption)
 void WButton::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
-  if( this->focused() ) {
-    focus_frame_.render(target, states, width_);
-  } else {
-    frame_.render(target, states, width_);
-  }
+  frame_.render(target, states, width_);
   target.draw(caption_, states);
 }
 
@@ -166,7 +150,32 @@ bool WButton::onInputEvent(const sf::Event& ev)
 void WButton::focus(bool focused)
 {
   WFocusable::focus(focused);
-  caption_.setColor(focused ? focus_color_ : color_);
+  if(focused) {
+    style_focus_.apply(*this);
+  } else {
+    style_.apply(*this);
+  }
+}
+
+
+void WButton::Style::load(const StyleLoader& loader)
+{
+  std::string key;
+
+  text.load(loader);
+  frame.load(loader);
+
+  width = loader.getStyle<float>("Width", key);
+  if(width <= 0) {
+    throw StyleError(key, "value must be positive");
+  }
+}
+
+void WButton::Style::apply(WButton& o)
+{
+  text.apply(o.caption_);
+  frame.apply(o.frame_);
+  o.width_ = width;
 }
 
 
@@ -181,10 +190,7 @@ WLabel::WLabel(const Screen& screen, const std::string& name):
   const IniFile& style = screen_.style();
   std::string key;
 
-  this->applyStyle(text_);
-  if(searchStyle("Color", key)) {
-    text_.setColor(style.get<sf::Color>(key));
-  }
+  applyStyle(text_);
   if(searchStyle("TextAlign", key)) {
     const std::string align = style.get<std::string>(key);
     if( align == "left" ) {
@@ -235,31 +241,10 @@ const std::string& WEntry::type() const {
 WEntry::WEntry(const Screen& screen, const std::string& name):
     WFocusable(screen, name), cursor_pos_(0)
 {
-  std::string key;
-
-  this->applyStyle(text_);
-
-  fetchStyle<sf::Color>("Color", color_);
-  StyleLoaderPrefix(*this, "Focus", true).fetchStyle("Color", focus_color_);
-
-  width_ = getStyle<float>("Width", key);
-  if(width_ <= 0) {
-    throw StyleError(key, "value must be positive");
-  }
-
-  std::pair<unsigned int, unsigned int> text_margins(0, 0);
-  fetchStyle<decltype(text_margins)>("TextMarginsX", text_margins);
-  unsigned int text_height = text_.getFont()->getLineSpacing(text_.getCharacterSize())+2;
-  text_img_.create(width_-(text_margins.first+text_margins.second), text_height);
-  text_sprite_.setOrigin(width_/2.-text_margins.first, text_height/2.);
-  text_sprite_.setTexture(text_img_.getTexture(), true);
-  text_sprite_.setColor(color_);
-  cursor_.setHeight(text_height);
-  cursor_.setColor(focus_color_);
+  style_.load(*this);
+  style_focus_.load(StyleLoaderPrefix(*this, "Focus", true));
+  style_.apply(*this);
   cursor_.x = text_sprite_.getOrigin().x;
-
-  this->applyStyle(frame_);
-  StyleLoaderPrefix(*this, "Focus", true).applyStyle(focus_frame_);
 }
 
 void WEntry::setText(const std::string& text)
@@ -271,13 +256,10 @@ void WEntry::setText(const std::string& text)
 void WEntry::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
-  if( this->focused() ) {
-    focus_frame_.render(target, states, width_);
-    target.draw(text_sprite_, states);
+  frame_.render(target, states, width_);
+  target.draw(text_sprite_, states);
+  if(focused()) {
     target.draw(cursor_, states);
-  } else {
-    frame_.render(target, states, width_);
-    target.draw(text_sprite_, states);
   }
 }
 
@@ -334,7 +316,11 @@ bool WEntry::onInputEvent(const sf::Event& ev)
 void WEntry::focus(bool focused)
 {
   WFocusable::focus(focused);
-  text_sprite_.setColor(focused ? focus_color_ : color_);
+  if(focused) {
+    style_focus_.apply(*this);
+  } else {
+    style_.apply(*this);
+  }
 }
 
 
@@ -371,6 +357,40 @@ void WEntry::updateTextDisplay(bool force)
 }
 
 
+void WEntry::Style::load(const StyleLoader& loader)
+{
+  std::string key;
+
+  text.load(loader);
+  frame.load(loader);
+
+  width = loader.getStyle<float>("Width", key);
+  if(width <= 0) {
+    throw StyleError(key, "value must be positive");
+  }
+
+  std::pair<unsigned int, unsigned int> text_margins(0, 0);
+  loader.fetchStyle<decltype(text_margins)>("TextMarginsX", text_margins);
+  text_margin_left = text_margins.first;
+  text_margin_right = text_margins.second;
+}
+
+void WEntry::Style::apply(WEntry& o)
+{
+  text.apply(o.text_);
+  frame.apply(o.frame_);
+  o.width_ = width;
+
+  unsigned int text_height = o.text_.getFont()->getLineSpacing(o.text_.getCharacterSize())+2;
+  o.text_img_.create(width-(text_margin_left+text_margin_right), text_height);
+  o.text_sprite_.setOrigin(width/2.-text_margin_left, text_height/2.);
+  o.text_sprite_.setTexture(o.text_img_.getTexture(), true);
+  o.cursor_.setHeight(text_height);
+  o.cursor_.setColor(text.color);
+  o.updateTextDisplay(true);
+}
+
+
 WEntry::Cursor::Cursor():
     x(0), color_(sf::Color::White)
 {
@@ -402,21 +422,9 @@ const std::string& WChoice::type() const {
 WChoice::WChoice(const Screen& screen, const std::string& name):
     WFocusable(screen, name)
 {
-  std::string key;
-
-  this->applyStyle(text_);
-
-  fetchStyle<sf::Color>("Color", color_);
-  StyleLoaderPrefix(*this, "Focus", true).fetchStyle("Color", focus_color_);
-
-  width_ = getStyle<float>("Width", key);
-  if(width_ <= 0) {
-    throw StyleError(key, "value must be positive");
-  }
-
-  this->applyStyle(frame_);
-  StyleLoaderPrefix(*this, "Focus", true).applyStyle(focus_frame_);
-  text_.setColor(color_);
+  style_.load(*this);
+  style_focus_.load(StyleLoaderPrefix(*this, "Focus", true));
+  style_.apply(*this);
 }
 
 void WChoice::setItems(const ItemContainer& items)
@@ -441,11 +449,7 @@ void WChoice::select(unsigned int i)
 void WChoice::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
-  if( this->focused() ) {
-    focus_frame_.render(target, states, width_);
-  } else {
-    frame_.render(target, states, width_);
-  }
+  frame_.render(target, states, width_);
   target.draw(text_, states);
 }
 
@@ -468,7 +472,32 @@ bool WChoice::onInputEvent(const sf::Event& ev)
 void WChoice::focus(bool focused)
 {
   WFocusable::focus(focused);
-  text_.setColor(focused ? focus_color_ : color_);
+  if(focused) {
+    style_focus_.apply(*this);
+  } else {
+    style_.apply(*this);
+  }
+}
+
+
+void WChoice::Style::load(const StyleLoader& loader)
+{
+  std::string key;
+
+  text.load(loader);
+  frame.load(loader);
+
+  width = loader.getStyle<float>("Width", key);
+  if(width <= 0) {
+    throw StyleError(key, "value must be positive");
+  }
+}
+
+void WChoice::Style::apply(WChoice& o)
+{
+  text.apply(o.text_);
+  frame.apply(o.frame_);
+  o.width_ = width;
 }
 
 
