@@ -64,6 +64,8 @@ struct StyleField
 
   /// Start countdown
   StyleText start_countdown_style;
+  /// Rank sign
+  StyleText rank_sign_style;
 
   void load(const StyleLoader& loader);
 };
@@ -78,6 +80,7 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event& ev);
   virtual void onPlayerStep(Player* pl);
+  virtual void onPlayerRanked(Player* pl);
   virtual void onStateChange();
 
   /// InputProvider interface.
@@ -113,11 +116,13 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   static const float BOUNCE_Y_MAX;
 
  public:
-  FieldDisplay(const GuiInterface& intf, const Field& fld, const StyleField& style);
+  FieldDisplay(GuiInterface& intf, const Field& fld, const StyleField& style);
   virtual ~FieldDisplay() {}
 
   /// Update internal display after a step
   void step();
+  /// Update internal display when player is ranked
+  void doRank();
 
  protected:
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
@@ -137,12 +142,13 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
    */
   void renderBouncingBlock(sf::RenderTarget& target, sf::RenderStates states, int x, int y, float bounce, unsigned int color) const;
 
-  const GuiInterface& intf_;
+  GuiInterface& intf_;
   const Field& field_;
   const StyleField& style_;
   sf::Sprite spr_frame_;
   sf::Sprite spr_cursor_;
   std::unique_ptr<sf::Text> text_start_countdown_;
+  std::unique_ptr<sf::Text> text_rank_sign_;
 
   /// Current lift offset (from 0 to 1)
   float lift_offset_;

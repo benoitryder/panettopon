@@ -84,6 +84,8 @@ void StyleField::load(const StyleLoader& loader)
 
   // Start countdown
   start_countdown_style.load(StyleLoaderPrefix(loader, "StartCountdown"));
+  // Rank sign
+  rank_sign_style.load(StyleLoaderPrefix(loader, "RankSign"));
 }
 
 
@@ -150,6 +152,14 @@ void ScreenGame::onPlayerStep(Player* pl)
   }
 }
 
+void ScreenGame::onPlayerRanked(Player* pl)
+{
+  auto fdp = field_displays_.find(pl->plid());
+  if(fdp != field_displays_.end()) {
+    (*fdp).second->doRank();
+  }
+}
+
 void ScreenGame::onStateChange()
 {
   auto state = intf_.instance()->state();
@@ -212,7 +222,7 @@ const float FieldDisplay::BOUNCE_Y_MIN       = -48/128.;
 const float FieldDisplay::BOUNCE_Y_MAX       =  60/128.;
 
 
-FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const StyleField& style):
+FieldDisplay::FieldDisplay(GuiInterface& intf, const Field& fld, const StyleField& style):
     sf::Drawable(), intf_(intf), field_(fld), style_(style)
 {
   ::memset(crouch_dt_, 0, sizeof(crouch_dt_));
@@ -292,9 +302,12 @@ void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
     target.draw((*it), states);
   }
 
-  // start countdown (empty text when expired)
+  // temporary elements
   if(text_start_countdown_) {
     target.draw(*text_start_countdown_, states);
+  }
+  if(text_rank_sign_) {
+    target.draw(*text_rank_sign_, states);
   }
 }
 
@@ -420,6 +433,43 @@ void FieldDisplay::step()
   } else if(field_.tick() == server_conf.tk_start_countdown) {
     text_start_countdown_.reset();
   }
+}
+
+
+void FieldDisplay::doRank()
+{
+  assert(!text_rank_sign_);
+  assert(field_.rank());
+  ResourceManager& res_mgr = intf_.res_mgr();
+
+  text_rank_sign_ = std::unique_ptr<sf::Text>(new sf::Text());
+  style_.rank_sign_style.apply(*text_rank_sign_);
+  // display a difference text depending on player count
+  std::string lang_key;
+  unsigned int field_count = intf_.instance()->match().fields().size();
+  unsigned int rank = field_.rank();
+  if(field_count == 1) {
+    lang_key = "Lose";
+  } if(field_count == 2) {
+    if(rank == 1) {
+      // detect draws (all players are first)
+      bool draw = true;
+      for(const auto& field : intf_.instance()->match().fields()) {
+        LOG("field %d: %d", field.fldid(), field.rank());
+        draw = draw && field.rank() == 1;
+      }
+      lang_key = draw ? "Draw" : "Win";
+    } else {
+      lang_key = "Lose";
+    }
+  } else {
+    lang_key = rank < 10 ? std::to_string(rank) : "Lose";
+  }
+
+  text_rank_sign_->setString(res_mgr.getLang({"Rank", lang_key}));
+  sf::FloatRect r = text_rank_sign_->getLocalBounds();
+  text_rank_sign_->setOrigin(r.width/2, 0);
+  text_rank_sign_->setPosition(style_.bk_size * FIELD_WIDTH/2, style_.bk_size * 2);
 }
 
 
