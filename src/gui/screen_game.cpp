@@ -114,8 +114,8 @@ void ScreenGame::exit()
 
 void ScreenGame::redraw()
 {
+  Screen::redraw();
   sf::RenderWindow& w = intf_.window();
-  w.clear(sf::Color(48,48,48)); //XXX:tmp
   for(const auto& pair : field_displays_) {
     w.draw(*pair.second);
   }
