@@ -9,7 +9,7 @@
 namespace gui {
 
 Screen::Screen(GuiInterface& intf, const std::string& name):
-    intf_(intf), name_(name)
+    intf_(intf), name_(name), container_(*this, ""), focused_(nullptr)
 {
   std::string val;
   if(fetchStyle<std::string>("BackgroundImage", val)) {
@@ -31,13 +31,75 @@ const IniFile& Screen::style() const
 
 void Screen::enter() {}
 void Screen::exit() {}
+
 void Screen::redraw()
 {
   sf::RenderWindow& w = intf_.window();
   w.draw(background_);
+  w.draw(container_);
 }
 
-void ScreenMenu::Background::draw(sf::RenderTarget& target, sf::RenderStates states) const
+
+bool Screen::onInputEvent(const sf::Event& ev)
+{
+  // handle input for focused widget
+
+  if(!focused_) {
+    return false; // nothing to do
+  }
+
+  if(focused_->onInputEvent(ev)) {
+    return true;
+  }
+
+  if(ev.type == sf::Event::KeyPressed) {
+    // move focus
+    WFocusable* next_focused = NULL;
+    if(ev.key.code == sf::Keyboard::Up) {
+      next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
+    } else if(ev.key.code == sf::Keyboard::Down) {
+      next_focused = focused_->neighbor(WFocusable::NEIGHBOR_DOWN);
+    } else if(ev.key.code == sf::Keyboard::Left) {
+      next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
+    } else if(ev.key.code == sf::Keyboard::Right) {
+      next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
+    } else if(ev.key.code == sf::Keyboard::Tab) {
+      if(ev.key.shift) {
+        next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
+        if(!next_focused) {
+          next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
+        }
+      } else {
+        next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
+        if(!next_focused) {
+          next_focused = focused_->neighbor(WFocusable::NEIGHBOR_DOWN);
+        }
+      }
+    }
+    if(next_focused) {
+      this->focus(next_focused);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
+void Screen::focus(WFocusable* w)
+{
+  if(focused_) {
+    focused_->focus(false);
+  }
+  focused_ = w;
+  if(focused_) {
+    focused_->focus(true);
+  }
+}
+
+
+
+void Screen::Background::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   target.clear(color);
   if( img ) {
@@ -77,74 +139,6 @@ bool Screen::searchStyle(const std::string& prop, std::string& key) const
     }
   }
   throw StyleError(*this, prop, "too many recursive fallbacks");
-}
-
-
-ScreenMenu::ScreenMenu(GuiInterface& intf, const std::string& name):
-    Screen(intf, name), container_(*this, ""), focused_(NULL)
-{
-}
-
-void ScreenMenu::redraw()
-{
-  Screen::redraw();
-  sf::RenderWindow& w = intf_.window();
-  w.draw(container_);
-}
-
-
-bool ScreenMenu::onInputEvent(const sf::Event& ev)
-{
-  if( focused_ ) {
-    if( focused_->onInputEvent(ev) ) {
-      return true;
-    }
-  }
-
-  if( ev.type == sf::Event::KeyPressed ) {
-    // move focus
-    if( focused_ ) {
-      WFocusable* next_focused = NULL;
-      if( ev.key.code == sf::Keyboard::Up ) {
-        next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
-      } else if( ev.key.code == sf::Keyboard::Down ) {
-        next_focused = focused_->neighbor(WFocusable::NEIGHBOR_DOWN);
-      } else if( ev.key.code == sf::Keyboard::Left ) {
-        next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
-      } else if( ev.key.code == sf::Keyboard::Right ) {
-        next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
-      } else if( ev.key.code == sf::Keyboard::Tab ) {
-        if( ev.key.shift ) {
-          next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
-          if( ! next_focused ) {
-            next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
-          }
-        } else {
-          next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
-          if( ! next_focused ) {
-            next_focused = focused_->neighbor(WFocusable::NEIGHBOR_DOWN);
-          }
-        }
-      }
-      if( next_focused ) {
-        this->focus(next_focused);
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-void ScreenMenu::focus(WFocusable* w)
-{
-  if( focused_ ) {
-    focused_->focus(false);
-  }
-  focused_ = w;
-  if( focused_ ) {
-    focused_->focus(true);
-  }
 }
 
 

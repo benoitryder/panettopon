@@ -9,7 +9,7 @@ namespace gui {
 
 
 ScreenStart::ScreenStart(GuiInterface& intf):
-    ScreenMenu(intf, "ScreenStart")
+    Screen(intf, "ScreenStart")
 {
 }
 
@@ -57,7 +57,7 @@ void ScreenStart::enter()
 
 bool ScreenStart::onInputEvent(const sf::Event& ev)
 {
-  if( ScreenMenu::onInputEvent(ev) ) {
+  if(Screen::onInputEvent(ev)) {
     return true;
   }
   if( ev.type == sf::Event::KeyPressed ) {
@@ -102,7 +102,7 @@ void ScreenStart::onCreateServer()
 
 
 ScreenJoinServer::ScreenJoinServer(GuiInterface& intf):
-    ScreenMenu(intf, "ScreenJoinServer"),
+    Screen(intf, "ScreenJoinServer"),
     submitting_(false)
 {
 }
@@ -150,7 +150,7 @@ bool ScreenJoinServer::onInputEvent(const sf::Event& ev)
   if( submitting_ ) {
     return true;  // ignore input
   }
-  if( ScreenMenu::onInputEvent(ev) ) {
+  if(Screen::onInputEvent(ev)) {
     return true;
   }
   if( ev.type == sf::Event::KeyPressed ) {
@@ -207,7 +207,7 @@ void ScreenJoinServer::submit()
 
 
 ScreenCreateServer::ScreenCreateServer(GuiInterface& intf):
-    ScreenMenu(intf, "ScreenCreateServer")
+    Screen(intf, "ScreenCreateServer")
 {
 }
 
@@ -255,7 +255,7 @@ void ScreenCreateServer::enter()
 
 bool ScreenCreateServer::onInputEvent(const sf::Event& ev)
 {
-  if( ScreenMenu::onInputEvent(ev) ) {
+  if(Screen::onInputEvent(ev)) {
     return true;
   }
   if( ev.type == sf::Event::KeyPressed ) {
@@ -302,7 +302,7 @@ void ScreenCreateServer::submit()
 
 
 ScreenLobby::ScreenLobby(GuiInterface& intf, Player* pl):
-    ScreenMenu(intf, "ScreenLobby"),
+    Screen(intf, "ScreenLobby"),
     player_(pl)
 {
 }
@@ -342,7 +342,7 @@ void ScreenLobby::enter()
 
 void ScreenLobby::redraw()
 {
-  ScreenMenu::redraw();
+  Screen::redraw();
 
   sf::RenderWindow& w = intf_.window();
   PlayerRowsContainer::const_iterator it;
@@ -354,7 +354,7 @@ void ScreenLobby::redraw()
 
 bool ScreenLobby::onInputEvent(const sf::Event& ev)
 {
-  if( ScreenMenu::onInputEvent(ev) ) {
+  if(Screen::onInputEvent(ev)) {
     return true;
   }
   if( ev.type == sf::Event::KeyPressed ) {

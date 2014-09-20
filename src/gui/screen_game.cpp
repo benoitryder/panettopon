@@ -123,6 +123,10 @@ void ScreenGame::redraw()
 
 bool ScreenGame::onInputEvent(const sf::Event& ev)
 {
+  if(Screen::onInputEvent(ev)) {
+    return true;
+  }
+
   if( ev.type == sf::Event::KeyPressed ) {
     if( ev.key.code == sf::Keyboard::Escape ) {
       intf_.swapScreen(new ScreenStart(intf_));

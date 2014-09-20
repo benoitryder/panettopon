@@ -16,7 +16,7 @@ class GuiInterface;
  *  - CreateServer (button)
  *  - Exit (button)
  */
-class ScreenStart: public ScreenMenu
+class ScreenStart: public Screen
 {
  public:
   ScreenStart(GuiInterface& intf);
@@ -40,7 +40,7 @@ class ScreenStart: public ScreenMenu
  *  - Port (entry)
  *  - Join (button)
  */
-class ScreenJoinServer: public ScreenMenu
+class ScreenJoinServer: public Screen
 {
  public:
   ScreenJoinServer(GuiInterface& intf);
@@ -66,7 +66,7 @@ class ScreenJoinServer: public ScreenMenu
  *  - PortEntry (entry)
  *  - Create (button)
  */
-class ScreenCreateServer: public ScreenMenu
+class ScreenCreateServer: public Screen
 {
  public:
   ScreenCreateServer(GuiInterface& intf);
@@ -91,7 +91,7 @@ class ScreenCreateServer: public ScreenMenu
  * Style properties:
  *  - PlayerRowsPos, PlayerRowsDY
  */
-class ScreenLobby: public ScreenMenu
+class ScreenLobby: public Screen
 {
  public:
   ScreenLobby(GuiInterface& intf, Player* pl);

@@ -14,7 +14,7 @@ namespace gui {
 class GuiInterface;
 
 
-/** @brief Basic screen.
+/** @brief Basic screen
  *
  * Style properties:
  *  - BackgroundImage, BackgroundColor
@@ -35,6 +35,8 @@ class Screen: public StyleLoader
    * @return true if processed, false otherwise.
    */
   virtual bool onInputEvent(const sf::Event& ev) = 0;
+  /// Focus a given widget
+  void focus(WFocusable* w);
 
   /** @name Instance observer methods. */
   //@{
@@ -64,6 +66,8 @@ class Screen: public StyleLoader
  protected:
   GuiInterface& intf_;
   const std::string name_;
+  WContainer container_;
+  WFocusable* focused_;
  private:
   /// Dummy drawable, to have a renderer
   class Background: public sf::Drawable {
@@ -73,21 +77,6 @@ class Screen: public StyleLoader
     const sf::Texture* img;
     sf::Color color;
   } background_;
-};
-
-
-/// Screen with widgets, used for menus.
-class ScreenMenu: public Screen
-{
- public:
-  ScreenMenu(GuiInterface& intf, const std::string& name);
-  virtual void redraw();
-  virtual bool onInputEvent(const sf::Event& ev);
-  void focus(WFocusable* w);
-
- protected:
-  WContainer container_;
-  WFocusable* focused_;
 };
 
 
