@@ -19,15 +19,15 @@ void ScreenStart::enter()
   const ResourceManager& res_mgr = intf_.res_mgr();
 
   WButton* button_join = new WButton(*this, "JoinServer");
-  button_join->setCaption(res_mgr.getLang(name_, "JoinServer"));
+  button_join->setCaption(res_mgr.getLang({name_, "JoinServer"}));
   container_.widgets.push_back(button_join);
 
   WButton* button_create = new WButton(*this, "CreateServer");
-  button_create->setCaption(res_mgr.getLang(name_, "CreateServer"));
+  button_create->setCaption(res_mgr.getLang({name_, "CreateServer"}));
   container_.widgets.push_back(button_create);
 
   button_exit_ = new WButton(*this, "Exit");
-  button_exit_->setCaption(res_mgr.getLang(name_, "Exit"));
+  button_exit_->setCaption(res_mgr.getLang({name_, "Exit"}));
   container_.widgets.push_back(button_exit_);
 
   button_join->setNeighbors(button_exit_, button_create, NULL, NULL);
@@ -43,7 +43,7 @@ void ScreenStart::enter()
   // "Debug start" button, only when debug mode is enabled
   if(intf_.cfg().get<bool>("Global.Debug", false)) {
     WButton* button_debugstart = new WButton(*this, "DebugStart");
-    button_debugstart->setCaption(res_mgr.getLang(name_, "DebugStart"));
+    button_debugstart->setCaption(res_mgr.getLang({name_, "DebugStart"}));
     container_.widgets.push_back(button_debugstart);
 
     button_debugstart->setNeighbors(button_exit_, button_join, NULL, NULL);
@@ -113,7 +113,7 @@ void ScreenJoinServer::enter()
   const IniFile& cfg = intf_.cfg();
 
   WLabel* label = new WLabel(*this, "HostPortLabel");
-  label->setText(res_mgr.getLang(name_, "HostPort"));
+  label->setText(res_mgr.getLang({name_, "HostPort"}));
   container_.widgets.push_back(label);
 
   entry_host_ = new WEntry(*this, "HostEntry");
@@ -125,7 +125,7 @@ void ScreenJoinServer::enter()
   container_.widgets.push_back(entry_port_);
 
   label = new WLabel(*this, "NickLabel");
-  label->setText(res_mgr.getLang(name_, "PlayerName"));
+  label->setText(res_mgr.getLang({name_, "PlayerName"}));
   container_.widgets.push_back(label);
 
   entry_nick_ = new WEntry(*this, "NickEntry");
@@ -133,7 +133,7 @@ void ScreenJoinServer::enter()
   container_.widgets.push_back(entry_nick_);
 
   WButton* button = new WButton(*this, "JoinButton");
-  button->setCaption(res_mgr.getLang(name_, "Join"));
+  button->setCaption(res_mgr.getLang({name_, "Join"}));
   container_.widgets.push_back(button);
 
   //XXX neighbors should be defined in style.ini too
@@ -218,7 +218,7 @@ void ScreenCreateServer::enter()
   // reload configuration from values
 
   WLabel* label = new WLabel(*this, "PortLabel");
-  label->setText(res_mgr.getLang(name_, "Port"));
+  label->setText(res_mgr.getLang({name_, "Port"}));
   container_.widgets.push_back(label);
 
   entry_port_ = new WEntry(*this, "PortEntry");
@@ -226,7 +226,7 @@ void ScreenCreateServer::enter()
   container_.widgets.push_back(entry_port_);
 
   label = new WLabel(*this, "NickLabel");
-  label->setText(res_mgr.getLang(name_, "PlayerName"));
+  label->setText(res_mgr.getLang({name_, "PlayerName"}));
   container_.widgets.push_back(label);
 
   entry_nick_ = new WEntry(*this, "NickEntry");
@@ -234,7 +234,7 @@ void ScreenCreateServer::enter()
   container_.widgets.push_back(entry_nick_);
 
   label = new WLabel(*this, "PlayerNbLabel");
-  label->setText(res_mgr.getLang(name_, "PlayerNumber"));
+  label->setText(res_mgr.getLang({name_, "PlayerNumber"}));
   container_.widgets.push_back(label);
 
   entry_player_nb_ = new WEntry(*this, "PlayerNbEntry");
@@ -242,7 +242,7 @@ void ScreenCreateServer::enter()
   container_.widgets.push_back(entry_player_nb_);
 
   WButton* button = new WButton(*this, "CreateButton");
-  button->setCaption(res_mgr.getLang(name_, "Create"));
+  button->setCaption(res_mgr.getLang({name_, "Create"}));
   container_.widgets.push_back(button);
 
   entry_port_->setNeighbors(button, entry_player_nb_, NULL, NULL);
@@ -314,7 +314,7 @@ void ScreenLobby::enter()
   const ResourceManager& res_mgr = intf_.res_mgr();
 
   button_ready_ = new WButton(*this, "Ready");
-  button_ready_->setCaption(res_mgr.getLang(name_, "Ready"));
+  button_ready_->setCaption(res_mgr.getLang({name_, "Ready"}));
   button_ready_->setCallback(std::bind(&ScreenLobby::submit, this));
   container_.widgets.push_back(button_ready_);
 
@@ -417,7 +417,7 @@ void ScreenLobby::submit()
 void ScreenLobby::updateReadyButtonCaption()
 {
   const std::string caption = player_->state() == Player::State::LOBBY_READY ? "Waiting" : "Ready";
-  button_ready_->setCaption(intf_.res_mgr().getLang("ScreenLobby", caption));
+  button_ready_->setCaption(intf_.res_mgr().getLang({"ScreenLobby", caption}));
 }
 
 void ScreenLobby::updatePlayerRowsPos()

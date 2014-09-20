@@ -38,7 +38,8 @@ class ResourceManager
   /// Style accessors
   const IniFile& style() const { return style_; }
   /// Get a language string from its section and name
-  std::string getLang(const std::string& section, const std::string& key) const;
+  std::string getLang(const std::string& key) const;
+  std::string getLang(IniFile::Path path) const;
 
  private:
   std::string res_path_;  ///< Path to resources.

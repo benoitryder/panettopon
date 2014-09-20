@@ -98,9 +98,14 @@ const sf::Font* ResourceManager::getFont(const std::string& name)
   return font;
 }
 
-std::string ResourceManager::getLang(const std::string& section, const std::string& key) const
+std::string ResourceManager::getLang(const std::string& key) const
 {
-  return lang_.get<std::string>({section, key});
+  return lang_.get<std::string>(key);
+}
+
+std::string ResourceManager::getLang(IniFile::Path path) const
+{
+  return lang_.get<std::string>(path);
 }
 
 
