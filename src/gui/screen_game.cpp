@@ -225,12 +225,13 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
 
   // start countdown
   {
-    style_.start_countdown_style.apply(text_start_countdown_);
+    text_start_countdown_ = std::unique_ptr<sf::Text>(new sf::Text());
+    style_.start_countdown_style.apply(*text_start_countdown_);
     // use a dummy string to center the text
-    text_start_countdown_.setString("0.0");
-    sf::FloatRect r = text_start_countdown_.getLocalBounds();
-    text_start_countdown_.setOrigin(r.width/2, 0);
-    text_start_countdown_.setPosition(style_.bk_size * FIELD_WIDTH/2, style_.bk_size * 2);
+    text_start_countdown_->setString("0.0");
+    sf::FloatRect r = text_start_countdown_->getLocalBounds();
+    text_start_countdown_->setOrigin(r.width/2, 0);
+    text_start_countdown_->setPosition(style_.bk_size * FIELD_WIDTH/2, style_.bk_size * 2);
   }
 
   style_.tiles_cursor[0].setToSprite(&spr_cursor_, true);
@@ -292,7 +293,9 @@ void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
   }
 
   // start countdown (empty text when expired)
-  target.draw(text_start_countdown_, states);
+  if(text_start_countdown_) {
+    target.draw(*text_start_countdown_, states);
+  }
 }
 
 
@@ -413,9 +416,9 @@ void FieldDisplay::step()
     unsigned int ticks = server_conf.tk_start_countdown - field_.tick();
     char buf[5];
     ::snprintf(buf, sizeof(buf), "%3.2f", (ticks * server_conf.tk_usec)/1000000.);
-    text_start_countdown_.setString(buf);
+    text_start_countdown_->setString(buf);
   } else if(field_.tick() == server_conf.tk_start_countdown) {
-    text_start_countdown_.setString("");
+    text_start_countdown_.reset();
   }
 }
 

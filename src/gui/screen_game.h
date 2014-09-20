@@ -1,6 +1,7 @@
 #ifndef GUI_SCREEN_GAME_H_
 #define GUI_SCREEN_GAME_H_
 
+#include <memory>
 #include <boost/ptr_container/ptr_map.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include "screen.h"
@@ -141,7 +142,7 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   const StyleField& style_;
   sf::Sprite spr_frame_;
   sf::Sprite spr_cursor_;
-  sf::Text text_start_countdown_;
+  std::unique_ptr<sf::Text> text_start_countdown_;
 
   /// Current lift offset (from 0 to 1)
   float lift_offset_;
