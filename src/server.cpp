@@ -772,6 +772,7 @@ void ServerInstance::updateRanks()
     np_rank->set_plid(pl->plid());
     np_rank->set_rank(fld->rank());
     socket_->broadcastPacket(pkt_send);
+    observer_.onPlayerRanked(pl);
   }
   if(end_of_match) {
     this->stopMatch();
