@@ -64,9 +64,9 @@ std::string ResourceManager::getResourceFilename(const std::string& filename) co
   return res_path_+"/"+filename;
 }
 
-const sf::Texture* ResourceManager::getImage(const std::string& name)
+const sf::Texture* ResourceManager::getImage(const std::string& name) const
 {
-  ImageContainer::iterator it = images_.find(name);
+  const auto it = images_.find(name);
   if( it != images_.end() ) {
     return (*it).second.get();
   }
@@ -81,9 +81,9 @@ const sf::Texture* ResourceManager::getImage(const std::string& name)
   return img;
 }
 
-const sf::Font* ResourceManager::getFont(const std::string& name)
+const sf::Font* ResourceManager::getFont(const std::string& name) const
 {
-  FontContainer::iterator it = fonts_.find(name);
+  const auto it = fonts_.find(name);
   if( it != fonts_.end() ) {
     return (*it).second.get();
   }
@@ -241,7 +241,7 @@ void ImageFrame::render(sf::RenderTarget& target, sf::RenderStates states, const
 
 void ImageFrame::Style::load(const StyleLoader& loader)
 {
-  ResourceManager& res_mgr = loader.res_mgr();
+  const ResourceManager& res_mgr = loader.res_mgr();
   std::string key;
 
   image = res_mgr.getImage(loader.getStyle<std::string>("Image"));
@@ -318,7 +318,7 @@ void ImageFrameX::render(sf::RenderTarget& target, sf::RenderStates states, floa
 
 void ImageFrameX::Style::load(const StyleLoader& loader)
 {
-  ResourceManager& res_mgr = loader.res_mgr();
+  const ResourceManager& res_mgr = loader.res_mgr();
   std::string key;
 
   image = res_mgr.getImage(loader.getStyle<std::string>("Image"));

@@ -116,7 +116,7 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   static const float BOUNCE_Y_MAX;
 
  public:
-  FieldDisplay(GuiInterface& intf, const Field& fld, const StyleField& style);
+  FieldDisplay(const GuiInterface& intf, const Field& fld, const StyleField& style);
   virtual ~FieldDisplay() {}
 
   /// Update internal display after a step
@@ -142,7 +142,7 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
    */
   void renderBouncingBlock(sf::RenderTarget& target, sf::RenderStates states, int x, int y, float bounce, unsigned int color) const;
 
-  GuiInterface& intf_;
+  const GuiInterface& intf_;
   const Field& field_;
   const StyleField& style_;
   sf::Sprite spr_frame_;

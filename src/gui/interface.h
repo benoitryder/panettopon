@@ -39,7 +39,7 @@ class GuiInterface: public ClientInstance::Observer
 
   sf::RenderWindow& window() { return window_; }
   bool focused() const { return focused_; }
-  ResourceManager& res_mgr() { return res_mgr_; }
+  const ResourceManager& res_mgr() const { return res_mgr_; }
 
   /** @name Instance observer methods. */
   //@{

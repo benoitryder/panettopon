@@ -32,7 +32,7 @@ class Widget: public sf::Drawable, public sf::Transformable, public StyleLoader
   /// Return the widget type as a string.
   virtual const std::string& type() const = 0;
 
-  virtual ResourceManager& res_mgr() const;
+  virtual const ResourceManager& res_mgr() const;
   /** @brief Get style entry key for a given property.
    *
    * The requested property is searched in the following sections (in order):

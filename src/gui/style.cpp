@@ -16,7 +16,7 @@ StyleLoaderPrefix::StyleLoaderPrefix(const StyleLoader& loader, const std::strin
 
 StyleLoaderPrefix::~StyleLoaderPrefix() {}
 
-ResourceManager& StyleLoaderPrefix::res_mgr() const
+const ResourceManager& StyleLoaderPrefix::res_mgr() const
 {
   return loader_.res_mgr();
 }
@@ -49,7 +49,7 @@ StyleError::StyleError(const StyleLoader& loader, const std::string& prop, const
 
 void StyleText::load(const StyleLoader& loader)
 {
-  ResourceManager& res_mgr = loader.res_mgr();
+  const ResourceManager& res_mgr = loader.res_mgr();
   const IniFile& ini = res_mgr.style();
   std::string key;
 
@@ -96,7 +96,7 @@ void StyleText::apply(sf::Text& o) const
 
 void StyleSprite::load(const StyleLoader& loader)
 {
-  ResourceManager& res_mgr = loader.res_mgr();
+  const ResourceManager& res_mgr = loader.res_mgr();
 
   image = res_mgr.getImage(loader.getStyle<std::string>("Image"));
   if(!loader.fetchStyle<decltype(rect)>("ImageRect", rect)) {

@@ -18,7 +18,7 @@ Widget::Widget(const Screen& screen, const std::string& name):
 
 Widget::~Widget() {}
 
-ResourceManager& Widget::res_mgr() const
+const ResourceManager& Widget::res_mgr() const
 {
   return screen_.intf().res_mgr();
 }

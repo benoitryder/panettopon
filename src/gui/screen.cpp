@@ -118,7 +118,7 @@ void Screen::Background::draw(sf::RenderTarget& target, sf::RenderStates states)
 }
 
 
-ResourceManager& Screen::res_mgr() const
+const ResourceManager& Screen::res_mgr() const
 {
   return intf_.res_mgr();
 }

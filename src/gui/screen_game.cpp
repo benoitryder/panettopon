@@ -8,7 +8,7 @@ namespace gui {
 
 void StyleField::load(const StyleLoader& loader)
 {
-  ResourceManager& res_mgr = loader.res_mgr();
+  const ResourceManager& res_mgr = loader.res_mgr();
   std::string key;
 
   colors.push_back(loader.getStyle<sf::Color>("Color.Neutral"));
@@ -222,7 +222,7 @@ const float FieldDisplay::BOUNCE_Y_MIN       = -48/128.;
 const float FieldDisplay::BOUNCE_Y_MAX       =  60/128.;
 
 
-FieldDisplay::FieldDisplay(GuiInterface& intf, const Field& fld, const StyleField& style):
+FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const StyleField& style):
     sf::Drawable(), intf_(intf), field_(fld), style_(style)
 {
   ::memset(crouch_dt_, 0, sizeof(crouch_dt_));
@@ -440,7 +440,7 @@ void FieldDisplay::doRank()
 {
   assert(!text_rank_sign_);
   assert(field_.rank());
-  ResourceManager& res_mgr = intf_.res_mgr();
+  const ResourceManager& res_mgr = intf_.res_mgr();
 
   text_rank_sign_ = std::unique_ptr<sf::Text>(new sf::Text());
   style_.rank_sign_style.apply(*text_rank_sign_);

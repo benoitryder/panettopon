@@ -40,7 +40,7 @@ class StyleLoader
   StyleLoader();
   virtual ~StyleLoader();
 
-  virtual ResourceManager& res_mgr() const = 0;
+  virtual const ResourceManager& res_mgr() const = 0;
 
   /** @brief Search style entry key for a given property
    * @return true if found, false otherwise.
@@ -89,7 +89,7 @@ class StyleLoaderPrefix: public StyleLoader
   StyleLoaderPrefix(const StyleLoader& loader, const std::string& prefix, bool fallback=false);
   virtual ~StyleLoaderPrefix();
 
-  virtual ResourceManager& res_mgr() const;
+  virtual const ResourceManager& res_mgr() const;
   virtual bool searchStyle(const std::string& prop, std::string& key) const;
   virtual std::string styleErrorSection() const;
 

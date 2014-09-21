@@ -32,9 +32,9 @@ class ResourceManager
   /// Get filename to use for a given resource filename
   std::string getResourceFilename(const std::string& filename) const;
   /// Get an image from its name.
-  const sf::Texture* getImage(const std::string& name);
+  const sf::Texture* getImage(const std::string& name) const;
   /// Get a font from its name
-  const sf::Font* getFont(const std::string& name);
+  const sf::Font* getFont(const std::string& name) const;
   /// Style accessors
   const IniFile& style() const { return style_; }
   /// Get a language string from its section and name
@@ -45,9 +45,9 @@ class ResourceManager
   std::string res_path_;  ///< Path to resources.
 
   typedef std::map<std::string, std::shared_ptr<sf::Texture> > ImageContainer;
-  ImageContainer images_;  ///< Loaded images.
+  mutable ImageContainer images_;  ///< Loaded images.
   typedef std::map<std::string, std::shared_ptr<sf::Font> > FontContainer;
-  FontContainer fonts_;  ///< Loaded fonts
+  mutable FontContainer fonts_;  ///< Loaded fonts
   IniFile style_;  ///< Style configuration
   IniFile lang_;  ///< Language strings
 };

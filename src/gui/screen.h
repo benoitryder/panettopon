@@ -52,7 +52,7 @@ class Screen: public StyleLoader
   virtual void onServerDisconnect() {}
   //@}
 
-  virtual ResourceManager& res_mgr() const;
+  virtual const ResourceManager& res_mgr() const;
   /** @brief Get style entry key for a given property.
    *
    * The requested property is searched in the screen's section and
