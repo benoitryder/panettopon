@@ -124,7 +124,7 @@ void WButton::setCaption(const std::string& caption)
 {
   caption_.setString(caption);
   sf::FloatRect r = caption_.getLocalBounds();
-  caption_.setOrigin(r.width/2, (caption_.getFont()->getLineSpacing(caption_.getCharacterSize())+2)/2);
+  caption_.setOrigin(r.width/2, (caption_.getFont()->getLineSpacing(caption_.getCharacterSize()))/2);
 }
 
 void WButton::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -228,7 +228,7 @@ void WLabel::setTextAlign(int align)
   } else if( align > 0 ) {
     x = r.width;
   }
-  text_.setOrigin(x, (text_.getFont()->getLineSpacing(text_.getCharacterSize())+2)/2);
+  text_.setOrigin(x, text_.getFont()->getLineSpacing(text_.getCharacterSize())/2);
   align_ = align;
 }
 
@@ -381,7 +381,7 @@ void WEntry::Style::apply(WEntry& o)
   frame.apply(o.frame_);
   o.width_ = width;
 
-  unsigned int text_height = o.text_.getFont()->getLineSpacing(o.text_.getCharacterSize())+2;
+  unsigned int text_height = o.text_.getFont()->getLineSpacing(o.text_.getCharacterSize());
   o.text_img_.create(width-(text_margin_left+text_margin_right), text_height);
   o.text_sprite_.setOrigin(width/2.-text_margin_left, text_height/2.);
   o.text_sprite_.setTexture(o.text_img_.getTexture(), true);
@@ -443,7 +443,7 @@ void WChoice::select(unsigned int i)
   text_.setString(items_[i]);
   index_ = i;
   sf::FloatRect r = text_.getLocalBounds();
-  text_.setOrigin(r.width/2, (text_.getFont()->getLineSpacing(text_.getCharacterSize())+2)/2);
+  text_.setOrigin(r.width/2, text_.getFont()->getLineSpacing(text_.getCharacterSize())/2);
 }
 
 void WChoice::draw(sf::RenderTarget& target, sf::RenderStates states) const
