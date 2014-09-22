@@ -316,6 +316,21 @@ void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
     target.draw((*it), states);
   }
 
+  // if game is over, darken the field
+  if(field_.rank()) {
+    sf::RenderStates states_dark(sf::BlendMultiply, states.transform, nullptr, nullptr);
+    const sf::Color dark(64, 64, 64);
+    const float sx = style_.bk_size * FIELD_WIDTH;
+    const float sy = style_.bk_size * FIELD_HEIGHT;
+    const sf::Vertex vertices[] = {
+      sf::Vertex(sf::Vector2f(0, 0), dark),
+      sf::Vertex(sf::Vector2f(sx, 0), dark),
+      sf::Vertex(sf::Vector2f(sx, sy), dark),
+      sf::Vertex(sf::Vector2f(0, sy), dark),
+    };
+    target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::Quads, states_dark);
+  }
+
   // temporary elements
   if(text_start_countdown_) {
     target.draw(*text_start_countdown_, states);
