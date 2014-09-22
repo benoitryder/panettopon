@@ -85,7 +85,21 @@ void StyleField::load(const StyleLoader& loader)
   // Start countdown
   start_countdown_style.load(StyleLoaderPrefix(loader, "StartCountdown"));
   // Rank sign
-  rank_sign_style.load(StyleLoaderPrefix(loader, "RankSign"));
+  {
+    StyleLoaderPrefix ranksign_loader = StyleLoaderPrefix(loader, "RankSign");
+    rank_sign_style.win.load(StyleLoaderPrefix(ranksign_loader, "Win", true));
+    rank_sign_style.lose.load(StyleLoaderPrefix(ranksign_loader, "Lose", true));
+    rank_sign_style.draw.load(StyleLoaderPrefix(ranksign_loader, "Draw", true));
+    for(unsigned int i=1; i<RANK_MAX; i++) {
+      std::string dummy;
+      std::string str_i = std::to_string(i);
+      // at least the color must be (re)defined
+      if(!ranksign_loader.searchStyle(str_i, dummy)) {
+        break;
+      }
+      rank_sign_style.rank[i-1].load(StyleLoaderPrefix(ranksign_loader, str_i, true));
+    }
+  }
 }
 
 
@@ -443,14 +457,16 @@ void FieldDisplay::doRank()
   const ResourceManager& res_mgr = intf_.res_mgr();
 
   text_rank_sign_ = std::unique_ptr<sf::Text>(new sf::Text());
-  style_.rank_sign_style.apply(*text_rank_sign_);
-  // display a difference text depending on player count
-  std::string lang_key;
+
+  // use different text/style depending on player count
+  // default to "Lose"
+  std::string lang_key = "Lose";
+  const StyleText* style = &style_.rank_sign_style.lose;
   unsigned int field_count = intf_.instance()->match().fields().size();
   unsigned int rank = field_.rank();
   if(field_count == 1) {
-    lang_key = "Lose";
-  } if(field_count == 2) {
+    // lose, this is the default
+  } else if(field_count == 2) {
     if(rank == 1) {
       // detect draws (all players are first)
       bool draw = true;
@@ -458,15 +474,25 @@ void FieldDisplay::doRank()
         LOG("field %d: %d", field.fldid(), field.rank());
         draw = draw && field.rank() == 1;
       }
-      lang_key = draw ? "Draw" : "Win";
+      if(draw) {
+        lang_key = "Draw";
+        style = &style_.rank_sign_style.draw;
+      } else {
+        lang_key = "Win";
+        style = &style_.rank_sign_style.win;
+      }
     } else {
-      lang_key = "Lose";
+      // lose, this is the default
     }
-  } else {
-    lang_key = rank < 10 ? std::to_string(rank) : "Lose";
+  } else if(rank < StyleField::RANK_MAX) {
+    lang_key = std::to_string(rank);
+    if(rank-1 < style_.rank_sign_style.rank.size()) {
+      style = &style_.rank_sign_style.rank[rank-1];
+    }
   }
 
   text_rank_sign_->setString(res_mgr.getLang({"Rank", lang_key}));
+  style->apply(*text_rank_sign_);
   sf::FloatRect r = text_rank_sign_->getLocalBounds();
   text_rank_sign_->setOrigin(r.width/2, 0);
   text_rank_sign_->setPosition(style_.bk_size * FIELD_WIDTH/2, style_.bk_size * 2);

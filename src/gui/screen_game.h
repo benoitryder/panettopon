@@ -22,6 +22,8 @@ class FieldDisplay;
  */
 struct StyleField
 {
+  static constexpr unsigned int RANK_MAX = 10;
+
   /// List of block/field colors
   std::vector<sf::Color> colors;
   /// Block pixel size
@@ -65,7 +67,12 @@ struct StyleField
   /// Start countdown
   StyleText start_countdown_style;
   /// Rank sign
-  StyleText rank_sign_style;
+  struct {
+    StyleText win;
+    StyleText lose;
+    StyleText draw;
+    std::vector<StyleText> rank;
+  } rank_sign_style;
 
   void load(const StyleLoader& loader);
 };
