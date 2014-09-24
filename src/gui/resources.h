@@ -13,6 +13,7 @@ namespace sf {
   class Text;
   class Texture;
   class Sprite;
+  class SoundBuffer;
 }
 
 namespace gui {
@@ -35,6 +36,8 @@ class ResourceManager
   const sf::Texture* getImage(const std::string& name) const;
   /// Get a font from its name
   const sf::Font* getFont(const std::string& name) const;
+  /// Get a sound buffer from its name
+  const sf::SoundBuffer* getSound(const std::string& name) const;
   /// Style accessors
   const IniFile& style() const { return style_; }
   /// Get a language string from its section and name
@@ -48,6 +51,8 @@ class ResourceManager
   mutable ImageContainer images_;  ///< Loaded images.
   typedef std::map<std::string, std::shared_ptr<sf::Font> > FontContainer;
   mutable FontContainer fonts_;  ///< Loaded fonts
+  typedef std::map<std::string, std::shared_ptr<sf::SoundBuffer> > SoundContainer;
+  mutable SoundContainer sounds_;  ///< Loaded sound buffers
   IniFile style_;  ///< Style configuration
   IniFile lang_;  ///< Language strings
 };

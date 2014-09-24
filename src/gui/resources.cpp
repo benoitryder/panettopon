@@ -4,6 +4,7 @@
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Audio/SoundBuffer.hpp>
 #include "resources.h"
 #include "style.h"
 
@@ -96,6 +97,23 @@ const sf::Font* ResourceManager::getFont(const std::string& name) const
   fonts_[name] = pfont;
 
   return font;
+}
+
+const sf::SoundBuffer* ResourceManager::getSound(const std::string& name) const
+{
+  const auto it = sounds_.find(name);
+  if(it != sounds_.end()) {
+    return (*it).second.get();
+  }
+
+  sf::SoundBuffer* sound = new sf::SoundBuffer;
+  std::shared_ptr<sf::SoundBuffer> psound(sound);
+  if(!sound->loadFromFile(this->getResourceFilename(name+".wav"))) {
+    throw std::runtime_error("failed to load sound "+name);
+  }
+  sounds_[name] = psound;
+
+  return sound;
 }
 
 std::string ResourceManager::getLang(const std::string& key) const
