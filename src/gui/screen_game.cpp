@@ -260,6 +260,10 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
 
   style_.tiles_cursor[0].setToSprite(&spr_cursor_, true);
 
+  // load sounds
+  sounds_.move.setBuffer(*intf_.res_mgr().getSound("move"));
+  sounds_.swap.setBuffer(*intf_.res_mgr().getSound("swap"));
+
   this->step();  // not a step, but do the work
 }
 
@@ -347,6 +351,17 @@ void FieldDisplay::step()
   const Field::StepInfo& info = field_.stepInfo();
 
   lift_offset_ = 1-(float)field_.raiseStep()/field_.conf().raise_steps;
+
+  // only play sounds for local players
+  Player* pl = intf_.instance()->player(&field_);
+  if(pl && pl->local()) {
+    if(info.move) {
+      sounds_.move.play();
+    }
+    if(info.swap) {
+      sounds_.swap.play();
+    }
+  }
 
   // cursor
   if( field_.tick() % 15 == 0 ) {

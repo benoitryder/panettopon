@@ -4,6 +4,7 @@
 #include <memory>
 #include <boost/ptr_container/ptr_map.hpp>
 #include <SFML/Graphics/Sprite.hpp>
+#include <SFML/Audio/Sound.hpp>
 #include "screen.h"
 #include "resources.h"
 
@@ -220,6 +221,12 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   GbHangingList gbw_drbs_;
 
   //@}
+
+  struct {
+    sf::Sound move;
+    sf::Sound swap;
+  } sounds_;
+
 };
 
 
