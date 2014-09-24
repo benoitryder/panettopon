@@ -83,7 +83,7 @@ void Field::initMatch()
 
 
 Field::StepInfo::StepInfo():
-    combo(0), chain(1), raised(false)
+    combo(0), chain(1), raised(false), swap(false), move(false)
 {
 }
 
@@ -506,18 +506,22 @@ void Field::step(KeyState keys)
   if( (keys_input&GAME_KEY_MOVE) && (key_repeat_ == 0 || key_repeat_ >= 10) ) {
     if( keys_input & GAME_KEY_UP ) {
       if( cursor_.y+1 < FIELD_HEIGHT ) {
+        step_info_.move = true;
         cursor_.y++;
       }
     } else if( keys_input & GAME_KEY_DOWN ) {
       if( cursor_.y > 1 ) {
+        step_info_.move = true;
         cursor_.y--;
       }
     } else if( keys_input & GAME_KEY_LEFT ) {
       if( cursor_.x > 0 ) {
+        step_info_.move = true;
         cursor_.x--;
       }
     } else if( keys_input & GAME_KEY_RIGHT ) {
       if( cursor_.x+1 < FIELD_WIDTH-1 ) {
+        step_info_.move = true;
         cursor_.x++;
       }
     }
@@ -547,6 +551,7 @@ void Field::step(KeyState keys)
       swap_dt_ = conf_.swap_tk;
       bk1->swapped = true;
       bk2->swapped = true;
+      step_info_.swap = true;
     }
   } else if( keys & GAME_KEY_RAISE ) {
     // key-up not required, fallback action

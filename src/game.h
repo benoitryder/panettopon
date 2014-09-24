@@ -193,6 +193,8 @@ class Field
     unsigned int combo; ///< Combo count (0 if no match).
     unsigned int chain; ///< Chain count (default: 1).
     bool raised;  ///< Field lifted up.
+    bool swap;  ///< Start a swap
+    bool move;  ///< Cursor moved
   };
   typedef boost::ptr_deque<Garbage> GarbageList;
 
