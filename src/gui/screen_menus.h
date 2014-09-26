@@ -85,6 +85,7 @@ class ScreenCreateServer: public Screen
 /** @brief Lobby (game preparation).
  *
  * Widgets:
+ *  - PlayerFrame (frame)
  *  - Ready (button)
  *  - PlayerRow (widget type)
  *
@@ -136,6 +137,7 @@ class ScreenLobby: public Screen
 
  private:
   Player* player_; ///< Controlled player
+  WFrame* player_frame_;
   WButton* button_ready_;
   typedef boost::ptr_map<PlId, WPlayerRow> PlayerRowsContainer;
   PlayerRowsContainer player_rows_;

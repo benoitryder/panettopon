@@ -313,6 +313,9 @@ void ScreenLobby::enter()
   assert( intf_.instance() );
   const ResourceManager& res_mgr = intf_.res_mgr();
 
+  player_frame_ = new WFrame(*this, "PlayerFrame");
+  container_.widgets.push_back(player_frame_);
+
   button_ready_ = new WButton(*this, "Ready");
   button_ready_->setCaption(res_mgr.getLang({name_, "Ready"}));
   button_ready_->setCallback(std::bind(&ScreenLobby::submit, this));
