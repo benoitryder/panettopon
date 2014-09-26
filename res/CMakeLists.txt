@@ -7,7 +7,7 @@ INKSCAPE_CONVERT_SVG2PNG(GAME_PNGS res.svg
   BkColor-map BkGarbage-map
   SwapCursor Signs
   GbHanging-map Field-Frame
-  Menu-map Menu-Background
+  Menu-map Menu-icons Menu-Background
   )
 
 # icon

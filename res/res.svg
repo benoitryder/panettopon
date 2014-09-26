@@ -357,6 +357,13 @@
         stroke-linejoin: round;
       }
 
+      #Menu-Icon-Ready {
+        fill: green;
+        stroke: white;
+        stroke-width: 2;
+      }
+
+
       #Menu-Background-bg {
         fill: #eeeeee;
       }
@@ -791,7 +798,7 @@
   <g id="Menu-map"
     transform="translate(500,1100) scale(2)">
     <!-- force the bounding box for the export -->
-    <rect id="Menu-container"
+    <rect id="Menu-map-container"
       width="256" height="192"
       style="stroke: none; fill: none;"
       />
@@ -840,6 +847,16 @@
         style="fill: none; stroke: #181818; stroke-width: 2;"
         />
     </g>
+  </g>
+
+  <g id="Menu-icons"
+    transform="translate(1100,1100) scale(2)">
+    <!-- force the bounding box for the export -->
+    <rect id="Menu-icons-container"
+      width="128" height="128"
+      style="stroke: none; fill: none;"
+      />
+    <circle id="Menu-Icon-Ready" cx="32" cy="32" r="16" />
   </g>
 
   <g id="Menu-Background"
