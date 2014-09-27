@@ -15,6 +15,7 @@
 
 class Field;
 class Match;
+class IniFile;
 
 
 /// Field configuration.
@@ -39,7 +40,7 @@ struct FieldConf
   uint16_t pop0_tk;      ///< first pop delay
   uint16_t transform_tk; ///< transform state duration (color blocks)
 
-  uint8_t color_nb;      ///< number of available colors
+  uint16_t color_nb;      ///< number of available colors
 
   /// Random color picking mode for raised lines.
   enum RaiseAdjacent {
@@ -58,6 +59,11 @@ struct FieldConf
   void fromPacket(const netplay::FieldConf& pkt);
   /// Set configuration to a packet
   void toPacket(netplay::FieldConf* pkt) const;
+
+  /** @brief Set configuration from a configuration file
+   * @note Configuration validity is checked.
+   */
+  void fromIniFile(const IniFile& cfg, const std::string& section);
 };
 
 /** @brief Generic macro for field configuration fields.

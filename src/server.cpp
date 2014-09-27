@@ -8,27 +8,6 @@
 
 const std::string ServerInstance::CONF_SECTION("Server");
 
-//XXX:temp
-static const FieldConf default_field_conf = {
-  /* swap_tk        */   3,
-  /* raise_tk       */ 500,
-  /* raise_steps    */  16,
-  /* stop_combo_0   */  42,
-  /* stop_combo_k   */  10,
-  /* stop_chain_0   */  85,
-  /* stop_chain_k   */  10,
-  /* lost_tk        */  60,
-  /* gb_hang_tk     */  90,
-  /* flash_tk       */  36,
-  /* levitate_tk    */  12,
-  /* pop_tk         */   8,
-  /* pop0_tk        */  19,
-  /* transform_tk   */  14,
-  /* color_nb       */   6,
-  /* raise_adjacent */ FieldConf::ADJACENT_ALWAYS,
-};
-
-
 ServerInstance::ServerInstance(Observer& obs, boost::asio::io_service& io_service):
     observer_(obs), socket_(std::make_shared<netplay::ServerSocket>(*this, io_service)), gb_distributor_(match_, *this),
     current_plid_(0)
@@ -61,26 +40,8 @@ void ServerInstance::loadConf(const IniFile& cfg)
       if( name.empty() ) {
         throw std::runtime_error("empty field configuration name");
       }
-      const std::string field_conf_section = CONF_SECTION+".FieldConfs"+name;
-      FieldConf* fc = &conf_.field_confs[name];
-#define FIELD_CONF_EXPR_INIT(n,ini) \
-      fc->n = cfg.get<decltype(fc->n)>({field_conf_section, #ini});
-      FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
-#undef FIELD_CONF_EXPR_INIT
-      const std::string s_raise_adjacent = cfg.get<std::string>({field_conf_section, "RaiseAdjacent"});
-      if( s_raise_adjacent == "never" ) {
-        fc->raise_adjacent = FieldConf::ADJACENT_NEVER;
-      } else if( s_raise_adjacent == "always" ) {
-        fc->raise_adjacent = FieldConf::ADJACENT_ALWAYS;
-      } else if( s_raise_adjacent == "alternate" ) {
-        fc->raise_adjacent = FieldConf::ADJACENT_ALTERNATE;
-      } else {
-        throw std::runtime_error("invalid RaiseAdjacent value: "+s_raise_adjacent);
-      }
-      if( !fc->isValid() ) {
-        throw std::runtime_error("invalid configuration: "+name);
-      }
-
+      const std::string field_conf_section = IniFile::join("FieldConf", name);
+      conf_.field_confs[name].fromIniFile(cfg, field_conf_section);
       if( pos2 == std::string::npos ) {
         break;
       }
@@ -88,9 +49,8 @@ void ServerInstance::loadConf(const IniFile& cfg)
     }
   }
 
-  //TODO:temp
-  if( conf_.field_confs.size() < 1 ) {
-    conf_.field_confs["default"] = default_field_conf;
+  if(conf_.field_confs.size() < 1) {
+    throw std::runtime_error("no field configuration defined");
   }
 }
 

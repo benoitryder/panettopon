@@ -1,6 +1,7 @@
 #include <memory>
 #include "game.h"
 #include "netplay.h"
+#include "inifile.h"
 #include "log.h"
 
 
@@ -40,6 +41,27 @@ void FieldConf::toPacket(netplay::FieldConf* pkt) const
   FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
 #undef FIELD_CONF_EXPR_INIT
   pkt->set_raise_adjacent(static_cast<netplay::FieldConf::RaiseAdjacent>(raise_adjacent));
+}
+
+void FieldConf::fromIniFile(const IniFile& cfg, const std::string& section)
+{
+#define FIELD_CONF_EXPR_INIT(n,ini) \
+  this->n = cfg.get<decltype(this->n)>({section, #ini});
+  FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
+#undef FIELD_CONF_EXPR_INIT
+  const std::string s_raise_adjacent = cfg.get<std::string>({section, "RaiseAdjacent"});
+  if(s_raise_adjacent == "never") {
+    raise_adjacent = ADJACENT_NEVER;
+  } else if(s_raise_adjacent == "always") {
+    raise_adjacent = ADJACENT_ALWAYS;
+  } else if(s_raise_adjacent == "alternate") {
+    raise_adjacent = ADJACENT_ALTERNATE;
+  } else {
+    throw std::runtime_error("invalid RaiseAdjacent value: "+s_raise_adjacent);
+  }
+  if(!this->isValid()) {
+    throw std::runtime_error("invalid configuration: "+section);
+  }
 }
 
 
