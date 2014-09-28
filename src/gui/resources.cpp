@@ -10,6 +10,8 @@
 
 namespace gui {
 
+static const std::vector<std::string> sound_ext{"wav", "ogg", "flac"};
+
 
 ResourceManager::ResourceManager()
 {
@@ -108,7 +110,15 @@ const sf::SoundBuffer* ResourceManager::getSound(const std::string& name) const
 
   sf::SoundBuffer* sound = new sf::SoundBuffer;
   std::shared_ptr<sf::SoundBuffer> psound(sound);
-  if(!sound->loadFromFile(this->getResourceFilename(name+".wav"))) {
+
+  bool loaded = false;
+  for(auto& ext : sound_ext) {
+    if(sound->loadFromFile(this->getResourceFilename(name+"."+ext))) {
+      loaded = true;
+      break;
+    }
+  }
+  if(!loaded) {
     throw std::runtime_error("failed to load sound "+name);
   }
   sounds_[name] = psound;
