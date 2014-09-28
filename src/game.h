@@ -22,8 +22,12 @@ class IniFile;
 struct FieldConf
 {
   uint16_t swap_tk;      ///< swap duration
-  uint16_t raise_speed;  ///< auto raise speed, 0 to disable
+  /// Auto raise speeds (values may be 0)
+  std::vector<uint16_t> raise_speeds;
   uint16_t manual_raise_speed;  ///< manual raise speed
+  /// Ticks of raise speed changes (must be increasing)
+  std::vector<uint16_t> raise_speed_changes;
+  uint16_t raise_steps;  ///< number of raise steps per line (must be not null)
   /** @name Slope and y-intercept for computing stop frames.
    */
   //@{
@@ -70,11 +74,10 @@ struct FieldConf
  *
  * Parameters: field name, INI property name.
  *
- * @warning \e expr is not applied to the \e raise_adjacent field.
+ * @warning \e expr is not applied to all fields, only to "simple" ones.
  */
 #define FIELD_CONF_APPLY(expr) { \
   expr(swap_tk, SwapTicks); \
-  expr(raise_speed, RaiseSpeed); \
   expr(manual_raise_speed, ManualRaiseSpeed); \
   expr(stop_combo_0, StopCombo0); \
   expr(stop_combo_k, StopComboStep); \
@@ -390,8 +393,14 @@ class Field
 
   /// Current raising progress
   uint32_t raise_progress_;
-  /// Current raising speed
-  uint16_t raise_speed_;
+  /// Current raising speed index
+  unsigned int raise_speed_index_;
+  /// True if manual raise is active
+  bool manual_raise_;
+  /// Remaining raise step before next line.
+  unsigned int raise_step_;
+  /// Tick before next raise, -1 for manual raise.
+  int raise_dt_;
   /// Remaining stop ticks.
   unsigned int stop_dt_;
   /// Transformed block counter, for transforming garbages.

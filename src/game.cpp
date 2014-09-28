@@ -7,8 +7,17 @@
 
 bool FieldConf::isValid() const
 {
+  // raise_change_speed values must be increasing
+  uint16_t last_tk = 0;
+  for(uint16_t tk : raise_speed_changes) {
+    if(tk <= last_tk) {
+      return false;
+    }
+    last_tk = tk;
+  }
   return swap_tk > 0
       && manual_raise_speed > 0
+      && raise_speeds.size() == raise_speed_changes.size() + 1
       && (stop_combo_0 > 0 || stop_combo_k > 0)
       && (stop_chain_0 > 0 || stop_chain_k > 0)
       && lost_tk > 0
@@ -27,6 +36,10 @@ void FieldConf::fromPacket(const netplay::FieldConf& pkt)
   n = pkt.n();
   FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
 #undef FIELD_CONF_EXPR_INIT
+  raise_speeds.clear();
+  std::copy(pkt.raise_speeds().begin(), pkt.raise_speeds().end(), std::back_inserter(raise_speeds));
+  raise_speed_changes.clear();
+  std::copy(pkt.raise_speed_changes().begin(), pkt.raise_speed_changes().end(), std::back_inserter(raise_speed_changes));
   raise_adjacent = static_cast<RaiseAdjacent>(pkt.raise_adjacent());
   if( !this->isValid() ) {
     throw netplay::CallbackError("invalid configuration");
@@ -39,6 +52,8 @@ void FieldConf::toPacket(netplay::FieldConf* pkt) const
   pkt->set_##n(n);
   FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
 #undef FIELD_CONF_EXPR_INIT
+  std::copy(raise_speeds.begin(), raise_speeds.end(), google::protobuf::RepeatedFieldBackInserter(pkt->mutable_raise_speeds()));
+  std::copy(raise_speed_changes.begin(), raise_speed_changes.end(), google::protobuf::RepeatedFieldBackInserter(pkt->mutable_raise_speed_changes()));
   pkt->set_raise_adjacent(static_cast<netplay::FieldConf::RaiseAdjacent>(raise_adjacent));
 }
 
@@ -48,6 +63,9 @@ void FieldConf::fromIniFile(const IniFile& cfg, const std::string& section)
   this->n = cfg.get<decltype(this->n)>({section, #ini});
   FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
 #undef FIELD_CONF_EXPR_INIT
+  raise_speeds = cfg.get<std::vector<uint16_t>>({section, "RaiseSpeeds"});
+  raise_speed_changes = cfg.get<std::vector<uint16_t>>({section, "RaiseSpeedChanges"});
+
   const std::string s_raise_adjacent = cfg.get<std::string>({section, "RaiseAdjacent"});
   if(s_raise_adjacent == "never") {
     raise_adjacent = ADJACENT_NEVER;
@@ -89,7 +107,8 @@ void Field::initMatch()
   key_state_ = GAME_KEY_NONE;
   key_repeat_ = 0;
   raise_progress_ = 0;
-  raise_speed_ = conf_.raise_speed;
+  raise_speed_index_ = 0;
+  manual_raise_ = false;
   stop_dt_ = 0;
   transformed_nb_ = 0;
   raised_lines_ = 0;
@@ -575,7 +594,7 @@ void Field::step(KeyState keys)
     }
   } else if( keys & GAME_KEY_RAISE ) {
     // key-up not required, fallback action
-    raise_speed_ = conf_.manual_raise_speed;
+    manual_raise_ = true;
     stop_dt_ = 0;
   }
 
@@ -636,7 +655,7 @@ void Field::step(KeyState keys)
 
   if( step_info_.combo > 0 ) {
     // cancel manual raise on match
-    raise_speed_ = conf_.raise_speed;
+    manual_raise_ = false;
     // update stop ticks
     if( step_info_.combo > 3 ) {
       unsigned int tk = conf_.stop_combo_0+conf_.stop_combo_k*(step_info_.combo-4);
@@ -653,10 +672,17 @@ void Field::step(KeyState keys)
   } else if( stop_dt_ > 0 && stop_dec ) {
     --stop_dt_;
   } else if(!full && raise && stop_dt_ == 0) {
-    raise_progress_ += raise_speed_;
+    raise_progress_ += manual_raise_ ? conf_.manual_raise_speed : conf_.raise_speeds[raise_speed_index_];
     while(raise_progress_ > RAISE_PROGRESS_MAX) {
       this->raise();
     }
+  }
+
+  // update raise speed if needed
+  if(raise_speed_index_ < conf_.raise_speed_changes.size() &&
+     tick_ >= conf_.raise_speed_changes[raise_speed_index_]) {
+    raise_speed_index_++;
+    LOG("[%u|%u] speed up", fldid_, tick_);
   }
 }
 
@@ -812,8 +838,8 @@ void Field::raise()
 
   step_info_.raised = true;
   raise_progress_ = 0;
+  manual_raise_ = false;
   raised_lines_++;
-  raise_speed_ = conf_.raise_speed;  // cancel manual raise
 }
 
 

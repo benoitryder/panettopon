@@ -104,6 +104,26 @@ template <typename T> struct IniFileConverter
   }
 };
 
+template <typename T> struct IniFileConverter<std::vector<T>>
+{
+  static std::vector<T> parse(const std::string& value)
+  {
+    std::vector<T> vec;
+    if(value.empty()) {
+      return vec;
+    }
+    T val;
+    char c = ',';
+    std::istringstream in(value);
+    in >> val;
+    while(in && c == ',') {
+      vec.push_back(val);
+      in >> c >> val;
+    }
+    return vec;
+  }
+};
+
 
 template <typename T> T IniFile::get(const std::string& key) const
 {
