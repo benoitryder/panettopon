@@ -337,7 +337,7 @@ Player* ServerInstance::newPlayer(netplay::PeerSocket* peer, const std::string& 
   LOG("init player: %d", pl->plid());
   pl->setState(Player::State::LOBBY);
   pl->setNick(nick);
-  auto fc_it = conf_.field_confs.begin(); //TODO:temp default configuration
+  auto fc_it = conf_.field_confs.begin();
   pl->setFieldConf(fc_it->second, fc_it->first);
   // put accepted player with his friends
   PlId plid = pl->plid(); // use a temporary value to help g++
