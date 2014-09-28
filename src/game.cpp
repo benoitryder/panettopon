@@ -8,8 +8,7 @@
 bool FieldConf::isValid() const
 {
   return swap_tk > 0
-      && raise_tk > 0
-      && raise_steps > 0
+      && manual_raise_speed > 0
       && (stop_combo_0 > 0 || stop_combo_k > 0)
       && (stop_chain_0 > 0 || stop_chain_k > 0)
       && lost_tk > 0
@@ -89,6 +88,8 @@ void Field::initMatch()
   lost_dt_ = 0;
   key_state_ = GAME_KEY_NONE;
   key_repeat_ = 0;
+  raise_progress_ = 0;
+  raise_speed_ = conf_.raise_speed;
   stop_dt_ = 0;
   transformed_nb_ = 0;
   raised_lines_ = 0;
@@ -97,9 +98,6 @@ void Field::initMatch()
   step_info_ = StepInfo();
   enable_swap_ = false;
   enable_raise_ = false;
-
-  this->resetAutoRaise();
-  raise_step_ = conf_.raise_steps;
 }
 
 
@@ -577,7 +575,7 @@ void Field::step(KeyState keys)
     }
   } else if( keys & GAME_KEY_RAISE ) {
     // key-up not required, fallback action
-    raise_dt_ = -1;
+    raise_speed_ = conf_.manual_raise_speed;
     stop_dt_ = 0;
   }
 
@@ -637,9 +635,8 @@ void Field::step(KeyState keys)
   }
 
   if( step_info_.combo > 0 ) {
-    if( raise_dt_ < 0 ) {
-      this->resetAutoRaise(); // cancel manual raise on match
-    }
+    // cancel manual raise on match
+    raise_speed_ = conf_.raise_speed;
     // update stop ticks
     if( step_info_.combo > 3 ) {
       unsigned int tk = conf_.stop_combo_0+conf_.stop_combo_k*(step_info_.combo-4);
@@ -655,14 +652,10 @@ void Field::step(KeyState keys)
     }
   } else if( stop_dt_ > 0 && stop_dec ) {
     --stop_dt_;
-  } else if( !full && raise && stop_dt_ == 0 && raise_dt_ != 0 ) {
-    if( raise_dt_ < 0 || --raise_dt_ == 0 ) {
-      if( --raise_step_ == 0 ) {
-        LOG("[%u|%u] raise (%s)", fldid_, tick_, raise_dt_<0 ? "manual" : "auto");
-        this->raise();
-      } else if( raise_dt_ == 0 ) {
-        this->resetAutoRaise();
-      }
+  } else if(!full && raise && stop_dt_ == 0) {
+    raise_progress_ += raise_speed_;
+    while(raise_progress_ > RAISE_PROGRESS_MAX) {
+      this->raise();
     }
   }
 }
@@ -786,6 +779,8 @@ bool Field::setGridContentFromPacket(const google::protobuf::RepeatedPtrField<ne
 
 void Field::raise()
 {
+  LOG("[%u|%u] raise", fldid_, tick_);
+
   int x;
   for( x=0; x<FIELD_WIDTH; x++ ) {
     int y;
@@ -815,11 +810,10 @@ void Field::raise()
     gb_it->pos.y++;
   }
 
-  this->resetAutoRaise();
-  raise_step_ = conf_.raise_steps;
-  raised_lines_++;
-
   step_info_.raised = true;
+  raise_progress_ = 0;
+  raised_lines_++;
+  raise_speed_ = conf_.raise_speed;  // cancel manual raise
 }
 
 

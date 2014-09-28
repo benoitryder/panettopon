@@ -350,7 +350,7 @@ void FieldDisplay::step()
   // Note: called at init, even if init does not actually steps the field.
   const Field::StepInfo& info = field_.stepInfo();
 
-  lift_offset_ = 1-(float)field_.raiseStep()/field_.conf().raise_steps;
+  lift_offset_ = (float)field_.raiseProgress()/Field::RAISE_PROGRESS_MAX;
 
   // only play sounds for local players
   Player* pl = intf_.instance()->player(&field_);

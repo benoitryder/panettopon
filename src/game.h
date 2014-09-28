@@ -22,8 +22,8 @@ class IniFile;
 struct FieldConf
 {
   uint16_t swap_tk;      ///< swap duration
-  uint16_t raise_tk;     ///< auto raise period, 0 if disabled
-  uint16_t raise_steps;  ///< number of raise steps per line (must be not null)
+  uint16_t raise_speed;  ///< auto raise speed, 0 to disable
+  uint16_t manual_raise_speed;  ///< manual raise speed
   /** @name Slope and y-intercept for computing stop frames.
    */
   //@{
@@ -68,14 +68,14 @@ struct FieldConf
 
 /** @brief Generic macro for field configuration fields.
  *
- * Parameters: field name.
+ * Parameters: field name, INI property name.
  *
  * @warning \e expr is not applied to the \e raise_adjacent field.
  */
 #define FIELD_CONF_APPLY(expr) { \
   expr(swap_tk, SwapTicks); \
-  expr(raise_tk, RaiseTicks); \
-  expr(raise_steps, RaiseSteps); \
+  expr(raise_speed, RaiseSpeed); \
+  expr(manual_raise_speed, ManualRaiseSpeed); \
   expr(stop_combo_0, StopCombo0); \
   expr(stop_combo_k, StopComboStep); \
   expr(stop_chain_0, StopChain0); \
@@ -193,6 +193,9 @@ struct Block
 class Field
 {
  public:
+  /// Raise progress value at which raise occurs
+  static constexpr uint32_t RAISE_PROGRESS_MAX = 65536;
+
   /// Information on the last step.
   struct StepInfo {
     StepInfo();  /// Create a new instance with default fresh values.
@@ -218,7 +221,7 @@ class Field
   const FieldPos& swapPos() const { return swap_; }
   unsigned int swapDelay() const { return swap_dt_; }
   unsigned int rank() const { return rank_; }
-  unsigned int raiseStep() const { return raise_step_; }
+  uint32_t raiseProgress() const { return raise_progress_; }
 
   void enableSwap(bool v) { enable_swap_ = v; }
   void enableRaise(bool v) { enable_raise_ = v; }
@@ -312,12 +315,6 @@ class Field
    */
   void setRaiseColor(int x, int y=0);
 
-  /// Set auto-raise mode.
-  inline void resetAutoRaise()
-  {
-    raise_dt_ = conf_.raise_tk / conf_.raise_steps;
-  }
-
   /// Set state for all blocks of a garbage.
   void setGarbageState(const Garbage* gb, BkGarbage::State st);
 
@@ -391,10 +388,10 @@ class Field
   /// Repetition count of the key state.
   unsigned int key_repeat_;
 
-  /// Remaining raise step before next line.
-  unsigned int raise_step_;
-  /// Tick before next raise, -1 for manual raise.
-  int raise_dt_;
+  /// Current raising progress
+  uint32_t raise_progress_;
+  /// Current raising speed
+  uint16_t raise_speed_;
   /// Remaining stop ticks.
   unsigned int stop_dt_;
   /// Transformed block counter, for transforming garbages.

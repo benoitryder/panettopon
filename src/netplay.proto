@@ -52,8 +52,8 @@ message FieldConf {
     ALTERNATE = 3;
   }
   optional string name = 1 [default = ""];
-  required uint32 raise_tk = 2;
-  required uint32 raise_steps = 3;
+  required uint32 raise_speed = 2;
+  required uint32 manual_raise_speed = 3;
   required uint32 swap_tk = 4;
   required uint32 stop_combo_0 = 5;
   required uint32 stop_combo_k = 6;
