@@ -45,7 +45,7 @@ void ServerInstance::loadConf(const IniFile& cfg)
       if( pos2 == std::string::npos ) {
         break;
       }
-      pos = pos2;
+      pos = pos2 + 1;
     }
   }
 
