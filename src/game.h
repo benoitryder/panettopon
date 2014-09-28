@@ -36,7 +36,7 @@ struct FieldConf
   uint16_t stop_chain_0;
   uint16_t stop_chain_k;
   //@}
-  uint16_t lost_tk;      ///< respite from death (at least 1)
+  uint16_t lost_tk;      ///< respite from death
   uint16_t gb_hang_tk;   ///< garbage hanging time
   uint16_t flash_tk;     ///< flashing duration
   uint16_t levitate_tk;  ///< levitating duration

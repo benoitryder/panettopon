@@ -20,7 +20,6 @@ bool FieldConf::isValid() const
       && raise_speeds.size() == raise_speed_changes.size() + 1
       && (stop_combo_0 > 0 || stop_combo_k > 0)
       && (stop_chain_0 > 0 || stop_chain_k > 0)
-      && lost_tk > 0
       && gb_hang_tk > 0
       && flash_tk > 0
       && levitate_tk > 0
@@ -497,19 +496,6 @@ void Field::step(KeyState keys)
   }
 
 
-  // field lost?
-  //TODO decrease while raising is disabled?
-  if( full && raise && stop_dt_ == 0 ) {
-    if( lost_dt_ == 0 ) {
-      lost_dt_ = conf_.lost_tk;
-    } else if( --lost_dt_ == 0 ) {
-      lost_ = true;
-      chain_ = 1; // just in case
-      return;
-    }
-  }
-
-
   // Swap steps
   if( this->isSwapping() ) {
     if( --swap_dt_ == 0 ) {
@@ -669,9 +655,23 @@ void Field::step(KeyState keys)
         stop_dt_ = tk;
       }
     }
-  } else if( stop_dt_ > 0 && stop_dec ) {
+  } else if(stop_dec && stop_dt_ > 0) {
     --stop_dt_;
+  } else if(stop_dec && full) {
+    // field lost?
+    if(lost_dt_ == 0) {
+      lost_dt_ = conf_.lost_tk;
+    } else {
+      lost_dt_--;
+    }
+    // not in the "else" above, to support lost_tk == 0
+    if(lost_dt_ == 0) {
+      lost_ = true;
+      chain_ = 1; // just in case
+      return;
+    }
   } else if(!full && raise && stop_dt_ == 0) {
+    lost_dt_ = 0;
     raise_progress_ += manual_raise_ ? conf_.manual_raise_speed : conf_.raise_speeds[raise_speed_index_];
     while(raise_progress_ > RAISE_PROGRESS_MAX) {
       this->raise();
