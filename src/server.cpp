@@ -228,6 +228,7 @@ void ServerInstance::onPeerConnect(netplay::PeerSocket* peer)
     np_plconf->set_nick( pl->nick() );
     netplay::FieldConf* np_fc = np_plconf->mutable_field_conf();
     pl->fieldConf().toPacket(np_fc);
+    np_fc->set_name(pl->fieldConfName());
     peer->writePacket(pkt);
     pkt.clear_player_conf();
 
@@ -355,6 +356,7 @@ Player* ServerInstance::newPlayer(netplay::PeerSocket* peer, const std::string& 
   np_conf->set_nick(pl->nick());
   netplay::FieldConf* np_fc = np_conf->mutable_field_conf();
   pl->fieldConf().toPacket(np_fc);
+  np_fc->set_name(pl->fieldConfName());
   socket_->broadcastPacket(pkt, peer);
   if( peer != NULL ) {
     np_conf->set_join(true);
