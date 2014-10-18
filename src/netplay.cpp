@@ -353,8 +353,6 @@ void ClientSocket::connect(const char* host, int port, int tout)
     timer_.expires_from_now(boost::posix_time::milliseconds(tout));
     timer_.async_wait(std::bind(&ClientSocket::onTimeout, self, std::placeholders::_1));
   }
-
-  connected_ = true;
 }
 
 void ClientSocket::close()
@@ -395,6 +393,7 @@ void ClientSocket::onTimeout(const boost::system::error_code& ec)
 
 void ClientSocket::onConnect(const boost::system::error_code& ec)
 {
+  connected_ = true;
   timer_.cancel();
   if( !ec ) {
     this->readNext();
