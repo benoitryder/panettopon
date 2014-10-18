@@ -332,8 +332,8 @@ void WEntry::updateTextDisplay(bool force)
   }
 
   const float text_width = text_img_.getSize().x;
-  const float cursor_pos_x = text_.findCharacterPos(cursor_pos_).x;
   float x = -text_.getPosition().x;
+  const float cursor_pos_x = text_.findCharacterPos(cursor_pos_).x + x;
 
   if( cursor_pos_x - x > text_width ) {
     x = cursor_pos_x - text_width;
