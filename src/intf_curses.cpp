@@ -282,7 +282,7 @@ void CursesInterface::onPlayerStep(Player* pl)
 
 void CursesInterface::onPlayerRanked(Player* pl)
 {
-  this->addMessage(2, "%s(%u) ranked %d", pl->nick().c_str(), pl->plid(), pl->rank());
+  this->addMessage(2, "%s(%u) ranked %d", pl->nick().c_str(), pl->plid(), pl->field()->rank());
 }
 
 KeyState CursesInterface::getNextInput(Player*)
