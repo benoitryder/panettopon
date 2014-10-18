@@ -30,5 +30,7 @@ endif()
 ##
 
 add_subdirectory(src)
+if(ENABLE_INTF_GUI)
 add_subdirectory(res)
+endif()
 
