@@ -373,13 +373,13 @@ void ClientSocket::processPacket(const netplay::Packet& pkt)
 
 void ClientSocket::processError(const std::string& msg, const boost::system::error_code& ec)
 {
-  if( !connected_ ) {
-    return; // disconnected by a previous error
-  }
   if( ec ) {
     LOG("Client: %s: %s", msg.c_str(), ec.message().c_str());
   } else {
     LOG("Client: %s", msg.c_str());
+  }
+  if( !connected_ ) {
+    return; // disconnected by a previous error
   }
   this->close();
 }
@@ -388,18 +388,20 @@ void ClientSocket::onTimeout(const boost::system::error_code& ec)
 {
   if( ec != asio::error::operation_aborted ) {
     this->processError("timeout", ec);
+    observer_.onServerConnect(false);
   }
 }
 
 void ClientSocket::onConnect(const boost::system::error_code& ec)
 {
-  connected_ = true;
+  connected_ = !ec;
   timer_.cancel();
-  if( !ec ) {
+  if(connected_) {
     this->readNext();
   } else {
     this->processError("connect error", ec);
   }
+  observer_.onServerConnect(connected_);
 }
 
 

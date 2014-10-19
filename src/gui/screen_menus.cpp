@@ -171,6 +171,14 @@ void ScreenJoinServer::onPlayerJoined(Player* pl)
   }
 }
 
+void ScreenJoinServer::onServerConnect(bool success)
+{
+  submitting_ = false;
+  if(success) {
+    intf_.client()->newLocalPlayer(entry_nick_->text());
+  }
+}
+
 void ScreenJoinServer::onServerDisconnect()
 {
   submitting_ = false;
@@ -201,7 +209,6 @@ void ScreenJoinServer::submit()
   intf_.cfg().set("Global.Port", port);
   intf_.cfg().set("Client.Nick", entry_nick_->text());
   intf_.startClient(entry_host_->text(), port);
-  intf_.client()->newLocalPlayer(entry_nick_->text());
   submitting_ = true;
 }
 

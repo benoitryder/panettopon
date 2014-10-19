@@ -22,9 +22,6 @@ void ClientInstance::connect(const char* host, int port, int tout)
 {
   LOG("connecting to %s:%d ...", host, port);
   socket_->connect(host, port, tout);
-  LOG("connected");
-  state_ = State::LOBBY;
-  conf_.toDefault();
 }
 
 void ClientInstance::disconnect()
@@ -161,6 +158,16 @@ void ClientInstance::onClientPacket(const netplay::Packet& pkt)
   } else {
     throw netplay::CallbackError("invalid packet field");
   }
+}
+
+void ClientInstance::onServerConnect(bool success)
+{
+  if(success) {
+    LOG("connected");
+    state_ = State::LOBBY;
+    conf_.toDefault();
+  }
+  observer_.onServerConnect(success);
 }
 
 void ClientInstance::onServerDisconnect()

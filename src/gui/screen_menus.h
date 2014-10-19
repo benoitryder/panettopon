@@ -47,6 +47,7 @@ class ScreenJoinServer: public Screen
   virtual void enter();
   virtual bool onInputEvent(const sf::Event& ev);
   virtual void onPlayerJoined(Player* );
+  virtual void onServerConnect(bool success);
   virtual void onServerDisconnect();
 
  protected:

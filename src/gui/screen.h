@@ -49,6 +49,7 @@ class Screen: public StyleLoader
   virtual void onPlayerStep(Player*) {}
   virtual void onPlayerRanked(Player*) {}
   virtual void onNotification(GameInstance::Severity, const std::string&) {}
+  virtual void onServerConnect(bool) {}
   virtual void onServerDisconnect() {}
   //@}
 

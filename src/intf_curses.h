@@ -35,6 +35,7 @@ class CursesInterface: public ClientInstance::Observer,
   virtual void onPlayerStep(Player* pl);
   virtual void onPlayerRanked(Player* pl);
   virtual void onNotification(GameInstance::Severity, const std::string&);
+  virtual void onServerConnect(bool success);
   virtual void onServerDisconnect();
   //@}
   virtual KeyState getNextInput(Player* pl);
@@ -48,6 +49,7 @@ class CursesInterface: public ClientInstance::Observer,
   void endCurses();
 
   boost::asio::io_service io_service_;
+  IniFile* cfg_;
   ClientInstance instance_;
   GameInputScheduler input_scheduler_;
   Player* player_;

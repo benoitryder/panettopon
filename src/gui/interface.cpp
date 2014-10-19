@@ -137,6 +137,14 @@ void GuiInterface::onNotification(GameInstance::Severity sev, const std::string&
   screen_->onNotification(sev, msg);
 }
 
+void GuiInterface::onServerConnect(bool success)
+{
+  if(!success) {
+    instance_.reset();
+  }
+  screen_->onServerConnect(success);
+}
+
 void GuiInterface::onServerDisconnect()
 {
   screen_->onServerDisconnect();

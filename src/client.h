@@ -15,6 +15,8 @@ class ClientInstance: public GameInstance,
   {
     /// Called on server notification.
     virtual void onNotification(Severity sev, const std::string& msg) = 0;
+    /// Called on server connection or connection error
+    virtual void onServerConnect(bool success) = 0;
     /// Called on server disconnection.
     virtual void onServerDisconnect() = 0;
   };
@@ -52,6 +54,7 @@ class ClientInstance: public GameInstance,
   /** @name ClientSocket::Observer interface. */
   //@{
   virtual void onClientPacket(const netplay::Packet& pkt);
+  virtual void onServerConnect(bool success);
   virtual void onServerDisconnect();
   //@}
 

@@ -8,7 +8,8 @@ namespace curses {
 const std::string CursesInterface::CONF_SECTION("Curses");
 
 
-CursesInterface::CursesInterface(): instance_(*this, io_service_),
+CursesInterface::CursesInterface():
+    cfg_(0), instance_(*this, io_service_),
     input_scheduler_(instance_, *this, io_service_),
     player_(NULL), wmsg_(NULL)
 {
@@ -56,9 +57,11 @@ bool CursesInterface::run(IniFile* cfg)
     return false;
   }
   instance_.connect(host.c_str(), port, 3000);
-  instance_.newLocalPlayer(cfg->get("Client.Nick", "Player"));
 
+  assert(!cfg_);
+  cfg_ = cfg;
   io_service_.run();
+  cfg_ = 0;
   return true;
 }
 
@@ -181,6 +184,15 @@ void CursesInterface::onNotification(GameInstance::Severity sev, const std::stri
     case GameInstance::SEVERITY_ERROR:   c = 8; break;
   }
   this->addMessage(c, ">> %s", msg.c_str());
+}
+
+void CursesInterface::onServerConnect(bool success)
+{
+  if(success) {
+    instance_.newLocalPlayer(cfg_->get("Client.Nick", "Player"));
+  } else {
+    io_service_.stop();
+  }
 }
 
 void CursesInterface::onServerDisconnect()

@@ -185,6 +185,8 @@ class ClientSocket: public PacketSocket
   {
     /// Called on input packet.
     virtual void onClientPacket(const Packet& pkt) = 0;
+    /// Called on server connection or connection error
+    virtual void onServerConnect(bool success) = 0;
     /// Called on server disconnection.
     virtual void onServerDisconnect() = 0;
   };
