@@ -536,12 +536,11 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
     return;  // nothing to draw
   }
 
-  sf::Vector2f center( x+0.5, y+0.5 );
-
   if( bk.isColor() ) {
     const StyleField::TilesBkColor& tiles = style_.tiles_bk_color[bk.bk_color.color];
 
     const ImageTile* tile = &tiles.normal; // default
+    float dx = 0;
     if(field_.lost()) {
       tile = &tiles.mutate;
     } else if( bk.bk_color.state == BkColor::FLASH ) {
@@ -551,19 +550,18 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
     } else if( bk.bk_color.state == BkColor::MUTATE ) {
       tile = &tiles.mutate;
     } else if( bk.swapped ) {
-      center.x += field_.swapPos().x ? 1 : -1;
-      center.y += field_.swapDelay()/(field_.conf().swap_tk+1);
+      dx = (field_.swapPos().x == x ? 1 : -1) * (float)field_.swapDelay()/(field_.conf().swap_tk+1);
     }
 
     unsigned int crouch_dt = crouch_dt_[x][y];
     if(crouch_dt == 0 || field_.lost()) {
-      tile->render(target, states, x, y, 1, 1, y ? sf::Color::White : sf::Color(96,96,96));
+      tile->render(target, states, x+dx, y, 1, 1, y ? sf::Color::White : sf::Color(96,96,96));
     } else {
       // bounce positions: -1 -> +1 (quick) -> 0 (slow)
       float bounce = ( crouch_dt > CROUCH_DURATION/2 )
         ? 4*(float)(CROUCH_DURATION-crouch_dt)/CROUCH_DURATION-1.0
         : 2*(float)crouch_dt/CROUCH_DURATION;
-      this->renderBouncingBlock(target, states, x, y, bounce, bk.bk_color.color);
+      this->renderBouncingBlock(target, states, x+dx, y, bounce, bk.bk_color.color);
     }
 
   } else if( bk.isGarbage() ) {
