@@ -558,6 +558,8 @@ void Field::step(KeyState keys)
     if( // swappable
         ( bk1->isNone() || bk1->isState(BkColor::REST) || bk1->isState(BkColor::FALL) ) &&
         ( bk2->isNone() || bk2->isState(BkColor::REST) || bk2->isState(BkColor::FALL) ) &&
+        // don't swap two empty blocks
+        ( !bk1->isNone() || !bk2->isNone() ) &&
         // not under a levitating block
         !( p.y < FIELD_HEIGHT && (
                 grid_[p.x  ][p.y+1].isState(BkColor::LEVITATE) ||
