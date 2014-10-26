@@ -659,7 +659,7 @@ void Field::step(KeyState keys)
     }
   } else if(stop_dec && stop_dt_ > 0) {
     --stop_dt_;
-  } else if(stop_dec && full) {
+  } else if(stop_dec && full && raise) {
     // field lost?
     if(lost_dt_ == 0) {
       lost_dt_ = conf_.lost_tk;
