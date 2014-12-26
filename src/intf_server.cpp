@@ -70,6 +70,10 @@ void BasicServerInterface::onStateChange()
   }
 }
 
+void BasicServerInterface::onServerChangeFieldConfs()
+{
+}
+
 void BasicServerInterface::onPlayerStep(Player* pl)
 {
   if( pl->field()->lost() ) {

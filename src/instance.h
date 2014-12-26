@@ -133,6 +133,8 @@ class GameInstance
     virtual void onPlayerChangeFieldConf(Player* pl) = 0;
     /// Called on state update.
     virtual void onStateChange() = 0;
+    /// Called on server field configurations change.
+    virtual void onServerChangeFieldConfs() = 0;
     /// Called after a player field step.
     virtual void onPlayerStep(Player* pl) = 0;
     /// Called when a player rank is set.

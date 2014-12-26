@@ -370,6 +370,10 @@ void ClientInstance::processPktServerConf(const netplay::PktServerConf& pkt)
   if( conf_.field_confs.size() == 0 ) {
     throw netplay::CallbackError("no field configuration");
   }
+
+  if(np_fcs.size() > 0) {
+    observer_.onServerChangeFieldConfs();
+  }
 }
 
 void ClientInstance::processPktServerState(const netplay::PktServerState& pkt)

@@ -122,6 +122,11 @@ void GuiInterface::onStateChange()
   screen_->onStateChange();
 }
 
+void GuiInterface::onServerChangeFieldConfs()
+{
+  screen_->onServerChangeFieldConfs();
+}
+
 void GuiInterface::onPlayerStep(Player* pl)
 {
   screen_->onPlayerStep(pl);

@@ -280,6 +280,10 @@ void CursesInterface::onStateChange()
   }
 }
 
+void CursesInterface::onServerChangeFieldConfs()
+{
+}
+
 void CursesInterface::onPlayerStep(Player* pl)
 {
   FieldDisplayMap::iterator it = fdisplays_.find(pl->field());

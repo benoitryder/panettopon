@@ -49,6 +49,7 @@ class GuiInterface: public ClientInstance::Observer
   virtual void onPlayerStateChange(Player* pl);
   virtual void onPlayerChangeFieldConf(Player* pl);
   virtual void onStateChange();
+  virtual void onServerChangeFieldConfs();
   virtual void onPlayerStep(Player* pl);
   virtual void onPlayerRanked(Player* pl);
   virtual void onNotification(GameInstance::Severity, const std::string& );

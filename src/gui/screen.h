@@ -46,6 +46,7 @@ class Screen: public StyleLoader
   virtual void onPlayerStateChange(Player*) {}
   virtual void onPlayerChangeFieldConf(Player*) {}
   virtual void onStateChange() {}
+  virtual void onServerChangeFieldConfs() {}
   virtual void onPlayerStep(Player*) {}
   virtual void onPlayerRanked(Player*) {}
   virtual void onNotification(GameInstance::Severity, const std::string&) {}
