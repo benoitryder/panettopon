@@ -364,7 +364,38 @@ void ScreenLobby::redraw()
 
 bool ScreenLobby::onInputEvent(const sf::Event& ev)
 {
+  // get currently selected row, to detect conf changes
+  WPlayerRow* player_row = 0;
+  unsigned int conf_index;
+  if(focused_ != button_ready_) {
+    for(auto const& kv : player_rows_) {
+      auto& choice = kv.second->choiceConf();
+      if(focused_ == &choice) {
+        player_row = kv.second;
+        conf_index = choice.index();
+        break;
+      }
+    }
+  }
+
   if(Screen::onInputEvent(ev)) {
+    if(player_row) {
+      auto choice = player_row->choiceConf();
+      if(choice.index() != conf_index) {
+        // choice updated
+        auto instance = intf().instance();
+        auto& conf_name = choice.value();
+        // get a non-const player
+        Player* pl = instance->player(player_row->player().plid());
+        instance->playerSetFieldConf(pl, instance->conf().field_confs.at(conf_name), conf_name);
+      }
+    }
+
+    // force focus if ready; it's simpler this way since there is no need
+    // to update neighbors
+    if(player_->state() == Player::State::LOBBY_READY) {
+      focus(button_ready_);
+    }
     return true;
   }
   if( ev.type == sf::Event::KeyPressed ) {
@@ -434,8 +465,13 @@ void ScreenLobby::submit()
 
 void ScreenLobby::updateReadyButtonCaption()
 {
-  const std::string caption = player_->state() == Player::State::LOBBY_READY ? "Waiting" : "Ready";
+  bool ready = player_->state() == Player::State::LOBBY_READY;
+  const std::string caption = ready ? "Waiting" : "Ready";
   button_ready_->setCaption(intf_.res_mgr().getLang({"ScreenLobby", caption}));
+  // force focus update, just in case
+  if(ready) {
+    focus(button_ready_);
+  }
 }
 
 void ScreenLobby::updatePlayerRowsPos()
