@@ -446,6 +446,16 @@ void WChoice::select(unsigned int i)
   text_.setOrigin(r.width/2, text_.getFont()->getLineSpacing(text_.getCharacterSize())/2);
 }
 
+bool WChoice::selectValue(const ItemContainer::value_type& v)
+{
+  auto it = std::find(items_.begin(), items_.end(), v);
+  if(it != items_.end()) {
+    select(it - items_.begin());
+    return true;
+  }
+  return false;
+}
+
 void WChoice::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();

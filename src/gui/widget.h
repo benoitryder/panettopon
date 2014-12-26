@@ -280,6 +280,8 @@ class WChoice: public WFocusable
   unsigned int index() const { return index_; }
   void setItems(const ItemContainer& items);
   void select(unsigned int i);
+  /// Select given value, return \e true if found, \e false otherwise
+  bool selectValue(const ItemContainer::value_type& v);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
   virtual bool onInputEvent(const sf::Event&);
   virtual void focus(bool focused);
