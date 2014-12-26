@@ -41,7 +41,10 @@ void ServerInstance::loadConf(const IniFile& cfg)
         throw std::runtime_error("empty field configuration name");
       }
       const std::string field_conf_section = IniFile::join("FieldConf", name);
-      conf_.field_confs[name].fromIniFile(cfg, field_conf_section);
+      conf_.field_confs.emplace_back();
+      FieldConf& field_conf = conf_.field_confs.back();
+      field_conf.name = name;
+      field_conf.fromIniFile(cfg, field_conf_section);
       if( pos2 == std::string::npos ) {
         break;
       }
@@ -94,19 +97,18 @@ void ServerInstance::playerSetNick(Player* pl, const std::string& nick)
   socket_->broadcastPacket(pkt);
 }
 
-void ServerInstance::playerSetFieldConf(Player* pl, const FieldConf& conf, const std::string& name)
+void ServerInstance::playerSetFieldConf(Player* pl, const FieldConf& conf)
 {
   assert(pl->local());
   assert(pl->state() == Player::State::LOBBY);
 
-  pl->setFieldConf(conf, name);
+  pl->setFieldConf(conf);
   observer_.onPlayerChangeFieldConf(pl);
 
   netplay::Packet pkt;
   netplay::PktPlayerConf* np_conf = pkt.mutable_player_conf();
   np_conf->set_plid(pl->plid());
   netplay::FieldConf* np_fc = np_conf->mutable_field_conf();
-  np_fc->set_name(name);
   conf.toPacket(np_fc);
   socket_->broadcastPacket(pkt);
 }
@@ -206,10 +208,9 @@ void ServerInstance::onPeerConnect(netplay::PeerSocket* peer)
   google::protobuf::RepeatedPtrField<netplay::FieldConf>* np_fcs = np_conf->mutable_field_confs();
   np_fcs->Reserve(conf_.field_confs.size());
   std::map<std::string, FieldConf>::const_iterator fcit;
-  for( fcit=conf_.field_confs.begin(); fcit!=conf_.field_confs.end(); ++fcit ) {
+  for(auto& fc : conf_.field_confs) {
     netplay::FieldConf* np_fc = np_fcs->Add();
-    np_fc->set_name( (*fcit).first );
-    (*fcit).second.toPacket(np_fc);
+    fc.toPacket(np_fc);
   }
   peer->writePacket(pkt);
   pkt.clear_server_conf();
@@ -228,7 +229,6 @@ void ServerInstance::onPeerConnect(netplay::PeerSocket* peer)
     np_plconf->set_nick( pl->nick() );
     netplay::FieldConf* np_fc = np_plconf->mutable_field_conf();
     pl->fieldConf().toPacket(np_fc);
-    np_fc->set_name(pl->fieldConfName());
     peer->writePacket(pkt);
     pkt.clear_player_conf();
 
@@ -338,8 +338,7 @@ Player* ServerInstance::newPlayer(netplay::PeerSocket* peer, const std::string& 
   LOG("init player: %d", pl->plid());
   pl->setState(Player::State::LOBBY);
   pl->setNick(nick);
-  auto fc_it = conf_.field_confs.begin();
-  pl->setFieldConf(fc_it->second, fc_it->first);
+  pl->setFieldConf(conf_.field_confs[0]);
   // put accepted player with his friends
   PlId plid = pl->plid(); // use a temporary value to help g++
   players_.insert(plid, pl_unique.release());
@@ -356,7 +355,6 @@ Player* ServerInstance::newPlayer(netplay::PeerSocket* peer, const std::string& 
   np_conf->set_nick(pl->nick());
   netplay::FieldConf* np_fc = np_conf->mutable_field_conf();
   pl->fieldConf().toPacket(np_fc);
-  np_fc->set_name(pl->fieldConfName());
   socket_->broadcastPacket(pkt, peer);
   if( peer != NULL ) {
     np_conf->set_join(true);
@@ -497,17 +495,16 @@ void ServerInstance::processPktPlayerConf(netplay::PeerSocket* peer, const netpl
     if( name.empty() ) {
       FieldConf conf;
       conf.fromPacket(pkt.field_conf());
-      pl->setFieldConf(conf, name);
+      pl->setFieldConf(conf);
     } else {
-      auto fc_it = conf_.field_confs.find(name);
-      if( fc_it == conf_.field_confs.end() ) {
+      auto* fc = conf_.fieldConf(name);
+      if(!fc) {
         throw netplay::CallbackError("invalid configuration name: "+name);
       }
-      pl->setFieldConf(fc_it->second, name);
+      pl->setFieldConf(*fc);
     }
     if( do_send ) {
       netplay::FieldConf* np_fc = np_plconf->mutable_field_conf();
-      np_fc->set_name(name);
       pl->fieldConf().toPacket(np_fc);
       observer_.onPlayerChangeFieldConf(pl);
     }

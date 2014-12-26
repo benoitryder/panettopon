@@ -1,6 +1,7 @@
 #ifndef INSTANCE_H_
 #define INSTANCE_H_
 
+#include <vector>
 #include <boost/asio/io_service.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
 #include "monotone_timer.hpp"
@@ -33,8 +34,10 @@ struct ServerConf
   /// Duration of start countdown
   uint32_t tk_start_countdown;
 
-  /// Field configurations indexed by their name
-  std::map<std::string, FieldConf> field_confs;
+  /// Field configurations
+  std::vector<FieldConf> field_confs;
+  /// Retrieve a configuration by its name, \e nullptr if not found
+  const FieldConf* fieldConf(const std::string& name) const;
 };
 
 /** @brief Generic macro for server configuration fields.
@@ -81,8 +84,7 @@ class Player
   State state() const { return state_; }
   void setState(State v) { state_ = v; }
   const FieldConf& fieldConf() const { return field_conf_; }
-  const std::string& fieldConfName() const { return field_conf_name_; }
-  void setFieldConf(const FieldConf& conf, const std::string& name);
+  void setFieldConf(const FieldConf& conf) { field_conf_ = conf; }
   const Field* field() const { return field_; }
   Field* field() { return field_; }
   FldId fldid() const { return field_ ? field_->fldid() : 0; }
@@ -94,7 +96,6 @@ class Player
   std::string nick_;
   State state_;  ///< player actual state
   FieldConf field_conf_;
-  std::string field_conf_name_;
   Field* field_;
 };
 
@@ -158,7 +159,7 @@ class GameInstance
    */
   //@{
   virtual void playerSetNick(Player* pl, const std::string& nick) = 0;
-  virtual void playerSetFieldConf(Player* pl, const FieldConf& conf, const std::string& name) = 0;
+  virtual void playerSetFieldConf(Player* pl, const FieldConf& conf) = 0;
   virtual void playerSetState(Player* pl, Player::State state) = 0;
   virtual void playerSendChat(Player* pl, const std::string& msg) = 0;
   virtual void playerStep(Player* pl, KeyState keys) = 0;

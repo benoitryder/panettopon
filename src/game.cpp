@@ -31,6 +31,7 @@ bool FieldConf::isValid() const
 
 void FieldConf::fromPacket(const netplay::FieldConf& pkt)
 {
+  name = pkt.name();
 #define FIELD_CONF_EXPR_INIT(n,ini) \
   n = pkt.n();
   FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
@@ -47,6 +48,7 @@ void FieldConf::fromPacket(const netplay::FieldConf& pkt)
 
 void FieldConf::toPacket(netplay::FieldConf* pkt) const
 {
+  pkt->set_name(name);
 #define FIELD_CONF_EXPR_INIT(n,ini) \
   pkt->set_##n(n);
   FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
@@ -58,6 +60,7 @@ void FieldConf::toPacket(netplay::FieldConf* pkt) const
 
 void FieldConf::fromIniFile(const IniFile& cfg, const std::string& section)
 {
+  // name is set by the caller
 #define FIELD_CONF_EXPR_INIT(n,ini) \
   this->n = cfg.get<decltype(this->n)>({section, #ini});
   FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);

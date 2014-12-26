@@ -57,7 +57,7 @@ void ClientInstance::playerSetNick(Player* pl, const std::string& nick)
   socket_->writePacket(pkt);
 }
 
-void ClientInstance::playerSetFieldConf(Player* pl, const FieldConf& conf, const std::string& name)
+void ClientInstance::playerSetFieldConf(Player* pl, const FieldConf& conf)
 {
   assert( pl->local() );
   assert(pl->state() == Player::State::LOBBY);
@@ -67,7 +67,6 @@ void ClientInstance::playerSetFieldConf(Player* pl, const FieldConf& conf, const
   netplay::PktPlayerConf* np_conf = pkt.mutable_player_conf();
   np_conf->set_plid(pl->plid());
   netplay::FieldConf* np_fc = np_conf->mutable_field_conf();
-  np_fc->set_name(name);
   conf.toPacket(np_fc);
   socket_->writePacket(pkt);
 }
@@ -358,12 +357,18 @@ void ClientInstance::processPktServerConf(const netplay::PktServerConf& pkt)
   google::protobuf::RepeatedPtrField<netplay::FieldConf> np_fcs = pkt.field_confs();
   if( np_fcs.size() > 0 ) {
     google::protobuf::RepeatedPtrField<netplay::FieldConf>::const_iterator fcit;
+    std::set<std::string> field_conf_names; // to check for duplicates
     conf_.field_confs.clear();
     for( fcit=np_fcs.begin(); fcit!=np_fcs.end(); ++fcit ) {
-      if( fcit->name().empty() ) {
+      const std::string& name = fcit->name();
+      if(name.empty()) {
         throw netplay::CallbackError("unnamed server field configuration");
       }
-      conf_.field_confs[fcit->name()].fromPacket(*fcit);
+      if(!field_conf_names.insert(name).second) {
+        throw netplay::CallbackError("duplicate field configuration name: "+name);
+      }
+      conf_.field_confs.emplace_back();
+      conf_.field_confs.back().fromPacket(*fcit);
     }
   }
   // even when np_fcs.size() > 0 to handle the init case (first conf packet)
@@ -438,7 +443,7 @@ void ClientInstance::processPktPlayerConf(const netplay::PktPlayerConf& pkt)
     players_.insert(plid, pl);
     FieldConf conf;
     conf.fromPacket(pkt.field_conf());
-    pl->setFieldConf(conf, pkt.field_conf().name());
+    pl->setFieldConf(conf);
     observer_.onPlayerJoined(pl);
   } else {
     // update player
@@ -452,13 +457,13 @@ void ClientInstance::processPktPlayerConf(const netplay::PktPlayerConf& pkt)
       if( name.empty() ) {
         FieldConf conf;
         conf.fromPacket(pkt.field_conf());
-        pl->setFieldConf(conf, name);
+        pl->setFieldConf(conf);
       } else {
-        auto fc_it = conf_.field_confs.find(name);
-        if( fc_it == conf_.field_confs.end() ) {
+        auto* fc = conf_.fieldConf(name);
+        if(!fc) {
           throw netplay::CallbackError("invalid configuration name: "+name);
         }
-        pl->setFieldConf(fc_it->second, name);
+        pl->setFieldConf(*fc);
       }
       observer_.onPlayerChangeFieldConf(pl);
     }

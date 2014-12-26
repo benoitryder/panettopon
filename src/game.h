@@ -21,6 +21,9 @@ class IniFile;
 /// Field configuration.
 struct FieldConf
 {
+  /// Configuration name, must be unique among others
+  std::string name;
+
   uint16_t swap_tk;      ///< swap duration
   /// Auto raise speeds (values may be 0)
   std::vector<uint16_t> raise_speeds;

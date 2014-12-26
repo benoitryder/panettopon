@@ -14,6 +14,16 @@ void ServerConf::toDefault()
   //TODO define default configuration here
 }
 
+const FieldConf* ServerConf::fieldConf(const std::string& name) const
+{
+  for(auto& conf : field_confs) {
+    if(conf.name == name) {
+      return &conf;
+    }
+  }
+  return nullptr;
+}
+
 
 
 Player::Player(PlId plid, bool local):
@@ -24,12 +34,6 @@ Player::Player(PlId plid, bool local):
 
 Player::~Player()
 {
-}
-
-void Player::setFieldConf(const FieldConf& conf, const std::string& name)
-{
-  field_conf_ = conf;
-  field_conf_name_ = name;
 }
 
 

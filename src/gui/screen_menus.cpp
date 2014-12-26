@@ -387,7 +387,10 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
         auto& conf_name = choice.value();
         // get a non-const player
         Player* pl = instance->player(player_row->player().plid());
-        instance->playerSetFieldConf(pl, instance->conf().field_confs.at(conf_name), conf_name);
+        auto* fc = instance->conf().fieldConf(conf_name);
+        if(fc) {  // should always be true
+          instance->playerSetFieldConf(pl, *fc);
+        }
       }
     }
 
@@ -531,7 +534,7 @@ void ScreenLobby::WPlayerRow::draw(sf::RenderTarget& target, sf::RenderStates st
 void ScreenLobby::WPlayerRow::update()
 {
   nick_.setString(player_.nick());
-  const std::string& conf_name = player_.fieldConfName();
+  const std::string& conf_name = player_.fieldConf().name;
   if(!choice_conf_->selectValue(conf_name)) {
     choice_conf_->select(choice_conf_->addItem(conf_name));
   }
@@ -539,14 +542,14 @@ void ScreenLobby::WPlayerRow::update()
 
 void ScreenLobby::WPlayerRow::updateConfItems()
 {
-  auto conf_name = player_.fieldConfName();
+  auto conf_name = player_.fieldConf().name;
   if(player_.local()) {
     // add all server configurations
-    auto confs = screen_.intf().instance()->conf().field_confs;
+    auto& confs = screen_.intf().instance()->conf().field_confs;
     WChoice::ItemContainer items;
     items.reserve(confs.size());
-    for(auto& kv : confs) {
-      items.push_back(kv.first);
+    for(auto& conf : confs) {
+      items.push_back(conf.name);
     }
     choice_conf_->setItems(items);
     // reselect previous value
