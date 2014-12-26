@@ -386,10 +386,18 @@ void ScreenLobby::onStateChange()
   }
 }
 
+void ScreenLobby::onServerChangeFieldConfs()
+{
+  for(auto const& kv : player_rows_) {
+    kv->second->updateConfItems();
+  }
+}
+
 void ScreenLobby::onPlayerJoined(Player* pl)
 {
   PlId plid = pl->plid(); // intermediate variable to help g++
-  player_rows_.insert(plid, new WPlayerRow(*this, *pl));
+  auto p = player_rows_.insert(plid, new WPlayerRow(*this, *pl));
+  p.first->second->updateConfItems();
   this->updatePlayerRowsPos();
 }
 
@@ -447,28 +455,28 @@ const std::string& ScreenLobby::WPlayerRow::type() const {
 }
 
 ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
-    Widget(screen, ""), player_(pl)
+    WContainer(screen, ""), player_(pl)
 {
   this->applyStyle(nick_, "Nick");
   nick_.setOrigin(0, (nick_.getFont()->getLineSpacing(nick_.getCharacterSize())+2)/2);
   nick_.setPosition(getStyle<float>("NickX"), 0);
 
-  this->applyStyle(conf_, "Conf");
-  conf_.setOrigin(0, (conf_.getFont()->getLineSpacing(conf_.getCharacterSize())+2)/2);
-  conf_.setPosition(getStyle<float>("ConfX"), 0);
+  choice_conf_ = new WChoice(screen, "Conf");
+  widgets.push_back(choice_conf_);
 
   this->applyStyle(ready_, "Ready");
   ready_.setOrigin(ready_.getLocalBounds().width/2.f, ready_.getLocalBounds().height/2.f);
   ready_.setPosition(getStyle<float>("ReadyX"), 0);
 
+  this->updateConfItems();
   this->update();
 }
 
 void ScreenLobby::WPlayerRow::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
+  WContainer::draw(target, states);
   states.transform *= getTransform();
   target.draw(nick_, states);
-  target.draw(conf_, states);
   if(player_.state() == Player::State::LOBBY_READY) {
     target.draw(ready_, states);
   }
@@ -477,7 +485,32 @@ void ScreenLobby::WPlayerRow::draw(sf::RenderTarget& target, sf::RenderStates st
 void ScreenLobby::WPlayerRow::update()
 {
   nick_.setString(player_.nick());
-  conf_.setString(player_.fieldConfName());
+  const std::string& conf_name = player_.fieldConfName();
+  if(!choice_conf_->selectValue(conf_name)) {
+    choice_conf_->select(choice_conf_->addItem(conf_name));
+  }
+}
+
+void ScreenLobby::WPlayerRow::updateConfItems()
+{
+  auto conf_name = player_.fieldConfName();
+  if(player_.local()) {
+    // add all server configurations
+    auto confs = screen_.intf().instance()->conf().field_confs;
+    WChoice::ItemContainer items;
+    items.reserve(confs.size());
+    for(auto& kv : confs) {
+      items.push_back(kv.first);
+    }
+    choice_conf_->setItems(items);
+    // reselect previous value
+    if(!choice_conf_->selectValue(conf_name)) {
+      choice_conf_->select(choice_conf_->addItem(conf_name));
+    }
+  } else {
+    // single item: the selected configuration
+    choice_conf_->setItems({conf_name});
+  }
 }
 
 

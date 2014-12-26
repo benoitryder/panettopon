@@ -115,13 +115,15 @@ class ScreenLobby: public Screen
    *  - ReadyImage, RedayImageRect
    *  - NickX, ConfX, ReadyX
    */
-  class WPlayerRow: public Widget
+  class WPlayerRow: public WContainer
   {
    public:
     WPlayerRow(const Screen& screen, const Player& pl);
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
     /// Update the widget after player state changes
     void update();
+    /// Update server list of configurations
+    void updateConfItems();
 
    protected:
     virtual const std::string& type() const;
@@ -129,7 +131,7 @@ class ScreenLobby: public Screen
    private:
     const Player& player_;
     sf::Text nick_;
-    sf::Text conf_;
+    WChoice* choice_conf_;
     sf::Sprite ready_;
   };
 
