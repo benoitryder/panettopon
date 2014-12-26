@@ -456,6 +456,12 @@ bool WChoice::selectValue(const ItemContainer::value_type& v)
   return false;
 }
 
+unsigned int WChoice::addItem(const ItemContainer::value_type& v)
+{
+  items_.push_back(v);
+  return items_.size()-1;
+}
+
 void WChoice::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();

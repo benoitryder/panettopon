@@ -283,6 +283,8 @@ class WChoice: public WFocusable
   void select(unsigned int i);
   /// Select given value, return \e true if found, \e false otherwise
   bool selectValue(const ItemContainer::value_type& v);
+  /// Add an item, return its index
+  unsigned int addItem(const ItemContainer::value_type& v);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
   virtual bool onInputEvent(const sf::Event&);
   virtual void focus(bool focused);
