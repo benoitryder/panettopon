@@ -71,6 +71,7 @@ class WFocusable: public Widget
   bool focused() const { return focused_; }
   virtual void focus(bool focused) { focused_ = focused; }
   WFocusable* neighbor(Neighbor n) const { return neighbors_[n]; }
+  void setNeighbor(Neighbor n, WFocusable* w);
   void setNeighbors(WFocusable* up, WFocusable* down, WFocusable* left, WFocusable* right);
 
  private:

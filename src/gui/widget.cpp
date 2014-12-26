@@ -53,6 +53,11 @@ WFocusable::WFocusable(const Screen& screen, const std::string& name):
   this->setNeighbors(NULL, NULL, NULL, NULL);
 }
 
+void WFocusable::setNeighbor(Neighbor n, WFocusable* w)
+{
+  neighbors_[n] = w;
+}
+
 void WFocusable::setNeighbors(WFocusable* up, WFocusable* down, WFocusable* left, WFocusable* right)
 {
   neighbors_[NEIGHBOR_UP] = up;
