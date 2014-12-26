@@ -278,6 +278,7 @@ class WChoice: public WFocusable
   WChoice(const Screen& screen, const std::string& name);
   const ItemContainer& items() const { return items_; }
   unsigned int index() const { return index_; }
+  const ItemContainer::value_type& value() const { return items_[index_]; }
   void setItems(const ItemContainer& items);
   void select(unsigned int i);
   /// Select given value, return \e true if found, \e false otherwise
