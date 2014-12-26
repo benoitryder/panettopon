@@ -120,6 +120,8 @@ class ScreenLobby: public Screen
    public:
     WPlayerRow(const Screen& screen, const Player& pl);
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+    const Player& player() const { return player_; }
+    WChoice& choiceConf() const { return *choice_conf_; }
     /// Update the widget after player state changes
     void update();
     /// Update server list of configurations

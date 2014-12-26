@@ -442,10 +442,20 @@ void ScreenLobby::updatePlayerRowsPos()
 {
   PlayerRowsContainer::iterator it;
   float y = player_rows_pos_.y;
-  for( it=player_rows_.begin(); it!=player_rows_.end(); ++it ) {
-    (*it).second->setPosition(player_rows_pos_.x, y);
+  WFocusable *neighbor_up = button_ready_;
+  for(auto kv : player_rows_) {
+    auto row = kv.second;
+    row->setPosition(player_rows_pos_.x, y);
     y += player_rows_dy_;
+    if(row->player().local()) {
+      WChoice* choice_conf = &row->choiceConf();
+      neighbor_up->setNeighbor(WFocusable::NEIGHBOR_DOWN, choice_conf);
+      choice_conf->setNeighbor(WFocusable::NEIGHBOR_UP, neighbor_up);
+      neighbor_up = choice_conf;
+    }
   }
+  neighbor_up->setNeighbor(WFocusable::NEIGHBOR_DOWN, button_ready_);
+  button_ready_->setNeighbor(WFocusable::NEIGHBOR_UP, neighbor_up);
 }
 
 
