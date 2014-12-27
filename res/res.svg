@@ -344,11 +344,12 @@
       }
 
 
-      #Menu-Choice rect {
+      #Menu-map .widget {
         fill: #c0c0c0;
         stroke: #101010;
         stroke-width: 1;
       }
+
       #Menu-Choice path {
         fill: #101010;
         stroke: #101010;
@@ -807,14 +808,14 @@
       x="-61" y="-29"
       width="122" height="58"
       rx="16" ry="16"
-      style="fill: #c0c0c0; stroke: #101010; stroke-width: 1;"
+      class="widget"
       />
     <rect id="Menu-Entry"
       transform="translate(64,96)"
       x="-61" y="-29"
       width="122" height="58"
       rx="4" ry="4"
-      style="fill: #c0c0c0; stroke: #101010; stroke-width: 1;"
+      class="widget"
       />
     <g id="Menu-Choice"
       transform="translate(64,160)">
@@ -822,6 +823,7 @@
         x="-47" y="-29"
         width="94" height="58"
         rx="4" ry="4"
+        class="widget"
         />
       <path
         sodipodi:nodetypes="cccc"
