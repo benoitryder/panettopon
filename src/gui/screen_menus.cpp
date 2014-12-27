@@ -510,7 +510,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   nick_.setOrigin(0, (nick_.getFont()->getLineSpacing(nick_.getCharacterSize())+2)/2);
   nick_.setPosition(getStyle<float>("NickX"), 0);
 
-  choice_conf_ = new WChoice(screen, "Conf");
+  choice_conf_ = new WChoice(screen, IniFile::join(type(), "Conf"));
   widgets.push_back(choice_conf_);
 
   this->applyStyle(ready_, "Ready");

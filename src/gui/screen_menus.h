@@ -111,9 +111,10 @@ class ScreenLobby: public Screen
   /** @brief Display a row of information for a player.
    *
    * Style properties:
-   *  - NickFont, NickFontSize, NickFontStyle
-   *  - ReadyImage, RedayImageRect
-   *  - NickX, ConfX, ReadyX
+   *  - Nick (text)
+   *  - Conf (choice)
+   *  - Ready (sprite)
+   *  - NickX, ReadyX
    */
   class WPlayerRow: public WContainer
   {
