@@ -319,8 +319,8 @@ void ImageFrameX::render(sf::RenderTarget& target, sf::RenderStates states, cons
 
   const float img_x1 = rect.left + inside_left_;
   const float img_x2 = rect.left + rect.width  - (rect_.width  - inside_left_ - inside_width_);
-  const float tex_x1 = (float)inside_left_/rect_.width * rect_.width;
-  const float tex_x2 = (float)(inside_left_+inside_width_)/rect_.width * rect_.width;
+  const float tex_x1 = rect_.left + inside_left_;
+  const float tex_x2 = rect_.left + inside_left_ + inside_width_;
 
   const sf::Vertex vertices[] = {
     // left
