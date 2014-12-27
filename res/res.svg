@@ -358,6 +358,18 @@
         stroke-linejoin: round;
       }
 
+      #Menu-Frame-inside {
+        fill: #202020;
+        fill-opacity:0.9;
+        stroke: #f0f0f0;
+        stroke-width: 4;
+      }
+      #Menu-Frame-border {
+        fill: none;
+        stroke: #181818;
+        stroke-width: 2;
+      }
+
       #Menu-Icon-Ready {
         fill: green;
         stroke: white;
@@ -840,13 +852,11 @@
         x="-57" y="-57"
         width="114" height="114"
         rx="24" ry="24"
-        style="fill:#202020; fill-opacity:0.9; stroke: #f0f0f0; stroke-width: 4;"
         />
       <rect id="Menu-Frame-border"
         x="-60" y="-60"
         width="120" height="120"
         rx="26" ry="26"
-        style="fill: none; stroke: #181818; stroke-width: 2;"
         />
     </g>
   </g>
