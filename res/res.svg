@@ -370,6 +370,19 @@
         stroke-width: 2;
       }
 
+      #Menu-LobbyConfChoice rect {
+        fill: none;
+        stroke: #f0f0f0;
+        stroke-width: 2;
+      }
+      #Menu-LobbyConfChoice path {
+        fill: #f0f0f0;
+        stroke: #f0f0f0;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
       #Menu-Icon-Ready {
         fill: green;
         stroke: white;
@@ -857,6 +870,22 @@
         x="-60" y="-60"
         width="120" height="120"
         rx="26" ry="26"
+        />
+    </g>
+    <g id="Menu-LobbyConfChoice"
+      transform="translate(192,160)">
+      <rect
+        x="-47" y="-29"
+        width="94" height="58"
+        rx="4" ry="4"
+        />
+      <path
+        sodipodi:nodetypes="cccc"
+        d="m -59,0 7,-16 0,32 z"
+        />
+      <path
+        sodipodi:nodetypes="cccc"
+        d="m 59,0 -7,-16 0,32 z"
         />
     </g>
   </g>
