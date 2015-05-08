@@ -263,6 +263,8 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
   // load sounds
   sounds_.move.setBuffer(*intf_.res_mgr().getSound("move"));
   sounds_.swap.setBuffer(*intf_.res_mgr().getSound("swap"));
+  sounds_.fall.setBuffer(*intf_.res_mgr().getSound("fall"));
+  sounds_.pop.setBuffer(*intf_.res_mgr().getSound("pop"));
 
   this->step();  // not a step, but do the work
 }
@@ -352,17 +354,6 @@ void FieldDisplay::step()
 
   lift_offset_ = (float)field_.raiseProgress()/Field::RAISE_PROGRESS_MAX;
 
-  // only play sounds for local players
-  Player* pl = intf_.instance()->player(&field_);
-  if(pl && pl->local()) {
-    if(info.move) {
-      sounds_.move.play();
-    }
-    if(info.swap) {
-      sounds_.swap.play();
-    }
-  }
-
   // cursor
   if( field_.tick() % 15 == 0 ) {
     style_.tiles_cursor[ (field_.tick()/15) % 2 ].setToSprite(&spr_cursor_, true);
@@ -382,20 +373,49 @@ void FieldDisplay::step()
     }
   }
 
-  // block bouncing after fall
-  //TODO update when a block fall?
+  bool play_fall = false;
+  float play_pop = 0;
   for(int x=0; x<FIELD_WIDTH; x++) {
     for(int y=1; y<=FIELD_WIDTH; y++) {
       const Block& bk = field_.block(x,y);
+      // block bouncing, fall sound
+      //TODO update when a block fall?
       if( bk.isState(BkColor::LAID) ) {
         crouch_dt_[x][y] = CROUCH_DURATION;
+        play_fall = true;
       } else if( bk.isState(BkColor::REST) && crouch_dt_[x][y] != 0 ) {
         crouch_dt_[x][y]--;
       } else {
         crouch_dt_[x][y] = 0;
       }
+      if(bk.isState(BkColor::MUTATE) && field_.tick()+1 >= bk.ntick) {
+        //TODO play one tick in advance :/
+        play_pop = true;
+      }
+      // pop sounds
     }
   }
+
+  // only play sounds for local players
+  //TODO there may be several sound of the same type at the same time
+  Player* pl = intf_.instance()->player(&field_);
+  if(pl && pl->local()) {
+    if(info.move) {
+      sounds_.move.play();
+    }
+    if(info.swap) {
+      sounds_.swap.play();
+    }
+    if(play_fall) {
+      LOG("[%u] play fall", field_.tick());
+      sounds_.fall.play();
+    }
+    if(play_pop) {
+      LOG("[%u] play pop", field_.tick());
+      sounds_.pop.play();
+    }
+  }
+
 
   // signs
 
