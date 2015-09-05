@@ -133,7 +133,7 @@ void ServerInstance::playerSetState(Player* pl, Player::State state)
       }
       players_.erase(pl->plid());
       state_valid = true;
-      //TODO special processing
+      break;
     case Player::State::LOBBY:
       state_valid = state_ == State::LOBBY || state_ == State::GAME;
       break;
