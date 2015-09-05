@@ -4,6 +4,7 @@
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Audio/Sound.hpp>
 #include <SFML/Audio/SoundBuffer.hpp>
 #include "resources.h"
 #include "style.h"
@@ -365,6 +366,35 @@ void ImageFrameX::Style::load(const StyleLoader& loader)
 void ImageFrameX::Style::apply(ImageFrameX& o) const
 {
   o.create(image, rect, inside_left, inside_width);
+}
+
+
+SoundPool::SoundPool(): buffer_(nullptr)
+{
+}
+
+void SoundPool::setBuffer(const sf::SoundBuffer& buffer)
+{
+  buffer_ = &buffer;
+  for(auto& sound : pool_) {
+    sound.setBuffer(buffer);
+  }
+}
+
+sf::Sound& SoundPool::getSound()
+{
+  for(auto& sound : pool_) {
+    if(sound.getStatus() == sf::SoundSource::Stopped) {
+      return sound;
+    }
+  }
+  pool_.emplace_back(*buffer_);
+  return pool_.back();
+}
+
+void SoundPool::play()
+{
+  getSound().play();
 }
 
 

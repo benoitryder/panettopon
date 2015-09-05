@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <map>
+#include <vector>
 #include <string>
 #include <istream>
 #include "../util.h"
@@ -13,6 +14,7 @@ namespace sf {
   class Text;
   class Texture;
   class Sprite;
+  class Sound;
   class SoundBuffer;
 }
 
@@ -143,6 +145,32 @@ class ImageFrameX
   sf::IntRect rect_;
   unsigned int inside_left_;
   unsigned int inside_width_;
+};
+
+
+/** @brief Sound pool for concurrent playing
+ *
+ * A single sf::Sound object is not sufficient if the sound can be played
+ * several times simultaneously.
+ */
+class SoundPool
+{
+ public:
+  SoundPool();
+
+  /// Set sound's source buffer
+  void setBuffer(const sf::SoundBuffer& buffer);
+  /// Get an available sound object from the pool
+  sf::Sound& getSound();
+  /** @brief Get an available sound object and play it
+   *
+   * This is a shortcut for getSound().play().
+   */
+  void play();
+
+ private:
+  std::vector<sf::Sound> pool_;
+  const sf::SoundBuffer* buffer_;
 };
 
 
