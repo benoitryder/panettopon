@@ -553,8 +553,9 @@ void ClientInstance::processPktPlayerField(const netplay::PktPlayerField& pkt)
   Field* fld = match_.addField(pl->fieldConf(), pkt.seed());
   pl->setField(fld);
   if( pkt.blocks_size() > 0 ) {
-    //TODO throw exceptions in setGridContentFromPacket
-    fld->setGridContentFromPacket(pkt.blocks());
+    if(!fld->setGridContentFromPacket(pkt.blocks())) {
+      throw netplay::CallbackError("invalid field content");
+    }
   }
 }
 
