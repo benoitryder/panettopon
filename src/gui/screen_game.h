@@ -225,8 +225,8 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   struct {
     sf::Sound move;
     sf::Sound swap;
-    sf::Sound fall;
-    sf::Sound pop;
+    SoundPool fall;
+    SoundPool pop;
   } sounds_;
 
 };
