@@ -307,7 +307,7 @@ KeyState CursesInterface::getNextInput(Player*)
   for(;;) {
     int c = ::getch();
     if( c == keys_.quit ) {
-      io_service_.stop(); //XXX
+      io_service_.stop();
     }
     if( c == ERR ) {
       break;

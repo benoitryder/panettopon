@@ -11,7 +11,6 @@ void ServerConf::toDefault()
   n = np_conf.n();
   SERVER_CONF_APPLY(SERVER_CONF_EXPR_INIT);
 #undef SERVER_CONF_EXPR_INIT
-  //TODO define default configuration here
 }
 
 const FieldConf* ServerConf::fieldConf(const std::string& name) const
@@ -55,7 +54,6 @@ Player* GameInstance::player(PlId plid)
 
 Player* GameInstance::player(const Field* fld)
 {
-  //XXX use a map on the instance to optimize?
   if( fld == NULL ) {
     return NULL;
   }

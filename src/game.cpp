@@ -180,7 +180,7 @@ void Field::step(KeyState keys)
         continue;
       }
 
-      Block* bk2 = &grid_[x][y-1]; // above block
+      Block* bk2 = &grid_[x][y-1]; // under block
 
       // color blocks
       if( bk->isColor() ) {
@@ -188,7 +188,6 @@ void Field::step(KeyState keys)
         if( bkc->state == BkColor::REST ) {
           if( bk2->swapped ) {
             // do nothing
-            //XXX not on graph?
           } else if( bk2->isNone() ) {
             bkc->state = BkColor::LEVITATE;
             bk->chaining = false;

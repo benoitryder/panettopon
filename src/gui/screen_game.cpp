@@ -379,7 +379,6 @@ void FieldDisplay::step()
     for(int y=1; y<=FIELD_WIDTH; y++) {
       const Block& bk = field_.block(x,y);
       // block bouncing, fall sound
-      //TODO update when a block fall?
       if( bk.isState(BkColor::LAID) ) {
         crouch_dt_[x][y] = CROUCH_DURATION;
         play_fall = true;
@@ -389,7 +388,7 @@ void FieldDisplay::step()
         crouch_dt_[x][y] = 0;
       }
       if(bk.isState(BkColor::MUTATE) && field_.tick()+1 >= bk.ntick) {
-        //TODO play one tick in advance :/
+        // note: sound is played one tick in advance :/
         play_pop = true;
       }
       // pop sounds
@@ -397,7 +396,6 @@ void FieldDisplay::step()
   }
 
   // only play sounds for local players
-  //TODO there may be several sound of the same type at the same time
   Player* pl = intf_.instance()->player(&field_);
   if(pl && pl->local()) {
     if(info.move) {

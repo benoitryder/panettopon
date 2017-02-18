@@ -192,7 +192,6 @@ void GuiInterface::stopInstance()
 
 bool GuiInterface::initDisplay()
 {
-  //TODO handle errors/exceptions
   window_.create(
       sf::VideoMode(window_conf_.screen_width, window_conf_.screen_height, 32),
       "Panettopon",
@@ -231,7 +230,6 @@ void GuiInterface::onRedrawTick(const boost::system::error_code& ec)
   }
 
   if( ! window_.isOpen() ) {
-    //TODO
     io_service_.stop();
     return;
   }

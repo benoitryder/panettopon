@@ -192,7 +192,7 @@ void ServerInstance::onPeerConnect(netplay::PeerSocket* peer)
   if(state_ != State::LOBBY) {
     throw netplay::CallbackError("match is running");
   } else if( players_.size() >= conf_.pl_nb_max ) {
-    //TODO difference between player max en peer max
+    //TODO difference between player max and peer max
     throw netplay::CallbackError("server full");
   }
   LOG("peer connected");
@@ -710,7 +710,7 @@ void ServerInstance::doStepPlayer(Player* pl, KeyState keys)
   pkt_send.clear_input(); // packet reused below
 
   // update garbages
-  //TODO check for clients which never send back the drop packets
+  //TODO check for clients who never send back the drop packets
   gb_distributor_.updateGarbages(pl->field());
 
   this->updateRanks();
