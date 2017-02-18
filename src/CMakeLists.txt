@@ -10,9 +10,6 @@ find_package(Boost COMPONENTS system)
 add_definitions(
   ${BOOST_DEFINITIONS}
   )
-if(WIN32 AND Boost_USE_STATIC_LIBS)
-  add_definitions(-DBOOST_PYTHON_STATIC_LIB)
-endif()
 
 include_directories(${BOOST_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
