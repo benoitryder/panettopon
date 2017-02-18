@@ -702,7 +702,7 @@ FieldDisplay::Sign::Sign(const StyleField& style, const FieldPos& pos, bool chai
   // initialize text
   style_.sign_style.apply(txt_);
   txt_.setString(chain ? 'x'+std::to_string(val) : std::to_string(val));
-  txt_.setColor(sf::Color::White);
+  txt_.setFillColor(sf::Color::White);
   sf::FloatRect txt_rect = txt_.getLocalBounds();
   float txt_sx = std::min(1.0, 0.8*style_.bk_size / txt_rect.width);
   txt_.setOrigin(txt_rect.left + txt_rect.width/2, txt_rect.top + txt_rect.height/2);
@@ -764,7 +764,7 @@ FieldDisplay::GbHanging::GbHanging(const StyleField& style, const Garbage& gb):
   bg_.setColor(style_.colors[gb_.from ? gb_.from->fldid() : 0]);
   //XXX store/cache text style information on StyleField
   style_.gb_hanging_style.apply(txt_);
-  txt_.setColor(sf::Color::White);
+  txt_.setFillColor(sf::Color::White);
 
   this->updateText();
 }

@@ -56,7 +56,7 @@ void StyleText::load(const StyleLoader& loader)
   font = res_mgr.getFont(loader.getStyle<std::string>("Font"));
 
   loader.fetchStyle<unsigned int>("FontSize", size);
-  loader.fetchStyle<unsigned int>("FontBorderWidth", border_width);
+  loader.fetchStyle<unsigned int>("FontOutlineThickness", border_width);
 
   if(loader.searchStyle("FontStyle", key)) {
     const std::string val = ini.get<std::string>(key);
@@ -76,7 +76,7 @@ void StyleText::load(const StyleLoader& loader)
   }
 
   loader.fetchStyle<sf::Color>("FontColor", color);
-  loader.fetchStyle<sf::Color>("FontBorderColor", border_color);
+  loader.fetchStyle<sf::Color>("FontOutlineColor", border_color);
 }
 
 
@@ -87,10 +87,10 @@ void StyleText::apply(sf::Text& o) const
   }
   o.setFont(*font);
   o.setCharacterSize(size);
-  o.setBorderWidth(border_width);
+  o.setOutlineThickness(border_width);
   o.setStyle(text_style);
-  o.setColor(color);
-  o.setBorderColor(border_color);
+  o.setFillColor(color);
+  o.setOutlineColor(border_color);
 }
 
 

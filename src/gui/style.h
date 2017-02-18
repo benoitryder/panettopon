@@ -160,10 +160,10 @@ template <class T> void StyleLoader::applyStyle(T& o, const std::string& prop) c
  * Style properties:
  *  - Font
  *  - FontSize
- *  - FontBorderWidth
+ *  - FontOutlineThickness
  *  - FontStyle
  *  - FontColor
- *  - FontBordercolor
+ *  - FontOutlineColor
  */
 struct StyleText
 {
