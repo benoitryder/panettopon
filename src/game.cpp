@@ -123,12 +123,6 @@ void Field::initMatch()
 
 
 
-Field::StepInfo::StepInfo():
-    combo(0), chain(1), raised(false), swap(false), move(false)
-{
-}
-
-
 void Field::step(KeyState keys)
 {
   assert( !lost_ );
@@ -213,6 +207,7 @@ void Field::step(KeyState keys)
             } else {
               bkc->state = BkColor::LAID;
               bk->ntick = 0;
+              step_info_.blocks.color.laid++;
             }
           } else if( bk2->isState(BkColor::LEVITATE) ) {
             // swapping blocks below chaining falling block don't cancel chain
@@ -233,6 +228,7 @@ void Field::step(KeyState keys)
           } else {
             bkc->state = BkColor::LAID;
             bk->ntick = 0;
+            step_info_.blocks.color.laid++;
           }
         } else if( bkc->state == BkColor::LAID ) {
           if( bk2->isNone() ) {
@@ -256,6 +252,7 @@ void Field::step(KeyState keys)
           } else if( bkc->state == BkColor::MUTATE ) {
             bkc->state = BkColor::CLEARED;
             bk->ntick = tick_ + bk->group_pos * conf_.pop_tk + 1;
+            step_info_.blocks.color.popped++;
           } else if( bkc->state == BkColor::CLEARED ) {
             bk->type = Block::NONE;
             bk->chaining = false;
@@ -315,6 +312,7 @@ void Field::step(KeyState keys)
             this->fallGarbage(gb);
           } else {
             this->setGarbageState(gb, BkGarbage::REST);
+            step_info_.blocks.garbage.laid += gb->size.x * gb->size.y;
           }
 
           // skip processed blocks (before pos.y update)
@@ -337,6 +335,7 @@ void Field::step(KeyState keys)
               bkg->state = BkGarbage::TRANSFORMED;
               bk->ntick = tick_ + bk->group_pos * conf_.pop_tk + 1;
             }
+            step_info_.blocks.garbage.mutated++;
           } else if( bkg->state == BkGarbage::TRANSFORMED ) {
             bkg->state = BkGarbage::REST;
             bk->ntick = 0;

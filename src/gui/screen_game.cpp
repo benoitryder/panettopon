@@ -373,25 +373,17 @@ void FieldDisplay::step()
     }
   }
 
-  bool play_fall = false;
-  float play_pop = 0;
   for(int x=0; x<FIELD_WIDTH; x++) {
     for(int y=1; y<=FIELD_WIDTH; y++) {
       const Block& bk = field_.block(x,y);
-      // block bouncing, fall sound
+      // block bouncing
       if( bk.isState(BkColor::LAID) ) {
         crouch_dt_[x][y] = CROUCH_DURATION;
-        play_fall = true;
       } else if( bk.isState(BkColor::REST) && crouch_dt_[x][y] != 0 ) {
         crouch_dt_[x][y]--;
       } else {
         crouch_dt_[x][y] = 0;
       }
-      if(bk.isState(BkColor::MUTATE) && field_.tick()+1 >= bk.ntick) {
-        // note: sound is played one tick in advance :/
-        play_pop = true;
-      }
-      // pop sounds
     }
   }
 
@@ -404,11 +396,11 @@ void FieldDisplay::step()
     if(info.swap) {
       sounds_.swap.play();
     }
-    if(play_fall) {
+    if(info.blocks.color.laid || info.blocks.garbage.laid) {
       LOG("[%u] play fall", field_.tick());
       sounds_.fall.play();
     }
-    if(play_pop) {
+    if(info.blocks.color.popped || info.blocks.garbage.mutated) {
       LOG("[%u] play pop", field_.tick());
       sounds_.pop.play();
     }

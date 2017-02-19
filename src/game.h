@@ -204,12 +204,22 @@ class Field
 
   /// Information on the last step.
   struct StepInfo {
-    StepInfo();  /// Create a new instance with default fresh values.
-    unsigned int combo; ///< Combo count (0 if no match).
-    unsigned int chain; ///< Chain count (default: 1).
-    bool raised;  ///< Field lifted up.
-    bool swap;  ///< Start a swap
-    bool move;  ///< Cursor moved
+    unsigned int combo = 0;  ///< Combo count (0 if no match)
+    unsigned int chain = 1;  ///< Chain count (default: 1)
+    bool raised = false;  ///< Field lifted up
+    bool swap = false;  ///< Start a swap
+    bool move = false;  ///< Cursor moved
+    /// Block state changes
+    struct {
+      struct {
+        unsigned int laid = 0;  ///< Blocks that fall to the ground
+        unsigned int popped = 0;  ///< Blocks popped
+      } color;
+      struct {
+        unsigned int laid = 0;  ///< Blocks that fall to the ground
+        unsigned int mutated = 0;  ///< Blocks mutated
+      } garbage;
+    } blocks;
   };
   typedef boost::ptr_deque<Garbage> GarbageList;
 
