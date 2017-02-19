@@ -211,7 +211,7 @@ void ClientInstance::processPktNewGarbage(const netplay::PktNewGarbage& pkt)
     throw netplay::CallbackError("match is not running");
   }
 
-  std::unique_ptr<Garbage> gb(new Garbage);
+  auto gb = std::make_unique<Garbage>();
   gb->gbid = pkt.gbid();
 
   Player* pl_to = this->player(pkt.plid_to());
@@ -245,7 +245,7 @@ void ClientInstance::processPktNewGarbage(const netplay::PktNewGarbage& pkt)
   if( pkt.pos() > gb->to->hangingGarbageCount() ) {
     throw netplay::CallbackError("invalid garbage position");
   }
-  match_.addGarbage(gb.release(), pkt.pos());
+  match_.addGarbage(std::move(gb), pkt.pos());
 }
 
 void ClientInstance::processPktUpdateGarbage(const netplay::PktUpdateGarbage& pkt)
@@ -274,9 +274,9 @@ void ClientInstance::processPktUpdateGarbage(const netplay::PktUpdateGarbage& pk
     if( pkt.pos() > pl_to->field()->hangingGarbageCount() ) {
       throw netplay::CallbackError("invalid garbage position");
     }
-    gb->to->removeHangingGarbage(gb);
+    auto ptr = gb->to->removeHangingGarbage(gb);
     gb->to = pl_to->field(); // no-op if plid_to did not changed
-    gb->to->insertHangingGarbage(gb, pkt.pos());
+    gb->to->insertHangingGarbage(std::move(ptr), pkt.pos());
   } else if( pkt.has_plid_to() ) {
     throw netplay::CallbackError("garbage position missing");
   }
@@ -337,7 +337,7 @@ void ClientInstance::processPktGarbageState(const netplay::PktGarbageState& pkt)
       throw netplay::CallbackError("invalid player");
     }
     if( !pl->local() ) { // ignore our garbages (already dropped)
-      if( fld->waitingGarbages().size() == 0 || fld->waitingGarbages().front().gbid != gb->gbid ) {
+      if( fld->waitingGarbages().size() == 0 || fld->waitingGarbages().front()->gbid != gb->gbid ) {
         throw netplay::CallbackError("invalid dropped garbage");
       }
       pl->field()->dropNextGarbage();
@@ -436,11 +436,11 @@ void ClientInstance::processPktPlayerConf(const netplay::PktPlayerConf& pkt)
       throw netplay::CallbackError("missing fields");
     }
     //TODO check we asked for a new local player
-    pl = new Player(pkt.plid(), pkt.join());
+    auto pl_ptr = std::make_unique<Player>(pkt.plid(), pkt.join());
+    Player* pl = pl_ptr.get();
     pl->setState(Player::State::LOBBY);
     pl->setNick( pkt.nick() );
-    PlId plid = pl->plid(); // use a temporary value to help g++
-    players_.insert(plid, pl);
+    players_.emplace(pl->plid(), std::move(pl_ptr));
     FieldConf conf;
     conf.fromPacket(pkt.field_conf());
     pl->setFieldConf(conf);

@@ -18,17 +18,14 @@ void ScreenStart::enter()
   intf_.stopInstance();
   const ResourceManager& res_mgr = intf_.res_mgr();
 
-  WButton* button_join = new WButton(*this, "JoinServer");
+  WButton* button_join = container_.addWidget<WButton>(*this, "JoinServer");
   button_join->setCaption(res_mgr.getLang({name_, "JoinServer"}));
-  container_.widgets.push_back(button_join);
 
-  WButton* button_create = new WButton(*this, "CreateServer");
+  WButton* button_create = container_.addWidget<WButton>(*this, "CreateServer");
   button_create->setCaption(res_mgr.getLang({name_, "CreateServer"}));
-  container_.widgets.push_back(button_create);
 
-  button_exit_ = new WButton(*this, "Exit");
+  button_exit_ = container_.addWidget<WButton>(*this, "Exit");
   button_exit_->setCaption(res_mgr.getLang({name_, "Exit"}));
-  container_.widgets.push_back(button_exit_);
 
   button_join->setNeighbors(button_exit_, button_create, NULL, NULL);
   button_create->setNeighbors(button_join, button_exit_, NULL, NULL);
@@ -42,9 +39,8 @@ void ScreenStart::enter()
 
   // "Debug start" button, only when debug mode is enabled
   if(intf_.cfg().get<bool>("Global.Debug", false)) {
-    WButton* button_debugstart = new WButton(*this, "DebugStart");
+    WButton* button_debugstart = container_.addWidget<WButton>(*this, "DebugStart");
     button_debugstart->setCaption(res_mgr.getLang({name_, "DebugStart"}));
-    container_.widgets.push_back(button_debugstart);
 
     button_debugstart->setNeighbors(button_exit_, button_join, NULL, NULL);
     button_debugstart->setCallback(std::bind(&ScreenStart::onDebugStart, this));
@@ -112,29 +108,23 @@ void ScreenJoinServer::enter()
   const ResourceManager& res_mgr = intf_.res_mgr();
   const IniFile& cfg = intf_.cfg();
 
-  WLabel* label = new WLabel(*this, "HostPortLabel");
+  WLabel* label = container_.addWidget<WLabel>(*this, "HostPortLabel");
   label->setText(res_mgr.getLang({name_, "HostPort"}));
-  container_.widgets.push_back(label);
 
-  entry_host_ = new WEntry(*this, "HostEntry");
+  entry_host_ = container_.addWidget<WEntry>(*this, "HostEntry");
   entry_host_->setText(cfg.get("Client.Hostname", ""));
-  container_.widgets.push_back(entry_host_);
 
-  entry_port_ = new WEntry(*this, "PortEntry");
+  entry_port_ = container_.addWidget<WEntry>(*this, "PortEntry");
   entry_port_->setText(cfg.get("Global.Port", ""));
-  container_.widgets.push_back(entry_port_);
 
-  label = new WLabel(*this, "NickLabel");
+  label = container_.addWidget<WLabel>(*this, "NickLabel");
   label->setText(res_mgr.getLang({name_, "PlayerName"}));
-  container_.widgets.push_back(label);
 
-  entry_nick_ = new WEntry(*this, "NickEntry");
+  entry_nick_ = container_.addWidget<WEntry>(*this, "NickEntry");
   entry_nick_->setText(cfg.get("Client.Nick", "Player"));
-  container_.widgets.push_back(entry_nick_);
 
-  WButton* button = new WButton(*this, "JoinButton");
+  WButton* button = container_.addWidget<WButton>(*this, "JoinButton");
   button->setCaption(res_mgr.getLang({name_, "Join"}));
-  container_.widgets.push_back(button);
 
   //XXX neighbors should be defined in style.ini too
   entry_host_->setNeighbors(button, entry_port_, NULL, NULL);
@@ -224,33 +214,26 @@ void ScreenCreateServer::enter()
   const IniFile& cfg = intf_.cfg();
   // reload configuration from values
 
-  WLabel* label = new WLabel(*this, "PortLabel");
+  WLabel* label = container_.addWidget<WLabel>(*this, "PortLabel");
   label->setText(res_mgr.getLang({name_, "Port"}));
-  container_.widgets.push_back(label);
 
-  entry_port_ = new WEntry(*this, "PortEntry");
+  entry_port_ = container_.addWidget<WEntry>(*this, "PortEntry");
   entry_port_->setText(cfg.get("Global.Port", ""));
-  container_.widgets.push_back(entry_port_);
 
-  label = new WLabel(*this, "NickLabel");
+  label = container_.addWidget<WLabel>(*this, "NickLabel");
   label->setText(res_mgr.getLang({name_, "PlayerName"}));
-  container_.widgets.push_back(label);
 
-  entry_nick_ = new WEntry(*this, "NickEntry");
+  entry_nick_ = container_.addWidget<WEntry>(*this, "NickEntry");
   entry_nick_->setText(cfg.get("Client.Nick", ""));
-  container_.widgets.push_back(entry_nick_);
 
-  label = new WLabel(*this, "PlayerNbLabel");
+  label = container_.addWidget<WLabel>(*this, "PlayerNbLabel");
   label->setText(res_mgr.getLang({name_, "PlayerNumber"}));
-  container_.widgets.push_back(label);
 
-  entry_player_nb_ = new WEntry(*this, "PlayerNbEntry");
+  entry_player_nb_ = container_.addWidget<WEntry>(*this, "PlayerNbEntry");
   entry_player_nb_->setText(cfg.get("Server.PlayerNumber", ""));
-  container_.widgets.push_back(entry_player_nb_);
 
-  WButton* button = new WButton(*this, "CreateButton");
+  WButton* button = container_.addWidget<WButton>(*this, "CreateButton");
   button->setCaption(res_mgr.getLang({name_, "Create"}));
-  container_.widgets.push_back(button);
 
   entry_port_->setNeighbors(button, entry_player_nb_, NULL, NULL);
   entry_player_nb_->setNeighbors(entry_port_, entry_nick_, NULL, NULL);
@@ -320,13 +303,11 @@ void ScreenLobby::enter()
   assert( intf_.instance() );
   const ResourceManager& res_mgr = intf_.res_mgr();
 
-  player_frame_ = new WFrame(*this, "PlayerFrame");
-  container_.widgets.push_back(player_frame_);
+  player_frame_ = container_.addWidget<WFrame>(*this, "PlayerFrame");
 
-  button_ready_ = new WButton(*this, "Ready");
+  button_ready_ = container_.addWidget<WButton>(*this, "Ready");
   button_ready_->setCaption(res_mgr.getLang({name_, "Ready"}));
   button_ready_->setCallback(std::bind(&ScreenLobby::submit, this));
-  container_.widgets.push_back(button_ready_);
 
   button_ready_->setNeighbors(NULL, NULL, NULL, NULL);
 
@@ -339,7 +320,7 @@ void ScreenLobby::enter()
   for(auto const& p : intf_.instance()->players()) {
     Player& pl = *p.second;
     PlId plid = pl.plid(); // intermediate variable because a ref is required
-    player_rows_.insert(plid, new WPlayerRow(*this, pl));
+    player_rows_.emplace(plid, std::make_unique<WPlayerRow>(*this, pl));
     if(pl.local()) {
       intf_.instance()->playerSetState(&pl, Player::State::LOBBY);
     }
@@ -355,9 +336,8 @@ void ScreenLobby::redraw()
   Screen::redraw();
 
   sf::RenderWindow& w = intf_.window();
-  PlayerRowsContainer::const_iterator it;
-  for( it=player_rows_.begin(); it!=player_rows_.end(); ++it ) {
-    w.draw(*(*it).second);
+  for(auto& kv : player_rows_) {
+    w.draw(*kv.second);
   }
 }
 
@@ -371,7 +351,7 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
     for(auto const& kv : player_rows_) {
       auto& choice = kv.second->choiceConf();
       if(focused_ == &choice) {
-        player_row = kv.second;
+        player_row = kv.second.get();
         conf_index = choice.index();
         break;
       }
@@ -423,14 +403,14 @@ void ScreenLobby::onStateChange()
 void ScreenLobby::onServerChangeFieldConfs()
 {
   for(auto const& kv : player_rows_) {
-    kv->second->updateConfItems();
+    kv.second->updateConfItems();
   }
 }
 
 void ScreenLobby::onPlayerJoined(Player* pl)
 {
   PlId plid = pl->plid(); // intermediate variable to help g++
-  auto p = player_rows_.insert(plid, new WPlayerRow(*this, *pl));
+  auto p = player_rows_.emplace(plid, std::make_unique<WPlayerRow>(*this, *pl));
   p.first->second->updateConfItems();
   this->updatePlayerRowsPos();
 }
@@ -482,8 +462,8 @@ void ScreenLobby::updatePlayerRowsPos()
   PlayerRowsContainer::iterator it;
   float y = player_rows_pos_.y;
   WFocusable *neighbor_up = button_ready_;
-  for(auto kv : player_rows_) {
-    auto row = kv.second;
+  for(auto& kv : player_rows_) {
+    auto& row = kv.second;
     row->setPosition(player_rows_pos_.x, y);
     y += player_rows_dy_;
     if(row->player().local()) {
@@ -510,8 +490,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   nick_.setOrigin(0, (nick_.getFont()->getLineSpacing(nick_.getCharacterSize())+2)/2);
   nick_.setPosition(getStyle<float>("NickX"), 0);
 
-  choice_conf_ = new WChoice(screen, IniFile::join(type(), "Conf"));
-  widgets.push_back(choice_conf_);
+  choice_conf_ = addWidget<WChoice>(screen, IniFile::join(type(), "Conf"));
 
   this->applyStyle(ready_, "Ready");
   ready_.setOrigin(ready_.getLocalBounds().width/2.f, ready_.getLocalBounds().height/2.f);

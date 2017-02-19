@@ -2,7 +2,8 @@
 #define GUI_SCREEN_GAME_H_
 
 #include <memory>
-#include <boost/ptr_container/ptr_map.hpp>
+#include <list>
+#include <map>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Audio/Sound.hpp>
 #include "screen.h"
@@ -98,7 +99,7 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
   Player* player_;  ///< Local controlled player
   GameInputScheduler input_scheduler_;
   StyleField style_field_;
-  typedef boost::ptr_map<FldId, FieldDisplay> FieldDisplayContainer;
+  typedef std::map<FldId, std::unique_ptr<FieldDisplay>> FieldDisplayContainer;
   FieldDisplayContainer field_displays_;
 
   /// Key bindings.
@@ -217,7 +218,7 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   };
 
   /// List of hanging garbage drawables
-  typedef boost::ptr_list<GbHanging> GbHangingList;
+  typedef std::list<std::unique_ptr<GbHanging>> GbHangingList;
   GbHangingList gbw_drbs_;
 
   //@}

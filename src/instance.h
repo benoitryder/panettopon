@@ -1,9 +1,10 @@
 #ifndef INSTANCE_H_
 #define INSTANCE_H_
 
+#include <memory>
 #include <vector>
+#include <map>
 #include <boost/asio/io_service.hpp>
-#include <boost/ptr_container/ptr_map.hpp>
 #include "monotone_timer.hpp"
 #include "game.h"
 
@@ -142,7 +143,7 @@ class GameInstance
     virtual void onPlayerRanked(Player* pl) = 0;
   };
 
-  typedef boost::ptr_map<PlId, Player> PlayerContainer;
+  typedef std::map<PlId, std::unique_ptr<Player>> PlayerContainer;
 
   GameInstance();
   virtual ~GameInstance();

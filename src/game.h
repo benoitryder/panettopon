@@ -6,10 +6,11 @@
  */
 
 #include <stdint.h>
+#include <memory>
 #include <map>
-#include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/ptr_container/ptr_list.hpp>
-#include <boost/ptr_container/ptr_deque.hpp>
+#include <vector>
+#include <deque>
+#include <list>
 #include "netplay.pb.h"
 #include "util.h"
 
@@ -221,7 +222,7 @@ class Field
       } garbage;
     } blocks;
   };
-  typedef boost::ptr_deque<Garbage> GarbageList;
+  typedef std::deque<std::unique_ptr<Garbage>> GarbageList;
 
   Field(FldId fldid, const FieldConf& conf, uint32_t seed);
   ~Field();
@@ -252,7 +253,7 @@ class Field
   const Block& block(const FieldPos& pos) const { return this->block(pos.x, pos.y); }
 
   /// Return hanging garbage at given position.
-  const Garbage& hangingGarbage(size_t pos) const { return gbs_hang_[pos]; }
+  const Garbage& hangingGarbage(size_t pos) const { return *gbs_hang_[pos]; }
   size_t hangingGarbageCount() const { return gbs_hang_.size(); }
   const GarbageList& waitingGarbages() const { return gbs_wait_; }
 
@@ -282,13 +283,13 @@ class Field
    * If \e pos is -1, push at the end.
    * The garbage will be owned by the field.
    */
-  void insertHangingGarbage(Garbage* gb, unsigned int pos);
+  void insertHangingGarbage(std::unique_ptr<Garbage> gb, unsigned int pos);
 
   /** @brief Remove a given hanging garbage.
    *
-   * The garbage is released but not destroyed.
+   * The garbage is released and returned.
    */
-  void removeHangingGarbage(Garbage* gb);
+  std::unique_ptr<Garbage> removeHangingGarbage(Garbage* gb);
 
   /** @brief Fill field with random blocks.
    *
@@ -431,7 +432,7 @@ class Field
   /// Queue of dropped garbages, waiting to fall.
   GarbageList gbs_drop_;
   /// Dropped garbages, on field.
-  boost::ptr_list<Garbage>  gbs_field_; // could be a set
+  std::list<std::unique_ptr<Garbage>> gbs_field_; // could be a set
 };
 
 
@@ -443,7 +444,7 @@ class Field
 class Match
 {
  public:
-  typedef boost::ptr_vector<Field> FieldContainer;
+  typedef std::vector<std::unique_ptr<Field>> FieldContainer;
   typedef std::map<GbId, Garbage*> GarbageMap;
 
   Match();
@@ -489,7 +490,7 @@ class Match
    *
    * The garbage is added to the \e to field, which must not be \e NULL.
    */
-  void addGarbage(Garbage* gb, unsigned int pos);
+  void addGarbage(std::unique_ptr<Garbage> gb, unsigned int pos);
   /// Move a hanging garbage to wait list.
   void waitGarbageDrop(const Garbage* gb);
 

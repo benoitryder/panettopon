@@ -1,6 +1,8 @@
 #ifndef GUI_SCREEN_MENUS_H_
 #define GUI_SCREEN_MENUS_H_
 
+#include <memory>
+#include <map>
 #include "screen.h"
 #include "resources.h"
 
@@ -146,7 +148,7 @@ class ScreenLobby: public Screen
   Player* player_; ///< Controlled player
   WFrame* player_frame_;
   WButton* button_ready_;
-  typedef boost::ptr_map<PlId, WPlayerRow> PlayerRowsContainer;
+  typedef std::map<PlId, std::unique_ptr<WPlayerRow>> PlayerRowsContainer;
   PlayerRowsContainer player_rows_;
   sf::Vector2f player_rows_pos_;
   float player_rows_dy_;

@@ -222,8 +222,8 @@ void ServerInstance::onPeerConnect(netplay::PeerSocket* peer)
 
   // send information on other players
   PlayerContainer::const_iterator it;
-  for( it=players_.begin(); it!=players_.end(); ++it ) {
-    const Player* pl = (*it).second;
+  for(auto const& kv : players_) {
+    const Player* pl = kv.second.get();
     netplay::PktPlayerConf* np_plconf = pkt.mutable_player_conf();
     np_plconf->set_plid( pl->plid() );
     np_plconf->set_nick( pl->nick() );
@@ -341,7 +341,7 @@ Player* ServerInstance::newPlayer(netplay::PeerSocket* peer, const std::string& 
   pl->setFieldConf(conf_.field_confs[0]);
   // put accepted player with his friends
   PlId plid = pl->plid(); // use a temporary value to help g++
-  players_.insert(plid, pl_unique.release());
+  players_.emplace(plid, std::move(pl_unique));
   if( peer != NULL ) {
     peers_[plid] = peer; // associate the player to its peer
   }
@@ -445,7 +445,7 @@ void ServerInstance::processPktGarbageState(netplay::PeerSocket* peer, const net
     throw netplay::CallbackError("invalid player");
   }
   this->checkPeerPlayer(pl->plid(), peer);
-  if( fld->waitingGarbages().size() == 0 || fld->waitingGarbages().front().gbid != gb->gbid ) {
+  if( fld->waitingGarbages().size() == 0 || fld->waitingGarbages().front()->gbid != gb->gbid ) {
     throw netplay::CallbackError("invalid dropped garbage");
   }
 
@@ -644,9 +644,8 @@ void ServerInstance::prepareMatch()
   int seed = ::rand(); // common seed for all fields
   netplay::Packet pkt;
 
-  PlayerContainer::iterator it;
-  for( it=players_.begin(); it!=players_.end(); ++it ) {
-    Player* pl = (*it).second;
+  for(auto& kv : players_) {
+    Player* pl = kv.second.get();
     if(pl->state() != Player::State::GAME_INIT) {
       continue;
     }

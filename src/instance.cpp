@@ -49,7 +49,7 @@ GameInstance::~GameInstance()
 Player* GameInstance::player(PlId plid)
 {
   PlayerContainer::iterator it = players_.find(plid);
-  return it == players_.end() ? NULL : (*it).second;
+  return it == players_.end() ? NULL : (*it).second.get();
 }
 
 Player* GameInstance::player(const Field* fld)
@@ -57,10 +57,9 @@ Player* GameInstance::player(const Field* fld)
   if( fld == NULL ) {
     return NULL;
   }
-  PlayerContainer::iterator it;
-  for(it=players_.begin(); it!=players_.end(); ++it) {
-    if( fld == (*it).second->field() ) {
-      return (*it).second;
+  for(auto& kv : players_) {
+    if(fld == kv.second->field() ) {
+      return kv.second.get();
     }
   }
   return NULL;
@@ -117,11 +116,9 @@ void GameInputScheduler::start()
 {
   // get local players
   players_.clear();
-  GameInstance::PlayerContainer& all_players = instance_.players();
-  GameInstance::PlayerContainer::iterator it;
-  for(it=all_players.begin(); it!=all_players.end(); ++it) {
-    Player* pl = (*it).second;
-    if( pl->local() && pl->field() != NULL ) {
+  for(auto& kv : instance_.players()) {
+    Player* pl = kv.second.get();
+    if(pl->local() && pl->field() != NULL) {
       players_.push_back(pl);
     }
   }

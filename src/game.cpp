@@ -461,8 +461,9 @@ void Field::step(KeyState keys)
   if( !gbs_drop_.empty() && !full && raise ) {
     LOG("[%u|%u] gb: dropping", fldid_, tick_);
     //TODO drop condition: no drop when flashing/chain
-    Garbage* gb = gbs_drop_.pop_front().release();
-    gbs_field_.push_back(gb);
+    gbs_field_.push_back(std::move(gbs_drop_.front()));
+    gbs_drop_.pop_front();
+    Garbage* gb = gbs_field_.back().get();
     gb->pos.y = FIELD_HEIGHT;
 
     Block bkgb;
@@ -693,35 +694,36 @@ void Field::step(KeyState keys)
 void Field::waitGarbageDrop(Garbage* gb)
 {
   LOG("[%u|%u] waitGarbageDrop(%u)", fldid_, tick_, gb->gbid);
-  this->removeHangingGarbage(gb);
-  gbs_wait_.push_back(gb);
+  gbs_wait_.push_back(this->removeHangingGarbage(gb));
 }
 
 void Field::dropNextGarbage()
 {
   LOG("[%u|%u] dropNextGarbage()", fldid_, tick_);
-  Garbage* gb = gbs_wait_.pop_front().release();
+  std::unique_ptr<Garbage> gb = std::move(gbs_wait_.front());
+  gbs_wait_.pop_front();
   gb->gbid = 0;
-  gbs_drop_.push_back(gb);
+  gbs_drop_.push_back(std::move(gb));
 }
 
-void Field::insertHangingGarbage(Garbage* gb, unsigned int pos)
+void Field::insertHangingGarbage(std::unique_ptr<Garbage> gb, unsigned int pos)
 {
   LOG("[%u|%u] insertHangingGarbage(%u, %u)", fldid_, tick_, gb->gbid, pos);
-  gbs_hang_.insert( gbs_hang_.begin()+pos, gb );
+  gbs_hang_.insert(gbs_hang_.begin()+pos, std::move(gb));
 }
 
-void Field::removeHangingGarbage(Garbage* gb)
+std::unique_ptr<Garbage> Field::removeHangingGarbage(Garbage* gb)
 {
   LOG("[%u|%u] removeHangingGarbage(%u)", fldid_, tick_, gb->gbid);
-  GarbageList::iterator it;
-  for( it=gbs_hang_.begin(); it!=gbs_hang_.end(); ++it ) {
-    if( &(*it) == gb ) {
-      gbs_hang_.release(it).release();
-      return;
+  for(auto it=gbs_hang_.begin(); it!=gbs_hang_.end(); ++it) {
+    if(it->get() == gb) {
+      std::unique_ptr<Garbage> ret = std::move(*it);
+      gbs_hang_.erase(it);
+      return ret;
     }
   }
   assert( !"garbage not found" );
+  return nullptr;
 }
 
 
@@ -834,9 +836,8 @@ void Field::raise()
     }
   }
 
-  boost::ptr_list<Garbage>::iterator gb_it;
-  for( gb_it=gbs_field_.begin(); gb_it!=gbs_field_.end(); ++gb_it ) {
-    gb_it->pos.y++;
+  for(auto& gb : gbs_field_) {
+    gb->pos.y++;
   }
 
   step_info_.raised = true;
@@ -1014,9 +1015,8 @@ void Field::transformGarbage(int x, int y)
   Garbage* gb = bk->bk_garbage.garbage;
   if( gb->size.y == 0 && x == gb->pos.x ) {
     // ptr_list uses objects but we need to compare pointers
-    boost::ptr_list<Garbage>::iterator it;
-    for( it=gbs_field_.begin(); it!=gbs_field_.end(); ++it ) {
-      if( &(*it) == gb ) {
+    for(auto it=gbs_field_.begin(); it!=gbs_field_.end(); ++it) {
+      if(it->get() == gb ) {
         gbs_field_.erase(it);
         break;
       }
@@ -1049,9 +1049,8 @@ void Match::start()
   started_ = true;
   tick_ = 0;
 
-  FieldContainer::iterator it;
-  for( it=fields_.begin(); it!=fields_.end(); ++it ) {
-    it->initMatch();
+  for(auto& fld : fields_) {
+    fld->initMatch();
   }
 }
 
@@ -1072,30 +1071,28 @@ void Match::clear()
 Field* Match::addField(const FieldConf& conf, uint32_t seed)
 {
   assert( !started_ );
-  Field* fld = new Field(fields_.size()+1, conf, seed);
-  fields_.push_back(fld);
-  return fld;
+  fields_.push_back(std::make_unique<Field>(fields_.size()+1, conf, seed));
+  return fields_.back().get();
 }
 
 void Match::updateTick()
 {
   // get the minimum tick value
   Tick ret = 0;
-  FieldContainer::const_iterator it;
-  for( it=fields_.begin(); it!=fields_.end(); ++it ) {
-    if( it->lost() ) {
+  for(auto& fld : fields_) {
+    if(fld->lost()) {
       continue;
     }
-    if( ret == 0 || it->tick() < ret ) {
-      ret = it->tick();
+    if(ret == 0 || fld->tick() < ret) {
+      ret = fld->tick();
     }
   }
   // all fields lost, match tick is the max tick
   // it MUST be set to handle draw games
-  if( ret == 0 ) {
-    for( it=fields_.begin(); it!=fields_.end(); ++it ) {
-      if( it->tick() > ret ) {
-        ret = it->tick();
+  if(ret == 0) {
+    for(auto& fld : fields_) {
+      if(fld->tick() > ret) {
+        ret = fld->tick();
       }
     }
   }
@@ -1110,14 +1107,13 @@ bool Match::updateRanks(std::vector<const Field*>& ranked)
   std::vector<Field*> to_rank;
   to_rank.reserve(fields_.size());
   unsigned int no_rank_nb = 0;
-  FieldContainer::iterator it;
-  for( it=fields_.begin(); it!=fields_.end(); ++it ) {
-    if( it->rank() != 0 ) {
+  for(auto& fld : fields_) {
+    if( fld->rank() != 0 ) {
       continue;
     }
     no_rank_nb++;
-    if( it->lost() && it->tick() <= tick_ ) {
-      to_rank.push_back(&(*it));
+    if( fld->lost() && fld->tick() <= tick_ ) {
+      to_rank.push_back(fld.get());
     }
   }
 
@@ -1125,8 +1121,7 @@ bool Match::updateRanks(std::vector<const Field*>& ranked)
     // best player first (lowest tick)
     std::sort(to_rank.begin(), to_rank.end(), [](const Field* a, const Field* b) { return a->tick() < b->tick(); });
     unsigned int rank = no_rank_nb - to_rank.size() + 1;
-    std::vector<Field*>::iterator it;
-    for( it=to_rank.begin(); it!=to_rank.end(); ++it ) {
+    for(auto it=to_rank.begin(); it!=to_rank.end(); ++it ) {
       if( it!=to_rank.begin() && (*it)->tick() == (*(it-1))->tick() ) {
         (*it)->setRank( (*(it-1))->rank() );
       } else {
@@ -1140,13 +1135,12 @@ bool Match::updateRanks(std::vector<const Field*>& ranked)
 
   // one (or no) remaining player: end of match
   if( no_rank_nb < 2 ) {
-    FieldContainer::iterator it;
-    for( it=fields_.begin(); it!=fields_.end(); ++it ) {
-      if( (*it).rank() != 0 ) {
+    for(auto& fld : fields_) {
+      if(fld->rank() != 0) {
         continue;
       }
-      it->setRank(1);
-      ranked.push_back(&(*it));
+      fld->setRank(1);
+      ranked.push_back(fld.get());
       break;
     }
     return true;
@@ -1156,12 +1150,13 @@ bool Match::updateRanks(std::vector<const Field*>& ranked)
 }
 
 
-void Match::addGarbage(Garbage* gb, unsigned int pos)
+void Match::addGarbage(std::unique_ptr<Garbage> gb, unsigned int pos)
 {
   assert( gb->to != NULL );
 
-  gb->to->insertHangingGarbage(gb, pos);
-  gbs_hang_[gb->gbid] = gb;
+  Garbage *p = gb.get();
+  p->to->insertHangingGarbage(std::move(gb), pos);
+  gbs_hang_[p->gbid] = p;
 }
 
 void Match::waitGarbageDrop(const Garbage* gb)
@@ -1220,25 +1215,21 @@ void GarbageDistributor::updateGarbages(Field* fld)
 
   // check if there is an opponent
   // if there is only one, keep it (faster target choice for 2-player game)
+  bool opponent_found = false;
   Field* single_opponent = NULL;
-  FieldContainer::const_iterator it;
-  for( it=fields.begin(); it!=fields.end(); ++it ) {
-    //XXX:hack
-    // const_iterator return a pointer to a const
-    // but we only need the container to be constant, not values
-    // so we use ptr_container's base which returns a void** from an iterator
-    Field* it_fld = static_cast<Field*>(*(it.base()));
-    if( it_fld == fld || it->lost() ) {
+  for(auto& it_fld : fields) {
+    if(it_fld.get() == fld || it_fld->lost()) {
       continue;
     }
+    opponent_found = true;
     if( single_opponent == NULL ) {
-      single_opponent = it_fld;
+      single_opponent = it_fld.get();
     } else {
       single_opponent = NULL;
       break;
     }
   }
-  if( single_opponent == NULL && it==fields.end() ) {
+  if( !opponent_found ) {
     return; // no opponent, no target
   }
 
@@ -1258,8 +1249,7 @@ void GarbageDistributor::updateGarbages(Field* fld)
         if( it == fields.end() ) {
           it = fields.begin();
         }
-        //XXX:hack see static_cast above
-        Field* fld2 = static_cast<Field*>(*(it.base()));
+        Field* fld2 = it->get();
         if( fld2 == fld || fld2->lost() ) {
           continue;
         }
@@ -1309,8 +1299,7 @@ void GarbageDistributor::updateGarbages(Field* fld)
         if( it == fields.end() ) {
           it = fields.begin();
         }
-        //XXX:hack see static_cast above
-        target_fld = static_cast<Field*>(*(it.base()));
+        target_fld = it->get();
         if( target_fld == fld || target_fld->lost() ) {
           continue;
         }
@@ -1352,7 +1341,7 @@ void GarbageDistributor::newGarbage(Field* from, Field* to, Garbage::Type type, 
 {
   assert( to != NULL );
 
-  std::unique_ptr<Garbage> gb_unique(new Garbage);
+  auto gb_unique = std::make_unique<Garbage>();
   Garbage* gb = gb_unique.get();
   gb->gbid = this->nextGarbageId();
   gb->from = from;
@@ -1377,7 +1366,7 @@ void GarbageDistributor::newGarbage(Field* from, Field* to, Garbage::Type type, 
   }
   drop_ticks_[gb] = to->tick() + to->conf().gb_hang_tk;
 
-  match_.addGarbage(gb_unique.release(), pos);
+  match_.addGarbage(std::move(gb_unique), pos);
   if( type == Garbage::TYPE_CHAIN ) {
     gbs_chain_[from] = gb;
   }

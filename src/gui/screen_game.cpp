@@ -192,11 +192,11 @@ void ScreenGame::onStateChange()
     // create a field display for each playing player
     float x = (-0.5*fields.size() + 0.5) * dx;
     for(const auto& field : fields) {
-      FldId fldid = field.fldid(); // intermediate variable because a ref is required
-      FieldDisplay* fdp = new FieldDisplay(intf_, field, style_field_);
-      field_displays_.insert(fldid, fdp);
+      FldId fldid = field->fldid(); // intermediate variable because a ref is required
+      auto fdp = std::make_unique<FieldDisplay>(intf_, *field, style_field_);
       fdp->scale(scale, scale);
       fdp->move(x, 0);
+      field_displays_.emplace(fldid, std::move(fdp));
       x += dx;
     }
 
@@ -310,7 +310,7 @@ void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
   for(gb_it=gbw_drbs_.begin(), gb_i=0;
       gb_it != gbw_drbs_.end() && gb_i<FIELD_WIDTH*2/3;
       ++gb_it, gb_i++) {
-    target.draw(*gb_it, states);
+    target.draw(**gb_it, states);
   }
 
   // cursor
@@ -449,27 +449,28 @@ void FieldDisplay::step()
       gb_i<gb_nb && gbd_it!=gbw_drbs_.end();
       gb_i++, ++gbd_it) {
     const Garbage& gb = field_.hangingGarbage(gb_i);
-    if( gb.gbid != gbd_it->gbid() ) {
+    if( gb.gbid != (*gbd_it)->gbid() ) {
       break;
     }
-    gbd_it->step();
+    (*gbd_it)->step();
   }
   // move/insert other garbages
   for( ; gb_i<gb_nb; gb_i++ ) {
     const Garbage& gb = field_.hangingGarbage(gb_i);
     // find an already existing drawable
     GbHangingList::iterator gbd_it2;
-    for( gbd_it2=gbd_it; gbd_it2!=gbw_drbs_.end() && gb.gbid != gbd_it2->gbid(); ++gbd_it2 ) ;
+    for( gbd_it2=gbd_it; gbd_it2!=gbw_drbs_.end() && gb.gbid != (*gbd_it2)->gbid(); ++gbd_it2 ) ;
     if( gbd_it2 == gbw_drbs_.end() ) {
       // not found: create and insert at the new position
-      gbd_it = gbw_drbs_.insert(gbd_it, new GbHanging(style_, gb));
+      gbd_it = gbw_drbs_.insert(gbd_it, std::make_unique<GbHanging>(style_, gb));
     } else if( gbd_it != gbd_it2 ) {
       // found: move it at the right position (swap)
       //note: do the '.release()' "by hand" to help the compiler
-      gbd_it = gbw_drbs_.insert(gbd_it, gbw_drbs_.release(gbd_it2).release());
+      gbd_it = gbw_drbs_.insert(gbd_it, std::move(*gbd_it2));
+      gbw_drbs_.erase(gbd_it2);
     }
-    gbd_it->step();
-    gbd_it->setPosition(gb_i);
+    (*gbd_it)->step();
+    (*gbd_it)->setPosition(gb_i);
     gbd_it++;
   }
   // remove remaining garbages (those removed)
@@ -511,8 +512,8 @@ void FieldDisplay::doRank()
       // detect draws (all players are first)
       bool draw = true;
       for(const auto& field : intf_.instance()->match().fields()) {
-        LOG("field %d: %d", field.fldid(), field.rank());
-        draw = draw && field.rank() == 1;
+        LOG("field %d: %d", field->fldid(), field->rank());
+        draw = draw && field->rank() == 1;
       }
       if(draw) {
         lang_key = "Draw";

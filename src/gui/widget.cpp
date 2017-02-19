@@ -81,8 +81,8 @@ void WContainer::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   Container::const_iterator it;
-  for( it=widgets.begin(); it!=widgets.end(); ++it ) {
-    target.draw(*it, states);
+  for(auto const& w : widgets) {
+    target.draw(*w, states);
   }
 }
 

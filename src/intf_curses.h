@@ -57,7 +57,7 @@ class CursesInterface: public ClientInstance::Observer,
   /// Window for messages.
   WINDOW* wmsg_;
 
-  typedef boost::ptr_map<const Field*, FieldDisplay> FieldDisplayMap;
+  typedef std::map<const Field*, std::unique_ptr<FieldDisplay>> FieldDisplayMap;
   FieldDisplayMap fdisplays_;
 
   /// Key bindings.

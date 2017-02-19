@@ -1,8 +1,9 @@
 #ifndef GUI_WIDGET_H_
 #define GUI_WIDGET_H_
 
+#include <memory>
+#include <vector>
 #include <functional>
-#include <boost/ptr_container/ptr_vector.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RenderTexture.hpp>
@@ -92,12 +93,19 @@ class WContainer: public Widget
  public:
   WContainer(const Screen& screen, const std::string& name);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+  template <class T, class... Args> T* addWidget(Args&&... args)
+  {
+    std::unique_ptr<T> unique = std::make_unique<T>(args...);
+    T* raw = unique.get();
+    widgets.push_back(std::move(unique));
+    return raw;
+  }
 
  protected:
   virtual const std::string& type() const;
 
  public:
-  typedef boost::ptr_vector<Widget> Container;
+  typedef std::vector<std::unique_ptr<Widget>> Container;
   Container widgets;
 };
 
