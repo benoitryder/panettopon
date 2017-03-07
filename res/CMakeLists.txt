@@ -16,7 +16,7 @@ foreach(size 16 32 64 128)
 endforeach()
 
 add_custom_target(resources ALL
-  DEPENDS ${GAME_PNGS} ${ICON_PNGS}
+  DEPENDS ${GAME_PNGS} ${ICON_PNGS} sounds.gen
   )
 
 if(WIN32)
@@ -35,8 +35,18 @@ if(WIN32)
   add_dependencies(resources icon)
 endif()
 
+add_custom_command(
+  OUTPUT sounds.gen
+  COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/sounds.py -o sound
+  COMMAND touch sounds.gen
+  DEPENDS sounds.py
+  COMMENT "Generating sounds files"
+  VERBATIM)
+
 
 #TODO install in share/ on Linux
-install(FILES ${GAME_PNGS} ${ICON_PNGS} style.ini FreeSans.ttf move.wav swap.wav DESTINATION res/)
+install(FILES ${GAME_PNGS} ${ICON_PNGS} style.ini FreeSans.ttf DESTINATION res/)
 install(DIRECTORY lang/ DESTINATION res/lang/ FILES_MATCHING PATTERN "*.ini")
+install(DIRECTORY sound/ DESTINATION res/sound/ FILES_MATCHING PATTERN "*.wav")
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/sound/ DESTINATION res/sound/ FILES_MATCHING PATTERN "*.wav")
 
