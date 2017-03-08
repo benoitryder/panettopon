@@ -41,7 +41,7 @@ void ResourceManager::init(const std::string& path)
 
   const std::string style_path = res_path_+"/style.ini";
   if( !style_.load(style_path.c_str()) ) {
-    throw std::runtime_error("failed to load style.ini file");
+    throw LoadError("failed to load style.ini file");
   }
   // use english as default language
   this->setLang("en");
@@ -55,7 +55,7 @@ void ResourceManager::setLang(const std::string& lang)
   }
   const std::string lang_path = this->getResourceFilename("lang/"+lang+".ini");
   if( !lang_.load(lang_path.c_str()) ) {
-    throw std::runtime_error("failed to load language "+lang);
+    throw LoadError("failed to load language "+lang);
   }
 }
 
@@ -63,7 +63,7 @@ void ResourceManager::setLang(const std::string& lang)
 std::string ResourceManager::getResourceFilename(const std::string& filename) const
 {
   if( res_path_.empty() ) {
-    throw std::runtime_error("resource path not set");
+    throw LoadError("resource path not set");
   }
   return res_path_+"/"+filename;
 }
@@ -78,7 +78,7 @@ const sf::Texture* ResourceManager::getImage(const std::string& name) const
   sf::Texture* img = new sf::Texture;
   std::shared_ptr<sf::Texture> pimg(img);
   if( ! img->loadFromFile(this->getResourceFilename(name+".png")) ) {
-    throw std::runtime_error("failed to load image "+name);
+    throw LoadError("failed to load image "+name);
   }
   images_[name] = pimg;
 
@@ -95,7 +95,7 @@ const sf::Font* ResourceManager::getFont(const std::string& name) const
   sf::Font* font = new sf::Font;
   std::shared_ptr<sf::Font> pfont(font);
   if( ! font->loadFromFile(this->getResourceFilename(name+".ttf")) ) {
-    throw std::runtime_error("failed to load font "+name);
+    throw LoadError("failed to load font "+name);
   }
   fonts_[name] = pfont;
 
@@ -120,7 +120,7 @@ const sf::SoundBuffer* ResourceManager::getSound(const std::string& name) const
     }
   }
   if(!loaded) {
-    throw std::runtime_error("failed to load sound "+name);
+    throw LoadError("failed to load sound "+name);
   }
   sounds_[name] = psound;
 
@@ -371,6 +371,11 @@ void ImageFrameX::Style::apply(ImageFrameX& o) const
 
 SoundPool::SoundPool(): buffer_(nullptr)
 {
+}
+
+SoundPool::SoundPool(const sf::SoundBuffer& buffer): buffer_(nullptr)
+{
+  setBuffer(buffer);
 }
 
 void SoundPool::setBuffer(const sf::SoundBuffer& buffer)

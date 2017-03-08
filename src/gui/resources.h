@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <istream>
+#include <stdexcept>
 #include "../util.h"
 #include "../inifile.h"
 
@@ -26,6 +27,11 @@ class StyleLoader;
 class ResourceManager
 {
  public:
+  struct LoadError: public std::runtime_error
+  {
+    LoadError(const std::string& what): std::runtime_error(what) {}
+  };
+
   ResourceManager();
   /// Initialize resources, set the resource path.
   void init(const std::string& path);
@@ -157,6 +163,7 @@ class SoundPool
 {
  public:
   SoundPool();
+  SoundPool(const sf::SoundBuffer& buffer);
 
   /// Set sound's source buffer
   void setBuffer(const sf::SoundBuffer& buffer);
