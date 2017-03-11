@@ -176,7 +176,6 @@ message PktPlayerField {
     optional bool swapped = 3 [default = false];
     optional bool chaining = 4 [default = false];
     optional uint32 ntick = 5 [default = 0];
-    //TODO group_pos
   }
 
   required uint32 plid = 1;

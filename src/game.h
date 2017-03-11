@@ -183,16 +183,22 @@ struct Block
 
   /// Tick of the next state change, or 0.
   Tick ntick;
-  /** @brief Position in flashing group.
-   *
-   * For flashing blocks: block of the same group that will pop before the whole
-   * group disappear.
-   *
-   * For garbages/processed color block: block of the same group to process
-   * before the whole group starts to fall.
-   */
-  unsigned int group_pos;
 
+  /// Information on combo that matched the block
+  struct ComboInfo {
+    unsigned int chain;  ///< Chain value of the combo
+    unsigned int pos;  ///< Block pop position in combo
+    /** @brief Number of blocks of the same type in combo
+     *
+     * Value is used to compute the tick for the following ending state (NONE
+     * for popped color blocks, TRANSFORMED for garbages).
+     *
+     * Since color blocks does not wait for garbage blocks to pop, they do not
+     * share the same value.
+     */
+    unsigned int group_end;
+  };
+  ComboInfo combo_info;
 };
 
 
@@ -200,6 +206,8 @@ struct Block
 class Field
 {
  public:
+  typedef Block::ComboInfo ComboInfo;
+
   /// Raise progress value at which raise occurs
   static constexpr uint32_t RAISE_PROGRESS_MAX = 65536;
 
@@ -212,14 +220,9 @@ class Field
     bool move = false;  ///< Cursor moved
     /// Block state changes
     struct {
-      struct {
-        unsigned int laid = 0;  ///< Blocks that fall to the ground
-        unsigned int popped = 0;  ///< Blocks popped
-      } color;
-      struct {
-        unsigned int laid = 0;  ///< Blocks that fall to the ground
-        unsigned int mutated = 0;  ///< Blocks mutated
-      } garbage;
+      unsigned int laid = 0;  ///< Blocks that fall to the ground
+      /// Chain and combo position of popped blocks and mutated garbages
+      std::vector<ComboInfo> popped;
     } blocks;
   };
   typedef std::deque<std::unique_ptr<Garbage>> GarbageList;
@@ -340,12 +343,13 @@ class Field
 
   /** @brief Match garbage and its neighbors, recursively.
    *
-   * If given block is not a falling garbage, do nothing.
+   * If given block is not a resting garbage, do nothing.
    * 
    * Garbage size and position are updated here.
-   * Block is removed if it has only one line.
+   *
+   * Return the number of matched garbage blocks.
    */
-  void matchGarbage(Block* bk, bool chained);
+  unsigned int matchGarbage(Block* bk);
 
   /** @brief Transform a garbage block to a color block.
    *
@@ -354,6 +358,8 @@ class Field
    * blocks if needed).
    *
    * Invalid random colors are skipped and a new draw is made.
+   *
+   * Block is removed if it has only one line.
    *
    * @note The block state is modified.
    */

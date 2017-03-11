@@ -227,7 +227,7 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
     sf::Sound move;
     sf::Sound swap;
     SoundPool fall;
-    SoundPool pop;
+    std::vector<std::vector<SoundPool>> pops;
   } sounds_;
 
 };

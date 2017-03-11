@@ -143,9 +143,6 @@ void Field::step(KeyState keys)
   bool raise = enable_raise_ && !this->isSwapping();
   bool stop_dec = true;
 
-  unsigned int color_pop = 0; // a group will pop if != 0
-  unsigned int garbage_pop = 0; // garbages will pop if != 0
-
   // evolution of blocks
   //TODO swapping a falling chaining block
   // above block still chains, further above blocks don't
@@ -207,7 +204,7 @@ void Field::step(KeyState keys)
             } else {
               bkc->state = BkColor::LAID;
               bk->ntick = 0;
-              step_info_.blocks.color.laid++;
+              step_info_.blocks.laid++;
             }
           } else if( bk2->isState(BkColor::LEVITATE) ) {
             // swapping blocks below chaining falling block don't cancel chain
@@ -228,7 +225,7 @@ void Field::step(KeyState keys)
           } else {
             bkc->state = BkColor::LAID;
             bk->ntick = 0;
-            step_info_.blocks.color.laid++;
+            step_info_.blocks.laid++;
           }
         } else if( bkc->state == BkColor::LAID ) {
           if( bk2->isNone() ) {
@@ -246,13 +243,11 @@ void Field::step(KeyState keys)
           // matching, tick events
           if( bkc->state == BkColor::FLASH ) {
             bkc->state = BkColor::MUTATE;
-            bk->ntick = 0;
-            // ntick and group_pos are set below
-            color_pop++;
+            bk->ntick = tick_ + conf_.pop0_tk + bk->combo_info.pos * conf_.pop_tk;
           } else if( bkc->state == BkColor::MUTATE ) {
             bkc->state = BkColor::CLEARED;
-            bk->ntick = tick_ + bk->group_pos * conf_.pop_tk + 1;
-            step_info_.blocks.color.popped++;
+            bk->ntick = tick_ + (bk->combo_info.group_end - bk->combo_info.pos - 1) * conf_.pop_tk + 1;
+            step_info_.blocks.popped.push_back(bk->combo_info);
           } else if( bkc->state == BkColor::CLEARED ) {
             bk->type = Block::NONE;
             bk->chaining = false;
@@ -312,7 +307,7 @@ void Field::step(KeyState keys)
             this->fallGarbage(gb);
           } else {
             this->setGarbageState(gb, BkGarbage::REST);
-            step_info_.blocks.garbage.laid += gb->size.x * gb->size.y;
+            step_info_.blocks.laid += gb->size.x * gb->size.y;
           }
 
           // skip processed blocks (before pos.y update)
@@ -324,17 +319,15 @@ void Field::step(KeyState keys)
           // matching, tick events
           if( bkg->state == BkGarbage::FLASH ) {
             bkg->state = BkGarbage::MUTATE;
-            bk->ntick = 0;
-            // ntick and group_pos are set below
-            garbage_pop++;
+            bk->ntick = tick_ + conf_.pop0_tk + bk->combo_info.pos * conf_.pop_tk;
           } else if( bkg->state == BkGarbage::MUTATE ) {
             if( y < gb->pos.y ) {
               this->transformGarbage(x, y);
             } else {
               bkg->state = BkGarbage::TRANSFORMED;
-              bk->ntick = tick_ + bk->group_pos * conf_.pop_tk + 1;
+              bk->ntick = tick_ + (bk->combo_info.group_end - bk->combo_info.pos - 1) * conf_.pop_tk + 1;
             }
-            step_info_.blocks.garbage.mutated++;
+            step_info_.blocks.popped.push_back(bk->combo_info);
           } else if( bkg->state == BkGarbage::TRANSFORMED ) {
             bkg->state = BkGarbage::REST;
             bk->ntick = 0;
@@ -417,7 +410,7 @@ void Field::step(KeyState keys)
     }
   }
 
-  // chains, combos, garbages
+  // determine if a chain is active
   bool chained = false;
   for( x=0; x<FIELD_WIDTH; x++ ) {
     for( y=1; y<=FIELD_HEIGHT; y++ ) {
@@ -429,30 +422,52 @@ void Field::step(KeyState keys)
     }
   }
 
+  // process blocks matched in combo
   if( step_info_.combo > 0 ) {
-    for( x=0; x<FIELD_WIDTH; x++ ) {
-      for( y=1; y<=FIELD_HEIGHT; y++ ) {
-        if( (match[x][y] & 0x40) == 0 ) {
-          continue;
-        }
-        Block* bk = &grid_[x][y];
-        assert( bk->isColor() ); // not sure...
-        bk->bk_color.state = BkColor::FLASH;
-        bk->chaining = chained;
-        bk->ntick = tick_ + conf_.flash_tk;
-
-        // garbages
-        if( x > 0 ) this->matchGarbage(&grid_[x-1][y], chained);
-        if( x < FIELD_WIDTH-1 ) this->matchGarbage(&grid_[x+1][y], chained);
-        if( y > 1 ) this->matchGarbage(&grid_[x][y-1], chained);
-        if( y < FIELD_HEIGHT ) this->matchGarbage(&grid_[x][y+1], chained);
-      }
-    }
-
     if( chained ) {
       step_info_.chain = ++chain_;
     }
-    LOG("[%u|%u] match +%d x%d", fldid_, tick_, step_info_.combo, step_info_.chain);
+
+    // match and update color blocks, from top-left to bottom-right
+    // also match garbages
+    unsigned int combo_pos = 0;
+    unsigned int garbage_end = step_info_.combo;
+    for( y=FIELD_HEIGHT; y>0; y-- ) {
+      for( x=0; x<FIELD_WIDTH; x++ ) {
+        if( (match[x][y] & 0x40) == 0 ) {
+          continue;
+        }
+        Block& bk = grid_[x][y];
+        assert(bk.isColor());
+        bk.bk_color.state = BkColor::FLASH;
+        bk.chaining = chained;
+        bk.ntick = tick_ + conf_.flash_tk;
+        bk.combo_info = ComboInfo{ step_info_.chain, combo_pos++, step_info_.combo };
+
+        // garbages, ntick, chaining and combo_info are set later
+        if(x > 0) garbage_end += this->matchGarbage(&grid_[x-1][y]);
+        if(x < FIELD_WIDTH-1) garbage_end += this->matchGarbage(&grid_[x+1][y]);
+        if(y > 1) garbage_end += this->matchGarbage(&grid_[x][y-1]);
+        if(y < FIELD_HEIGHT) garbage_end += this->matchGarbage(&grid_[x][y+1]);
+      }
+    }
+
+    // update garbage blocks, from bottom-right to top-left
+    unsigned int garbage_pos = 0;
+    for( y=1; y<=FIELD_HEIGHT; y++ ) {
+      for( x=FIELD_WIDTH-1; x>=0; x-- ) {
+        Block& bk = grid_[x][y];
+        if(!(bk.isState(BkGarbage::FLASH) && bk.ntick == 0)) {
+          continue;
+        }
+
+        bk.chaining = chained;
+        bk.ntick = tick_ + conf_.flash_tk;
+        bk.combo_info = ComboInfo{ step_info_.chain, garbage_pos++, garbage_end };
+      }
+    }
+
+    LOG("[%u|%u] match +%d x%d  gb:%d", fldid_, tick_, step_info_.combo, step_info_.chain, garbage_end);
   }
 
 
@@ -585,39 +600,6 @@ void Field::step(KeyState keys)
     // key-up not required, fallback action
     manual_raise_ = true;
     stop_dt_ = 0;
-  }
-
-
-  // set timing on the new popping group
-  // after swapping, on purpose
-  if( color_pop || garbage_pop ) {
-    // color blocks: from top-left to bottom-right
-    Tick tick_pop = tick_ + conf_.pop0_tk;
-    for( y=FIELD_HEIGHT; y>0; y-- ) {
-      for( x=0; x<FIELD_WIDTH; x++ ) {
-        Block* bk = &grid_[x][y];
-        if( !bk->isState(BkColor::MUTATE) || bk->ntick != 0 ) {
-          continue;
-        }
-        bk->ntick = tick_pop;
-        bk->group_pos = --color_pop;
-        tick_pop += conf_.pop_tk;
-      }
-    }
-
-    // garbages: from bottom-right to top-left
-    // ntick already incremented
-    for( y=1; y<=FIELD_HEIGHT; y++ ) {
-      for( x=FIELD_WIDTH-1; x>=0; x-- ) {
-        Block* bk = &grid_[x][y];
-        if( !bk->isState(BkGarbage::MUTATE) || bk->ntick != 0 ) {
-          continue;
-        }
-        bk->ntick = tick_pop;
-        bk->group_pos = --garbage_pop;
-        tick_pop += conf_.pop_tk;
-      }
-    }
   }
 
 
@@ -922,10 +904,10 @@ void Field::fallGarbage(Garbage* gb)
   gb->pos.y--;
 }
 
-void Field::matchGarbage(Block* bk, bool chained)
+unsigned int Field::matchGarbage(Block* bk)
 {
   if( !bk->isState(BkGarbage::REST) ) {
-    return;
+    return 0;
   }
   Garbage* gb = bk->bk_garbage.garbage;
 
@@ -934,8 +916,9 @@ void Field::matchGarbage(Block* bk, bool chained)
   bk_match.type = Block::GARBAGE;
   bk_match.bk_garbage.state = BkGarbage::FLASH;
   bk_match.bk_garbage.garbage = gb;
-  bk_match.chaining = chained;
-  bk_match.ntick = tick_ + conf_.flash_tk;
+  bk_match.ntick = 0;
+  // ntick could be set now, but special value 0 is used to detect just-matched
+  // garbages that need to be finalized
 
   int x, y;
   for( x=0; x<gb->size.x; x++ ) {
@@ -943,31 +926,34 @@ void Field::matchGarbage(Block* bk, bool chained)
       grid_[gb->pos.x+x][gb->pos.y+y] = bk_match;
     }
   }
+  int ret = gb->size.x * gb->size.y;
 
   // match adjacent garbages
   if( gb->pos.x > 0 ) {
     for( y=0; y<gb->size.y && gb->pos.y+y<=FIELD_HEIGHT; y++ ) {
-      this->matchGarbage(&grid_[gb->pos.x-1][gb->pos.y+y], chained);
+      ret += this->matchGarbage(&grid_[gb->pos.x-1][gb->pos.y+y]);
     }
   }
   if( gb->pos.x+gb->size.x < FIELD_WIDTH ) {
     for( y=0; y<gb->size.y && gb->pos.y+y<=FIELD_HEIGHT; y++ ) {
-      this->matchGarbage(&grid_[gb->pos.x+gb->size.x][gb->pos.y+y], chained);
+      ret += this->matchGarbage(&grid_[gb->pos.x+gb->size.x][gb->pos.y+y]);
     }
   }
   if( gb->pos.y > 0 ) {
     for( x=0; x<gb->size.x; x++ ) {
-      this->matchGarbage(&grid_[gb->pos.x+x][gb->pos.y-1], chained);
+      ret += this->matchGarbage(&grid_[gb->pos.x+x][gb->pos.y-1]);
     }
   }
   if( gb->pos.y+gb->size.y <= FIELD_HEIGHT ) {
     for( x=0; x<gb->size.x; x++ ) {
-      this->matchGarbage(&grid_[gb->pos.x+x][gb->pos.y+gb->size.y], chained);
+      ret += this->matchGarbage(&grid_[gb->pos.x+x][gb->pos.y+gb->size.y]);
     }
   }
 
   gb->size.y--;
   gb->pos.y++;
+
+  return ret;
 }
 
 void Field::transformGarbage(int x, int y)
@@ -1026,7 +1012,7 @@ void Field::transformGarbage(int x, int y)
   bk->bk_color.state = BkColor::TRANSFORMED;
   bk->bk_color.color = color;
   // chaining: unchanged
-  bk->ntick = tick_ + bk->group_pos * conf_.pop_tk + 2;
+  bk->ntick = tick_ + (bk->combo_info.group_end - bk->combo_info.pos - 1) * conf_.pop_tk + 2;
 }
 
 

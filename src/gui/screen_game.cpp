@@ -264,7 +264,25 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
   sounds_.move.setBuffer(*intf_.res_mgr().getSound("move"));
   sounds_.swap.setBuffer(*intf_.res_mgr().getSound("swap"));
   sounds_.fall.setBuffer(*intf_.res_mgr().getSound("fall"));
-  sounds_.pop.setBuffer(*intf_.res_mgr().getSound("pop"));
+  for(int i=0;; i++) {
+    sounds_.pops.emplace_back();
+    auto& sub_pops = sounds_.pops.back();
+    for(int j=0;; j++) {
+      std::string name = "pop-" + std::to_string(i) + '-' + std::to_string(j);
+      try {
+        sub_pops.emplace_back(*intf_.res_mgr().getSound(name));
+      } catch(const ResourceManager::LoadError&) {
+        if(i == 0 && j == 0) {
+          throw;  // except at least one entry
+        }
+        break;
+      }
+    }
+    if(sub_pops.empty()) {
+      sounds_.pops.pop_back();
+      break;
+    }
+  }
 
   this->step();  // not a step, but do the work
 }
@@ -396,13 +414,18 @@ void FieldDisplay::step()
     if(info.swap) {
       sounds_.swap.play();
     }
-    if(info.blocks.color.laid || info.blocks.garbage.laid) {
+    if(info.blocks.laid) {
       LOG("[%u] play fall", field_.tick());
       sounds_.fall.play();
     }
-    if(info.blocks.color.popped || info.blocks.garbage.mutated) {
-      LOG("[%u] play pop", field_.tick());
-      sounds_.pop.play();
+    if(!info.blocks.popped.empty()) {
+      unsigned int max_chain = sounds_.pops.size();
+      for(auto& combo : info.blocks.popped) {
+        LOG("[%u] play pop %u %u", field_.tick(), combo.chain, combo.pos);
+        auto& pop_sounds = sounds_.pops[std::min(combo.chain, max_chain) - 1];
+        unsigned int max_pos = pop_sounds.size() - 1;
+        pop_sounds[std::min(combo.pos, max_pos)].play();
+      }
     }
   }
 
