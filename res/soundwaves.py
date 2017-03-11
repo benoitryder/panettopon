@@ -153,6 +153,9 @@ class Sound:
     def __len__(self):
         return len(self.samples)
 
+    def __iter__(self):
+        return iter(self.samples)
+
     @property
     def duration(self):
         return float(len(self.samples)) / framerate

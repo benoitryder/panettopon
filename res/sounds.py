@@ -86,25 +86,41 @@ def pop_all(dur=0.04, amp=0.5):
     return [globals()['pop_seq%d' % (i+1)](dur, amp) for i in range(4)]
 
 
+def fall(dur=0.07, amp=0.5):
+    pieces = [(0.0, 0), (0.1, 1), (0.2, 0.7), (0.6, 0.1), (0.8, 0.5), (1, 0)]
+    freq = 230
+    wave0 = WaveTrapezium(freq, dur=dur)
+    wave1 = WaveSin(freq, dur=dur)
+    n = float(len(wave0))
+    wave = Sound( b*i/n + a*(n-i)/n for i,(a,b) in enumerate(zip(wave0, wave1)) )
+    return wave.enveloppe_linear_pieces(pieces)
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--output', metavar='DIR', default='',
             help="output directory")
     parser.add_argument('-1', '--single', action='store_true',
-            help="generate a single WAV file with all sounds")
+            help="generate single WAV file for sequenced sounds")
     args = parser.parse_args()
 
     if not os.path.isdir(args.output):
         os.makedirs(args.output)
 
+    def fwave(p):
+        return os.path.join(args.output, p)
+
     pop_seqs = pop_all()
     if args.single:
-        merge_sequence([merge_sequence(seq, dt=0.1) for seq in pop_seqs], dt=0.2).write(os.path.join(args.output, 'pop-all.wav'))
+        merge_sequence([merge_sequence(seq, dt=0.1) for seq in pop_seqs], dt=0.2).write(fwave('pop-all.wav'))
     else:
         for i, seq in enumerate(pop_seqs):
             for j, track in enumerate(seq):
-                track.write(os.path.join(args.output, 'pop-%d-%d.wav' % (i, j)))
+                track.write(fwave('pop-%d-%d.wav' % (i, j)))
+
+    fall().write(fwave('fall.wav'))
+
 
 if __name__ == '__main__':
     main()
