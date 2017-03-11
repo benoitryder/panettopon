@@ -324,7 +324,6 @@ void Field::step(KeyState keys)
           // matching, tick events
           if( bkg->state == BkGarbage::FLASH ) {
             bkg->state = BkGarbage::MUTATE;
-            bk->chaining = bk->chaining;
             bk->ntick = 0;
             // ntick and group_pos are set below
             garbage_pop++;
