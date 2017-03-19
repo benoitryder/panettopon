@@ -225,7 +225,11 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
 
   struct {
     sf::Sound move;
-    sf::Sound swap;
+    struct {
+      sf::Sound both;
+      sf::Sound left;
+      sf::Sound right;
+    } swap;
     SoundPool fall;
     std::vector<std::vector<SoundPool>> pops;
   } sounds_;

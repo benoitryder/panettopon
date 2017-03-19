@@ -262,7 +262,9 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
 
   // load sounds
   sounds_.move.setBuffer(*intf_.res_mgr().getSound("move"));
-  sounds_.swap.setBuffer(*intf_.res_mgr().getSound("swap"));
+  sounds_.swap.both.setBuffer(*intf_.res_mgr().getSound("swap-both"));
+  sounds_.swap.left.setBuffer(*intf_.res_mgr().getSound("swap-left"));
+  sounds_.swap.right.setBuffer(*intf_.res_mgr().getSound("swap-right"));
   sounds_.fall.setBuffer(*intf_.res_mgr().getSound("fall"));
   for(int i=0;; i++) {
     sounds_.pops.emplace_back();
@@ -412,10 +414,17 @@ void FieldDisplay::step()
       sounds_.move.play();
     }
     if(info.swap) {
-      sounds_.swap.play();
-    }
-    if(info.blocks.laid) {
-      LOG("[%u] play fall", field_.tick());
+      sounds_.swap.both.stop();
+      sounds_.swap.left.stop();
+      sounds_.swap.right.stop();
+      auto& swap_pos = field_.swapPos();
+      if(field_.block(swap_pos.x, swap_pos.y).isNone()) {
+        sounds_.swap.right.play();  // no left block, play 'right' sound
+      } else if(field_.block(swap_pos.x + 1, swap_pos.y).isNone()) {
+        sounds_.swap.left.play();  // no right block, play 'left' sound
+      } else {
+        sounds_.swap.both.play();  // both blocks, play 'both' sound
+      }
       sounds_.fall.play();
     }
     if(!info.blocks.popped.empty()) {
