@@ -86,6 +86,11 @@ def pop_all(dur=0.04, amp=0.5):
     return [globals()['pop_seq%d' % (i+1)](dur, amp) for i in range(4)]
 
 
+def move(dur=0.003, amp=0.2):
+    pieces = [(0, 0), (.5, 1), (1, 0)]
+    freq = 3200
+    return WaveSin(freq, amp, dur=dur).enveloppe(SignalSin, pieces)
+
 def fall(dur=0.07, amp=0.5):
     pieces = [(0, 0), (0.1, 1), (0.2, 0.7), (0.6, 0.1), (0.8, 0.5), (1, 0)]
     freq = 230
@@ -120,6 +125,7 @@ def main():
                 track.write(fwave('pop-%d-%d.wav' % (i, j)))
 
     fall().write(fwave('fall.wav'))
+    move().write(fwave('move.wav'))
 
 
 if __name__ == '__main__':
