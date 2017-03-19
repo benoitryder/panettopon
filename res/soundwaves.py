@@ -123,25 +123,11 @@ class Sound:
         draw([self.samples])
 
 
-    def enveloppe_linear(self, k0, k1):
-        """Apply a linear transformation to samples"""
-        return self.enveloppe_linear_pieces([(0, k0), (1, k1)])
-
-    def enveloppe_linear_pieces(self, pieces):
-        """Apply piecewise linear transformation to samples
-        pieces is a sorted list of (position, amp_ratio).
+    def enveloppe(self, signal, pieces):
+        """Apply a signal to enveloppe samples
+        pieces is a list of (position, amp_ratio).
         """
-        n = len(self.samples)
-        enveloppe = []
-        i0, k0 = 0, 1
-        for p, k1 in pieces:
-            assert 0.0 <= p <= 1.0
-            i1 = int(p * n)
-            if i1 > i0:
-                k = float(k1 - k0) / (i1 - i0)
-                enveloppe.extend(k0 + k * (i - i0) for i in range(i0, i1))
-            k0, i0 = k1, i1
-        return self & enveloppe
+        return self & signal(pieces, dur=self)
 
     def amplify(self, k):
         return Sound(k*v for v in self.samples)
@@ -251,6 +237,40 @@ class WaveTrapezium(Wave):
         return ret + [-x for x in ret]
 
 
+class Signal(Sound):
+    def __init__(self, pieces, dur=None):
+        self.pieces = pieces
+        if dur is not None:
+            # pieces contains positions (in [0, 1]), not ticks
+            n = _to_sample_count(dur)
+            pieces = [(int(p * n), a) for p, a in pieces]
+
+        self.samples = []
+        i0, a0 = 0, 0.0
+        for i1, a1 in pieces:
+            a1 = float(a1)
+            assert i1 >= i0
+            if i1 > i0:
+                self.samples.extend(self.signal_piece_samples(a0, a1, i1 - i0))
+            i0, a0 = i1, a1
+
+    def __repr__(self):
+        return "<%s len=%d %r>" % (self.__class__.__name__, len(self.samples), self.pieces)
+
+    def signal_piece_samples(self, a0, a1, n):
+        raise NotImplementedError()
+
+class SignalTriangle(Signal):
+    def signal_piece_samples(self, a0, a1, n):
+        return (a0 + t * float(a1 - a0) / n for t in range(n))
+
+class SignalSin(Signal):
+    def signal_piece_samples(self, a0, a1, n):
+        y = (a1 + a0) / 2
+        r = (a1 - a0) / 2
+        return (y - r * math.cos(t * math.pi / n) for t in range(n))
+
+
 class Noise(Sound):
     def __init__(self, amp, dur, seed=None):
         if seed is not None:
@@ -259,8 +279,8 @@ class Noise(Sound):
         self.amp = amp
         self.samples = [random.uniform(-amp, amp) for t in range(n)]
 
-class NoiseWave(Sound):
-    def __init__(self, freq, amp=0.5, dur=None, seed=None):
+class NoiseSignal(Sound):
+    def __init__(self, signal, freq, amp=0.5, dur=None, seed=None):
         self.freq = freq
         self.amp = amp
         self.seed = seed
@@ -269,29 +289,11 @@ class NoiseWave(Sound):
 
         nsamples = _to_sample_count(dur)
         period = int(framerate / self.freq)
-
-        self.samples = []
-        last = 0
-        for i in range(0, nsamples, period):
-            new = random.uniform(-amp, amp)
-            self.samples.extend(self.noise_period(last, new, period))
-            last = new
+        pieces = [(i, random.uniform(-amp, amp)) for i in range(0, nsamples, period)]
+        self.samples = signal(pieces).samples
 
     def __repr__(self):
         return "<%s f=%r, a=%r, seed=%r, len=%d>" % (self.__class__.__name__, self.freq, self.amp, self.seed, len(self.samples))
-
-    def noise_period(self, last, new, t, period):
-        raise NotImplementedError()
-
-class NoiseTriangle(NoiseWave):
-    def noise_period(self, last, new, period):
-        return (t * float(new - last) / period for t in range(period))
-
-class NoiseSin(NoiseWave):
-    def noise_period(self, last, new, period):
-        y = (last + new) / 2
-        r = (last - new) / 2
-        return (y + r * math.cos(t * math.pi / period) for t in range(period))
 
 
 class Track:
