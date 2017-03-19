@@ -92,13 +92,13 @@ def move(dur=0.003, amp=0.2):
     return WaveSin(freq, amp, dur=dur).enveloppe(SignalSin, pieces)
 
 def fall(dur=0.07, amp=0.5):
-    pieces = [(0, 0), (0.1, 1), (0.2, 0.7), (0.6, 0.1), (0.8, 0.5), (1, 0)]
-    freq = 230
+    pieces = [(0, 0), (0.1, 1), (0.6, 0.1), (0.8, 0.5), (1, 0)]
+    freq = 150
     wave0 = WaveTrapezium(freq, amp, dur=dur)
     wave1 = WaveSin(freq, amp, dur=dur)
     n = float(len(wave0))
     wave = Sound( b*i/n + a*(n-i)/n for i,(a,b) in enumerate(zip(wave0, wave1)) )
-    return wave.enveloppe(SignalTriangle, pieces)
+    return wave.enveloppe(SignalSin, pieces)
 
 
 def main():
