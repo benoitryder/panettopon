@@ -296,6 +296,11 @@ class NoiseSignal(Sound):
         return "<%s f=%r, a=%r, seed=%r, len=%d>" % (self.__class__.__name__, self.freq, self.amp, self.seed, len(self.samples))
 
 
+class Silence(Sound):
+    def __init__(self, dur):
+        self.samples = [0 for i in range(_to_sample_count(dur))]
+
+
 class Track:
     def __init__(self, channels=None, n=None):
         if channels is None and n is None:
