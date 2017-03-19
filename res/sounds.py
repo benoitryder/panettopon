@@ -101,6 +101,23 @@ def fall(dur=0.07, amp=0.5):
     return wave.enveloppe(SignalSin, pieces)
 
 
+def swap(dur=0.05, amp=0.3):
+    pieces = [(.0, 0), (.05, 1), (.2, 0), (.6, 0), (.8, .4), (1, 0)]
+    freq = 3000
+    seed = 3  # pure randomness don't always produce good results
+    base = (WaveSin(freq, amp, dur) & NoiseSignal(SignalSin, freq, 1, dur, seed=3))
+    return base.enveloppe(SignalSin, pieces)
+
+def swap_all(dur=0.05, amp=0.3):
+    """Return (swap_both, swap_to_left, swap_to_right)"""
+    p1 = [(0, .5), (.5, .5), (.5, 1), (1, 1)]
+    p2 = [(0, 1), (.5, 1), (.5, .5), (1, .5)]
+    s = swap(dur, amp)
+    s1 = s.enveloppe(SignalTriangle, p1)
+    s2 = s.enveloppe(SignalTriangle, p2)
+    return Track([s, s]), Track([s1, s2]), Track([s2, s1])
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
@@ -114,18 +131,24 @@ def main():
         os.makedirs(args.output)
 
     def fwave(p):
-        return os.path.join(args.output, p)
+        return os.path.join(args.output, p) + '.wav'
 
     pop_seqs = pop_all()
     if args.single:
-        merge_sequence([merge_sequence(seq, dt=0.1) for seq in pop_seqs], dt=0.2).write(fwave('pop-all.wav'))
+        merge_sequence([merge_sequence(seq, dt=0.1) for seq in pop_seqs], dt=0.2).write(fwave('pop-all'))
     else:
         for i, seq in enumerate(pop_seqs):
             for j, track in enumerate(seq):
-                track.write(fwave('pop-%d-%d.wav' % (i, j)))
+                track.write(fwave('pop-%d-%d' % (i, j)))
 
-    fall().write(fwave('fall.wav'))
-    move().write(fwave('move.wav'))
+    fall().write(fwave('fall'))
+    move().write(fwave('move'))
+    swap_blr = swap_all()
+    if args.single:
+        merge_sequence(swap_blr, dt=0.3).write(fwave('swap-both-left-right.wav'))
+    else:
+        for track, name in zip(swap_blr, ('both', 'left', 'right')):
+            track.write(fwave('swap-%s' % name))
 
 
 if __name__ == '__main__':
