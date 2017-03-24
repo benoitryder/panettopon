@@ -1,6 +1,7 @@
 #include "screen_game.h"
 #include "screen_menus.h"
 #include "interface.h"
+#include "input.h"
 #include "../log.h"
 
 namespace gui {
@@ -143,13 +144,11 @@ bool ScreenGame::onInputEvent(const sf::Event& ev)
     return true;
   }
 
-  if( ev.type == sf::Event::KeyPressed ) {
-    if( ev.key.code == sf::Keyboard::Escape ) {
-      intf_.swapScreen(new ScreenStart(intf_));
-      return true;
-    }
-  } else if(intf_.instance()->state() == GameInstance::State::LOBBY) {
-    if(ev.key.code == sf::Keyboard::Return) {
+  if(InputBinding::MenuCancel.match(ev)) {
+    intf_.swapScreen(new ScreenStart(intf_));
+    return true;
+  } else if(InputBinding::MenuConfirm.match(ev)) {
+    if(intf_.instance()->state() == GameInstance::State::LOBBY) {
       intf_.swapScreen(new ScreenLobby(intf_, player_));
       return true;
     }

@@ -4,6 +4,7 @@
 #include <GL/gl.h>
 #include "screen.h"
 #include "interface.h"
+#include "input.h"
 #include "../log.h"
 
 namespace gui {
@@ -52,34 +53,29 @@ bool Screen::onInputEvent(const sf::Event& ev)
     return true;
   }
 
-  if(ev.type == sf::Event::KeyPressed) {
-    // move focus
-    WFocusable* next_focused = NULL;
-    if(ev.key.code == sf::Keyboard::Up) {
-      next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
-    } else if(ev.key.code == sf::Keyboard::Down) {
+  WFocusable* next_focused = NULL;
+  if(InputBinding::MenuUp.match(ev)) {
+    next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
+  } else if(InputBinding::MenuDown.match(ev)) {
+    next_focused = focused_->neighbor(WFocusable::NEIGHBOR_DOWN);
+  } else if(InputBinding::MenuLeft.match(ev)) {
+    next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
+  } else if(InputBinding::MenuRight.match(ev)) {
+    next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
+  } else if(InputBinding::MenuFocusNext.match(ev)) {
+    next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
+    if(!next_focused) {
       next_focused = focused_->neighbor(WFocusable::NEIGHBOR_DOWN);
-    } else if(ev.key.code == sf::Keyboard::Left) {
-      next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
-    } else if(ev.key.code == sf::Keyboard::Right) {
-      next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
-    } else if(ev.key.code == sf::Keyboard::Tab) {
-      if(ev.key.shift) {
-        next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
-        if(!next_focused) {
-          next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
-        }
-      } else {
-        next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
-        if(!next_focused) {
-          next_focused = focused_->neighbor(WFocusable::NEIGHBOR_DOWN);
-        }
-      }
     }
-    if(next_focused) {
-      this->focus(next_focused);
-      return true;
+  } else if(InputBinding::MenuFocusPrevious.match(ev)) {
+    next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
+    if(!next_focused) {
+      next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
     }
+  }
+  if(next_focused) {
+    this->focus(next_focused);
+    return true;
   }
 
   return false;

@@ -2,6 +2,7 @@
 #include "screen.h"
 #include "interface.h"
 #include "resources.h"
+#include "input.h"
 #include "../log.h"
 
 namespace gui {
@@ -141,12 +142,10 @@ void WButton::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
 bool WButton::onInputEvent(const sf::Event& ev)
 {
-  if( ev.type == sf::Event::KeyPressed ) {
-    if( ev.key.code == sf::Keyboard::Return ) {
-      if( callback_ ) {
-        callback_();
-        return true;
-      }
+  if(InputBinding::MenuConfirm.match(ev)) {
+    if( callback_ ) {
+      callback_();
+      return true;
     }
   }
   return false;
@@ -476,15 +475,11 @@ void WChoice::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
 bool WChoice::onInputEvent(const sf::Event& ev)
 {
-  if( ev.type == sf::Event::KeyPressed ) {
-    sf::Keyboard::Key c = ev.key.code;
-    if( c == sf::Keyboard::Left ) {
-      this->select( index_ == 0 ? items_.size()-1 : index_-1 );
-    } else if( c == sf::Keyboard::Right ) {
-      this->select( index_ == items_.size()-1 ? 0 : index_+1 );
-    } else {
-      return false; // not processed
-    }
+  if(InputBinding::MenuLeft.match(ev)) {
+    this->select( index_ == 0 ? items_.size()-1 : index_-1 );
+    return true;
+  } else if(InputBinding::MenuRight.match(ev)) {
+    this->select( index_ == items_.size()-1 ? 0 : index_+1 );
     return true;
   }
   return false;

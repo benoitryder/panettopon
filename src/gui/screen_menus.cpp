@@ -2,6 +2,7 @@
 #include "screen_menus.h"
 #include "screen_game.h"
 #include "interface.h"
+#include "input.h"
 #include "../server.h"
 #include "../log.h"
 
@@ -56,15 +57,13 @@ bool ScreenStart::onInputEvent(const sf::Event& ev)
   if(Screen::onInputEvent(ev)) {
     return true;
   }
-  if( ev.type == sf::Event::KeyPressed ) {
-    if( ev.key.code == sf::Keyboard::Escape ) {
-      if( focused_ == button_exit_ ) {
-        intf_.swapScreen(nullptr);
-      } else {
-        this->focus(button_exit_);
-      }
-      return true;
+  if(InputBinding::MenuCancel.match(ev)) {
+    if( focused_ == button_exit_ ) {
+      intf_.swapScreen(nullptr);
+    } else {
+      this->focus(button_exit_);
     }
+    return true;
   }
   return false;
 }
@@ -143,12 +142,11 @@ bool ScreenJoinServer::onInputEvent(const sf::Event& ev)
   if(Screen::onInputEvent(ev)) {
     return true;
   }
-  if( ev.type == sf::Event::KeyPressed ) {
-    if( ev.key.code == sf::Keyboard::Escape ) {
-      intf_.swapScreen(new ScreenStart(intf_));
-    } else if( ev.key.code == sf::Keyboard::Return ) {
-      this->submit();
-    }
+  if(InputBinding::MenuCancel.match(ev)) {
+    intf_.swapScreen(new ScreenStart(intf_));
+    return true;
+  } else if(InputBinding::MenuConfirm.match(ev)) {
+    this->submit();
     return true;
   }
   return false;
@@ -248,12 +246,11 @@ bool ScreenCreateServer::onInputEvent(const sf::Event& ev)
   if(Screen::onInputEvent(ev)) {
     return true;
   }
-  if( ev.type == sf::Event::KeyPressed ) {
-    if( ev.key.code == sf::Keyboard::Escape ) {
-      intf_.swapScreen(new ScreenStart(intf_));
-    } else if( ev.key.code == sf::Keyboard::Return ) {
-      this->submit();
-    }
+  if(InputBinding::MenuCancel.match(ev)) {
+    intf_.swapScreen(new ScreenStart(intf_));
+    return true;
+  } else if(InputBinding::MenuConfirm.match(ev)) {
+    this->submit();
     return true;
   }
   return false;
@@ -381,10 +378,8 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
     }
     return true;
   }
-  if( ev.type == sf::Event::KeyPressed ) {
-    if( ev.key.code == sf::Keyboard::Escape ) {
-      intf_.swapScreen(new ScreenStart(intf_));
-    }
+  if(InputBinding::MenuCancel.match(ev)) {
+    intf_.swapScreen(new ScreenStart(intf_));
     return true;
   }
   return false;
