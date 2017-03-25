@@ -190,17 +190,17 @@ bool InputBinding::isActive() const
 
   } else if(type_ == Type::JOYSTICK) {
     if(joystick_.button_ == JOYSTICK_UP) {
-      return sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::Y) <= -JOYSTICK_DEADZONE ||
-          sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::PovY) >= JOYSTICK_DEADZONE;
+      return sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::Y) < -JOYSTICK_ACTIVE_THRESHOLD ||
+          sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::PovY) > JOYSTICK_ACTIVE_THRESHOLD;
     } else if(joystick_.button_ == JOYSTICK_DOWN) {
-      return sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::Y) >= JOYSTICK_DEADZONE ||
-          sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::PovY) <= -JOYSTICK_DEADZONE;
+      return sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::Y) > JOYSTICK_ACTIVE_THRESHOLD ||
+          sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::PovY) < -JOYSTICK_ACTIVE_THRESHOLD;
     } else if(joystick_.button_ == JOYSTICK_LEFT) {
-      return sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::X) <= -JOYSTICK_DEADZONE ||
-          sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::PovX) <= -JOYSTICK_DEADZONE;
+      return sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::X) < -JOYSTICK_ACTIVE_THRESHOLD ||
+          sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::PovX) < -JOYSTICK_ACTIVE_THRESHOLD;
     } else if(joystick_.button_ == JOYSTICK_RIGHT) {
-      return sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::X) >= JOYSTICK_DEADZONE ||
-          sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::PovX) >= JOYSTICK_DEADZONE;
+      return sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::X) > JOYSTICK_ACTIVE_THRESHOLD ||
+          sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::PovX) > JOYSTICK_ACTIVE_THRESHOLD;
     } else {
       return sf::Joystick::isButtonPressed(joystick_.id_, joystick_.button_);
     }
@@ -265,15 +265,15 @@ bool InputBinding::match(const sf::Event& event) const
       const auto& ev = event.joystickMove;
       switch(menu_.action_) {
         case MenuAction::UP:
-          return (ev.axis == sf::Joystick::Axis::Y && ev.position <= -JOYSTICK_MENU_DEADZONE)
-              || (ev.axis == sf::Joystick::Axis::PovY && ev.position >= JOYSTICK_MENU_DEADZONE);
+          return (ev.axis == sf::Joystick::Axis::Y && ev.position < 0)
+              || (ev.axis == sf::Joystick::Axis::PovY && ev.position > 0);
         case MenuAction::DOWN:
-          return (ev.axis == sf::Joystick::Axis::Y && ev.position >= JOYSTICK_MENU_DEADZONE)
-              || (ev.axis == sf::Joystick::Axis::PovY && ev.position <= -JOYSTICK_MENU_DEADZONE);
+          return (ev.axis == sf::Joystick::Axis::Y && ev.position > 0)
+              || (ev.axis == sf::Joystick::Axis::PovY && ev.position < 0);
         case MenuAction::LEFT:
-          return (ev.axis == sf::Joystick::Axis::X || ev.axis == sf::Joystick::Axis::PovX) && ev.position <= -JOYSTICK_MENU_DEADZONE;
+          return (ev.axis == sf::Joystick::Axis::X || ev.axis == sf::Joystick::Axis::PovX) && ev.position < 0;
         case MenuAction::RIGHT:
-          return (ev.axis == sf::Joystick::Axis::X || ev.axis == sf::Joystick::Axis::PovX) && ev.position >= JOYSTICK_MENU_DEADZONE;
+          return (ev.axis == sf::Joystick::Axis::X || ev.axis == sf::Joystick::Axis::PovX) && ev.position > 0;
         default:
           return false;
       }
@@ -281,6 +281,37 @@ bool InputBinding::match(const sf::Event& event) const
   }
   return false;
 }
+
+
+InputHandler::InputHandler():
+    joystick_axis_pos_()
+{
+}
+
+
+bool InputHandler::filterEvent(const sf::Event& event)
+{
+  if(event.type == sf::Event::JoystickMoved) {
+    const auto& ev = event.joystickMove;
+    int new_pos;
+    if(ev.position > JOYSTICK_THRESHOLD) {
+      new_pos = 1;
+    } else if(ev.position < -JOYSTICK_THRESHOLD) {
+      new_pos = -1;
+    } else {
+      new_pos = 0;
+    }
+    if(joystick_axis_pos_[ev.joystickId][ev.axis] == new_pos) {
+      return false;
+    } else {
+      joystick_axis_pos_[ev.joystickId][ev.axis] = new_pos;
+      return new_pos != 0;
+    }
+  } else {
+    return true;
+  }
+}
+
 
 }
 

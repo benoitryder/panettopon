@@ -5,6 +5,7 @@
 #include <string>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include "resources.h"
+#include "input.h"
 #include "../client.h"
 #include "../monotone_timer.hpp"
 
@@ -93,6 +94,7 @@ class GuiInterface: public ClientInstance::Observer
   sf::RenderWindow window_;
   bool focused_;
   ResourceManager res_mgr_;
+  InputHandler input_handler_;
   std::unique_ptr<Screen> screen_;
   boost::asio::monotone_timer redraw_timer_;
 

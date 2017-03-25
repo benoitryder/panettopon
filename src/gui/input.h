@@ -33,8 +33,13 @@ struct InvalidInputBindingError: public std::runtime_error
 class InputBinding
 {
  private:
-  static constexpr float JOYSTICK_DEADZONE = 25.;
-  static constexpr float JOYSTICK_MENU_DEADZONE = 95.;
+  /** @brief Threshold above which joystick direction is active
+   *
+   * This is only used for isActive(), not match().
+   *
+   * @note Chosen value allows to also trigger on diagonals
+   */
+  static constexpr float JOYSTICK_ACTIVE_THRESHOLD = 65.;
 
   enum class Type {
     KEYBOARD,
@@ -98,6 +103,42 @@ class InputBinding
       MenuAction action_;
     } menu_;
   };
+};
+
+
+/** @brief Handle and filter SFML input events
+ *
+ * Filter SFML input events to handle joystick repetition.
+ */
+class InputHandler
+{
+  /** @brief Axis value above which direction is triggered
+   * @note Chosen value allows to trigger only on straight directions.
+   */
+  static constexpr float JOYSTICK_THRESHOLD = 95.;
+
+ public:
+  InputHandler();
+
+  /** @brief Filter an input event
+   *
+   * sf::Event::JoystickMoved events are inspected to keep only moves beyond
+   * the threshold. Move events on the same axis are filtered out until value
+   * goes cross the threshold again.
+   *
+   * It is then possible to check for actual moves by comparing joystick
+   * position to 0.
+   *
+   * @return \e true if filter should be processed, \e false if it has been filtered out.
+   */
+  bool filterEvent(const sf::Event& event);
+
+ private:
+  /** @brief Current past-threshold position for each axis
+   *
+   * Possible Values 0, -1 and 1.
+   */
+  int joystick_axis_pos_[sf::Joystick::Count][sf::Joystick::AxisCount];
 };
 
 }

@@ -243,12 +243,14 @@ void GuiInterface::onRedrawTick(const boost::system::error_code& ec)
   sf::Event event;
   while(window_.pollEvent(event)) {
     if( event.type == sf::Event::KeyPressed ||
-               event.type == sf::Event::KeyReleased ||
-               event.type == sf::Event::TextEntered ||
-               event.type == sf::Event::JoystickButtonPressed ||
-               event.type == sf::Event::JoystickMoved) {
-      if(focused_) {
-        screen_->onInputEvent(event);
+       event.type == sf::Event::KeyReleased ||
+       event.type == sf::Event::TextEntered ||
+       event.type == sf::Event::JoystickButtonPressed ||
+       event.type == sf::Event::JoystickMoved) {
+      if(input_handler_.filterEvent(event)) {
+        if(focused_) {
+          screen_->onInputEvent(event);
+        }
       }
     } else if( event.type == sf::Event::Closed ) {
       this->endDisplay();
