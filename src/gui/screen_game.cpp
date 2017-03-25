@@ -1,7 +1,6 @@
 #include "screen_game.h"
 #include "screen_menus.h"
 #include "interface.h"
-#include "input.h"
 #include "../log.h"
 
 namespace gui {
@@ -109,12 +108,12 @@ ScreenGame::ScreenGame(GuiInterface& intf, Player* pl):
     player_(pl),
     input_scheduler_(*intf.instance(), *this, intf.io_service())
 {
-  keys_.up    = sf::Keyboard::Up;
-  keys_.down  = sf::Keyboard::Down;
-  keys_.left  = sf::Keyboard::Left;
-  keys_.right = sf::Keyboard::Right;
-  keys_.swap  = sf::Keyboard::D;
-  keys_.raise = sf::Keyboard::F;
+  keys_.up = InputBinding::fromName("up");
+  keys_.down = InputBinding::fromName("down");
+  keys_.left = InputBinding::fromName("left");
+  keys_.right = InputBinding::fromName("right");
+  keys_.swap = InputBinding::fromName("d");
+  keys_.raise = InputBinding::fromName("f");
 }
 
 void ScreenGame::enter()
@@ -214,12 +213,12 @@ KeyState ScreenGame::getNextInput(Player* /*pl*/)
     return GAME_KEY_NONE;
   }
   int key = GAME_KEY_NONE;
-  if( sf::Keyboard::isKeyPressed(keys_.up   ) ) key |= GAME_KEY_UP;
-  if( sf::Keyboard::isKeyPressed(keys_.down ) ) key |= GAME_KEY_DOWN;
-  if( sf::Keyboard::isKeyPressed(keys_.left ) ) key |= GAME_KEY_LEFT;
-  if( sf::Keyboard::isKeyPressed(keys_.right) ) key |= GAME_KEY_RIGHT;
-  if( sf::Keyboard::isKeyPressed(keys_.swap ) ) key |= GAME_KEY_SWAP;
-  if( sf::Keyboard::isKeyPressed(keys_.raise) ) key |= GAME_KEY_RAISE;
+  if(keys_.up.isActive()) key |= GAME_KEY_UP;
+  if(keys_.down.isActive()) key |= GAME_KEY_DOWN;
+  if(keys_.left.isActive()) key |= GAME_KEY_LEFT;
+  if(keys_.right.isActive()) key |= GAME_KEY_RIGHT;
+  if(keys_.swap.isActive()) key |= GAME_KEY_SWAP;
+  if(keys_.raise.isActive()) key |= GAME_KEY_RAISE;
   return key;
 }
 

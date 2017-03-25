@@ -42,6 +42,7 @@ class InputBinding
   static constexpr float JOYSTICK_ACTIVE_THRESHOLD = 65.;
 
   enum class Type {
+    NONE,
     KEYBOARD,
     JOYSTICK,
     MENU,
@@ -64,10 +65,13 @@ class InputBinding
   };
 
  public:
-  /// Build a binding from its configuration name
-  InputBinding(const std::string& name);
+  /// Build a never matched, never active binding
+  InputBinding();
   /// Build a menu binding
   constexpr InputBinding(MenuAction action);
+
+  /// Build a binding from its configuration name
+  static InputBinding fromName(const std::string& name);
 
   // Predefined menu bindings
   static const InputBinding MenuUp;

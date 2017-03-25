@@ -10,161 +10,169 @@ InvalidInputBindingError::InvalidInputBindingError(const std::string& name, cons
 }
 
 
-InputBinding::InputBinding(const std::string& name)
+InputBinding::InputBinding(): type_(Type::NONE)
 {
+}
+
+
+InputBinding InputBinding::fromName(const std::string& name)
+{
+  InputBinding binding;
   if(name.substr(0, 3) == "joy") {
-    type_ = Type::JOYSTICK;
+    binding.type_ = Type::JOYSTICK;
     if(name.size() < 6) {
       throw InvalidInputBindingError(name, "invalid format");
     }
     if(name[3] < '0' && name[3] > '9') {
       throw InvalidInputBindingError(name, "invalid joystick number");
     }
-    joystick_.id_ = name[3] - '0';
-    if(joystick_.id_ >= sf::Joystick::Count) {
+    binding.joystick_.id_ = name[3] - '0';
+    if(binding.joystick_.id_ >= sf::Joystick::Count) {
       throw InvalidInputBindingError(name, "bad joystick number");
     }
     std::string button = name.substr(4);
     if(button == "up") {
-      joystick_.button_ = JOYSTICK_UP;
+      binding.joystick_.button_ = JOYSTICK_UP;
     } else if(button == "down") {
-      joystick_.button_ = JOYSTICK_DOWN;
+      binding.joystick_.button_ = JOYSTICK_DOWN;
     } else if(button == "left") {
-      joystick_.button_ = JOYSTICK_LEFT;
+      binding.joystick_.button_ = JOYSTICK_LEFT;
     } else if(button == "right") {
-      joystick_.button_ = JOYSTICK_RIGHT;
+      binding.joystick_.button_ = JOYSTICK_RIGHT;
     } else {
       try {
-        joystick_.button_ = boost::lexical_cast<unsigned int>(button);
+        binding.joystick_.button_ = boost::lexical_cast<unsigned int>(button);
       } catch(const boost::bad_lexical_cast&) {
         throw InvalidInputBindingError(name, "bad joystick button number");
       }
-      if(joystick_.button_ >= sf::Joystick::ButtonCount) {
+      if(binding.joystick_.button_ >= sf::Joystick::ButtonCount) {
         throw InvalidInputBindingError(name, "bad joystick button number");
       }
     }
 
   } else {
-    type_ = Type::KEYBOARD;
+    binding.type_ = Type::KEYBOARD;
     if(name.size() == 1) {
       char c = name[0];
       if(c >= 'a' && c <= 'z') {
-        keyboard_.code_ = static_cast<sf::Keyboard::Key>(sf::Keyboard::A + (c - 'a'));
+        binding.keyboard_.code_ = static_cast<sf::Keyboard::Key>(sf::Keyboard::A + (c - 'a'));
       } else if(c >= '0' && c <= '9') {
-        keyboard_.code_ = static_cast<sf::Keyboard::Key>(sf::Keyboard::Num0 + (c - '0'));
+        binding.keyboard_.code_ = static_cast<sf::Keyboard::Key>(sf::Keyboard::Num0 + (c - '0'));
       } else if(c == '[') {
-        keyboard_.code_ = sf::Keyboard::LBracket;
+        binding.keyboard_.code_ = sf::Keyboard::LBracket;
       } else if(c == ']') {
-        keyboard_.code_ = sf::Keyboard::RBracket;
+        binding.keyboard_.code_ = sf::Keyboard::RBracket;
       } else if(c == ';') {
-        keyboard_.code_ = sf::Keyboard::SemiColon;
+        binding.keyboard_.code_ = sf::Keyboard::SemiColon;
       } else if(c == ',') {
-        keyboard_.code_ = sf::Keyboard::Comma;
+        binding.keyboard_.code_ = sf::Keyboard::Comma;
       } else if(c == '.') {
-        keyboard_.code_ = sf::Keyboard::Period;
+        binding.keyboard_.code_ = sf::Keyboard::Period;
       } else if(c == '\'') {
-        keyboard_.code_ = sf::Keyboard::Quote;
+        binding.keyboard_.code_ = sf::Keyboard::Quote;
       } else if(c == '/') {
-        keyboard_.code_ = sf::Keyboard::Slash;
+        binding.keyboard_.code_ = sf::Keyboard::Slash;
       } else if(c == '\\') {
-        keyboard_.code_ = sf::Keyboard::BackSlash;
+        binding.keyboard_.code_ = sf::Keyboard::BackSlash;
       } else if(c == '~') {
-        keyboard_.code_ = sf::Keyboard::Tilde;
+        binding.keyboard_.code_ = sf::Keyboard::Tilde;
       } else if(c == '=') {
-        keyboard_.code_ = sf::Keyboard::Equal;
+        binding.keyboard_.code_ = sf::Keyboard::Equal;
       } else if(c == '-') {
-        keyboard_.code_ = sf::Keyboard::Dash;
+        binding.keyboard_.code_ = sf::Keyboard::Dash;
       } else {
         throw InvalidInputBindingError(name, "invalid keyboard key");
       }
     } else if(name == "space") {
-      keyboard_.code_ = sf::Keyboard::Space;
+      binding.keyboard_.code_ = sf::Keyboard::Space;
     } else if(name == "return") {
-      keyboard_.code_ = sf::Keyboard::Return;
+      binding.keyboard_.code_ = sf::Keyboard::Return;
     } else if(name == "backspace") {
-      keyboard_.code_ = sf::Keyboard::BackSpace;
+      binding.keyboard_.code_ = sf::Keyboard::BackSpace;
     } else if(name == "tab") {
-      keyboard_.code_ = sf::Keyboard::Tab;
+      binding.keyboard_.code_ = sf::Keyboard::Tab;
     } else if(name == "escape") {
-      keyboard_.code_ = sf::Keyboard::Escape;
+      binding.keyboard_.code_ = sf::Keyboard::Escape;
     } else if(name == "pause") {
-      keyboard_.code_ = sf::Keyboard::Pause;
+      binding.keyboard_.code_ = sf::Keyboard::Pause;
     } else if(name == "home") {
-      keyboard_.code_ = sf::Keyboard::Home;
+      binding.keyboard_.code_ = sf::Keyboard::Home;
     } else if(name == "end") {
-      keyboard_.code_ = sf::Keyboard::End;
+      binding.keyboard_.code_ = sf::Keyboard::End;
     } else if(name == "pagedown") {
-      keyboard_.code_ = sf::Keyboard::PageDown;
+      binding.keyboard_.code_ = sf::Keyboard::PageDown;
     } else if(name == "pageup") {
-      keyboard_.code_ = sf::Keyboard::PageDown;
+      binding.keyboard_.code_ = sf::Keyboard::PageDown;
     } else if(name == "insert") {
-      keyboard_.code_ = sf::Keyboard::Insert;
+      binding.keyboard_.code_ = sf::Keyboard::Insert;
     } else if(name == "delete") {
-      keyboard_.code_ = sf::Keyboard::Delete;
+      binding.keyboard_.code_ = sf::Keyboard::Delete;
     } else if(name == "num0") {
-      keyboard_.code_ = sf::Keyboard::Numpad0;
+      binding.keyboard_.code_ = sf::Keyboard::Numpad0;
     } else if(name == "num1") {
-      keyboard_.code_ = sf::Keyboard::Numpad1;
+      binding.keyboard_.code_ = sf::Keyboard::Numpad1;
     } else if(name == "num2") {
-      keyboard_.code_ = sf::Keyboard::Numpad2;
+      binding.keyboard_.code_ = sf::Keyboard::Numpad2;
     } else if(name == "num3") {
-      keyboard_.code_ = sf::Keyboard::Numpad3;
+      binding.keyboard_.code_ = sf::Keyboard::Numpad3;
     } else if(name == "num4") {
-      keyboard_.code_ = sf::Keyboard::Numpad4;
+      binding.keyboard_.code_ = sf::Keyboard::Numpad4;
     } else if(name == "num5") {
-      keyboard_.code_ = sf::Keyboard::Numpad5;
+      binding.keyboard_.code_ = sf::Keyboard::Numpad5;
     } else if(name == "num6") {
-      keyboard_.code_ = sf::Keyboard::Numpad6;
+      binding.keyboard_.code_ = sf::Keyboard::Numpad6;
     } else if(name == "num7") {
-      keyboard_.code_ = sf::Keyboard::Numpad7;
+      binding.keyboard_.code_ = sf::Keyboard::Numpad7;
     } else if(name == "num8") {
-      keyboard_.code_ = sf::Keyboard::Numpad8;
+      binding.keyboard_.code_ = sf::Keyboard::Numpad8;
     } else if(name == "num9") {
-      keyboard_.code_ = sf::Keyboard::Numpad9;
+      binding.keyboard_.code_ = sf::Keyboard::Numpad9;
     } else if(name == "num+") {
-      keyboard_.code_ = sf::Keyboard::Add;
+      binding.keyboard_.code_ = sf::Keyboard::Add;
     } else if(name == "num-") {
-      keyboard_.code_ = sf::Keyboard::Subtract;
+      binding.keyboard_.code_ = sf::Keyboard::Subtract;
     } else if(name == "num*") {
-      keyboard_.code_ = sf::Keyboard::Multiply;
+      binding.keyboard_.code_ = sf::Keyboard::Multiply;
     } else if(name == "num/") {
-      keyboard_.code_ = sf::Keyboard::Divide;
+      binding.keyboard_.code_ = sf::Keyboard::Divide;
     } else if(name == "left") {
-      keyboard_.code_ = sf::Keyboard::Left;
+      binding.keyboard_.code_ = sf::Keyboard::Left;
     } else if(name == "right") {
-      keyboard_.code_ = sf::Keyboard::Right;
+      binding.keyboard_.code_ = sf::Keyboard::Right;
     } else if(name == "up") {
-      keyboard_.code_ = sf::Keyboard::Up;
+      binding.keyboard_.code_ = sf::Keyboard::Up;
     } else if(name == "down") {
-      keyboard_.code_ = sf::Keyboard::Down;
+      binding.keyboard_.code_ = sf::Keyboard::Down;
     } else if(name == "f1") {
-      keyboard_.code_ = sf::Keyboard::F1;
+      binding.keyboard_.code_ = sf::Keyboard::F1;
     } else if(name == "f2") {
-      keyboard_.code_ = sf::Keyboard::F2;
+      binding.keyboard_.code_ = sf::Keyboard::F2;
     } else if(name == "f3") {
-      keyboard_.code_ = sf::Keyboard::F3;
+      binding.keyboard_.code_ = sf::Keyboard::F3;
     } else if(name == "f4") {
-      keyboard_.code_ = sf::Keyboard::F4;
+      binding.keyboard_.code_ = sf::Keyboard::F4;
     } else if(name == "f5") {
-      keyboard_.code_ = sf::Keyboard::F5;
+      binding.keyboard_.code_ = sf::Keyboard::F5;
     } else if(name == "f6") {
-      keyboard_.code_ = sf::Keyboard::F6;
+      binding.keyboard_.code_ = sf::Keyboard::F6;
     } else if(name == "f7") {
-      keyboard_.code_ = sf::Keyboard::F7;
+      binding.keyboard_.code_ = sf::Keyboard::F7;
     } else if(name == "f8") {
-      keyboard_.code_ = sf::Keyboard::F8;
+      binding.keyboard_.code_ = sf::Keyboard::F8;
     } else if(name == "f9") {
-      keyboard_.code_ = sf::Keyboard::F9;
+      binding.keyboard_.code_ = sf::Keyboard::F9;
     } else if(name == "f10") {
-      keyboard_.code_ = sf::Keyboard::F10;
+      binding.keyboard_.code_ = sf::Keyboard::F10;
     } else if(name == "f11") {
-      keyboard_.code_ = sf::Keyboard::F11;
+      binding.keyboard_.code_ = sf::Keyboard::F11;
     } else if(name == "f12") {
-      keyboard_.code_ = sf::Keyboard::F12;
+      binding.keyboard_.code_ = sf::Keyboard::F12;
     } else {
       throw InvalidInputBindingError(name, "invalid keyboard key");
     }
   }
+
+  return binding;
 }
 
 

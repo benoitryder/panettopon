@@ -8,6 +8,7 @@
 #include <SFML/Audio/Sound.hpp>
 #include "screen.h"
 #include "resources.h"
+#include "input.h"
 
 namespace gui {
 
@@ -104,8 +105,8 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
 
   /// Key bindings.
   struct {
-    sf::Keyboard::Key up, down, left, right;
-    sf::Keyboard::Key swap, raise;
+    InputBinding up, down, left, right;
+    InputBinding swap, raise;
   } keys_;
 };
 
