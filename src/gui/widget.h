@@ -145,7 +145,6 @@ class WButton: public WFocusable
   struct Style {
     StyleText text;
     ImageFrameX::Style frame;
-    sf::Color color;
     float width;
 
     void load(const StyleLoader& loader);
@@ -211,7 +210,6 @@ class WEntry: public WFocusable
   struct Style {
     StyleText text;
     ImageFrameX::Style frame;
-    sf::Color color;
     float width;
     float text_margin_left;
     float text_margin_right;
@@ -275,7 +273,6 @@ class WChoice: public WFocusable
   struct Style {
     StyleText text;
     ImageFrameX::Style frame;
-    sf::Color color;
     float width;
 
     void load(const StyleLoader& loader);
