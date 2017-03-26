@@ -108,7 +108,7 @@ class ScreenLobby: public Screen
   virtual void onPlayerChangeFieldConf(Player*);
 
  private:
-  /** @brief Display a row of information for a player.
+  /** @brief Display information for a player.
    *
    * Style properties:
    *  - Border (frame)

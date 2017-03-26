@@ -330,7 +330,7 @@ void ScreenLobby::redraw()
 
 bool ScreenLobby::onInputEvent(const sf::Event& ev)
 {
-  // get currently selected row, to detect conf changes
+  // get currently selected frame, to detect conf changes
   WPlayerFrame* player_frame = 0;
   unsigned int conf_index;
   for(auto const& kv : player_frames_) {
@@ -434,11 +434,11 @@ void ScreenLobby::updatePlayerFramesPos()
   WFocusable* neighbor_first = nullptr;
   WFocusable* neighbor_up = nullptr;
   for(auto& kv : player_frames_) {
-    auto& row = kv.second;
-    row->setPosition(pos);
+    auto& frame = kv.second;
+    frame->setPosition(pos);
     pos += player_frames_dpos_;
-    if(row->player().local()) {
-      WChoice* choice_conf = &row->choiceConf();
+    if(frame->player().local()) {
+      WChoice* choice_conf = &frame->choiceConf();
       if(neighbor_up) {
         neighbor_up->setNeighbor(WFocusable::NEIGHBOR_DOWN, choice_conf);
         choice_conf->setNeighbor(WFocusable::NEIGHBOR_UP, neighbor_up);
