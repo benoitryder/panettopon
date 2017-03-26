@@ -178,6 +178,9 @@ void ScreenGame::onStateChange()
     // create a field display for each playing player
     float x = (-0.5*fields.size() + 0.5) * dx;
     for(const auto& field : fields) {
+      if(intf_.style().colors.size() - 1 < field->conf().color_nb) {
+        throw std::runtime_error("not enough configured colors to display fields");
+      }
       FldId fldid = field->fldid(); // intermediate variable because a ref is required
       auto fdp = std::make_unique<FieldDisplay>(intf_, *field, style_field_);
       fdp->scale(scale, scale);
