@@ -17,6 +17,20 @@ namespace gui {
 
 class Screen;
 
+/** @brief Global style entries
+ *
+ * Style entries:
+ *  - Color.Neutral: neutral block/field color
+ *  - Color.N: block/field color N
+ */
+struct StyleGlobal
+{
+  /// List of block/field colors
+  std::vector<sf::Color> colors;
+
+  void load(const StyleLoader& loader);
+};
+
 
 class GuiInterface: public ClientInstance::Observer
 {
@@ -29,6 +43,7 @@ class GuiInterface: public ClientInstance::Observer
   bool run(IniFile* cfg);
   boost::asio::io_service &io_service() { return io_service_; }
   IniFile& cfg() const { return *cfg_; }
+  const StyleGlobal& style() const { return style_; }
 
   /** @brief Change the active screen.
    *
@@ -101,6 +116,8 @@ class GuiInterface: public ClientInstance::Observer
   std::unique_ptr<GameInstance> instance_;
   ServerInstance* server_instance_;
   ClientInstance* client_instance_;
+
+  StyleGlobal style_;
 };
 
 

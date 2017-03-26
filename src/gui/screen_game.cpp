@@ -6,23 +6,11 @@
 namespace gui {
 
 
-void StyleField::load(const StyleLoader& loader)
+void StyleField::load(const StyleLoader& loader, const StyleGlobal& global)
 {
   const ResourceManager& res_mgr = loader.res_mgr();
-  std::string key;
-
-  colors.push_back(loader.getStyle<sf::Color>("Color.Neutral"));
-  for(unsigned int i=1; i<=16; ++i) {
-    sf::Color color;
-    if(!loader.fetchStyle({"Color", std::to_string(i)}, color)) {
-      break;
-    }
-    colors.push_back(color);
-  }
-  unsigned int color_nb = colors.size() - 1;
-  if(color_nb < 4) {
-    throw std::runtime_error("ColorNb is too small, must be at least 4");
-  }
+  this->global = &global;
+  unsigned int color_nb = global.colors.size() - 1;
 
   const sf::Texture* img;
 
@@ -118,7 +106,7 @@ ScreenGame::ScreenGame(GuiInterface& intf, Player* pl):
 
 void ScreenGame::enter()
 {
-  style_field_.load(StyleLoaderPrefix(*this, "Field"));
+  style_field_.load(StyleLoaderPrefix(*this, "Field"), intf_.style());
   assert( player_ );
 }
 
@@ -243,7 +231,7 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
   spr_frame_.setTexture(*style_.img_field_frame);
   spr_frame_.setOrigin(style_.frame_origin.x, style_.frame_origin.y);
   spr_frame_.setScale(2,2);
-  spr_frame_.setColor(style_.colors[field_.fldid()]);
+  spr_frame_.setColor(intf_.style().colors[field_.fldid()]);
 
   // start countdown
   {
@@ -609,7 +597,7 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
     const StyleField::TilesGb& tiles = style_.tiles_gb;
     const Garbage* gb = bk.bk_garbage.garbage;
     //XXX gb is reset before being transformed
-    const sf::Color& color = style_.colors[(gb && gb->from) ? gb->from->fldid() : 0];
+    const sf::Color& color = intf_.style().colors[(gb && gb->from) ? gb->from->fldid() : 0];
 
     if( bk.bk_garbage.state == BkGarbage::FLASH ) {
       if( (bk.ntick - field_.tick()) % 2 == 0 ) {
@@ -782,7 +770,7 @@ FieldDisplay::GbHanging::GbHanging(const StyleField& style, const Garbage& gb):
   } else {
     //TODO not handled yet
   }
-  bg_.setColor(style_.colors[gb_.from ? gb_.from->fldid() : 0]);
+  bg_.setColor(style_.global->colors[gb_.from ? gb_.from->fldid() : 0]);
   //XXX store/cache text style information on StyleField
   style_.gb_hanging_style.apply(txt_);
   txt_.setFillColor(sf::Color::White);

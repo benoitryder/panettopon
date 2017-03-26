@@ -9,6 +9,22 @@ StyleLoader::StyleLoader() {}
 StyleLoader::~StyleLoader() {}
 
 
+StyleLoaderResourceManager::StyleLoaderResourceManager(const ResourceManager& res_mgr, const std::string& name):
+    res_mgr_(res_mgr), name_(name)
+{
+}
+
+bool StyleLoaderResourceManager::searchStyle(const std::string& prop, std::string& key) const
+{
+  std::string s = IniFile::join(name_, prop);
+  if(res_mgr_.style().has(s)) {
+    key = s;
+    return true;
+  }
+  return false;
+}
+
+
 StyleLoaderPrefix::StyleLoaderPrefix(const StyleLoader& loader, const std::string& prefix, bool fallback):
     loader_(loader), prefix_(prefix), fallback_(fallback)
 {

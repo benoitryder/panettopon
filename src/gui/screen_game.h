@@ -12,6 +12,7 @@
 
 namespace gui {
 
+class StyleGlobal;
 class GuiInterface;
 class FieldDisplay;
 
@@ -19,16 +20,14 @@ class FieldDisplay;
 /** @brief Style for a field display
  *
  * Style entries:
- *  - Color.Neutral: neutral block/field color
- *  - Color.N: block/field color N
  *  - FrameOrigin: origin of field blocks in frame
  */
 struct StyleField
 {
   static constexpr unsigned int RANK_MAX = 10;
 
-  /// List of block/field colors
-  std::vector<sf::Color> colors;
+  const StyleGlobal* global;
+
   /// Block pixel size
   unsigned int bk_size = 0;
 
@@ -77,7 +76,7 @@ struct StyleField
     std::vector<StyleText> rank;
   } rank_sign_style;
 
-  void load(const StyleLoader& loader);
+  void load(const StyleLoader& loader, const StyleGlobal& global);
 };
 
 

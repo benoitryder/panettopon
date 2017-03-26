@@ -10,6 +10,23 @@ namespace asio = boost::asio;
 
 namespace gui {
 
+void StyleGlobal::load(const StyleLoader& loader)
+{
+  colors.push_back(loader.getStyle<sf::Color>("Color.Neutral"));
+  for(unsigned int i=1; i<=16; ++i) {
+    sf::Color color;
+    if(!loader.fetchStyle({"Color", std::to_string(i)}, color)) {
+      break;
+    }
+    colors.push_back(color);
+  }
+  unsigned int color_nb = colors.size() - 1;
+  if(color_nb < 4) {
+    throw std::runtime_error("color count is too small, must be at least 4");
+  }
+}
+
+
 
 const std::string GuiInterface::CONF_SECTION("GUI");
 
@@ -55,6 +72,8 @@ bool GuiInterface::run(IniFile* cfg)
   if(!cfg->has("Client.Nick")) {
     cfg->set("Client.Nick", "Player");
   }
+
+  style_.load(StyleLoaderResourceManager(res_mgr_, "Global"));
 
   // start display loop
   if( !this->initDisplay() ) {

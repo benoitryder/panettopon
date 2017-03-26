@@ -78,6 +78,23 @@ class StyleLoader
 };
 
 
+/// Basic style loader, loading from a given section
+class StyleLoaderResourceManager: public StyleLoader
+{
+ public:
+  StyleLoaderResourceManager(const ResourceManager& res_mgr, const std::string& name);
+  virtual ~StyleLoaderResourceManager() {}
+
+  virtual const ResourceManager& res_mgr() const { return res_mgr_; }
+  virtual bool searchStyle(const std::string& prop, std::string& key) const;
+  virtual std::string styleErrorSection() const { return name_; }
+
+ protected:
+  const ResourceManager& res_mgr_;
+  std::string name_;
+};
+
+
 /** @brief Style loader that search in a subsection
  *
  * If fallback is true, the loader will search in the parent loader if entry is
