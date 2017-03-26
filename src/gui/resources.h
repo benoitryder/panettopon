@@ -106,6 +106,7 @@ class ImageFrame
     const sf::Texture* image = nullptr;
     sf::IntRect rect;
     sf::IntRect inside;
+    sf::Color color = sf::Color::White;
     void load(const StyleLoader& loader);
     void apply(ImageFrame& o) const;
   };
@@ -113,6 +114,8 @@ class ImageFrame
   ImageFrame();
   /// Initialize the frame using image subrect and frame inside subrect
   void create(const sf::Texture* img, const sf::IntRect& rect, const sf::IntRect& inside);
+  /// Set drawing color
+  void setColor(const sf::Color& color) { color_ = color; }
   /// Draw the frame at given position, with given size
   void render(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& rect) const;
   /// Draw the frame centered on 0,0 with given size
@@ -122,6 +125,7 @@ class ImageFrame
   const sf::Texture* image_;
   sf::IntRect rect_;
   sf::IntRect inside_;
+  sf::Color color_;
 };
 
 
@@ -134,6 +138,7 @@ class ImageFrameX
     sf::IntRect rect;
     unsigned int inside_left;
     unsigned int inside_width;
+    sf::Color color = sf::Color::White;
     void load(const StyleLoader& loader);
     void apply(ImageFrameX& o) const;
   };
@@ -141,6 +146,8 @@ class ImageFrameX
   ImageFrameX();
   /// Initialize the frame using image subrect and margin
   void create(const sf::Texture* img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width);
+  /// Set drawing color
+  void setColor(const sf::Color& color) { color_ = color; }
   /// Draw the frame at given position, with given size
   void render(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& rect) const;
   /// Draw the frame centered on 0,0 with given width
@@ -151,6 +158,7 @@ class ImageFrameX
   sf::IntRect rect_;
   unsigned int inside_left_;
   unsigned int inside_width_;
+  sf::Color color_;
 };
 
 

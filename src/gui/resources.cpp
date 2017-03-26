@@ -191,7 +191,7 @@ void ImageTile::setToSprite(sf::Sprite* spr, bool center) const
 
 
 ImageFrame::ImageFrame():
-    image_(NULL)
+    image_(NULL), color_(sf::Color::White)
 {
 }
 
@@ -227,34 +227,34 @@ void ImageFrame::render(sf::RenderTarget& target, sf::RenderStates states, const
   const float tex_y2 = rect_.top + inside_.top  + inside_.height;
 
   const sf::Vertex vertices0[] = {
-    sf::Vertex(sf::Vector2f(img_x0, img_y0), sf::Vector2f(tex_x0, tex_y3)),
-    sf::Vertex(sf::Vector2f(img_x0, img_y1), sf::Vector2f(tex_x0, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y0), sf::Vector2f(tex_x1, tex_y3)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y1), sf::Vector2f(tex_x1, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y0), sf::Vector2f(tex_x2, tex_y3)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y1), sf::Vector2f(tex_x2, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y0), sf::Vector2f(tex_x3, tex_y3)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y1), sf::Vector2f(tex_x3, tex_y2)),
+    sf::Vertex(sf::Vector2f(img_x0, img_y0), color_, sf::Vector2f(tex_x0, tex_y3)),
+    sf::Vertex(sf::Vector2f(img_x0, img_y1), color_, sf::Vector2f(tex_x0, tex_y2)),
+    sf::Vertex(sf::Vector2f(img_x1, img_y0), color_, sf::Vector2f(tex_x1, tex_y3)),
+    sf::Vertex(sf::Vector2f(img_x1, img_y1), color_, sf::Vector2f(tex_x1, tex_y2)),
+    sf::Vertex(sf::Vector2f(img_x2, img_y0), color_, sf::Vector2f(tex_x2, tex_y3)),
+    sf::Vertex(sf::Vector2f(img_x2, img_y1), color_, sf::Vector2f(tex_x2, tex_y2)),
+    sf::Vertex(sf::Vector2f(img_x3, img_y0), color_, sf::Vector2f(tex_x3, tex_y3)),
+    sf::Vertex(sf::Vector2f(img_x3, img_y1), color_, sf::Vector2f(tex_x3, tex_y2)),
   };
   const sf::Vertex vertices1[] = {
-    sf::Vertex(sf::Vector2f(img_x0, img_y1), sf::Vector2f(tex_x0, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x0, img_y2), sf::Vector2f(tex_x0, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y1), sf::Vector2f(tex_x1, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y2), sf::Vector2f(tex_x1, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y1), sf::Vector2f(tex_x2, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y2), sf::Vector2f(tex_x2, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y1), sf::Vector2f(tex_x3, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y2), sf::Vector2f(tex_x3, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x0, img_y1), color_, sf::Vector2f(tex_x0, tex_y2)),
+    sf::Vertex(sf::Vector2f(img_x0, img_y2), color_, sf::Vector2f(tex_x0, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x1, img_y1), color_, sf::Vector2f(tex_x1, tex_y2)),
+    sf::Vertex(sf::Vector2f(img_x1, img_y2), color_, sf::Vector2f(tex_x1, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x2, img_y1), color_, sf::Vector2f(tex_x2, tex_y2)),
+    sf::Vertex(sf::Vector2f(img_x2, img_y2), color_, sf::Vector2f(tex_x2, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x3, img_y1), color_, sf::Vector2f(tex_x3, tex_y2)),
+    sf::Vertex(sf::Vector2f(img_x3, img_y2), color_, sf::Vector2f(tex_x3, tex_y1)),
   };
   const sf::Vertex vertices2[] = {
-    sf::Vertex(sf::Vector2f(img_x0, img_y2), sf::Vector2f(tex_x0, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x0, img_y3), sf::Vector2f(tex_x0, tex_y0)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y2), sf::Vector2f(tex_x1, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y3), sf::Vector2f(tex_x1, tex_y0)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y2), sf::Vector2f(tex_x2, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y3), sf::Vector2f(tex_x2, tex_y0)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y2), sf::Vector2f(tex_x3, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y3), sf::Vector2f(tex_x3, tex_y0)),
+    sf::Vertex(sf::Vector2f(img_x0, img_y2), color_, sf::Vector2f(tex_x0, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x0, img_y3), color_, sf::Vector2f(tex_x0, tex_y0)),
+    sf::Vertex(sf::Vector2f(img_x1, img_y2), color_, sf::Vector2f(tex_x1, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x1, img_y3), color_, sf::Vector2f(tex_x1, tex_y0)),
+    sf::Vertex(sf::Vector2f(img_x2, img_y2), color_, sf::Vector2f(tex_x2, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x2, img_y3), color_, sf::Vector2f(tex_x2, tex_y0)),
+    sf::Vertex(sf::Vector2f(img_x3, img_y2), color_, sf::Vector2f(tex_x3, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x3, img_y3), color_, sf::Vector2f(tex_x3, tex_y0)),
   };
 
   target.draw(vertices0, sizeof(vertices0)/sizeof(*vertices0), sf::TrianglesStrip, states);
@@ -283,11 +283,14 @@ void ImageFrame::Style::load(const StyleLoader& loader)
      inside.top < 0 || inside.top+inside.height > rect.height) {
     throw StyleError(key, "image inside not contained in image size");
   }
+
+  loader.fetchStyle<sf::Color>("Color", color);
 }
 
 void ImageFrame::Style::apply(ImageFrame& o) const
 {
   o.create(image, rect, inside);
+  o.setColor(color);
 }
 
 
@@ -325,16 +328,16 @@ void ImageFrameX::render(sf::RenderTarget& target, sf::RenderStates states, cons
 
   const sf::Vertex vertices[] = {
     // left
-    sf::Vertex(sf::Vector2f(img_x0, img_y0), sf::Vector2f(tex_x0, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x0, img_y1), sf::Vector2f(tex_x0, tex_y0)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y0), sf::Vector2f(tex_x1, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y1), sf::Vector2f(tex_x1, tex_y0)),
+    sf::Vertex(sf::Vector2f(img_x0, img_y0), color_, sf::Vector2f(tex_x0, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x0, img_y1), color_, sf::Vector2f(tex_x0, tex_y0)),
+    sf::Vertex(sf::Vector2f(img_x1, img_y0), color_, sf::Vector2f(tex_x1, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x1, img_y1), color_, sf::Vector2f(tex_x1, tex_y0)),
     // middle
-    sf::Vertex(sf::Vector2f(img_x2, img_y0), sf::Vector2f(tex_x2, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y1), sf::Vector2f(tex_x2, tex_y0)),
+    sf::Vertex(sf::Vector2f(img_x2, img_y0), color_, sf::Vector2f(tex_x2, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x2, img_y1), color_, sf::Vector2f(tex_x2, tex_y0)),
     // right
-    sf::Vertex(sf::Vector2f(img_x3, img_y0), sf::Vector2f(tex_x3, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y1), sf::Vector2f(tex_x3, tex_y0)),
+    sf::Vertex(sf::Vector2f(img_x3, img_y0), color_, sf::Vector2f(tex_x3, tex_y1)),
+    sf::Vertex(sf::Vector2f(img_x3, img_y1), color_, sf::Vector2f(tex_x3, tex_y0)),
   };
   target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::TrianglesStrip, states);
 }
@@ -361,11 +364,14 @@ void ImageFrameX::Style::load(const StyleLoader& loader)
   }
   inside_left = inside.first;
   inside_width = inside.second;
+
+  loader.fetchStyle<sf::Color>("Color", color);
 }
 
 void ImageFrameX::Style::apply(ImageFrameX& o) const
 {
   o.create(image, rect, inside_left, inside_width);
+  o.setColor(color);
 }
 
 
