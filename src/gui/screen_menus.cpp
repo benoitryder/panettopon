@@ -431,12 +431,15 @@ void ScreenLobby::submit()
 void ScreenLobby::updatePlayerFramesPos()
 {
   auto pos = player_frames_pos_;
+  unsigned int frame_color = 1;
   WFocusable* neighbor_first = nullptr;
   WFocusable* neighbor_up = nullptr;
   for(auto& kv : player_frames_) {
     auto& frame = kv.second;
     frame->setPosition(pos);
+    frame->frame().setColor(intf_.style().colors[frame_color]);
     pos += player_frames_dpos_;
+    frame_color++;
     if(frame->player().local()) {
       WChoice* choice_conf = &frame->choiceConf();
       if(neighbor_up) {

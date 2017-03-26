@@ -121,6 +121,7 @@ class WFrame: public Widget
  public:
   WFrame(const Screen& screen, const std::string& name);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+  void setColor(const sf::Color& c) { frame_.setColor(c); }
 
  protected:
   virtual const std::string& type() const;
