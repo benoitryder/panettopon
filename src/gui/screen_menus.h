@@ -88,11 +88,10 @@ class ScreenCreateServer: public Screen
 /** @brief Lobby (game preparation).
  *
  * Widgets:
- *  - PlayerFrame (frame)
- *  - PlayerRow (widget type)
+ *  - PlayerFrame (widget type)
  *
  * Style properties:
- *  - PlayerRowsPos, PlayerRowsDY
+ *  - PlayerFramesPos, PlayerFramesDPos
  */
 class ScreenLobby: public Screen
 {
@@ -117,10 +116,10 @@ class ScreenLobby: public Screen
    *  - Ready (sprite)
    *  - NickX, ReadyX
    */
-  class WPlayerRow: public WContainer
+  class WPlayerFrame: public WContainer
   {
    public:
-    WPlayerRow(const Screen& screen, const Player& pl);
+    WPlayerFrame(const Screen& screen, const Player& pl);
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
     const Player& player() const { return player_; }
     WChoice& choiceConf() const { return *choice_conf_; }
@@ -140,16 +139,16 @@ class ScreenLobby: public Screen
   };
 
   void submit();
-  void updatePlayerRowsPos();
+  void updatePlayerFramesPos();
 
  private:
   Player* player_; ///< Controlled player
   WFrame* player_frame_;
   WButton* button_ready_;
-  typedef std::map<PlId, std::unique_ptr<WPlayerRow>> PlayerRowsContainer;
-  PlayerRowsContainer player_rows_;
-  sf::Vector2f player_rows_pos_;
-  float player_rows_dy_;
+  typedef std::map<PlId, std::unique_ptr<WPlayerFrame>> PlayerFramesContainer;
+  PlayerFramesContainer player_frames_;
+  sf::Vector2f player_frames_pos_;
+  sf::Vector2f player_frames_dpos_;
 };
 
 

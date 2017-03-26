@@ -302,21 +302,21 @@ void ScreenLobby::enter()
   player_frame_ = container_.addWidget<WFrame>(*this, "PlayerFrame");
 
   const IniFile& style = this->style();
-  player_rows_pos_ = style.get<sf::Vector2f>({name_, "PlayerRowsPos"});
-  player_rows_dy_ = style.get<float>({name_, "PlayerRowsDY"});
+  player_frames_pos_ = style.get<sf::Vector2f>({name_, "PlayerFramesPos"});
+  player_frames_dpos_ = style.get<sf::Vector2f>({name_, "PlayerFramesDPos"});
 
   // add already connected players
   // set state of local players to LOBBY
   for(auto const& p : intf_.instance()->players()) {
     Player& pl = *p.second;
     PlId plid = pl.plid(); // intermediate variable because a ref is required
-    player_rows_.emplace(plid, std::make_unique<WPlayerRow>(*this, pl));
+    player_frames_.emplace(plid, std::make_unique<WPlayerFrame>(*this, pl));
     if(pl.local()) {
       intf_.instance()->playerSetState(&pl, Player::State::LOBBY);
     }
   }
 
-  this->updatePlayerRowsPos();
+  this->updatePlayerFramesPos();
 }
 
 void ScreenLobby::redraw()
@@ -324,7 +324,7 @@ void ScreenLobby::redraw()
   Screen::redraw();
 
   sf::RenderWindow& w = intf_.window();
-  for(auto& kv : player_rows_) {
+  for(auto& kv : player_frames_) {
     w.draw(*kv.second);
   }
 }
@@ -333,26 +333,26 @@ void ScreenLobby::redraw()
 bool ScreenLobby::onInputEvent(const sf::Event& ev)
 {
   // get currently selected row, to detect conf changes
-  WPlayerRow* player_row = 0;
+  WPlayerFrame* player_frame = 0;
   unsigned int conf_index;
-  for(auto const& kv : player_rows_) {
+  for(auto const& kv : player_frames_) {
     auto& choice = kv.second->choiceConf();
     if(focused_ == &choice) {
-      player_row = kv.second.get();
+      player_frame = kv.second.get();
       conf_index = choice.index();
       break;
     }
   }
 
   if(Screen::onInputEvent(ev)) {
-    if(player_row) {
-      auto choice = player_row->choiceConf();
+    if(player_frame) {
+      auto choice = player_frame->choiceConf();
       if(choice.index() != conf_index) {
         // choice updated
         auto instance = intf().instance();
         auto& conf_name = choice.value();
         // get a non-const player
-        Player* pl = instance->player(player_row->player().plid());
+        Player* pl = instance->player(player_frame->player().plid());
         auto* fc = instance->conf().fieldConf(conf_name);
         if(fc) {  // should always be true
           instance->playerSetFieldConf(pl, *fc);
@@ -367,7 +367,7 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
     }
     return true;
   } else if(InputBinding::MenuConfirm.match(ev)) {
-    if(player_row) {
+    if(player_frame) {
       ScreenLobby::submit();
     }
   } else if(InputBinding::MenuCancel.match(ev)) {
@@ -387,7 +387,7 @@ void ScreenLobby::onStateChange()
 
 void ScreenLobby::onServerChangeFieldConfs()
 {
-  for(auto const& kv : player_rows_) {
+  for(auto const& kv : player_frames_) {
     kv.second->updateConfItems();
   }
 }
@@ -395,29 +395,29 @@ void ScreenLobby::onServerChangeFieldConfs()
 void ScreenLobby::onPlayerJoined(Player* pl)
 {
   PlId plid = pl->plid(); // intermediate variable to help g++
-  auto p = player_rows_.emplace(plid, std::make_unique<WPlayerRow>(*this, *pl));
+  auto p = player_frames_.emplace(plid, std::make_unique<WPlayerFrame>(*this, *pl));
   p.first->second->updateConfItems();
-  this->updatePlayerRowsPos();
+  this->updatePlayerFramesPos();
 }
 
 void ScreenLobby::onPlayerChangeNick(Player* pl, const std::string& )
 {
-  player_rows_.find(pl->plid())->second->update();
+  player_frames_.find(pl->plid())->second->update();
 }
 
 void ScreenLobby::onPlayerStateChange(Player* pl)
 {
   if(pl->state() == Player::State::QUIT) {
-    player_rows_.erase(pl->plid());
-    this->updatePlayerRowsPos();
+    player_frames_.erase(pl->plid());
+    this->updatePlayerFramesPos();
   } else {
-    player_rows_.find(pl->plid())->second->update();
+    player_frames_.find(pl->plid())->second->update();
   }
 }
 
 void ScreenLobby::onPlayerChangeFieldConf(Player* pl)
 {
-  player_rows_.find(pl->plid())->second->update();
+  player_frames_.find(pl->plid())->second->update();
 }
 
 
@@ -430,15 +430,15 @@ void ScreenLobby::submit()
   }
 }
 
-void ScreenLobby::updatePlayerRowsPos()
+void ScreenLobby::updatePlayerFramesPos()
 {
-  float y = player_rows_pos_.y;
+  auto pos = player_frames_pos_;
   WFocusable* neighbor_first = nullptr;
   WFocusable* neighbor_up = nullptr;
-  for(auto& kv : player_rows_) {
+  for(auto& kv : player_frames_) {
     auto& row = kv.second;
-    row->setPosition(player_rows_pos_.x, y);
-    y += player_rows_dy_;
+    row->setPosition(pos);
+    pos += player_frames_dpos_;
     if(row->player().local()) {
       WChoice* choice_conf = &row->choiceConf();
       if(neighbor_up) {
@@ -462,12 +462,12 @@ void ScreenLobby::updatePlayerRowsPos()
 }
 
 
-const std::string& ScreenLobby::WPlayerRow::type() const {
-  static const std::string type("PlayerRow");
+const std::string& ScreenLobby::WPlayerFrame::type() const {
+  static const std::string type("PlayerFrame");
   return type;
 }
 
-ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
+ScreenLobby::WPlayerFrame::WPlayerFrame(const Screen& screen, const Player& pl):
     WContainer(screen, ""), player_(pl)
 {
   this->applyStyle(nick_, "Nick");
@@ -484,7 +484,7 @@ ScreenLobby::WPlayerRow::WPlayerRow(const Screen& screen, const Player& pl):
   this->update();
 }
 
-void ScreenLobby::WPlayerRow::draw(sf::RenderTarget& target, sf::RenderStates states) const
+void ScreenLobby::WPlayerFrame::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   WContainer::draw(target, states);
   states.transform *= getTransform();
@@ -494,7 +494,7 @@ void ScreenLobby::WPlayerRow::draw(sf::RenderTarget& target, sf::RenderStates st
   }
 }
 
-void ScreenLobby::WPlayerRow::update()
+void ScreenLobby::WPlayerFrame::update()
 {
   nick_.setString(player_.nick());
   const std::string& conf_name = player_.fieldConf().name;
@@ -503,7 +503,7 @@ void ScreenLobby::WPlayerRow::update()
   }
 }
 
-void ScreenLobby::WPlayerRow::updateConfItems()
+void ScreenLobby::WPlayerFrame::updateConfItems()
 {
   auto conf_name = player_.fieldConf().name;
   if(player_.local()) {
