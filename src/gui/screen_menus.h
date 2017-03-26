@@ -111,10 +111,11 @@ class ScreenLobby: public Screen
   /** @brief Display a row of information for a player.
    *
    * Style properties:
-   *  - Nick (text)
+   *  - Border (frame)
+   *  - Nick (label)
    *  - Conf (choice)
    *  - Ready (sprite)
-   *  - NickX, ReadyX
+   *  - Ready.Pos
    */
   class WPlayerFrame: public WContainer
   {
@@ -133,7 +134,8 @@ class ScreenLobby: public Screen
 
    private:
     const Player& player_;
-    sf::Text nick_;
+    WFrame* frame_;
+    WLabel* nick_;
     WChoice* choice_conf_;
     sf::Sprite ready_;
   };
@@ -143,7 +145,6 @@ class ScreenLobby: public Screen
 
  private:
   Player* player_; ///< Controlled player
-  WFrame* player_frame_;
   WButton* button_ready_;
   typedef std::map<PlId, std::unique_ptr<WPlayerFrame>> PlayerFramesContainer;
   PlayerFramesContainer player_frames_;

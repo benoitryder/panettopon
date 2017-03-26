@@ -299,8 +299,6 @@ void ScreenLobby::enter()
   assert( player_ );
   assert( intf_.instance() );
 
-  player_frame_ = container_.addWidget<WFrame>(*this, "PlayerFrame");
-
   const IniFile& style = this->style();
   player_frames_pos_ = style.get<sf::Vector2f>({name_, "PlayerFramesPos"});
   player_frames_dpos_ = style.get<sf::Vector2f>({name_, "PlayerFramesDPos"});
@@ -470,15 +468,14 @@ const std::string& ScreenLobby::WPlayerFrame::type() const {
 ScreenLobby::WPlayerFrame::WPlayerFrame(const Screen& screen, const Player& pl):
     WContainer(screen, ""), player_(pl)
 {
-  this->applyStyle(nick_, "Nick");
-  nick_.setOrigin(0, (nick_.getFont()->getLineSpacing(nick_.getCharacterSize())+2)/2);
-  nick_.setPosition(getStyle<float>("NickX"), 0);
+  frame_ = addWidget<WFrame>(screen, IniFile::join(type(), "Border"));
 
+  nick_ = addWidget<WLabel>(screen, IniFile::join(type(), "Nick"));
   choice_conf_ = addWidget<WChoice>(screen, IniFile::join(type(), "Conf"));
 
   this->applyStyle(ready_, "Ready");
   ready_.setOrigin(ready_.getLocalBounds().width/2.f, ready_.getLocalBounds().height/2.f);
-  ready_.setPosition(getStyle<float>("ReadyX"), 0);
+  ready_.setPosition(getStyle<sf::Vector2f>("Ready.Pos"));
 
   this->updateConfItems();
   this->update();
@@ -488,7 +485,6 @@ void ScreenLobby::WPlayerFrame::draw(sf::RenderTarget& target, sf::RenderStates 
 {
   WContainer::draw(target, states);
   states.transform *= getTransform();
-  target.draw(nick_, states);
   if(player_.state() == Player::State::LOBBY_READY) {
     target.draw(ready_, states);
   }
@@ -496,7 +492,7 @@ void ScreenLobby::WPlayerFrame::draw(sf::RenderTarget& target, sf::RenderStates 
 
 void ScreenLobby::WPlayerFrame::update()
 {
-  nick_.setString(player_.nick());
+  nick_->setText(player_.nick());
   const std::string& conf_name = player_.fieldConf().name;
   if(!choice_conf_->selectValue(conf_name)) {
     choice_conf_->select(choice_conf_->addItem(conf_name));
