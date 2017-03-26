@@ -89,7 +89,6 @@ class ScreenCreateServer: public Screen
  *
  * Widgets:
  *  - PlayerFrame (frame)
- *  - Ready (button)
  *  - PlayerRow (widget type)
  *
  * Style properties:
@@ -141,7 +140,6 @@ class ScreenLobby: public Screen
   };
 
   void submit();
-  void updateReadyButtonCaption();
   void updatePlayerRowsPos();
 
  private:

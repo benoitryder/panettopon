@@ -298,15 +298,8 @@ void ScreenLobby::enter()
 {
   assert( player_ );
   assert( intf_.instance() );
-  const ResourceManager& res_mgr = intf_.res_mgr();
 
   player_frame_ = container_.addWidget<WFrame>(*this, "PlayerFrame");
-
-  button_ready_ = container_.addWidget<WButton>(*this, "Ready");
-  button_ready_->setCaption(res_mgr.getLang({name_, "Ready"}));
-  button_ready_->setCallback(std::bind(&ScreenLobby::submit, this));
-
-  button_ready_->setNeighbors(NULL, NULL, NULL, NULL);
 
   const IniFile& style = this->style();
   player_rows_pos_ = style.get<sf::Vector2f>({name_, "PlayerRowsPos"});
@@ -323,9 +316,7 @@ void ScreenLobby::enter()
     }
   }
 
-  this->updateReadyButtonCaption();
   this->updatePlayerRowsPos();
-  this->focus(button_ready_);
 }
 
 void ScreenLobby::redraw()
@@ -344,14 +335,12 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
   // get currently selected row, to detect conf changes
   WPlayerRow* player_row = 0;
   unsigned int conf_index;
-  if(focused_ != button_ready_) {
-    for(auto const& kv : player_rows_) {
-      auto& choice = kv.second->choiceConf();
-      if(focused_ == &choice) {
-        player_row = kv.second.get();
-        conf_index = choice.index();
-        break;
-      }
+  for(auto const& kv : player_rows_) {
+    auto& choice = kv.second->choiceConf();
+    if(focused_ == &choice) {
+      player_row = kv.second.get();
+      conf_index = choice.index();
+      break;
     }
   }
 
@@ -371,14 +360,17 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
       }
     }
 
-    // force focus if ready; it's simpler this way since there is no need
+    // unfocus if ready; it's simpler this way since there is no need
     // to update neighbors
     if(player_->state() == Player::State::LOBBY_READY) {
-      focus(button_ready_);
+      focus(nullptr);
     }
     return true;
-  }
-  if(InputBinding::MenuCancel.match(ev)) {
+  } else if(InputBinding::MenuConfirm.match(ev)) {
+    if(player_row) {
+      ScreenLobby::submit();
+    }
+  } else if(InputBinding::MenuCancel.match(ev)) {
     intf_.swapScreen(new ScreenStart(intf_));
     return true;
   }
@@ -388,9 +380,7 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
 void ScreenLobby::onStateChange()
 {
   auto state = intf_.instance()->state();
-  if(state == GameInstance::State::LOBBY) {
-    this->updateReadyButtonCaption();
-  } else if(state == GameInstance::State::GAME_INIT) {
+  if(state == GameInstance::State::GAME_INIT) {
     intf_.swapScreen(new ScreenGame(intf_, player_));
   }
 }
@@ -437,39 +427,38 @@ void ScreenLobby::submit()
   assert( instance );
   if(instance->state() == GameInstance::State::LOBBY) {
     instance->playerSetState(player_, player_->state() == Player::State::LOBBY ? Player::State::LOBBY_READY : Player::State::LOBBY);
-    this->updateReadyButtonCaption();
-  }
-}
-
-void ScreenLobby::updateReadyButtonCaption()
-{
-  bool ready = player_->state() == Player::State::LOBBY_READY;
-  const std::string caption = ready ? "Waiting" : "Ready";
-  button_ready_->setCaption(intf_.res_mgr().getLang({"ScreenLobby", caption}));
-  // force focus update, just in case
-  if(ready) {
-    focus(button_ready_);
   }
 }
 
 void ScreenLobby::updatePlayerRowsPos()
 {
-  PlayerRowsContainer::iterator it;
   float y = player_rows_pos_.y;
-  WFocusable *neighbor_up = button_ready_;
+  WFocusable* neighbor_first = nullptr;
+  WFocusable* neighbor_up = nullptr;
   for(auto& kv : player_rows_) {
     auto& row = kv.second;
     row->setPosition(player_rows_pos_.x, y);
     y += player_rows_dy_;
     if(row->player().local()) {
       WChoice* choice_conf = &row->choiceConf();
-      neighbor_up->setNeighbor(WFocusable::NEIGHBOR_DOWN, choice_conf);
-      choice_conf->setNeighbor(WFocusable::NEIGHBOR_UP, neighbor_up);
+      if(neighbor_up) {
+        neighbor_up->setNeighbor(WFocusable::NEIGHBOR_DOWN, choice_conf);
+        choice_conf->setNeighbor(WFocusable::NEIGHBOR_UP, neighbor_up);
+      }
       neighbor_up = choice_conf;
+      if(!neighbor_first) {
+        neighbor_first = neighbor_up;
+      }
     }
   }
-  neighbor_up->setNeighbor(WFocusable::NEIGHBOR_DOWN, button_ready_);
-  button_ready_->setNeighbor(WFocusable::NEIGHBOR_UP, neighbor_up);
+
+  if(neighbor_first) {
+    neighbor_up->setNeighbor(WFocusable::NEIGHBOR_DOWN, neighbor_first);
+    neighbor_first->setNeighbor(WFocusable::NEIGHBOR_UP, neighbor_up);
+    if(!focused_) {
+      focus(neighbor_first);
+    }
+  }
 }
 
 
