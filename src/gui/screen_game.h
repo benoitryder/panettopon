@@ -102,11 +102,7 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
   typedef std::map<FldId, std::unique_ptr<FieldDisplay>> FieldDisplayContainer;
   FieldDisplayContainer field_displays_;
 
-  /// Key bindings.
-  struct {
-    InputBinding up, down, left, right;
-    InputBinding swap, raise;
-  } keys_;
+  InputMapping keys_;
 };
 
 

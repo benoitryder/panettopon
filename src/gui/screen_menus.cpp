@@ -57,7 +57,7 @@ bool ScreenStart::onInputEvent(const sf::Event& ev)
   if(Screen::onInputEvent(ev)) {
     return true;
   }
-  if(InputBinding::MenuCancel.match(ev)) {
+  if(InputBinding::GlobalCancel.match(ev)) {
     if( focused_ == button_exit_ ) {
       intf_.swapScreen(nullptr);
     } else {
@@ -142,10 +142,10 @@ bool ScreenJoinServer::onInputEvent(const sf::Event& ev)
   if(Screen::onInputEvent(ev)) {
     return true;
   }
-  if(InputBinding::MenuCancel.match(ev)) {
+  if(InputBinding::GlobalCancel.match(ev)) {
     intf_.swapScreen(new ScreenStart(intf_));
     return true;
-  } else if(InputBinding::MenuConfirm.match(ev)) {
+  } else if(InputBinding::GlobalConfirm.match(ev)) {
     this->submit();
     return true;
   }
@@ -246,10 +246,10 @@ bool ScreenCreateServer::onInputEvent(const sf::Event& ev)
   if(Screen::onInputEvent(ev)) {
     return true;
   }
-  if(InputBinding::MenuCancel.match(ev)) {
+  if(InputBinding::GlobalCancel.match(ev)) {
     intf_.swapScreen(new ScreenStart(intf_));
     return true;
-  } else if(InputBinding::MenuConfirm.match(ev)) {
+  } else if(InputBinding::GlobalConfirm.match(ev)) {
     this->submit();
     return true;
   }
@@ -364,11 +364,11 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
       focus(nullptr);
     }
     return true;
-  } else if(InputBinding::MenuConfirm.match(ev)) {
+  } else if(InputBinding::GlobalConfirm.match(ev)) {
     if(player_frame) {
       ScreenLobby::submit();
     }
-  } else if(InputBinding::MenuCancel.match(ev)) {
+  } else if(InputBinding::GlobalCancel.match(ev)) {
     intf_.swapScreen(new ScreenStart(intf_));
     return true;
   }

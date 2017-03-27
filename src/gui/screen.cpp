@@ -54,20 +54,20 @@ bool Screen::onInputEvent(const sf::Event& ev)
   }
 
   WFocusable* next_focused = NULL;
-  if(InputBinding::MenuUp.match(ev)) {
+  if(InputBinding::GlobalUp.match(ev)) {
     next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
-  } else if(InputBinding::MenuDown.match(ev)) {
+  } else if(InputBinding::GlobalDown.match(ev)) {
     next_focused = focused_->neighbor(WFocusable::NEIGHBOR_DOWN);
-  } else if(InputBinding::MenuLeft.match(ev)) {
+  } else if(InputBinding::GlobalLeft.match(ev)) {
     next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
-  } else if(InputBinding::MenuRight.match(ev)) {
+  } else if(InputBinding::GlobalRight.match(ev)) {
     next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
-  } else if(InputBinding::MenuFocusNext.match(ev)) {
+  } else if(InputBinding::GlobalFocusNext.match(ev)) {
     next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
     if(!next_focused) {
       next_focused = focused_->neighbor(WFocusable::NEIGHBOR_DOWN);
     }
-  } else if(InputBinding::MenuFocusPrevious.match(ev)) {
+  } else if(InputBinding::GlobalFocusPrevious.match(ev)) {
     next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
     if(!next_focused) {
       next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);

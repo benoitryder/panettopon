@@ -142,7 +142,7 @@ void WButton::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
 bool WButton::onInputEvent(const sf::Event& ev)
 {
-  if(InputBinding::MenuConfirm.match(ev)) {
+  if(InputBinding::GlobalConfirm.match(ev)) {
     if( callback_ ) {
       callback_();
       return true;
@@ -475,10 +475,10 @@ void WChoice::draw(sf::RenderTarget& target, sf::RenderStates states) const
 
 bool WChoice::onInputEvent(const sf::Event& ev)
 {
-  if(InputBinding::MenuLeft.match(ev)) {
+  if(InputBinding::GlobalLeft.match(ev)) {
     this->select( index_ == 0 ? items_.size()-1 : index_-1 );
     return true;
-  } else if(InputBinding::MenuRight.match(ev)) {
+  } else if(InputBinding::GlobalRight.match(ev)) {
     this->select( index_ == items_.size()-1 ? 0 : index_+1 );
     return true;
   }

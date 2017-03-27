@@ -101,6 +101,12 @@ class GuiInterface: public ClientInstance::Observer
     unsigned int screen_width, screen_height;
   } window_conf_;
 
+  /// Configured input mappings, grouped by type
+  struct {
+    std::vector<InputMapping> joystick;
+    std::vector<InputMapping> keyboard;
+  } input_mappings_;
+
   bool initDisplay();
   void endDisplay();
   void enterFirstScreen();

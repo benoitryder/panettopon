@@ -5,6 +5,8 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Window/Joystick.hpp>
 
+class IniFile;
+
 namespace gui {
 
 struct InvalidInputBindingError: public std::runtime_error
@@ -12,23 +14,17 @@ struct InvalidInputBindingError: public std::runtime_error
   InvalidInputBindingError(const std::string& name, const std::string& msg);
 };
 
+enum class InputType {
+  NONE,
+  KEYBOARD,
+  JOYSTICK,
+  GLOBAL,
+};
 
 /** @brief Binding of a user event
  *
  * A single class for input configuration.
  * Bindings are intended to be matched against received sf::Event.
- *
- * For keyboard keys, binding names are:
- * lowercase letters, digits, one of <tt>();,.'/\\~=-</tt>,
- * \c space, \c return, \c backspace, \c tab, \c escape, \c pause,
- * \c home, \c end, \c pageup, \c pagdown, \c insert, \c delete,
- * \c num0 to \c num9, \c num+, \c num-, \c num*, \c num/
- * \c left, \c right, \c up, \c down,
- * \c f1 to \c f12.
- *
- * For joystick buttons, binding names use this format: \c joyN-B where \c N is
- * a joystick number (starting at 0) and B is a button number (starting at 0),
- * \c up, \c down, \c left or \c right.
  */
 class InputBinding
 {
@@ -41,72 +37,115 @@ class InputBinding
    */
   static constexpr float JOYSTICK_ACTIVE_THRESHOLD = 65.;
 
-  enum class Type {
-    NONE,
-    KEYBOARD,
-    JOYSTICK,
-    MENU,
-  };
-
-  /// Special joystick buttons
-  enum {
-    // positions with "small" deadzone, not match()-able
+ public:
+  /// Special joystick buttons for directions
+  enum : unsigned int {
     JOYSTICK_UP = sf::Joystick::Count + 100,
     JOYSTICK_DOWN,
     JOYSTICK_LEFT,
     JOYSTICK_RIGHT,
   };
 
-  /// Menu type actions
-  enum class MenuAction {
+  /// Global actions
+  enum class GlobalAction {
     UP, DOWN, LEFT, RIGHT,
     CONFIRM, CANCEL,
     FOCUS_NEXT, FOCUS_PREVIOUS,
   };
 
- public:
+  struct Keyboard {
+    sf::Keyboard::Key code_;
+  };
+
+  struct Joystick {
+    unsigned int id_;
+    unsigned int button_;
+  };
+
+  struct Global {
+    GlobalAction action_;
+  };
+
   /// Build a never matched, never active binding
-  InputBinding();
-  /// Build a menu binding
-  constexpr InputBinding(MenuAction action);
+  InputBinding(): type_(InputType::NONE) {}
+  /// Build a global binding
+  constexpr InputBinding(GlobalAction action): type_(InputType::GLOBAL), global_({action}) {}
+  /// Build a keyboard binding
+  constexpr InputBinding(sf::Keyboard::Key code): type_(InputType::KEYBOARD), keyboard_({code}) {}
+  /// Build a joystick binding
+  constexpr InputBinding(Joystick v): type_(InputType::JOYSTICK), joystick_(v) {}
 
-  /// Build a binding from its configuration name
-  static InputBinding fromName(const std::string& name);
+  /** @brief Build a keyboard binding from its configuration name
+   *
+   * Valid names are:
+   * lowercase letters, digits, one of <tt>();,.'/\\~=-</tt>,
+   * \c space, \c return, \c backspace, \c tab, \c escape, \c pause,
+   * \c home, \c end, \c pageup, \c pagdown, \c insert, \c delete,
+   * \c num0 to \c num9, \c num+, \c num-, \c num*, \c num/
+   * \c left, \c right, \c up, \c down,
+   * \c f1 to \c f12.
+   */
+  static InputBinding fromKeyboardName(const std::string& name);
 
-  // Predefined menu bindings
-  static const InputBinding MenuUp;
-  static const InputBinding MenuDown;
-  static const InputBinding MenuLeft;
-  static const InputBinding MenuRight;
-  static const InputBinding MenuConfirm;
-  static const InputBinding MenuCancel;
-  static const InputBinding MenuFocusNext;
-  static const InputBinding MenuFocusPrevious;
+  /** @brief Build a joystick binding from its configuration name
+   *
+   * Valid names are button numbers, \c up, \c down, \c left, \c right.
+   */
+  static InputBinding fromJoystickName(const std::string& name);
 
+  /// Change the joystick ID associated to the binding
+  void setJoystickId(unsigned int id);
+
+  // Predefined global bindings
+  static const InputBinding GlobalUp;
+  static const InputBinding GlobalDown;
+  static const InputBinding GlobalLeft;
+  static const InputBinding GlobalRight;
+  static const InputBinding GlobalConfirm;
+  static const InputBinding GlobalCancel;
+  static const InputBinding GlobalFocusNext;
+  static const InputBinding GlobalFocusPrevious;
+
+  InputType type() const { return type_; }
 
   /** @brief Return true if binding is currently "pressed"
-   * @note menu bindings never return true.
+   * @note Global bindings never return true.
    */
   bool isActive() const;
-  /** @brief Match the binding against an event
-   * @note Special joystick direction bindings never return true.
-   */
+  /// Match the binding against an event
   bool match(const sf::Event& event) const;
 
  private:
-  Type type_;
+  InputType type_;
   union {
-    struct {
-      sf::Keyboard::Key code_;
-    } keyboard_;
-    struct {
-      unsigned int id_;
-      unsigned int button_;
-    } joystick_;
-    struct {
-      MenuAction action_;
-    } menu_;
+    Keyboard keyboard_;
+    Joystick joystick_;
+    Global global_;
   };
+};
+
+
+/** @brief Set of bindings needed by a player
+ *
+ * All bindings are assumed to have the same type.
+ */
+struct InputMapping
+{
+  /// Create a new mapping with NONE type
+  InputMapping(): up{} {};
+
+  InputBinding up, down, left, right;
+  InputBinding swap, raise;
+  InputBinding confirm, cancel;
+
+  InputType type() const { return up.type(); }
+  void setJoystickId(unsigned int id);
+
+  /// Parse a mapping from a configuration file
+  static InputMapping parse(const IniFile& ini, const std::string section);
+
+  static InputMapping DefaultKeyboardMapping;
+  static InputMapping DefaultJoystickMapping;
 };
 
 

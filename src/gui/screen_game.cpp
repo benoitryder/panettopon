@@ -96,12 +96,7 @@ ScreenGame::ScreenGame(GuiInterface& intf, Player* pl):
     player_(pl),
     input_scheduler_(*intf.instance(), *this, intf.io_service())
 {
-  keys_.up = InputBinding::fromName("up");
-  keys_.down = InputBinding::fromName("down");
-  keys_.left = InputBinding::fromName("left");
-  keys_.right = InputBinding::fromName("right");
-  keys_.swap = InputBinding::fromName("d");
-  keys_.raise = InputBinding::fromName("f");
+  keys_ = InputMapping::DefaultKeyboardMapping;
 }
 
 void ScreenGame::enter()
@@ -131,10 +126,10 @@ bool ScreenGame::onInputEvent(const sf::Event& ev)
     return true;
   }
 
-  if(InputBinding::MenuCancel.match(ev)) {
+  if(InputBinding::GlobalCancel.match(ev)) {
     intf_.swapScreen(new ScreenStart(intf_));
     return true;
-  } else if(InputBinding::MenuConfirm.match(ev)) {
+  } else if(InputBinding::GlobalConfirm.match(ev)) {
     if(intf_.instance()->state() == GameInstance::State::LOBBY) {
       intf_.swapScreen(new ScreenLobby(intf_, player_));
       return true;

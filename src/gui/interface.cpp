@@ -73,6 +73,32 @@ bool GuiInterface::run(IniFile* cfg)
     cfg->set("Client.Nick", "Player");
   }
 
+  // load input mappings
+  for(unsigned int i=1; ; i++) {
+    const std::string section = IniFile::join({CONF_SECTION, "Mapping", std::to_string(i)});
+    if(!cfg->has({section, "Type"})) {
+      break;
+    }
+    InputMapping mapping = InputMapping::parse(*cfg, section);
+    if(mapping.type() == InputType::KEYBOARD) {
+      input_mappings_.keyboard.push_back(mapping);
+    } else if(mapping.type() == InputType::JOYSTICK) {
+      input_mappings_.joystick.push_back(mapping);
+    }
+  }
+  if(input_mappings_.keyboard.size() == 0) {
+    LOG("no keyboard mappings in conf, use default");
+    input_mappings_.keyboard.push_back(InputMapping::DefaultKeyboardMapping);
+  } else {
+    LOG("keyboard mappings in conf: %lu", input_mappings_.keyboard.size());
+  }
+  if(input_mappings_.joystick.size() == 0) {
+    LOG("no joystick mappings in conf, use default");
+    input_mappings_.joystick.push_back(InputMapping::DefaultJoystickMapping);
+  } else {
+    LOG("joystick mappings in conf: %lu", input_mappings_.joystick.size());
+  }
+
   style_.load(StyleLoaderResourceManager(res_mgr_, "Global"));
 
   // start display loop
