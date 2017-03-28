@@ -2,7 +2,6 @@
 #include "screen_menus.h"
 #include "screen_game.h"
 #include "interface.h"
-#include "input.h"
 #include "../server.h"
 #include "../log.h"
 
@@ -57,7 +56,7 @@ bool ScreenStart::onInputEvent(const sf::Event& ev)
   if(Screen::onInputEvent(ev)) {
     return true;
   }
-  if(InputBinding::GlobalCancel.match(ev)) {
+  if(InputMapping::Global.cancel.match(ev)) {
     if( focused_ == button_exit_ ) {
       intf_.swapScreen(nullptr);
     } else {
@@ -75,14 +74,14 @@ void ScreenStart::onDebugStart()
   Player* pl1 = intf_.server()->newLocalPlayer("Player 1");
   Player* pl2 = intf_.server()->newLocalPlayer("Player 2");
   // swap to screen game
-  intf_.swapScreen(new ScreenGame(intf_, pl1));
+  auto new_screen = std::make_unique<ScreenGame>(intf_);
+  new_screen->setPlayerMapping(*pl1, InputMapping::DefaultKeyboardMapping);
+  new_screen->setPlayerMapping(*pl2, InputMapping::DefaultKeyboardMapping);
+  intf_.swapScreen(new_screen.release());
   // lobby: players are ready
   GameInstance* instance = intf_.instance();
   instance->playerSetState(pl1, Player::State::LOBBY_READY);
   instance->playerSetState(pl2, Player::State::LOBBY_READY);
-  // game start: players are ready (again)
-  instance->playerSetState(pl1, Player::State::GAME_READY);
-  instance->playerSetState(pl2, Player::State::GAME_READY);
 }
 
 void ScreenStart::onJoinServer()
@@ -98,7 +97,7 @@ void ScreenStart::onCreateServer()
 
 ScreenJoinServer::ScreenJoinServer(GuiInterface& intf):
     Screen(intf, "ScreenJoinServer"),
-    submitting_(false)
+    submitting_event_{sf::Event::Count, {}}
 {
 }
 
@@ -136,17 +135,17 @@ void ScreenJoinServer::enter()
 
 bool ScreenJoinServer::onInputEvent(const sf::Event& ev)
 {
-  if( submitting_ ) {
+  if(submitting_event_.type != sf::Event::Count) {
     return true;  // ignore input
   }
   if(Screen::onInputEvent(ev)) {
     return true;
   }
-  if(InputBinding::GlobalCancel.match(ev)) {
+  if(InputMapping::Global.cancel.match(ev)) {
     intf_.swapScreen(new ScreenStart(intf_));
     return true;
-  } else if(InputBinding::GlobalConfirm.match(ev)) {
-    this->submit();
+  } else if(InputMapping::Global.confirm.match(ev)) {
+    this->submit(ev);
     return true;
   }
   return false;
@@ -155,13 +154,18 @@ bool ScreenJoinServer::onInputEvent(const sf::Event& ev)
 void ScreenJoinServer::onPlayerJoined(Player* pl)
 {
   if( pl->local() ) {
-    intf_.swapScreen(new ScreenLobby(intf_, pl));
+    assert(submitting_event_.type != sf::Event::Count);
+    auto new_screen = std::make_unique<ScreenLobby>(intf_);
+    InputMapping mapping = new_screen->getUnusedInputMapping(submitting_event_);
+    assert(mapping.type() != InputType::NONE);
+    new_screen->addLocalPlayer(*pl, mapping);
+    intf_.swapScreen(new_screen.release());
   }
 }
 
 void ScreenJoinServer::onServerConnect(bool success)
 {
-  submitting_ = false;
+  assert(submitting_event_.type != sf::Event::Count);
   if(success) {
     intf_.client()->newLocalPlayer(entry_nick_->text());
   }
@@ -169,13 +173,13 @@ void ScreenJoinServer::onServerConnect(bool success)
 
 void ScreenJoinServer::onServerDisconnect()
 {
-  submitting_ = false;
+  submitting_event_.type = sf::Event::Count;
   intf_.stopInstance();
 }
 
-void ScreenJoinServer::submit()
+void ScreenJoinServer::submit(const sf::Event& ev)
 {
-  assert( !submitting_ );
+  assert(submitting_event_.type == sf::Event::Count);
   //TODO display errors to the user
   if( entry_nick_->text().empty() ) {
     // TODO check nick is valid, not only not empty
@@ -197,7 +201,7 @@ void ScreenJoinServer::submit()
   intf_.cfg().set("Global.Port", port);
   intf_.cfg().set("Client.Nick", entry_nick_->text());
   intf_.startClient(entry_host_->text(), port);
-  submitting_ = true;
+  submitting_event_ = ev;
 }
 
 
@@ -246,17 +250,17 @@ bool ScreenCreateServer::onInputEvent(const sf::Event& ev)
   if(Screen::onInputEvent(ev)) {
     return true;
   }
-  if(InputBinding::GlobalCancel.match(ev)) {
+  if(InputMapping::Global.cancel.match(ev)) {
     intf_.swapScreen(new ScreenStart(intf_));
     return true;
-  } else if(InputBinding::GlobalConfirm.match(ev)) {
-    this->submit();
+  } else if(InputMapping::Global.confirm.match(ev)) {
+    this->submit(ev);
     return true;
   }
   return false;
 }
 
-void ScreenCreateServer::submit()
+void ScreenCreateServer::submit(const sf::Event& ev)
 {
   //TODO display errors to the user
   if( entry_nick_->text().empty() ) {
@@ -283,38 +287,41 @@ void ScreenCreateServer::submit()
   intf_.cfg().set("Client.Nick", entry_nick_->text());
   intf_.cfg().set("Server.PlayerNumber", player_nb);
   intf_.startServer(port);
+
+  auto new_screen = std::make_unique<ScreenLobby>(intf_);
+  InputMapping mapping = new_screen->getUnusedInputMapping(ev);
+  assert(mapping.type() != InputType::NONE);
   Player* pl = intf_.server()->newLocalPlayer(entry_nick_->text());
-  intf_.swapScreen(new ScreenLobby(intf_, pl));
+  new_screen->addLocalPlayer(*pl, mapping);
+  intf_.swapScreen(new_screen.release());
 }
 
 
-ScreenLobby::ScreenLobby(GuiInterface& intf, Player* pl):
-    Screen(intf, "ScreenLobby"),
-    player_(pl)
+ScreenLobby::ScreenLobby(GuiInterface& intf):
+    Screen(intf, "ScreenLobby")
 {
 }
 
 void ScreenLobby::enter()
 {
-  assert( player_ );
   assert( intf_.instance() );
 
   const IniFile& style = this->style();
   player_frames_pos_ = style.get<sf::Vector2f>({name_, "PlayerFramesPos"});
   player_frames_dpos_ = style.get<sf::Vector2f>({name_, "PlayerFramesDPos"});
 
-  // add already connected players
-  // set state of local players to LOBBY
-  for(auto const& p : intf_.instance()->players()) {
-    Player& pl = *p.second;
-    PlId plid = pl.plid(); // intermediate variable because a ref is required
-    player_frames_.emplace(plid, std::make_unique<WPlayerFrame>(*this, pl));
-    if(pl.local()) {
-      intf_.instance()->playerSetState(&pl, Player::State::LOBBY);
+  // add non-local connected players
+  // (local players are added separately, with their mapping)
+  for(auto& pair : intf_.instance()->players()) {
+    Player& pl = *pair.second;
+    if(!pl.local()) {
+      this->addRemotePlayer(pl);
     }
   }
+  assert(player_frames_.size() == intf_.instance()->players().size());
 
-  this->updatePlayerFramesPos();
+  // needed if local player added between screen creation and enter() call
+  this->updatePlayerFramesLayout();
 }
 
 void ScreenLobby::redraw()
@@ -330,48 +337,30 @@ void ScreenLobby::redraw()
 
 bool ScreenLobby::onInputEvent(const sf::Event& ev)
 {
-  // get currently selected frame, to detect conf changes
-  WPlayerFrame* player_frame = 0;
-  unsigned int conf_index;
+  // events for existing local players
   for(auto const& kv : player_frames_) {
-    auto& choice = kv.second->choiceConf();
-    if(focused_ == &choice) {
-      player_frame = kv.second.get();
-      conf_index = choice.index();
-      break;
+    if(kv.second->onInputEvent(ev)) {
+      return true;
     }
   }
 
-  if(Screen::onInputEvent(ev)) {
-    if(player_frame) {
-      auto choice = player_frame->choiceConf();
-      if(choice.index() != conf_index) {
-        // choice updated
-        auto instance = intf().instance();
-        auto& conf_name = choice.value();
-        // get a non-const player
-        Player* pl = instance->player(player_frame->player().plid());
-        auto* fc = instance->conf().fieldConf(conf_name);
-        if(fc) {  // should always be true
-          instance->playerSetFieldConf(pl, *fc);
-        }
-      }
-    }
-
-    // unfocus if ready; it's simpler this way since there is no need
-    // to update neighbors
-    if(player_->state() == Player::State::LOBBY_READY) {
-      focus(nullptr);
-    }
-    return true;
-  } else if(InputBinding::GlobalConfirm.match(ev)) {
-    if(player_frame) {
-      ScreenLobby::submit();
-    }
-  } else if(InputBinding::GlobalCancel.match(ev)) {
+  // global keyboard cancel: exit
+  if(ev.type == sf::Event::KeyPressed && InputMapping::Global.cancel.match(ev)) {
     intf_.swapScreen(new ScreenStart(intf_));
     return true;
   }
+
+  // global confirm: add local player
+  if(InputMapping::Global.confirm.match(ev)) {
+    InputMapping mapping = this->getUnusedInputMapping(ev);
+    if(mapping.type() != InputType::NONE) {
+      auto nick = intf_.cfg().get<std::string>("Client.Nick");
+      Player* pl = intf_.server()->newLocalPlayer(nick);
+      this->addLocalPlayer(*pl, mapping);
+    }
+    return true;
+  }
+
   return false;
 }
 
@@ -379,7 +368,14 @@ void ScreenLobby::onStateChange()
 {
   auto state = intf_.instance()->state();
   if(state == GameInstance::State::GAME_INIT) {
-    intf_.swapScreen(new ScreenGame(intf_, player_));
+    auto new_screen = std::make_unique<ScreenGame>(intf_);
+    for(auto& pair : player_frames_) {
+      WPlayerFrame& frame = *pair.second;
+      if(frame.player().local()) {
+        new_screen->setPlayerMapping(frame.player(), frame.mapping());
+      }
+    }
+    intf_.swapScreen(new_screen.release());
   }
 }
 
@@ -392,10 +388,9 @@ void ScreenLobby::onServerChangeFieldConfs()
 
 void ScreenLobby::onPlayerJoined(Player* pl)
 {
-  PlId plid = pl->plid(); // intermediate variable to help g++
-  auto p = player_frames_.emplace(plid, std::make_unique<WPlayerFrame>(*this, *pl));
-  p.first->second->updateConfItems();
-  this->updatePlayerFramesPos();
+  if(!pl->local()) {
+    this->addRemotePlayer(*pl);
+  }
 }
 
 void ScreenLobby::onPlayerChangeNick(Player* pl, const std::string& )
@@ -407,7 +402,7 @@ void ScreenLobby::onPlayerStateChange(Player* pl)
 {
   if(pl->state() == Player::State::QUIT) {
     player_frames_.erase(pl->plid());
-    this->updatePlayerFramesPos();
+    this->updatePlayerFramesLayout();
   } else {
     player_frames_.find(pl->plid())->second->update();
   }
@@ -419,47 +414,71 @@ void ScreenLobby::onPlayerChangeFieldConf(Player* pl)
 }
 
 
-void ScreenLobby::submit()
-{
-  GameInstance* instance = intf_.instance();
-  assert( instance );
-  if(instance->state() == GameInstance::State::LOBBY) {
-    instance->playerSetState(player_, player_->state() == Player::State::LOBBY ? Player::State::LOBBY_READY : Player::State::LOBBY);
-  }
-}
-
-void ScreenLobby::updatePlayerFramesPos()
+void ScreenLobby::updatePlayerFramesLayout()
 {
   auto pos = player_frames_pos_;
   unsigned int frame_color = 1;
-  WFocusable* neighbor_first = nullptr;
-  WFocusable* neighbor_up = nullptr;
   for(auto& kv : player_frames_) {
-    auto& frame = kv.second;
-    frame->setPosition(pos);
-    frame->frame().setColor(intf_.style().colors[frame_color]);
+    auto& frame = *kv.second;
+    frame.setPosition(pos);
+    frame.frame().setColor(intf_.style().colors[frame_color]);
     pos += player_frames_dpos_;
     frame_color++;
-    if(frame->player().local()) {
-      WChoice* choice_conf = &frame->choiceConf();
-      if(neighbor_up) {
-        neighbor_up->setNeighbor(WFocusable::NEIGHBOR_DOWN, choice_conf);
-        choice_conf->setNeighbor(WFocusable::NEIGHBOR_UP, neighbor_up);
-      }
-      neighbor_up = choice_conf;
-      if(!neighbor_first) {
-        neighbor_first = neighbor_up;
-      }
-    }
   }
+}
 
-  if(neighbor_first) {
-    neighbor_up->setNeighbor(WFocusable::NEIGHBOR_DOWN, neighbor_first);
-    neighbor_first->setNeighbor(WFocusable::NEIGHBOR_UP, neighbor_up);
-    if(!focused_) {
-      focus(neighbor_first);
+
+void ScreenLobby::addLocalPlayer(Player& pl, const InputMapping& mapping)
+{
+  LOG("adding local player %u to lobby", pl.plid());
+  assert(pl.local());
+  auto frame_ptr = std::make_unique<WPlayerFrame>(*this, pl);
+  WPlayerFrame& frame = *frame_ptr;
+  frame.setMapping(mapping);
+  player_frames_.emplace(pl.plid(), std::move(frame_ptr));
+  frame.updateConfItems();
+  intf_.instance()->playerSetState(&pl, Player::State::LOBBY);
+  this->updatePlayerFramesLayout();
+}
+
+void ScreenLobby::addRemotePlayer(Player& pl)
+{
+  LOG("adding remote player %u to lobby", pl.plid());
+  assert(!pl.local());
+  auto frame_ptr = std::make_unique<WPlayerFrame>(*this, pl);
+  WPlayerFrame& frame = *frame_ptr;
+  player_frames_.emplace(pl.plid(), std::move(frame_ptr));
+  frame.updateConfItems();
+  this->updatePlayerFramesLayout();
+}
+
+InputMapping ScreenLobby::getUnusedInputMapping(const sf::Event& event)
+{
+  if(event.type == sf::Event::KeyPressed) {
+    for(auto& mapping : intf_.inputMappings().keyboard) {
+      auto it = std::find_if(player_frames_.begin(), player_frames_.end(),
+                             [&mapping](auto& kv) { return mapping.isEquivalent(kv.second->mapping()); });
+      if(it == player_frames_.end()) {
+        return mapping;
+      }
     }
+    return {};  // no unused keyboard mapping
+  } else if(event.type == sf::Event::JoystickButtonPressed) {
+    unsigned int joystick_id = event.joystickButton.joystickId;
+    for(auto& kv : player_frames_) {
+      const InputMapping& player_mapping = kv.second->mapping();
+      if(player_mapping.type() == InputType::JOYSTICK) {
+        // compare only the first binding
+        if(player_mapping.up.joystick.id == joystick_id) {
+          return {};  // joystick already in use
+        }
+      }
+    }
+    InputMapping mapping = intf_.inputMappings().joystick[0];
+    mapping.setJoystickId(joystick_id);
+    return mapping;
   }
+  return {};
 }
 
 
@@ -468,8 +487,8 @@ const std::string& ScreenLobby::WPlayerFrame::type() const {
   return type;
 }
 
-ScreenLobby::WPlayerFrame::WPlayerFrame(const Screen& screen, const Player& pl):
-    WContainer(screen, ""), player_(pl)
+ScreenLobby::WPlayerFrame::WPlayerFrame(const Screen& screen, Player& pl):
+    WContainer(screen, ""), player_(pl), mapping_(), focused_(nullptr)
 {
   frame_ = addWidget<WFrame>(screen, IniFile::join(type(), "Border"));
 
@@ -482,6 +501,7 @@ ScreenLobby::WPlayerFrame::WPlayerFrame(const Screen& screen, const Player& pl):
 
   this->updateConfItems();
   this->update();
+  this->focus(choice_conf_);
 }
 
 void ScreenLobby::WPlayerFrame::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -522,6 +542,64 @@ void ScreenLobby::WPlayerFrame::updateConfItems()
     // single item: the selected configuration
     choice_conf_->setItems({conf_name});
   }
+}
+
+void ScreenLobby::WPlayerFrame::focus(WFocusable* w)
+{
+  if(focused_) {
+    focused_->focus(false);
+  }
+  focused_ = w;
+  if(focused_) {
+    focused_->focus(true);
+  }
+}
+
+bool ScreenLobby::WPlayerFrame::onInputEvent(const sf::Event& ev)
+{
+  if(!player_.local()) {
+    return false;
+  }
+
+  if(focused_) {
+    // detect conf change
+    unsigned int conf_index = choice_conf_->index();
+    if(focused_->onInputEvent(mapping_, ev)) {
+      if(choice_conf_->index() != conf_index) {
+        // choice updated
+        auto instance = screen_.intf().instance();
+        auto* fc = instance->conf().fieldConf(choice_conf_->value());
+        if(fc) {  // should always be true
+          instance->playerSetFieldConf(&player_, *fc);
+        }
+      }
+      return true;
+    }
+  }
+
+  if(mapping_.confirm.match(ev)) {
+    if(player_.state() != Player::State::LOBBY_READY) {
+      screen_.intf().instance()->playerSetState(&player_, Player::State::LOBBY_READY);
+      this->focus(nullptr);
+    }
+    return true;
+  } else if(mapping_.cancel.match(ev)) {
+    if(player_.state() == Player::State::LOBBY_READY) {
+      screen_.intf().instance()->playerSetState(&player_, Player::State::LOBBY);
+      this->focus(choice_conf_);
+    } else {
+      screen_.intf().instance()->playerSetState(&player_, Player::State::QUIT);
+    }
+    return true;
+  } else if(focused_) {
+    WFocusable* next_focused = focused_->neighborToFocus(mapping_, ev);
+    if(next_focused) {
+      this->focus(next_focused);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 

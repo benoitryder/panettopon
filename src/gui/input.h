@@ -54,26 +54,26 @@ class InputBinding
   };
 
   struct Keyboard {
-    sf::Keyboard::Key code_;
+    sf::Keyboard::Key code;
   };
 
   struct Joystick {
-    unsigned int id_;
-    unsigned int button_;
+    unsigned int id;
+    unsigned int button;
   };
 
   struct Global {
-    GlobalAction action_;
+    GlobalAction action;
   };
 
   /// Build a never matched, never active binding
-  InputBinding(): type_(InputType::NONE) {}
+  InputBinding(): type(InputType::NONE) {}
   /// Build a global binding
-  constexpr InputBinding(GlobalAction action): type_(InputType::GLOBAL), global_({action}) {}
+  constexpr InputBinding(GlobalAction action): type(InputType::GLOBAL), global({action}) {}
   /// Build a keyboard binding
-  constexpr InputBinding(sf::Keyboard::Key code): type_(InputType::KEYBOARD), keyboard_({code}) {}
+  constexpr InputBinding(sf::Keyboard::Key code): type(InputType::KEYBOARD), keyboard({code}) {}
   /// Build a joystick binding
-  constexpr InputBinding(Joystick v): type_(InputType::JOYSTICK), joystick_(v) {}
+  constexpr InputBinding(Joystick v): type(InputType::JOYSTICK), joystick(v) {}
 
   /** @brief Build a keyboard binding from its configuration name
    *
@@ -96,18 +96,6 @@ class InputBinding
   /// Change the joystick ID associated to the binding
   void setJoystickId(unsigned int id);
 
-  // Predefined global bindings
-  static const InputBinding GlobalUp;
-  static const InputBinding GlobalDown;
-  static const InputBinding GlobalLeft;
-  static const InputBinding GlobalRight;
-  static const InputBinding GlobalConfirm;
-  static const InputBinding GlobalCancel;
-  static const InputBinding GlobalFocusNext;
-  static const InputBinding GlobalFocusPrevious;
-
-  InputType type() const { return type_; }
-
   /** @brief Return true if binding is currently "pressed"
    * @note Global bindings never return true.
    */
@@ -115,12 +103,18 @@ class InputBinding
   /// Match the binding against an event
   bool match(const sf::Event& event) const;
 
- private:
-  InputType type_;
+  /** @brief Return true if bindings are equivalent
+   *
+   * Bindings are equivalent if they have the same keys or button (joystick ID
+   * is ignored).
+   */
+  bool isEquivalent(const InputBinding& o) const;
+
+  InputType type;
   union {
-    Keyboard keyboard_;
-    Joystick joystick_;
-    Global global_;
+    Keyboard keyboard;
+    Joystick joystick;
+    Global global;
   };
 };
 
@@ -131,21 +125,24 @@ class InputBinding
  */
 struct InputMapping
 {
-  /// Create a new mapping with NONE type
-  InputMapping(): up{} {};
-
-  InputBinding up, down, left, right;
+  InputBinding up = {}, down, left, right;
   InputBinding swap, raise;
   InputBinding confirm, cancel;
+  InputBinding focus_next, focus_previous;
 
-  InputType type() const { return up.type(); }
+  InputType type() const { return up.type; }
   void setJoystickId(unsigned int id);
 
   /// Parse a mapping from a configuration file
   static InputMapping parse(const IniFile& ini, const std::string section);
 
+  /// Return true if all bindings are equivalent
+  bool isEquivalent(const InputMapping& o) const;
+
   static InputMapping DefaultKeyboardMapping;
   static InputMapping DefaultJoystickMapping;
+  /// Mapping with predefined global bindings
+  static InputMapping Global;
 };
 
 

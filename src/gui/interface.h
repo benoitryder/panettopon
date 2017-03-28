@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include "resources.h"
 #include "input.h"
@@ -38,12 +39,19 @@ class GuiInterface: public ClientInstance::Observer
   static const std::string CONF_SECTION;
 
  public:
+  /// Configured input mappings, grouped by type
+  struct InputMappings {
+    std::vector<InputMapping> joystick;
+    std::vector<InputMapping> keyboard;
+  };
+
   GuiInterface();
   virtual ~GuiInterface();
   bool run(IniFile* cfg);
   boost::asio::io_service &io_service() { return io_service_; }
   IniFile& cfg() const { return *cfg_; }
   const StyleGlobal& style() const { return style_; }
+  const InputMappings& inputMappings() const { return input_mappings_; }
 
   /** @brief Change the active screen.
    *
@@ -101,11 +109,7 @@ class GuiInterface: public ClientInstance::Observer
     unsigned int screen_width, screen_height;
   } window_conf_;
 
-  /// Configured input mappings, grouped by type
-  struct {
-    std::vector<InputMapping> joystick;
-    std::vector<InputMapping> keyboard;
-  } input_mappings_;
+  InputMappings input_mappings_;
 
   bool initDisplay();
   void endDisplay();

@@ -133,6 +133,12 @@ InputBinding InputBinding::fromKeyboardName(const std::string& name)
     throw InvalidInputBindingError(name, "invalid keyboard key");
   }
 
+
+  // forbid some keys conflicting with global bindin
+  if(code == sf::Keyboard::Return || code == sf::Keyboard::Escape) {
+    throw InvalidInputBindingError(name, "reserved key");
+  }
+
   return InputBinding(code);
 }
 
@@ -163,46 +169,36 @@ InputBinding InputBinding::fromJoystickName(const std::string& name)
 
 void InputBinding::setJoystickId(unsigned int id)
 {
-  assert(type_ == InputType::JOYSTICK);
-  if(type_ == InputType::JOYSTICK) {
-    joystick_.id_ = id;
+  assert(type == InputType::JOYSTICK);
+  if(type == InputType::JOYSTICK) {
+    joystick.id = id;
   }
 }
 
 
-const InputBinding InputBinding::GlobalUp{GlobalAction::UP};
-const InputBinding InputBinding::GlobalDown{GlobalAction::DOWN};
-const InputBinding InputBinding::GlobalLeft{GlobalAction::LEFT};
-const InputBinding InputBinding::GlobalRight{GlobalAction::RIGHT};
-const InputBinding InputBinding::GlobalConfirm{GlobalAction::CONFIRM};
-const InputBinding InputBinding::GlobalCancel{GlobalAction::CANCEL};
-const InputBinding InputBinding::GlobalFocusNext{GlobalAction::FOCUS_NEXT};
-const InputBinding InputBinding::GlobalFocusPrevious{GlobalAction::FOCUS_PREVIOUS};
-
-
 bool InputBinding::isActive() const
 {
-  if(type_ == InputType::KEYBOARD) {
-    return sf::Keyboard::isKeyPressed(keyboard_.code_);
+  if(type == InputType::KEYBOARD) {
+    return sf::Keyboard::isKeyPressed(keyboard.code);
 
-  } else if(type_ == InputType::JOYSTICK) {
-    if(joystick_.button_ == JOYSTICK_UP) {
-      return sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::Y) < -JOYSTICK_ACTIVE_THRESHOLD ||
-          sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::PovY) > JOYSTICK_ACTIVE_THRESHOLD;
-    } else if(joystick_.button_ == JOYSTICK_DOWN) {
-      return sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::Y) > JOYSTICK_ACTIVE_THRESHOLD ||
-          sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::PovY) < -JOYSTICK_ACTIVE_THRESHOLD;
-    } else if(joystick_.button_ == JOYSTICK_LEFT) {
-      return sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::X) < -JOYSTICK_ACTIVE_THRESHOLD ||
-          sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::PovX) < -JOYSTICK_ACTIVE_THRESHOLD;
-    } else if(joystick_.button_ == JOYSTICK_RIGHT) {
-      return sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::X) > JOYSTICK_ACTIVE_THRESHOLD ||
-          sf::Joystick::getAxisPosition(joystick_.id_, sf::Joystick::Axis::PovX) > JOYSTICK_ACTIVE_THRESHOLD;
+  } else if(type == InputType::JOYSTICK) {
+    if(joystick.button == JOYSTICK_UP) {
+      return sf::Joystick::getAxisPosition(joystick.id, sf::Joystick::Axis::Y) < -JOYSTICK_ACTIVE_THRESHOLD ||
+          sf::Joystick::getAxisPosition(joystick.id, sf::Joystick::Axis::PovY) > JOYSTICK_ACTIVE_THRESHOLD;
+    } else if(joystick.button == JOYSTICK_DOWN) {
+      return sf::Joystick::getAxisPosition(joystick.id, sf::Joystick::Axis::Y) > JOYSTICK_ACTIVE_THRESHOLD ||
+          sf::Joystick::getAxisPosition(joystick.id, sf::Joystick::Axis::PovY) < -JOYSTICK_ACTIVE_THRESHOLD;
+    } else if(joystick.button == JOYSTICK_LEFT) {
+      return sf::Joystick::getAxisPosition(joystick.id, sf::Joystick::Axis::X) < -JOYSTICK_ACTIVE_THRESHOLD ||
+          sf::Joystick::getAxisPosition(joystick.id, sf::Joystick::Axis::PovX) < -JOYSTICK_ACTIVE_THRESHOLD;
+    } else if(joystick.button == JOYSTICK_RIGHT) {
+      return sf::Joystick::getAxisPosition(joystick.id, sf::Joystick::Axis::X) > JOYSTICK_ACTIVE_THRESHOLD ||
+          sf::Joystick::getAxisPosition(joystick.id, sf::Joystick::Axis::PovX) > JOYSTICK_ACTIVE_THRESHOLD;
     } else {
-      return sf::Joystick::isButtonPressed(joystick_.id_, joystick_.button_);
+      return sf::Joystick::isButtonPressed(joystick.id, joystick.button);
     }
 
-  } else if(type_ == InputType::GLOBAL) {
+  } else if(type == InputType::GLOBAL) {
     return false;
   }
   return false;
@@ -211,18 +207,18 @@ bool InputBinding::isActive() const
 
 bool InputBinding::match(const sf::Event& event) const
 {
-  if(type_ == InputType::KEYBOARD) {
+  if(type == InputType::KEYBOARD) {
     if(event.type == sf::Event::KeyPressed) {
-      return event.key.code == keyboard_.code_;
+      return event.key.code == keyboard.code;
     }
 
-  } else if(type_ == InputType::JOYSTICK) {
+  } else if(type == InputType::JOYSTICK) {
     if(event.type == sf::Event::JoystickButtonPressed) {
-      return event.joystickButton.joystickId == joystick_.id_ && event.joystickButton.button == joystick_.button_;
+      return event.joystickButton.joystickId == joystick.id && event.joystickButton.button == joystick.button;
     } else if(event.type == sf::Event::JoystickMoved) {
       const auto& ev = event.joystickMove;
-      if(ev.joystickId == joystick_.id_) {
-        switch(joystick_.button_) {
+      if(ev.joystickId == joystick.id) {
+        switch(joystick.button) {
           case JOYSTICK_UP:
             return (ev.axis == sf::Joystick::Axis::Y && ev.position < 0)
                 || (ev.axis == sf::Joystick::Axis::PovY && ev.position > 0);
@@ -239,10 +235,10 @@ bool InputBinding::match(const sf::Event& event) const
       }
     }
 
-  } else if(type_ == InputType::GLOBAL) {
+  } else if(type == InputType::GLOBAL) {
     if(event.type == sf::Event::KeyPressed) {
       const auto& ev = event.key;
-      switch(global_.action_) {
+      switch(global.action) {
         case GlobalAction::UP:
           return ev.code == sf::Keyboard::Up;
         case GlobalAction::DOWN:
@@ -264,7 +260,7 @@ bool InputBinding::match(const sf::Event& event) const
       }
     } else if(event.type == sf::Event::JoystickButtonPressed) {
       const auto& ev = event.joystickButton;
-      switch(global_.action_) {
+      switch(global.action) {
         case GlobalAction::CONFIRM:
           return ev.button == 0;
         case GlobalAction::CANCEL:
@@ -278,7 +274,7 @@ bool InputBinding::match(const sf::Event& event) const
       }
     } else if(event.type == sf::Event::JoystickMoved) {
       const auto& ev = event.joystickMove;
-      switch(global_.action_) {
+      switch(global.action) {
         case GlobalAction::UP:
           return (ev.axis == sf::Joystick::Axis::Y && ev.position < 0)
               || (ev.axis == sf::Joystick::Axis::PovY && ev.position > 0);
@@ -298,6 +294,26 @@ bool InputBinding::match(const sf::Event& event) const
 }
 
 
+bool InputBinding::isEquivalent(const InputBinding& o) const
+{
+  if(type != o.type) {
+    return false;
+  }
+  switch(type) {
+    case InputType::NONE:
+      return true;
+    case InputType::KEYBOARD:
+      return keyboard.code == o.keyboard.code;
+    case InputType::JOYSTICK:
+      return joystick.button == o.joystick.button;
+    case InputType::GLOBAL:
+      return global.action == o.global.action;
+  }
+  return false;  // unreachable
+}
+
+
+
 void InputMapping::setJoystickId(unsigned int id)
 {
   assert(type() == InputType::JOYSTICK);
@@ -310,7 +326,29 @@ void InputMapping::setJoystickId(unsigned int id)
     raise.setJoystickId(id);
     confirm.setJoystickId(id);
     cancel.setJoystickId(id);
+    if(focus_next.type != InputType::NONE) {
+      focus_next.setJoystickId(id);
+    }
+    if(focus_previous.type != InputType::NONE) {
+      focus_previous.setJoystickId(id);
+    }
   }
+}
+
+
+bool InputMapping::isEquivalent(const InputMapping& o) const
+{
+  return up.isEquivalent(o.up)
+      && down.isEquivalent(o.down)
+      && left.isEquivalent(o.left)
+      && right.isEquivalent(o.right)
+      && swap.isEquivalent(o.swap)
+      && raise.isEquivalent(o.raise)
+      && confirm.isEquivalent(o.confirm)
+      && cancel.isEquivalent(o.cancel)
+      && focus_next.isEquivalent(o.focus_next)
+      && focus_previous.isEquivalent(o.focus_previous)
+      ;
 }
 
 
@@ -339,8 +377,11 @@ InputMapping InputMapping::parse(const IniFile& ini, const std::string section)
   } else {
     throw std::runtime_error("invalid mapping type: "+str_type);
   }
+  mapping.focus_next = InputBinding();
+  mapping.focus_previous = InputBinding();
   return mapping;
 }
+
 
 
 InputMapping InputMapping::DefaultKeyboardMapping{
@@ -350,8 +391,10 @@ InputMapping InputMapping::DefaultKeyboardMapping{
   .right = InputBinding(sf::Keyboard::Right),
   .swap = InputBinding(sf::Keyboard::D),
   .raise = InputBinding(sf::Keyboard::F),
-  .confirm = InputBinding(sf::Keyboard::Return),
-  .cancel = InputBinding(sf::Keyboard::Escape),
+  .confirm = InputBinding(sf::Keyboard::D),
+  .cancel = InputBinding(sf::Keyboard::F),
+  .focus_next = InputBinding(),
+  .focus_previous = InputBinding(),
 };
 
 InputMapping InputMapping::DefaultJoystickMapping{
@@ -363,9 +406,22 @@ InputMapping InputMapping::DefaultJoystickMapping{
   .raise = InputBinding({0, 4}),
   .confirm = InputBinding({0, 0}),
   .cancel = InputBinding({0, 1}),
+  .focus_next = InputBinding(),
+  .focus_previous = InputBinding()
 };
 
-
+InputMapping InputMapping::Global{
+  .up = InputBinding{InputBinding::GlobalAction::UP},
+  .down = InputBinding{InputBinding::GlobalAction::DOWN},
+  .left = InputBinding{InputBinding::GlobalAction::LEFT},
+  .right = InputBinding{InputBinding::GlobalAction::RIGHT},
+  .swap = InputBinding{},
+  .raise = InputBinding{},
+  .confirm = InputBinding{InputBinding::GlobalAction::CONFIRM},
+  .cancel = InputBinding{InputBinding::GlobalAction::CANCEL},
+  .focus_next = InputBinding{InputBinding::GlobalAction::FOCUS_NEXT},
+  .focus_previous = InputBinding{InputBinding::GlobalAction::FOCUS_PREVIOUS},
+};
 
 InputHandler::InputHandler():
     joystick_axis_pos_()

@@ -5,6 +5,7 @@
 #include <map>
 #include "screen.h"
 #include "resources.h"
+#include "input.h"
 
 namespace gui {
 
@@ -53,13 +54,13 @@ class ScreenJoinServer: public Screen
   virtual void onServerDisconnect();
 
  protected:
-  void submit();
+  void submit(const sf::Event& ev);
 
  private:
   WEntry* entry_host_;
   WEntry* entry_port_;
   WEntry* entry_nick_;
-  bool submitting_;
+  sf::Event submitting_event_;
 };
 
 /** @brief Server creation (choose port).
@@ -77,7 +78,7 @@ class ScreenCreateServer: public Screen
   virtual bool onInputEvent(const sf::Event& ev);
 
  protected:
-  void submit();
+  void submit(const sf::Event& ev);
 
  private:
   WEntry* entry_port_;
@@ -96,7 +97,7 @@ class ScreenCreateServer: public Screen
 class ScreenLobby: public Screen
 {
  public:
-  ScreenLobby(GuiInterface& intf, Player* pl);
+  ScreenLobby(GuiInterface& intf);
   virtual void enter();
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event& ev);
@@ -107,7 +108,20 @@ class ScreenLobby: public Screen
   virtual void onPlayerStateChange(Player*);
   virtual void onPlayerChangeFieldConf(Player*);
 
+  /** @brief Return an unused input mapping
+   *
+   * \a event should be be the event that added a new player to the lobby.
+   * It defines which kind of mapping should be created.
+   *
+   * If no input mapping is available, maping type is NONE.
+   */
+  InputMapping getUnusedInputMapping(const sf::Event& event);
+
+  void addLocalPlayer(Player& pl, const InputMapping& mapping);
+
  private:
+  void addRemotePlayer(Player& pl);
+
   /** @brief Display information for a player.
    *
    * Style properties:
@@ -120,32 +134,41 @@ class ScreenLobby: public Screen
   class WPlayerFrame: public WContainer
   {
    public:
-    WPlayerFrame(const Screen& screen, const Player& pl);
+    WPlayerFrame(const Screen& screen, Player& pl);
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
     const Player& player() const { return player_; }
+    const InputMapping& mapping() const { return mapping_; }
+    void setMapping(const InputMapping& mapping) { mapping_ = mapping; }
     WFrame& frame() const { return *frame_; }
-    WChoice& choiceConf() const { return *choice_conf_; }
     /// Update the widget after player state changes
     void update();
     /// Update server list of configurations
     void updateConfItems();
+    /** @brief Process events on the frame
+     *
+     * @warn The widget may call the destruction of its player and itself.
+     * They should not be accessed after calling this method.
+     */
+    bool onInputEvent(const sf::Event& ev);
 
    protected:
     virtual const std::string& type() const;
 
+    /// Focus a given widget
+    void focus(WFocusable* w);
+
    private:
-    const Player& player_;
+    Player& player_;
+    InputMapping mapping_;
     WFrame* frame_;
     WLabel* nick_;
     WChoice* choice_conf_;
     sf::Sprite ready_;
+    WFocusable* focused_;
   };
 
-  void submit();
-  void updatePlayerFramesPos();
+  void updatePlayerFramesLayout();
 
- private:
-  Player* player_; ///< Controlled player
   WButton* button_ready_;
   typedef std::map<PlId, std::unique_ptr<WPlayerFrame>> PlayerFramesContainer;
   PlayerFramesContainer player_frames_;

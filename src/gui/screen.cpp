@@ -49,11 +49,11 @@ bool Screen::onInputEvent(const sf::Event& ev)
     return false; // nothing to do
   }
 
-  if(focused_->onInputEvent(ev)) {
+  if(focused_->onInputEvent(InputMapping::Global, ev)) {
     return true;
   }
 
-  WFocusable* next_focused = focused_->neighborToFocus(ev);
+  WFocusable* next_focused = focused_->neighborToFocus(InputMapping::Global, ev);
   if(next_focused) {
     this->focus(next_focused);
     return true;

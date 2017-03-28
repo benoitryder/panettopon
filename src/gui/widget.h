@@ -15,6 +15,7 @@
 namespace gui {
 
 class Screen;
+class InputMapping;
 
 
 /** @brief Base class for widgets.
@@ -68,7 +69,7 @@ class WFocusable: public Widget
 
   WFocusable(const Screen& screen, const std::string& name);
 
-  virtual bool onInputEvent(const sf::Event&) { return false; }
+  virtual bool onInputEvent(const InputMapping&, const sf::Event&) { return false; }
   bool focused() const { return focused_; }
   virtual void focus(bool focused) { focused_ = focused; }
   WFocusable* neighbor(Neighbor n) const { return neighbors_[n]; }
@@ -80,7 +81,7 @@ class WFocusable: public Widget
    * @return the new object to focus, \e nullptr if event not handled or widget
    * is currently not focused.
    */
-  WFocusable* neighborToFocus(const sf::Event& ev);
+  WFocusable* neighborToFocus(const InputMapping& mapping, const sf::Event& ev);
 
  private:
   bool focused_;
@@ -162,7 +163,7 @@ class WButton: public WFocusable
   WButton(const Screen& screen, const std::string& name);
   void setCaption(const std::string& caption);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-  virtual bool onInputEvent(const sf::Event&);
+  virtual bool onInputEvent(const InputMapping&, const sf::Event&);
   virtual void focus(bool focused);
   typedef std::function<void()> Callback;
   void setCallback(Callback cb) { callback_ = cb; }
@@ -229,7 +230,7 @@ class WEntry: public WFocusable
   WEntry(const Screen& screen, const std::string& name);
   void setText(const std::string& caption);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-  virtual bool onInputEvent(const sf::Event&);
+  virtual bool onInputEvent(const InputMapping&, const sf::Event&);
   virtual void focus(bool focused);
   std::string text() const { return text_.getString(); }
 
@@ -300,7 +301,7 @@ class WChoice: public WFocusable
   /// Add an item, return its index
   unsigned int addItem(const ItemContainer::value_type& v);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-  virtual bool onInputEvent(const sf::Event&);
+  virtual bool onInputEvent(const InputMapping&, const sf::Event&);
   virtual void focus(bool focused);
 
  protected:

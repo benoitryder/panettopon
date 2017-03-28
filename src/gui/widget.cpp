@@ -67,32 +67,34 @@ void WFocusable::setNeighbors(WFocusable* up, WFocusable* down, WFocusable* left
   neighbors_[NEIGHBOR_RIGHT] = right;
 }
 
-WFocusable* WFocusable::neighborToFocus(const sf::Event& ev)
+WFocusable* WFocusable::neighborToFocus(const InputMapping& mapping, const sf::Event& ev)
 {
   if(!focused_) {
     return nullptr;
   }
-  if(InputBinding::GlobalUp.match(ev)) {
+  if(mapping.up.match(ev)) {
     return neighbors_[NEIGHBOR_UP];
-  } else if(InputBinding::GlobalDown.match(ev)) {
+  } else if(mapping.down.match(ev)) {
     return neighbors_[NEIGHBOR_DOWN];
-  } else if(InputBinding::GlobalLeft.match(ev)) {
+  } else if(mapping.left.match(ev)) {
     return neighbors_[NEIGHBOR_LEFT];
-  } else if(InputBinding::GlobalRight.match(ev)) {
+  } else if(mapping.right.match(ev)) {
     return neighbors_[NEIGHBOR_RIGHT];
-  } else if(InputBinding::GlobalFocusNext.match(ev)) {
+  } else if(mapping.focus_next.match(ev)) {
     WFocusable* next = neighbors_[NEIGHBOR_RIGHT];
     if(!next) {
       next = neighbors_[NEIGHBOR_DOWN];
     }
     return next;
-  } else if(InputBinding::GlobalFocusPrevious.match(ev)) {
+  } else if(mapping.focus_previous.match(ev)) {
     WFocusable* next = neighbors_[NEIGHBOR_LEFT];
     if(!next) {
       next = neighbors_[NEIGHBOR_UP];
     }
     return next;
   }
+
+  return nullptr;
 }
 
 
@@ -168,9 +170,9 @@ void WButton::draw(sf::RenderTarget& target, sf::RenderStates states) const
   target.draw(caption_, states);
 }
 
-bool WButton::onInputEvent(const sf::Event& ev)
+bool WButton::onInputEvent(const InputMapping& mapping, const sf::Event& ev)
 {
-  if(InputBinding::GlobalConfirm.match(ev)) {
+  if(mapping.confirm.match(ev)) {
     if( callback_ ) {
       callback_();
       return true;
@@ -295,7 +297,7 @@ void WEntry::draw(sf::RenderTarget& target, sf::RenderStates states) const
   }
 }
 
-bool WEntry::onInputEvent(const sf::Event& ev)
+bool WEntry::onInputEvent(const InputMapping&, const sf::Event& ev)
 {
   if( ev.type == sf::Event::TextEntered ) {
     sf::Uint32 c = ev.text.unicode;
@@ -501,12 +503,12 @@ void WChoice::draw(sf::RenderTarget& target, sf::RenderStates states) const
   target.draw(text_, states);
 }
 
-bool WChoice::onInputEvent(const sf::Event& ev)
+bool WChoice::onInputEvent(const InputMapping& mapping, const sf::Event& ev)
 {
-  if(InputBinding::GlobalLeft.match(ev)) {
+  if(mapping.left.match(ev)) {
     this->select( index_ == 0 ? items_.size()-1 : index_-1 );
     return true;
-  } else if(InputBinding::GlobalRight.match(ev)) {
+  } else if(mapping.right.match(ev)) {
     this->select( index_ == items_.size()-1 ? 0 : index_+1 );
     return true;
   }

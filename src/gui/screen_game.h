@@ -83,7 +83,7 @@ struct StyleField
 class ScreenGame: public Screen, public GameInputScheduler::InputProvider
 {
  public:
-  ScreenGame(GuiInterface& intf, Player* pl);
+  ScreenGame(GuiInterface& intf);
   virtual void enter();
   virtual void exit();
   virtual void redraw();
@@ -95,14 +95,15 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
   /// InputProvider interface.
   virtual KeyState getNextInput(Player* pl);
 
+  void setPlayerMapping(const Player& pl, const InputMapping& mapping);
+
  private:
-  Player* player_;  ///< Local controlled player
   GameInputScheduler input_scheduler_;
   StyleField style_field_;
   typedef std::map<FldId, std::unique_ptr<FieldDisplay>> FieldDisplayContainer;
   FieldDisplayContainer field_displays_;
-
-  InputMapping keys_;
+  typedef std::map<PlId, InputMapping> InputMappingContainer;
+  InputMappingContainer input_mappings_;
 };
 
 

@@ -91,18 +91,15 @@ void StyleField::load(const StyleLoader& loader, const StyleGlobal& global)
 }
 
 
-ScreenGame::ScreenGame(GuiInterface& intf, Player* pl):
+ScreenGame::ScreenGame(GuiInterface& intf):
     Screen(intf, "ScreenGame"),
-    player_(pl),
     input_scheduler_(*intf.instance(), *this, intf.io_service())
 {
-  keys_ = InputMapping::DefaultKeyboardMapping;
 }
 
 void ScreenGame::enter()
 {
   style_field_.load(StyleLoaderPrefix(*this, "Field"), intf_.style());
-  assert( player_ );
 }
 
 void ScreenGame::exit()
@@ -126,12 +123,20 @@ bool ScreenGame::onInputEvent(const sf::Event& ev)
     return true;
   }
 
-  if(InputBinding::GlobalCancel.match(ev)) {
+  if(InputMapping::Global.cancel.match(ev)) {
     intf_.swapScreen(new ScreenStart(intf_));
     return true;
-  } else if(InputBinding::GlobalConfirm.match(ev)) {
+  } else if(InputMapping::Global.confirm.match(ev)) {
     if(intf_.instance()->state() == GameInstance::State::LOBBY) {
-      intf_.swapScreen(new ScreenLobby(intf_, player_));
+      auto new_screen = std::make_unique<ScreenLobby>(intf_);
+      // re-add local players with their mapping
+      for(auto& pair : intf_.instance()->players()) {
+        Player& pl = *pair.second;
+        if(pl.local()) {
+          new_screen->addLocalPlayer(pl, input_mappings_[pl.plid()]);
+        }
+      }
+      intf_.swapScreen(new_screen.release());
       return true;
     }
   }
@@ -184,7 +189,12 @@ void ScreenGame::onStateChange()
       x += dx;
     }
 
-    intf_.instance()->playerSetState(player_, Player::State::GAME_READY);
+    for(auto& pair : intf_.instance()->players()) {
+      Player& pl = *pair.second;
+      if(pl.local()) {
+        intf_.instance()->playerSetState(&pl, Player::State::GAME_READY);
+      }
+    }
 
   } else if(state == GameInstance::State::GAME) {
     LOG("match start");
@@ -193,21 +203,27 @@ void ScreenGame::onStateChange()
 }
 
 
-KeyState ScreenGame::getNextInput(Player* /*pl*/)
+KeyState ScreenGame::getNextInput(Player* pl)
 {
-  if( !intf_.focused() ) {
+  if(!intf_.focused()) {
     return GAME_KEY_NONE;
   }
+  const InputMapping& mapping = input_mappings_[pl->plid()];
   int key = GAME_KEY_NONE;
-  if(keys_.up.isActive()) key |= GAME_KEY_UP;
-  if(keys_.down.isActive()) key |= GAME_KEY_DOWN;
-  if(keys_.left.isActive()) key |= GAME_KEY_LEFT;
-  if(keys_.right.isActive()) key |= GAME_KEY_RIGHT;
-  if(keys_.swap.isActive()) key |= GAME_KEY_SWAP;
-  if(keys_.raise.isActive()) key |= GAME_KEY_RAISE;
+  if(mapping.up.isActive()) key |= GAME_KEY_UP;
+  if(mapping.down.isActive()) key |= GAME_KEY_DOWN;
+  if(mapping.left.isActive()) key |= GAME_KEY_LEFT;
+  if(mapping.right.isActive()) key |= GAME_KEY_RIGHT;
+  if(mapping.swap.isActive()) key |= GAME_KEY_SWAP;
+  if(mapping.raise.isActive()) key |= GAME_KEY_RAISE;
   return key;
 }
 
+
+void ScreenGame::setPlayerMapping(const Player& pl, const InputMapping& mapping)
+{
+  input_mappings_[pl.plid()] = mapping;
+}
 
 
 const unsigned int FieldDisplay::CROUCH_DURATION = 8;
