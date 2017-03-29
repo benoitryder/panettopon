@@ -75,6 +75,13 @@ class WFocusable: public Widget
   void setNeighbor(Neighbor n, WFocusable* w);
   void setNeighbors(WFocusable* up, WFocusable* down, WFocusable* left, WFocusable* right);
 
+  /** @brief Return neighbor to focus following an event
+   *
+   * @return the new object to focus, \e nullptr if event not handled or widget
+   * is currently not focused.
+   */
+  WFocusable* neighborToFocus(const sf::Event& ev);
+
  private:
   bool focused_;
   WFocusable* neighbors_[NEIGHBOR_COUNT];

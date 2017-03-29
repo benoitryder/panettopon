@@ -53,26 +53,7 @@ bool Screen::onInputEvent(const sf::Event& ev)
     return true;
   }
 
-  WFocusable* next_focused = NULL;
-  if(InputBinding::GlobalUp.match(ev)) {
-    next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
-  } else if(InputBinding::GlobalDown.match(ev)) {
-    next_focused = focused_->neighbor(WFocusable::NEIGHBOR_DOWN);
-  } else if(InputBinding::GlobalLeft.match(ev)) {
-    next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
-  } else if(InputBinding::GlobalRight.match(ev)) {
-    next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
-  } else if(InputBinding::GlobalFocusNext.match(ev)) {
-    next_focused = focused_->neighbor(WFocusable::NEIGHBOR_RIGHT);
-    if(!next_focused) {
-      next_focused = focused_->neighbor(WFocusable::NEIGHBOR_DOWN);
-    }
-  } else if(InputBinding::GlobalFocusPrevious.match(ev)) {
-    next_focused = focused_->neighbor(WFocusable::NEIGHBOR_LEFT);
-    if(!next_focused) {
-      next_focused = focused_->neighbor(WFocusable::NEIGHBOR_UP);
-    }
-  }
+  WFocusable* next_focused = focused_->neighborToFocus(ev);
   if(next_focused) {
     this->focus(next_focused);
     return true;

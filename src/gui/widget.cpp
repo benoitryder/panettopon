@@ -67,6 +67,34 @@ void WFocusable::setNeighbors(WFocusable* up, WFocusable* down, WFocusable* left
   neighbors_[NEIGHBOR_RIGHT] = right;
 }
 
+WFocusable* WFocusable::neighborToFocus(const sf::Event& ev)
+{
+  if(!focused_) {
+    return nullptr;
+  }
+  if(InputBinding::GlobalUp.match(ev)) {
+    return neighbors_[NEIGHBOR_UP];
+  } else if(InputBinding::GlobalDown.match(ev)) {
+    return neighbors_[NEIGHBOR_DOWN];
+  } else if(InputBinding::GlobalLeft.match(ev)) {
+    return neighbors_[NEIGHBOR_LEFT];
+  } else if(InputBinding::GlobalRight.match(ev)) {
+    return neighbors_[NEIGHBOR_RIGHT];
+  } else if(InputBinding::GlobalFocusNext.match(ev)) {
+    WFocusable* next = neighbors_[NEIGHBOR_RIGHT];
+    if(!next) {
+      next = neighbors_[NEIGHBOR_DOWN];
+    }
+    return next;
+  } else if(InputBinding::GlobalFocusPrevious.match(ev)) {
+    WFocusable* next = neighbors_[NEIGHBOR_LEFT];
+    if(!next) {
+      next = neighbors_[NEIGHBOR_UP];
+    }
+    return next;
+  }
+}
+
 
 const std::string& WContainer::type() const {
   static const std::string type("Container");
