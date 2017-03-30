@@ -146,17 +146,23 @@ bool ScreenGame::onInputEvent(const sf::Event& ev)
 
 void ScreenGame::onPlayerStep(Player* pl)
 {
-  auto fdp = field_displays_.find(pl->plid());
-  if(fdp != field_displays_.end()) {
-    (*fdp).second->step();
+  assert(pl->field());
+  if(pl->field()) {
+    auto fdp = field_displays_.find(pl->field()->fldid());
+    if(fdp != field_displays_.end()) {
+      (*fdp).second->step();
+    }
   }
 }
 
 void ScreenGame::onPlayerRanked(Player* pl)
 {
-  auto fdp = field_displays_.find(pl->plid());
-  if(fdp != field_displays_.end()) {
-    (*fdp).second->doRank();
+  assert(pl->field());
+  if(pl->field()) {
+    auto fdp = field_displays_.find(pl->field()->fldid());
+    if(fdp != field_displays_.end()) {
+      (*fdp).second->doRank();
+    }
   }
 }
 
