@@ -18,13 +18,13 @@ void ScreenStart::enter()
   intf_.stopInstance();
   const ResourceManager& res_mgr = intf_.res_mgr();
 
-  WButton* button_join = container_.addWidget<WButton>(*this, "JoinServer");
+  WButton* button_join = &container_.addWidget<WButton>(*this, "JoinServer");
   button_join->setCaption(res_mgr.getLang({name_, "JoinServer"}));
 
-  WButton* button_create = container_.addWidget<WButton>(*this, "CreateServer");
+  WButton* button_create = &container_.addWidget<WButton>(*this, "CreateServer");
   button_create->setCaption(res_mgr.getLang({name_, "CreateServer"}));
 
-  button_exit_ = container_.addWidget<WButton>(*this, "Exit");
+  button_exit_ = &container_.addWidget<WButton>(*this, "Exit");
   button_exit_->setCaption(res_mgr.getLang({name_, "Exit"}));
 
   button_join->setNeighbors(button_exit_, button_create, NULL, NULL);
@@ -39,7 +39,7 @@ void ScreenStart::enter()
 
   // "Debug start" button, only when debug mode is enabled
   if(intf_.cfg().get<bool>("Global.Debug", false)) {
-    WButton* button_debugstart = container_.addWidget<WButton>(*this, "DebugStart");
+    WButton* button_debugstart = &container_.addWidget<WButton>(*this, "DebugStart");
     button_debugstart->setCaption(res_mgr.getLang({name_, "DebugStart"}));
 
     button_debugstart->setNeighbors(button_exit_, button_join, NULL, NULL);
@@ -71,12 +71,12 @@ void ScreenStart::onDebugStart()
 {
   // create server and players
   intf_.startServer(intf_.cfg().get<uint16_t>("Global.Port"));
-  Player* pl1 = intf_.server()->newLocalPlayer("Player 1");
-  Player* pl2 = intf_.server()->newLocalPlayer("Player 2");
+  Player& pl1 = intf_.server()->newLocalPlayer("Player 1");
+  Player& pl2 = intf_.server()->newLocalPlayer("Player 2");
   // swap to screen game
   auto new_screen = std::make_unique<ScreenGame>(intf_);
-  new_screen->setPlayerMapping(*pl1, InputMapping::DefaultKeyboardMapping);
-  new_screen->setPlayerMapping(*pl2, InputMapping::DefaultKeyboardMapping);
+  new_screen->setPlayerMapping(pl1, InputMapping::DefaultKeyboardMapping);
+  new_screen->setPlayerMapping(pl2, InputMapping::DefaultKeyboardMapping);
   intf_.swapScreen(new_screen.release());
   // lobby: players are ready
   GameInstance* instance = intf_.instance();
@@ -106,22 +106,22 @@ void ScreenJoinServer::enter()
   const ResourceManager& res_mgr = intf_.res_mgr();
   const IniFile& cfg = intf_.cfg();
 
-  WLabel* label = container_.addWidget<WLabel>(*this, "HostPortLabel");
+  WLabel* label = &container_.addWidget<WLabel>(*this, "HostPortLabel");
   label->setText(res_mgr.getLang({name_, "HostPort"}));
 
-  entry_host_ = container_.addWidget<WEntry>(*this, "HostEntry");
+  entry_host_ = &container_.addWidget<WEntry>(*this, "HostEntry");
   entry_host_->setText(cfg.get("Client.Hostname", ""));
 
-  entry_port_ = container_.addWidget<WEntry>(*this, "PortEntry");
+  entry_port_ = &container_.addWidget<WEntry>(*this, "PortEntry");
   entry_port_->setText(cfg.get("Global.Port", ""));
 
-  label = container_.addWidget<WLabel>(*this, "NickLabel");
+  label = &container_.addWidget<WLabel>(*this, "NickLabel");
   label->setText(res_mgr.getLang({name_, "PlayerName"}));
 
-  entry_nick_ = container_.addWidget<WEntry>(*this, "NickEntry");
+  entry_nick_ = &container_.addWidget<WEntry>(*this, "NickEntry");
   entry_nick_->setText(cfg.get("Client.Nick", "Player"));
 
-  WButton* button = container_.addWidget<WButton>(*this, "JoinButton");
+  WButton* button = &container_.addWidget<WButton>(*this, "JoinButton");
   button->setCaption(res_mgr.getLang({name_, "Join"}));
 
   //XXX neighbors should be defined in style.ini too
@@ -151,14 +151,14 @@ bool ScreenJoinServer::onInputEvent(const sf::Event& ev)
   return false;
 }
 
-void ScreenJoinServer::onPlayerJoined(Player* pl)
+void ScreenJoinServer::onPlayerJoined(Player& pl)
 {
-  if( pl->local() ) {
+  if(pl.local()) {
     assert(submitting_event_.type != sf::Event::Count);
     auto new_screen = std::make_unique<ScreenLobby>(intf_);
     InputMapping mapping = new_screen->getUnusedInputMapping(submitting_event_);
     assert(mapping.type() != InputType::NONE);
-    new_screen->addLocalPlayer(*pl, mapping);
+    new_screen->addLocalPlayer(pl, mapping);
     intf_.swapScreen(new_screen.release());
   }
 }
@@ -216,25 +216,25 @@ void ScreenCreateServer::enter()
   const IniFile& cfg = intf_.cfg();
   // reload configuration from values
 
-  WLabel* label = container_.addWidget<WLabel>(*this, "PortLabel");
+  WLabel* label = &container_.addWidget<WLabel>(*this, "PortLabel");
   label->setText(res_mgr.getLang({name_, "Port"}));
 
-  entry_port_ = container_.addWidget<WEntry>(*this, "PortEntry");
+  entry_port_ = &container_.addWidget<WEntry>(*this, "PortEntry");
   entry_port_->setText(cfg.get("Global.Port", ""));
 
-  label = container_.addWidget<WLabel>(*this, "NickLabel");
+  label = &container_.addWidget<WLabel>(*this, "NickLabel");
   label->setText(res_mgr.getLang({name_, "PlayerName"}));
 
-  entry_nick_ = container_.addWidget<WEntry>(*this, "NickEntry");
+  entry_nick_ = &container_.addWidget<WEntry>(*this, "NickEntry");
   entry_nick_->setText(cfg.get("Client.Nick", ""));
 
-  label = container_.addWidget<WLabel>(*this, "PlayerNbLabel");
+  label = &container_.addWidget<WLabel>(*this, "PlayerNbLabel");
   label->setText(res_mgr.getLang({name_, "PlayerNumber"}));
 
-  entry_player_nb_ = container_.addWidget<WEntry>(*this, "PlayerNbEntry");
+  entry_player_nb_ = &container_.addWidget<WEntry>(*this, "PlayerNbEntry");
   entry_player_nb_->setText(cfg.get("Server.PlayerNumber", ""));
 
-  WButton* button = container_.addWidget<WButton>(*this, "CreateButton");
+  WButton* button = &container_.addWidget<WButton>(*this, "CreateButton");
   button->setCaption(res_mgr.getLang({name_, "Create"}));
 
   entry_port_->setNeighbors(button, entry_player_nb_, NULL, NULL);
@@ -291,8 +291,8 @@ void ScreenCreateServer::submit(const sf::Event& ev)
   auto new_screen = std::make_unique<ScreenLobby>(intf_);
   InputMapping mapping = new_screen->getUnusedInputMapping(ev);
   assert(mapping.type() != InputType::NONE);
-  Player* pl = intf_.server()->newLocalPlayer(entry_nick_->text());
-  new_screen->addLocalPlayer(*pl, mapping);
+  Player& pl = intf_.server()->newLocalPlayer(entry_nick_->text());
+  new_screen->addLocalPlayer(pl, mapping);
   intf_.swapScreen(new_screen.release());
 }
 
@@ -355,8 +355,8 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
     InputMapping mapping = this->getUnusedInputMapping(ev);
     if(mapping.type() != InputType::NONE) {
       auto nick = intf_.cfg().get<std::string>("Client.Nick");
-      Player* pl = intf_.server()->newLocalPlayer(nick);
-      this->addLocalPlayer(*pl, mapping);
+      Player& pl = intf_.server()->newLocalPlayer(nick);
+      this->addLocalPlayer(pl, mapping);
     }
     return true;
   }
@@ -386,31 +386,31 @@ void ScreenLobby::onServerChangeFieldConfs()
   }
 }
 
-void ScreenLobby::onPlayerJoined(Player* pl)
+void ScreenLobby::onPlayerJoined(Player& pl)
 {
-  if(!pl->local()) {
-    this->addRemotePlayer(*pl);
+  if(!pl.local()) {
+    this->addRemotePlayer(pl);
   }
 }
 
-void ScreenLobby::onPlayerChangeNick(Player* pl, const std::string& )
+void ScreenLobby::onPlayerChangeNick(Player& pl, const std::string& )
 {
-  player_frames_.find(pl->plid())->second->update();
+  player_frames_.find(pl.plid())->second->update();
 }
 
-void ScreenLobby::onPlayerStateChange(Player* pl)
+void ScreenLobby::onPlayerStateChange(Player& pl)
 {
-  if(pl->state() == Player::State::QUIT) {
-    player_frames_.erase(pl->plid());
+  if(pl.state() == Player::State::QUIT) {
+    player_frames_.erase(pl.plid());
     this->updatePlayerFramesLayout();
   } else {
-    player_frames_.find(pl->plid())->second->update();
+    player_frames_.find(pl.plid())->second->update();
   }
 }
 
-void ScreenLobby::onPlayerChangeFieldConf(Player* pl)
+void ScreenLobby::onPlayerChangeFieldConf(Player& pl)
 {
-  player_frames_.find(pl->plid())->second->update();
+  player_frames_.find(pl.plid())->second->update();
 }
 
 
@@ -437,7 +437,7 @@ void ScreenLobby::addLocalPlayer(Player& pl, const InputMapping& mapping)
   frame.setMapping(mapping);
   player_frames_.emplace(pl.plid(), std::move(frame_ptr));
   frame.updateConfItems();
-  intf_.instance()->playerSetState(&pl, Player::State::LOBBY);
+  intf_.instance()->playerSetState(pl, Player::State::LOBBY);
   this->updatePlayerFramesLayout();
 }
 
@@ -490,10 +490,10 @@ const std::string& ScreenLobby::WPlayerFrame::type() const {
 ScreenLobby::WPlayerFrame::WPlayerFrame(const Screen& screen, Player& pl):
     WContainer(screen, ""), player_(pl), mapping_(), focused_(nullptr)
 {
-  frame_ = addWidget<WFrame>(screen, IniFile::join(type(), "Border"));
+  frame_ = &addWidget<WFrame>(screen, IniFile::join(type(), "Border"));
 
-  nick_ = addWidget<WLabel>(screen, IniFile::join(type(), "Nick"));
-  choice_conf_ = addWidget<WChoice>(screen, IniFile::join(type(), "Conf"));
+  nick_ = &addWidget<WLabel>(screen, IniFile::join(type(), "Nick"));
+  choice_conf_ = &addWidget<WChoice>(screen, IniFile::join(type(), "Conf"));
 
   this->applyStyle(ready_, "Ready");
   ready_.setOrigin(ready_.getLocalBounds().width/2.f, ready_.getLocalBounds().height/2.f);
@@ -570,7 +570,7 @@ bool ScreenLobby::WPlayerFrame::onInputEvent(const sf::Event& ev)
         auto instance = screen_.intf().instance();
         auto* fc = instance->conf().fieldConf(choice_conf_->value());
         if(fc) {  // should always be true
-          instance->playerSetFieldConf(&player_, *fc);
+          instance->playerSetFieldConf(player_, *fc);
         }
       }
       return true;
@@ -579,16 +579,16 @@ bool ScreenLobby::WPlayerFrame::onInputEvent(const sf::Event& ev)
 
   if(mapping_.confirm.match(ev)) {
     if(player_.state() != Player::State::LOBBY_READY) {
-      screen_.intf().instance()->playerSetState(&player_, Player::State::LOBBY_READY);
+      screen_.intf().instance()->playerSetState(player_, Player::State::LOBBY_READY);
       this->focus(nullptr);
     }
     return true;
   } else if(mapping_.cancel.match(ev)) {
     if(player_.state() == Player::State::LOBBY_READY) {
-      screen_.intf().instance()->playerSetState(&player_, Player::State::LOBBY);
+      screen_.intf().instance()->playerSetState(player_, Player::State::LOBBY);
       this->focus(choice_conf_);
     } else {
-      screen_.intf().instance()->playerSetState(&player_, Player::State::QUIT);
+      screen_.intf().instance()->playerSetState(player_, Player::State::QUIT);
     }
     return true;
   } else if(focused_) {

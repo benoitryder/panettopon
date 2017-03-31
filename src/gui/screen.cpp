@@ -14,7 +14,7 @@ Screen::Screen(GuiInterface& intf, const std::string& name):
 {
   std::string val;
   if(fetchStyle<std::string>("BackgroundImage", val)) {
-    background_.img = intf_.res_mgr().getImage(val);
+    background_.img = &intf_.res_mgr().getImage(val);
     // note: assume that the background image always needs wrapping
     sf::Texture::bind(background_.img);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

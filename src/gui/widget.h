@@ -101,12 +101,12 @@ class WContainer: public Widget
  public:
   WContainer(const Screen& screen, const std::string& name);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-  template <class T, class... Args> T* addWidget(Args&&... args)
+  template <class T, class... Args> T& addWidget(Args&&... args)
   {
     std::unique_ptr<T> unique = std::make_unique<T>(args...);
     T* raw = unique.get();
     widgets.push_back(std::move(unique));
-    return raw;
+    return *raw;
   }
 
  protected:

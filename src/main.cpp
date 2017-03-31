@@ -215,19 +215,19 @@ int main(int /*argc*/, char** argv)
 #ifndef WITHOUT_INTF_SERVER
     if( intfstr == "server" ) {
       BasicServerInterface intf;
-      ret = intf.run(&cfg);
+      ret = intf.run(cfg);
     } else
 #endif
 #ifndef WITHOUT_INTF_CURSES
     if( intfstr == "curses" ) {
       curses::CursesInterface intf;
-      ret = intf.run(&cfg);
+      ret = intf.run(cfg);
     } else
 #endif
 #ifndef WITHOUT_INTF_GUI
     if( intfstr == "gui" ) {
       gui::GuiInterface intf;
-      ret = intf.run(&cfg);
+      ret = intf.run(cfg);
     } else
 #endif
     {

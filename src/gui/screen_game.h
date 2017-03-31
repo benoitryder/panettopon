@@ -88,12 +88,12 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
   virtual void exit();
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event& ev);
-  virtual void onPlayerStep(Player* pl);
-  virtual void onPlayerRanked(Player* pl);
+  virtual void onPlayerStep(Player& pl);
+  virtual void onPlayerRanked(Player& pl);
   virtual void onStateChange();
 
   /// InputProvider interface.
-  virtual KeyState getNextInput(Player* pl);
+  virtual KeyState getNextInput(const Player& pl);
 
   void setPlayerMapping(const Player& pl, const InputMapping& mapping);
 

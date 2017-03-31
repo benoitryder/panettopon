@@ -46,16 +46,16 @@ void FieldConf::fromPacket(const netplay::FieldConf& pkt)
   }
 }
 
-void FieldConf::toPacket(netplay::FieldConf* pkt) const
+void FieldConf::toPacket(netplay::FieldConf& pkt) const
 {
-  pkt->set_name(name);
+  pkt.set_name(name);
 #define FIELD_CONF_EXPR_INIT(n,ini) \
-  pkt->set_##n(n);
+  pkt.set_##n(n);
   FIELD_CONF_APPLY(FIELD_CONF_EXPR_INIT);
 #undef FIELD_CONF_EXPR_INIT
-  std::copy(raise_speeds.begin(), raise_speeds.end(), google::protobuf::RepeatedFieldBackInserter(pkt->mutable_raise_speeds()));
-  std::copy(raise_speed_changes.begin(), raise_speed_changes.end(), google::protobuf::RepeatedFieldBackInserter(pkt->mutable_raise_speed_changes()));
-  pkt->set_raise_adjacent(static_cast<netplay::FieldConf::RaiseAdjacent>(raise_adjacent));
+  std::copy(raise_speeds.begin(), raise_speeds.end(), google::protobuf::RepeatedFieldBackInserter(pkt.mutable_raise_speeds()));
+  std::copy(raise_speed_changes.begin(), raise_speed_changes.end(), google::protobuf::RepeatedFieldBackInserter(pkt.mutable_raise_speed_changes()));
+  pkt.set_raise_adjacent(static_cast<netplay::FieldConf::RaiseAdjacent>(raise_adjacent));
 }
 
 void FieldConf::fromIniFile(const IniFile& cfg, const std::string& section)
@@ -149,188 +149,188 @@ void Field::step(KeyState keys)
 
   for( y=1; y<=FIELD_HEIGHT; y++ ) {
     for( x=0; x<FIELD_WIDTH; x++ ) { // order matters, for garbage processing
-      Block* bk = &grid_[x][y];
-      if( bk->isNone() ) {
+      Block& bk = grid_[x][y];
+      if(bk.isNone()) {
         continue;
       }
 
       // TODO check condition and moment for auto-raise
       if( stop_dec ) {
-        if( bk->isState(BkColor::FLASH) ||
-            bk->isState(BkGarbage::FLASH) ) {
+        if(bk.isState(BkColor::FLASH) ||
+           bk.isState(BkGarbage::FLASH)) {
           raise = stop_dec = false; //TODO:check
         } else if(
-            raise && !bk->isState(BkColor::REST) &&
-            !bk->isState(BkGarbage::REST) ) {
+            raise && !bk.isState(BkColor::REST) &&
+            !bk.isState(BkGarbage::REST) ) {
           raise = false;
         }
       }
 
       // swapped block, don't "evolve"
-      if( bk->swapped ) {
+      if(bk.swapped) {
         continue;
       }
 
-      Block* bk2 = &grid_[x][y-1]; // under block
+      Block& bk2 = grid_[x][y-1]; // under block
 
       // color blocks
-      if( bk->isColor() ) {
-        BkColor* bkc = &bk->bk_color;
-        if( bkc->state == BkColor::REST ) {
-          if( bk2->swapped ) {
+      if(bk.isColor()) {
+        BkColor& bkc = bk.bk_color;
+        if( bkc.state == BkColor::REST ) {
+          if(bk2.swapped) {
             // do nothing
-          } else if( bk2->isNone() ) {
-            bkc->state = BkColor::LEVITATE;
-            bk->chaining = false;
-            bk->ntick = tick_ + conf_.levitate_tk;
-          } else if( bk2->isState(BkColor::LEVITATE) ) {
-            bkc->state = BkColor::LEVITATE;
-            bk->chaining = bk2->chaining;
-            bk->ntick = bk2->ntick;
-          } else if( bk->chaining ) {
+          } else if(bk2.isNone()) {
+            bkc.state = BkColor::LEVITATE;
+            bk.chaining = false;
+            bk.ntick = tick_ + conf_.levitate_tk;
+          } else if(bk2.isState(BkColor::LEVITATE)) {
+            bkc.state = BkColor::LEVITATE;
+            bk.chaining = bk2.chaining;
+            bk.ntick = bk2.ntick;
+          } else if(bk.chaining) {
             // remove chain flag (kept after laid state)
-            bkc->state = BkColor::REST;
-            bk->chaining = false;
+            bkc.state = BkColor::REST;
+            bk.chaining = false;
           }
-        } else if( bkc->state == BkColor::LEVITATE ) {
-          if( tick_ >= bk->ntick ) {
-            if( bk2->isNone() ) {
-              bk2->type = Block::COLOR;
-              bk2->bk_color.state = BkColor::FALL;
-              bk2->bk_color.color = bkc->color;
-              bk2->chaining = bk->chaining;
-              bk2->ntick = 0;
-              *bk = Block();
+        } else if(bkc.state == BkColor::LEVITATE) {
+          if(tick_ >= bk.ntick) {
+            if(bk2.isNone()) {
+              bk2.type = Block::COLOR;
+              bk2.bk_color.state = BkColor::FALL;
+              bk2.bk_color.color = bkc.color;
+              bk2.chaining = bk.chaining;
+              bk2.ntick = 0;
+              bk = Block();
             } else {
-              bkc->state = BkColor::LAID;
-              bk->ntick = 0;
+              bkc.state = BkColor::LAID;
+              bk.ntick = 0;
               step_info_.blocks.laid++;
             }
-          } else if( bk2->isState(BkColor::LEVITATE) ) {
+          } else if(bk2.isState(BkColor::LEVITATE)) {
             // swapping blocks below chaining falling block don't cancel chain
-            bkc->state = BkColor::LEVITATE;
-            bk->chaining = bk->chaining || bk2->chaining;
-            bk->ntick = bk2->ntick;
+            bkc.state = BkColor::LEVITATE;
+            bk.chaining = bk.chaining || bk2.chaining;
+            bk.ntick = bk2.ntick;
           }
-        } else if( bkc->state == BkColor::FALL ) {
-          if( bk2->isNone() ) {
-            *bk2 = *bk;
-            bk->type = Block::NONE;
-            bk->chaining = false;
-            bk->ntick = 0;
-          } else if( bk2->isState(BkColor::LEVITATE) ) {
+        } else if(bkc.state == BkColor::FALL) {
+          if(bk2.isNone()) {
+            bk2 = bk;
+            bk.type = Block::NONE;
+            bk.chaining = false;
+            bk.ntick = 0;
+          } else if(bk2.isState(BkColor::LEVITATE)) {
             // swapping blocks below chaining falling block don't cancel chain
-            bkc->state = BkColor::LEVITATE;
-            bk->ntick = bk2->ntick;
+            bkc.state = BkColor::LEVITATE;
+            bk.ntick = bk2.ntick;
           } else {
-            bkc->state = BkColor::LAID;
-            bk->ntick = 0;
+            bkc.state = BkColor::LAID;
+            bk.ntick = 0;
             step_info_.blocks.laid++;
           }
-        } else if( bkc->state == BkColor::LAID ) {
-          if( bk2->isNone() ) {
-            bkc->state = BkColor::LEVITATE;
-            bk->ntick = tick_ + conf_.levitate_tk;
-          } else if( bk2->isState(BkColor::LEVITATE) ) {
-            bkc->state = BkColor::LEVITATE;
-            bk->chaining = bk2->chaining;
-            bk->ntick = bk2->ntick;
+        } else if(bkc.state == BkColor::LAID) {
+          if(bk2.isNone()) {
+            bkc.state = BkColor::LEVITATE;
+            bk.ntick = tick_ + conf_.levitate_tk;
+          } else if(bk2.isState(BkColor::LEVITATE)) {
+            bkc.state = BkColor::LEVITATE;
+            bk.chaining = bk2.chaining;
+            bk.ntick = bk2.ntick;
           } else {
-            bkc->state = BkColor::REST;
+            bkc.state = BkColor::REST;
           }
         }
-        else if( bk->ntick != 0 && tick_ >= bk->ntick ) {
+        else if(bk.ntick != 0 && tick_ >= bk.ntick) {
           // matching, tick events
-          if( bkc->state == BkColor::FLASH ) {
-            bkc->state = BkColor::MUTATE;
-            bk->ntick = tick_ + conf_.pop0_tk + bk->combo_info.pos * conf_.pop_tk;
-          } else if( bkc->state == BkColor::MUTATE ) {
-            bkc->state = BkColor::CLEARED;
-            bk->ntick = tick_ + (bk->combo_info.group_end - bk->combo_info.pos - 1) * conf_.pop_tk + 1;
-            step_info_.blocks.popped.push_back(bk->combo_info);
-          } else if( bkc->state == BkColor::CLEARED ) {
-            bk->type = Block::NONE;
-            bk->chaining = false;
-            bk->ntick = 0;
+          if(bkc.state == BkColor::FLASH) {
+            bkc.state = BkColor::MUTATE;
+            bk.ntick = tick_ + conf_.pop0_tk + bk.combo_info.pos * conf_.pop_tk;
+          } else if( bkc.state == BkColor::MUTATE ) {
+            bkc.state = BkColor::CLEARED;
+            bk.ntick = tick_ + (bk.combo_info.group_end - bk.combo_info.pos - 1) * conf_.pop_tk + 1;
+            step_info_.blocks.popped.push_back(bk.combo_info);
+          } else if(bkc.state == BkColor::CLEARED) {
+            bk.type = Block::NONE;
+            bk.chaining = false;
+            bk.ntick = 0;
             // above blocks: levitate + chain
             int yy;
             for( yy=y+1; yy<FIELD_HEIGHT; yy++ ) {
-              Block* bk3 = &grid_[x][yy];
-              if( !bk3->isState(BkColor::REST) && !bk3->isState(BkColor::LAID) ) {
+              Block& bk3 = grid_[x][yy];
+              if(!bk3.isState(BkColor::REST) && !bk3.isState(BkColor::LAID)) {
                 break;
               }
-              bk3->bk_color.state = BkColor::LEVITATE;
-              bk3->chaining = true;
-              bk3->ntick = tick_ + conf_.levitate_tk;
+              bk3.bk_color.state = BkColor::LEVITATE;
+              bk3.chaining = true;
+              bk3.ntick = tick_ + conf_.levitate_tk;
             }
-          } else if( bkc->state == BkColor::TRANSFORMED ) {
-            bkc->state = BkColor::LEVITATE;
-            bk->chaining = true;
-            bk->ntick = tick_ + conf_.transform_tk;
+          } else if(bkc.state == BkColor::TRANSFORMED) {
+            bkc.state = BkColor::LEVITATE;
+            bk.chaining = true;
+            bk.ntick = tick_ + conf_.transform_tk;
           }
         }
       }
 
       // garbages
-      else if( bk->isGarbage() ) {
-        BkGarbage* bkg = &bk->bk_garbage;
-        Garbage* gb = bkg->garbage;
-        if( bkg->state == BkGarbage::REST ) {
-          if( bk2->isNone() || bk2->isState(BkGarbage::FALL) ) {
+      else if(bk.isGarbage()) {
+        BkGarbage& bkg = bk.bk_garbage;
+        Garbage& gb = *bkg.garbage;
+        if(bkg.state == BkGarbage::REST) {
+          if(bk2.isNone() || bk2.isState(BkGarbage::FALL)) {
             // all below blocks are identical
             // Block::NONE and BkGarbage::FALL should not be mixed
             int xx;
-            for( xx=gb->pos.x+1; xx<gb->pos.x+gb->size.x; xx++ ) {
+            for(xx=gb.pos.x+1; xx<gb.pos.x+gb.size.x; xx++) {
               const Block& bk_it = block(xx,y-1);
-              if( bk_it.type != bk2->type ||
+              if(bk_it.type != bk2.type ||
                  (bk_it.type == Block::GARBAGE &&
-                  bk_it.bk_garbage.state != bk2->bk_garbage.state) ) {
+                  bk_it.bk_garbage.state != bk2.bk_garbage.state)) {
                 break;
               }
             }
-            if( xx == gb->pos.x+gb->size.x ) {
+            if(xx == gb.pos.x+gb.size.x) {
               this->setGarbageState(gb, BkGarbage::FALL);
             }
           }
           // skip processed blocks (before pos.y update)
           //note: does not work if size.y>1 && size.x<FIELD_WIDTH
-          x = gb->pos.x + gb->size.x-1;
-          y = gb->pos.y + gb->size.y-1; // for combos value does not change
-        } else if( bkg->state == BkGarbage::FALL ) {
+          x = gb.pos.x + gb.size.x-1;
+          y = gb.pos.y + gb.size.y-1; // for combos value does not change
+        } else if(bkg.state == BkGarbage::FALL) {
           int xx;
-          for( xx=gb->pos.x; xx<gb->pos.x+gb->size.x; xx++ ) {
+          for(xx=gb.pos.x; xx<gb.pos.x+gb.size.x; xx++) {
             if( !block(xx,y-1).isNone() ) {
               break;
             }
           }
-          if( xx == gb->pos.x+gb->size.x ) {
+          if(xx == gb.pos.x+gb.size.x) {
             this->fallGarbage(gb);
           } else {
             this->setGarbageState(gb, BkGarbage::REST);
-            step_info_.blocks.laid += gb->size.x * gb->size.y;
+            step_info_.blocks.laid += gb.size.x * gb.size.y;
           }
 
           // skip processed blocks (before pos.y update)
           //note: does not work if size.y>1 && size.x<FIELD_WIDTH
-          x = gb->pos.x + gb->size.x-1;
-          y = gb->pos.y + gb->size.y-1; // for combos value does not change
+          x = gb.pos.x + gb.size.x-1;
+          y = gb.pos.y + gb.size.y-1; // for combos value does not change
         }
-        else if( bk->ntick != 0 && tick_ >= bk->ntick ) {
+        else if(bk.ntick != 0 && tick_ >= bk.ntick) {
           // matching, tick events
-          if( bkg->state == BkGarbage::FLASH ) {
-            bkg->state = BkGarbage::MUTATE;
-            bk->ntick = tick_ + conf_.pop0_tk + bk->combo_info.pos * conf_.pop_tk;
-          } else if( bkg->state == BkGarbage::MUTATE ) {
-            if( y < gb->pos.y ) {
+          if(bkg.state == BkGarbage::FLASH) {
+            bkg.state = BkGarbage::MUTATE;
+            bk.ntick = tick_ + conf_.pop0_tk + bk.combo_info.pos * conf_.pop_tk;
+          } else if(bkg.state == BkGarbage::MUTATE) {
+            if(y < gb.pos.y) {
               this->transformGarbage(x, y);
             } else {
-              bkg->state = BkGarbage::TRANSFORMED;
-              bk->ntick = tick_ + (bk->combo_info.group_end - bk->combo_info.pos - 1) * conf_.pop_tk + 1;
+              bkg.state = BkGarbage::TRANSFORMED;
+              bk.ntick = tick_ + (bk.combo_info.group_end - bk.combo_info.pos - 1) * conf_.pop_tk + 1;
             }
-            step_info_.blocks.popped.push_back(bk->combo_info);
-          } else if( bkg->state == BkGarbage::TRANSFORMED ) {
-            bkg->state = BkGarbage::REST;
-            bk->ntick = 0;
+            step_info_.blocks.popped.push_back(bk.combo_info);
+          } else if(bkg.state == BkGarbage::TRANSFORMED) {
+            bkg.state = BkGarbage::REST;
+            bk.ntick = 0;
           }
         }
       }
@@ -445,10 +445,10 @@ void Field::step(KeyState keys)
         bk.combo_info = ComboInfo{ step_info_.chain, combo_pos++, step_info_.combo };
 
         // garbages, ntick, chaining and combo_info are set later
-        if(x > 0) garbage_end += this->matchGarbage(&grid_[x-1][y]);
-        if(x < FIELD_WIDTH-1) garbage_end += this->matchGarbage(&grid_[x+1][y]);
-        if(y > 1) garbage_end += this->matchGarbage(&grid_[x][y-1]);
-        if(y < FIELD_HEIGHT) garbage_end += this->matchGarbage(&grid_[x][y+1]);
+        if(x > 0) garbage_end += this->matchGarbage(grid_[x-1][y]);
+        if(x < FIELD_WIDTH-1) garbage_end += this->matchGarbage(grid_[x+1][y]);
+        if(y > 1) garbage_end += this->matchGarbage(grid_[x][y-1]);
+        if(y < FIELD_HEIGHT) garbage_end += this->matchGarbage(grid_[x][y+1]);
       }
     }
 
@@ -477,36 +477,36 @@ void Field::step(KeyState keys)
     //TODO drop condition: no drop when flashing/chain
     gbs_field_.push_back(std::move(gbs_drop_.front()));
     gbs_drop_.pop_front();
-    Garbage* gb = gbs_field_.back().get();
-    gb->pos.y = FIELD_HEIGHT;
+    Garbage& gb = *gbs_field_.back().get();
+    gb.pos.y = FIELD_HEIGHT;
 
     Block bkgb;
     bkgb.type = Block::GARBAGE;
-    bkgb.bk_garbage = (BkGarbage){ BkGarbage::REST, gb };
-    if( gb->type == Garbage::TYPE_CHAIN ) {
+    bkgb.bk_garbage = (BkGarbage){ BkGarbage::REST, &gb };
+    if( gb.type == Garbage::TYPE_CHAIN ) {
       // new chain
-      gb->pos.x = 0;
+      gb.pos.x = 0;
       for( x=0; x<FIELD_WIDTH; x++ ) {
         grid_[x][FIELD_HEIGHT] = bkgb;
       }
-    } else if( gb->type == Garbage::TYPE_COMBO ) {
+    } else if( gb.type == Garbage::TYPE_COMBO ) {
       // new combo
-      int xx = gb_drop_pos_[gb->size.x];
-      gb->pos.x = xx;
-      for( x=0; x<gb->size.x; x++ ) {
+      int xx = gb_drop_pos_[gb.size.x];
+      gb.pos.x = xx;
+      for( x=0; x<gb.size.x; x++ ) {
         grid_[x+xx][FIELD_HEIGHT] = bkgb;
       }
 
       // iterate drop pos
-      if( 2*gb->size.x > FIELD_WIDTH ) {
+      if( 2*gb.size.x > FIELD_WIDTH ) {
         xx++;
       } else {
-        xx += gb->size.x;
+        xx += gb.size.x;
       }
-      if( xx + gb->size.x > FIELD_WIDTH ) {
+      if( xx + gb.size.x > FIELD_WIDTH ) {
         xx = 0;
       }
-      gb_drop_pos_[gb->size.x] = xx;
+      gb_drop_pos_[gb.size.x] = xx;
     }
     raise = 0;
   }
@@ -568,16 +568,16 @@ void Field::step(KeyState keys)
     }
   } else if( (keys_input & GAME_KEY_SWAP) && key_repeat_ == 0 ) {
     const FieldPos& p = cursor_;
-    Block* bk1 = &grid_[p.x  ][p.y];
-    Block* bk2 = &grid_[p.x+1][p.y];
+    Block& bk1 = grid_[p.x  ][p.y];
+    Block& bk2 = grid_[p.x+1][p.y];
 
     if( // swappable
-        ( bk1->isNone() || bk1->isState(BkColor::REST) || bk1->isState(BkColor::FALL) ) &&
-        ( bk2->isNone() || bk2->isState(BkColor::REST) || bk2->isState(BkColor::FALL) ) &&
+        (bk1.isNone() || bk1.isState(BkColor::REST) || bk1.isState(BkColor::FALL)) &&
+        (bk2.isNone() || bk2.isState(BkColor::REST) || bk2.isState(BkColor::FALL)) &&
         // don't swap two empty blocks
-        ( !bk1->isNone() || !bk2->isNone() ) &&
+        (!bk1.isNone() || !bk2.isNone()) &&
         // not under a levitating block
-        !( p.y < FIELD_HEIGHT && (
+        !(p.y < FIELD_HEIGHT && (
                 grid_[p.x  ][p.y+1].isState(BkColor::LEVITATE) ||
                 grid_[p.x+1][p.y+1].isState(BkColor::LEVITATE) )
          ) ) {
@@ -587,13 +587,13 @@ void Field::step(KeyState keys)
         grid_[swap_.x+1][swap_.y].swapped = false;
       }
       // new swap
-      Block bk = *bk1;
-      *bk1 = *bk2;
-      *bk2 = bk;
+      Block bk = bk1;
+      bk1 = bk2;
+      bk2 = bk;
       swap_ = cursor_;
       swap_dt_ = conf_.swap_tk;
-      bk1->swapped = true;
-      bk2->swapped = true;
+      bk1.swapped = true;
+      bk2.swapped = true;
       step_info_.swap = true;
     }
   } else if( keys & GAME_KEY_RAISE ) {
@@ -672,9 +672,9 @@ void Field::step(KeyState keys)
 }
 
 
-void Field::waitGarbageDrop(Garbage* gb)
+void Field::waitGarbageDrop(const Garbage& gb)
 {
-  LOG("[%u|%u] waitGarbageDrop(%u)", fldid_, tick_, gb->gbid);
+  LOG("[%u|%u] waitGarbageDrop(%u)", fldid_, tick_, gb.gbid);
   gbs_wait_.push_back(this->removeHangingGarbage(gb));
 }
 
@@ -693,11 +693,11 @@ void Field::insertHangingGarbage(std::unique_ptr<Garbage> gb, unsigned int pos)
   gbs_hang_.insert(gbs_hang_.begin()+pos, std::move(gb));
 }
 
-std::unique_ptr<Garbage> Field::removeHangingGarbage(Garbage* gb)
+std::unique_ptr<Garbage> Field::removeHangingGarbage(const Garbage& gb)
 {
-  LOG("[%u|%u] removeHangingGarbage(%u)", fldid_, tick_, gb->gbid);
+  LOG("[%u|%u] removeHangingGarbage(%u)", fldid_, tick_, gb.gbid);
   for(auto it=gbs_hang_.begin(); it!=gbs_hang_.end(); ++it) {
-    if(it->get() == gb) {
+    if(it->get() == &gb) {
       std::unique_ptr<Garbage> ret = std::move(*it);
       gbs_hang_.erase(it);
       return ret;
@@ -726,14 +726,14 @@ void Field::abort()
 }
 
 
-void Field::setGridContentToPacket(google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block>* grid)
+void Field::setGridContentToPacket(google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block>& grid)
 {
-  grid->Clear();
-  grid->Reserve(FIELD_WIDTH*(FIELD_HEIGHT+1));
+  grid.Clear();
+  grid.Reserve(FIELD_WIDTH*(FIELD_HEIGHT+1));
   int x, y;
   for( y=0; y<=FIELD_HEIGHT; y++ ) {
     for( x=0; x<FIELD_WIDTH; x++ ) {
-      netplay::PktPlayerField_Block* np_bk = grid->Add();
+      netplay::PktPlayerField_Block* np_bk = grid.Add();
       const Block& bk = block(x,y);
       np_bk->set_swapped( bk.swapped );
       np_bk->set_chaining( bk.chaining );
@@ -759,30 +759,29 @@ bool Field::setGridContentFromPacket(const google::protobuf::RepeatedPtrField<ne
   if( grid.size() != FIELD_WIDTH*(FIELD_HEIGHT+1) ) {
     return false;
   }
-  int x, y;
   google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block>::const_iterator it = grid.begin();
-  for( y=0; y<=FIELD_HEIGHT; y++ ) {
-    for( x=0; x<FIELD_WIDTH; x++ ) {
-      Block* bk = &grid_[x][y];
+  for(int y=0; y<=FIELD_HEIGHT; y++) {
+    for(int x=0; x<FIELD_WIDTH; x++) {
+      Block& bk = grid_[x][y];
       const netplay::PktPlayerField_Block& np_bk = (*it++);
       if( np_bk.has_bk_color() ) {
         if( np_bk.has_bk_garbage() ) {
           return false; // mutually exclusive fields
         }
         const netplay::PktPlayerField_BkColor& np_bk_color = np_bk.bk_color();
-        bk->type = Block::COLOR;
-        BkColor* bk_color = &bk->bk_color;
-        bk_color->state = static_cast<BkColor::State>(np_bk_color.state());
-        bk_color->color = np_bk_color.color();
+        bk.type = Block::COLOR;
+        BkColor& bk_color = bk.bk_color;
+        bk_color.state = static_cast<BkColor::State>(np_bk_color.state());
+        bk_color.color = np_bk_color.color();
       } else if ( np_bk.has_bk_garbage() ) {
         assert( !"not supported yet" );
       } else {
-        bk->type = Block::NONE;
+        bk.type = Block::NONE;
       }
       // invalid states may be set (eg. type=GARBAGE, swapped=true)
-      bk->swapped = np_bk.swapped();
-      bk->chaining = np_bk.chaining();
-      bk->ntick = np_bk.ntick();
+      bk.swapped = np_bk.swapped();
+      bk.chaining = np_bk.chaining();
+      bk.ntick = np_bk.ntick();
     }
   }
   return true;
@@ -793,10 +792,8 @@ void Field::raise()
 {
   LOG("[%u|%u] raise", fldid_, tick_);
 
-  int x;
-  for( x=0; x<FIELD_WIDTH; x++ ) {
-    int y;
-    for( y=FIELD_HEIGHT; y>0; y-- ) {
+  for(int x=0; x<FIELD_WIDTH; x++) {
+    for(int y=FIELD_HEIGHT; y>0; y--) {
       grid_[x][y] = grid_[x][y-1];
     }
     this->setRaiseColor(x);
@@ -852,113 +849,111 @@ void Field::setRaiseColor(int x, int y)
     }
   }
 
-  Block* bk = &grid_[x][y];
-  bk->type = Block::COLOR;
+  Block& bk = grid_[x][y];
+  bk.type = Block::COLOR;
   for(;;) {
     int color = this->rand() % conf_.color_nb;
     if( color == bad_color1 || color == bad_color2 ) {
       continue;
     }
-    bk->bk_color.color = color;
+    bk.bk_color.color = color;
     break;
   }
-  bk->bk_color.state = BkColor::REST;
-  bk->ntick = 0;
+  bk.bk_color.state = BkColor::REST;
+  bk.ntick = 0;
 }
 
 
-void Field::setGarbageState(const Garbage* gb, BkGarbage::State st)
+void Field::setGarbageState(const Garbage& gb, BkGarbage::State st)
 {
   int x, y;
-  for( x=gb->pos.x; x<gb->pos.x+gb->size.x; x++ ) {
-    for( y=gb->pos.y; y<gb->pos.y+gb->size.y && y<=FIELD_HEIGHT; y++ ) {
+  for( x=gb.pos.x; x<gb.pos.x+gb.size.x; x++ ) {
+    for( y=gb.pos.y; y<gb.pos.y+gb.size.y && y<=FIELD_HEIGHT; y++ ) {
       grid_[x][y].bk_garbage.state = st;
     }
   }
 }
 
-void Field::fallGarbage(Garbage* gb)
+void Field::fallGarbage(Garbage& gb)
 {
-  int x;
   // for chains: no need to modify "middle" lines
   // bottom line: copy and set ntick
   // (ntick is only used on the bottom line)
-  for( x=gb->pos.x; x<gb->pos.x+gb->size.x; x++ ) {
-    grid_[x][gb->pos.y-1] = grid_[x][gb->pos.y];
-    grid_[x][gb->pos.y-1].ntick = tick_+1;
+  for(int x=gb.pos.x; x<gb.pos.x+gb.size.x; x++) {
+    grid_[x][gb.pos.y-1] = grid_[x][gb.pos.y];
+    grid_[x][gb.pos.y-1].ntick = tick_+1;
   }
 
-  if( gb->pos.y+gb->size.y-1 <= FIELD_HEIGHT ) {
+  if( gb.pos.y+gb.size.y-1 <= FIELD_HEIGHT ) {
     // top line: empty
-    for( x=gb->pos.x; x<gb->pos.x+gb->size.x; x++ ) {
-      grid_[x][gb->pos.y+gb->size.y-1] = Block();
+    for(int x=gb.pos.x; x<gb.pos.x+gb.size.x; x++) {
+      grid_[x][gb.pos.y+gb.size.y-1] = Block();
     }
   } else {
     // add new line (at most 1 per frame)
-    Block* bk = &grid_[gb->pos.x][gb->pos.y];
-    for( x=gb->pos.x; x<gb->pos.x+gb->size.x; x++ ) {
-      grid_[x][FIELD_HEIGHT] = *bk;
+    Block& bk = grid_[gb.pos.x][gb.pos.y];
+    for(int x=gb.pos.x; x<gb.pos.x+gb.size.x; x++) {
+      grid_[x][FIELD_HEIGHT] = bk;
     }
   }
 
-  gb->pos.y--;
+  gb.pos.y--;
 }
 
-unsigned int Field::matchGarbage(Block* bk)
+unsigned int Field::matchGarbage(const Block& bk)
 {
-  if( !bk->isState(BkGarbage::REST) ) {
+  if(!bk.isState(BkGarbage::REST)) {
     return 0;
   }
-  Garbage* gb = bk->bk_garbage.garbage;
+  Garbage& gb = *bk.bk_garbage.garbage;
 
   // update block states
   Block bk_match;
   bk_match.type = Block::GARBAGE;
   bk_match.bk_garbage.state = BkGarbage::FLASH;
-  bk_match.bk_garbage.garbage = gb;
+  bk_match.bk_garbage.garbage = &gb;
   bk_match.ntick = 0;
   // ntick could be set now, but special value 0 is used to detect just-matched
   // garbages that need to be finalized
 
-  int x, y;
-  for( x=0; x<gb->size.x; x++ ) {
-    for( y=0; y<gb->size.y && gb->pos.y+y<=FIELD_HEIGHT; y++ ) {
-      grid_[gb->pos.x+x][gb->pos.y+y] = bk_match;
+  for(int x=0; x<gb.size.x; x++) {
+    for(int y=0; y<gb.size.y && gb.pos.y+y<=FIELD_HEIGHT; y++) {
+      grid_[gb.pos.x+x][gb.pos.y+y] = bk_match;
     }
   }
-  int ret = gb->size.x * gb->size.y;
+  int ret = gb.size.x * gb.size.y;
 
   // match adjacent garbages
-  if( gb->pos.x > 0 ) {
-    for( y=0; y<gb->size.y && gb->pos.y+y<=FIELD_HEIGHT; y++ ) {
-      ret += this->matchGarbage(&grid_[gb->pos.x-1][gb->pos.y+y]);
+  if(gb.pos.x > 0) {
+    for(int y=0; y<gb.size.y && gb.pos.y+y<=FIELD_HEIGHT; y++) {
+      ret += this->matchGarbage(grid_[gb.pos.x-1][gb.pos.y+y]);
     }
   }
-  if( gb->pos.x+gb->size.x < FIELD_WIDTH ) {
-    for( y=0; y<gb->size.y && gb->pos.y+y<=FIELD_HEIGHT; y++ ) {
-      ret += this->matchGarbage(&grid_[gb->pos.x+gb->size.x][gb->pos.y+y]);
+  if(gb.pos.x+gb.size.x < FIELD_WIDTH) {
+    for(int y=0; y<gb.size.y && gb.pos.y+y<=FIELD_HEIGHT; y++) {
+      ret += this->matchGarbage(grid_[gb.pos.x+gb.size.x][gb.pos.y+y]);
     }
   }
-  if( gb->pos.y > 0 ) {
-    for( x=0; x<gb->size.x; x++ ) {
-      ret += this->matchGarbage(&grid_[gb->pos.x+x][gb->pos.y-1]);
+  if(gb.pos.y > 0) {
+    for(int x=0; x<gb.size.x; x++) {
+      ret += this->matchGarbage(grid_[gb.pos.x+x][gb.pos.y-1]);
     }
   }
-  if( gb->pos.y+gb->size.y <= FIELD_HEIGHT ) {
-    for( x=0; x<gb->size.x; x++ ) {
-      ret += this->matchGarbage(&grid_[gb->pos.x+x][gb->pos.y+gb->size.y]);
+  if(gb.pos.y+gb.size.y <= FIELD_HEIGHT) {
+    for(int x=0; x<gb.size.x; x++) {
+      ret += this->matchGarbage(grid_[gb.pos.x+x][gb.pos.y+gb.size.y]);
     }
   }
 
-  gb->size.y--;
-  gb->pos.y++;
+  gb.size.y--;
+  gb.pos.y++;
 
   return ret;
 }
 
 void Field::transformGarbage(int x, int y)
 {
-  Block* bk = &grid_[x][y];
+  Block& bk = grid_[x][y];
   int color = -1;
   if( ++transformed_nb_ == FIELD_WIDTH-1 ) {
     transformed_nb_ = 0;
@@ -997,22 +992,22 @@ void Field::transformGarbage(int x, int y)
   }
 
   // remove garbage if it was its last block
-  Garbage* gb = bk->bk_garbage.garbage;
-  if( gb->size.y == 0 && x == gb->pos.x ) {
+  const Garbage& gb = *bk.bk_garbage.garbage;
+  if(gb.size.y == 0 && x == gb.pos.x) {
     // ptr_list uses objects but we need to compare pointers
     for(auto it=gbs_field_.begin(); it!=gbs_field_.end(); ++it) {
-      if(it->get() == gb ) {
+      if(it->get() == &gb) {
         gbs_field_.erase(it);
         break;
       }
     }
   }
 
-  bk->type = Block::COLOR;
-  bk->bk_color.state = BkColor::TRANSFORMED;
-  bk->bk_color.color = color;
+  bk.type = Block::COLOR;
+  bk.bk_color.state = BkColor::TRANSFORMED;
+  bk.bk_color.color = color;
   // chaining: unchanged
-  bk->ntick = tick_ + (bk->combo_info.group_end - bk->combo_info.pos - 1) * conf_.pop_tk + 2;
+  bk.ntick = tick_ + (bk.combo_info.group_end - bk.combo_info.pos - 1) * conf_.pop_tk + 2;
 }
 
 
@@ -1053,11 +1048,11 @@ void Match::clear()
   fields_.clear();
 }
 
-Field* Match::addField(const FieldConf& conf, uint32_t seed)
+Field& Match::addField(const FieldConf& conf, uint32_t seed)
 {
   assert( !started_ );
   fields_.push_back(std::make_unique<Field>(fields_.size()+1, conf, seed));
-  return fields_.back().get();
+  return *fields_.back().get();
 }
 
 void Match::updateTick()
@@ -1144,16 +1139,16 @@ void Match::addGarbage(std::unique_ptr<Garbage> gb, unsigned int pos)
   gbs_hang_[p->gbid] = p;
 }
 
-void Match::waitGarbageDrop(const Garbage* gb)
+void Match::waitGarbageDrop(const Garbage& gb)
 {
-  assert( gb->to != NULL );
+  assert(gb.to != nullptr);
 
-  auto it = gbs_hang_.find(gb->gbid);
+  auto it = gbs_hang_.find(gb.gbid);
   assert( it != gbs_hang_.end() );
-  Garbage* gb2 = it->second; // same as gb, but not const
+  Garbage& gb2 = *it->second; // same as gb, but not const
   gbs_hang_.erase(it);
-  gb->to->waitGarbageDrop(gb2);
-  gbs_wait_[gb->gbid] = gb2;
+  gb.to->waitGarbageDrop(gb2);
+  gbs_wait_[gb.gbid] = &gb2;
 }
 
 
@@ -1170,29 +1165,29 @@ void GarbageDistributor::reset()
   drop_ticks_.clear();
 }
 
-void GarbageDistributor::updateGarbages(Field* fld)
+void GarbageDistributor::updateGarbages(Field& fld)
 {
   // cancel chain garbage
-  if( fld->chain() < 2 ) {
-    gbs_chain_.erase(fld);
+  if(fld.chain() < 2) {
+    gbs_chain_.erase(&fld);
   }
 
   // check whether a garbage should be dropped (at most one per step)
-  if( fld->hangingGarbageCount() > 0 ) {
-    const Garbage& gb = fld->hangingGarbage(0);
+  if(fld.hangingGarbageCount() > 0) {
+    const Garbage& gb = fld.hangingGarbage(0);
     GbChainMap::iterator it = gbs_chain_.find(gb.from);
     // don't drop garbage of an active chain
     if( it == gbs_chain_.end() && (*it).second != &gb ) {
       GbDropTickMap::iterator it2 = drop_ticks_.find(&gb);
       assert( it2 != drop_ticks_.end() );
-      if( (*it2).second <= fld->tick() ) {
+      if( (*it2).second <= fld.tick() ) {
         drop_ticks_.erase(it2);
-        observer_.onGarbageDrop(&gb);
+        observer_.onGarbageDrop(gb);
       }
     }
   }
 
-  const Field::StepInfo info = fld->stepInfo();
+  const Field::StepInfo info = fld.stepInfo();
   if( info.combo == 0 ) {
     return; // no match, no new garbages
   }
@@ -1203,7 +1198,7 @@ void GarbageDistributor::updateGarbages(Field* fld)
   bool opponent_found = false;
   Field* single_opponent = NULL;
   for(auto& it_fld : fields) {
-    if(it_fld.get() == fld || it_fld->lost()) {
+    if(it_fld.get() == &fld || it_fld->lost()) {
       continue;
     }
     opponent_found = true;
@@ -1225,7 +1220,7 @@ void GarbageDistributor::updateGarbages(Field* fld)
     Field* target_fld = single_opponent;
     if( target_fld == NULL ) {
       // get player with the least chain garbages
-      GbTargetMap::iterator targets_it = targets_chain_.find(fld);
+      GbTargetMap::iterator targets_it = targets_chain_.find(&fld);
       assert( targets_it != targets_chain_.end() );
       FieldContainer::const_iterator it = (*targets_it).second;
       unsigned int min = -1; // overflow: max value
@@ -1235,7 +1230,7 @@ void GarbageDistributor::updateGarbages(Field* fld)
           it = fields.begin();
         }
         Field* fld2 = it->get();
-        if( fld2 == fld || fld2->lost() ) {
+        if(fld2 == &fld || fld2->lost()) {
           continue;
         }
         size_t nb_chain = 0;
@@ -1258,18 +1253,18 @@ void GarbageDistributor::updateGarbages(Field* fld)
       assert( target_fld != NULL );
       (*targets_it).second = it_min;
     }
-    this->newGarbage(fld, target_fld, Garbage::TYPE_CHAIN, 1);
+    this->newGarbage(&fld, target_fld, Garbage::TYPE_CHAIN, 1);
 
   } else if( info.chain > 2 ) {
     // increase chain garbage
-    GbChainMap::iterator it = gbs_chain_.find(fld);
+    GbChainMap::iterator it = gbs_chain_.find(&fld);
     assert( it != gbs_chain_.end() );
-    Garbage* gb = (*it).second;
-    assert( gb->type == Garbage::TYPE_CHAIN );
-    gb->size.y++;
-    drop_ticks_[gb] = fld->tick() + fld->conf().gb_hang_tk;
+    Garbage& gb = *(*it).second;
+    assert(gb.type == Garbage::TYPE_CHAIN);
+    gb.size.y++;
+    drop_ticks_[&gb] = fld.tick() + fld.conf().gb_hang_tk;
     observer_.onGarbageUpdateSize(gb);
-}
+  }
 
   // combo garbage
   // with a width of 6, values match the original PdP rules
@@ -1277,7 +1272,7 @@ void GarbageDistributor::updateGarbages(Field* fld)
     Field* target_fld = single_opponent;
     if( target_fld == NULL ) {
       // get the next target player
-      GbTargetMap::iterator targets_it = targets_combo_.find(fld);
+      GbTargetMap::iterator targets_it = targets_combo_.find(&fld);
       assert( targets_it != targets_combo_.end() );
       FieldContainer::const_iterator it;
       for( it=++(*targets_it).second; ; ++it ) {
@@ -1285,7 +1280,7 @@ void GarbageDistributor::updateGarbages(Field* fld)
           it = fields.begin();
         }
         target_fld = it->get();
-        if( target_fld == fld || target_fld->lost() ) {
+        if(target_fld == &fld || target_fld->lost()) {
           continue;
         }
         (*targets_it).second = it;
@@ -1296,12 +1291,12 @@ void GarbageDistributor::updateGarbages(Field* fld)
 
     if( info.combo-1 <= FIELD_WIDTH ) {
       // one block
-      this->newGarbage(fld, target_fld, Garbage::TYPE_COMBO, info.combo-1);
+      this->newGarbage(&fld, target_fld, Garbage::TYPE_COMBO, info.combo-1);
     } else if( info.combo <= 2*FIELD_WIDTH ) {
       // two blocks
       unsigned int n = (info.combo > FIELD_WIDTH*3/2) ? info.combo : info.combo-1;
-      this->newGarbage(fld, target_fld, Garbage::TYPE_COMBO, n/2);
-      this->newGarbage(fld, target_fld, Garbage::TYPE_COMBO, n/2+n%2);
+      this->newGarbage(&fld, target_fld, Garbage::TYPE_COMBO, n/2);
+      this->newGarbage(&fld, target_fld, Garbage::TYPE_COMBO, n/2+n%2);
     } else {
       // n blocks
       unsigned int n;
@@ -1315,7 +1310,7 @@ void GarbageDistributor::updateGarbages(Field* fld)
         n = 8;
       }
       while( n-- > 0 ) {
-        this->newGarbage(fld, target_fld, Garbage::TYPE_COMBO, FIELD_WIDTH);
+        this->newGarbage(&fld, target_fld, Garbage::TYPE_COMBO, FIELD_WIDTH);
       }
     }
   }
@@ -1327,15 +1322,15 @@ void GarbageDistributor::newGarbage(Field* from, Field* to, Garbage::Type type, 
   assert( to != NULL );
 
   auto gb_unique = std::make_unique<Garbage>();
-  Garbage* gb = gb_unique.get();
-  gb->gbid = this->nextGarbageId();
-  gb->from = from;
-  gb->to = to;
-  gb->type = type;
+  Garbage& gb = *gb_unique.get();
+  gb.gbid = this->nextGarbageId();
+  gb.from = from;
+  gb.to = to;
+  gb.type = type;
 
   unsigned int pos;
   if( type == Garbage::TYPE_CHAIN ) {
-    gb->size = FieldPos(FIELD_WIDTH, size);
+    gb.size = FieldPos(FIELD_WIDTH, size);
     const unsigned int n = to->hangingGarbageCount();
     for( pos=0; pos<n; pos++ ) {
       if( to->hangingGarbage(pos).type == Garbage::TYPE_CHAIN ) {
@@ -1343,17 +1338,17 @@ void GarbageDistributor::newGarbage(Field* from, Field* to, Garbage::Type type, 
       }
     }
   } else if( type == Garbage::TYPE_COMBO ) {
-    gb->size = FieldPos(size, 1);
+    gb.size = FieldPos(size, 1);
     pos = to->hangingGarbageCount(); // push back
   } else {
     assert( !"not supported yet" );
     return;
   }
-  drop_ticks_[gb] = to->tick() + to->conf().gb_hang_tk;
+  drop_ticks_[&gb] = to->tick() + to->conf().gb_hang_tk;
 
   match_.addGarbage(std::move(gb_unique), pos);
   if( type == Garbage::TYPE_CHAIN ) {
-    gbs_chain_[from] = gb;
+    gbs_chain_[from] = &gb;
   }
 
   observer_.onGarbageAdd(gb, pos);

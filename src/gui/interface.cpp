@@ -45,15 +45,15 @@ GuiInterface::~GuiInterface()
   this->endDisplay();
 }
 
-bool GuiInterface::run(IniFile* cfg)
+bool GuiInterface::run(IniFile& cfg)
 {
 #define CONF_LOAD(n,ini) \
-  window_conf_.n = cfg->get({CONF_SECTION, #ini}, window_conf_.n);
+  window_conf_.n = cfg.get({CONF_SECTION, #ini}, window_conf_.n);
   CONF_LOAD(fullscreen,    Fullscreen);
   CONF_LOAD(screen_width,  ScreenWidth);
   CONF_LOAD(screen_height, ScreenHeight);
 #undef CONF_LOAD
-  float f = cfg->get({CONF_SECTION, "FPS"}, 60.0);
+  float f = cfg.get({CONF_SECTION, "FPS"}, 60.0);
   //XXX default not based on the cfg value set in constructor
   if( f <= 0 ) {
     LOG("invalid conf. value for FPS: %f", f);
@@ -61,25 +61,25 @@ bool GuiInterface::run(IniFile* cfg)
     window_conf_.redraw_dt = (1000.0/f);
   }
 
-  res_mgr_.init(cfg->get({CONF_SECTION, "ResPath"}, "./res"));
+  res_mgr_.init(cfg.get({CONF_SECTION, "ResPath"}, "./res"));
   // set some default values
-  if(!cfg->has("Global.Port")) {
-    cfg->set("Global.Port", DEFAULT_PNP_PORT);
+  if(!cfg.has("Global.Port")) {
+    cfg.set("Global.Port", DEFAULT_PNP_PORT);
   }
-  if(!cfg->has("Client.Hostname")) {
-    cfg->set("Client.Hostname", "localhost");
+  if(!cfg.has("Client.Hostname")) {
+    cfg.set("Client.Hostname", "localhost");
   }
-  if(!cfg->has("Client.Nick")) {
-    cfg->set("Client.Nick", "Player");
+  if(!cfg.has("Client.Nick")) {
+    cfg.set("Client.Nick", "Player");
   }
 
   // load input mappings
   for(unsigned int i=1; ; i++) {
     const std::string section = IniFile::join({CONF_SECTION, "Mapping", std::to_string(i)});
-    if(!cfg->has({section, "Type"})) {
+    if(!cfg.has({section, "Type"})) {
       break;
     }
-    InputMapping mapping = InputMapping::parse(*cfg, section);
+    InputMapping mapping = InputMapping::parse(cfg, section);
     if(mapping.type() == InputType::KEYBOARD) {
       input_mappings_.keyboard.push_back(mapping);
     } else if(mapping.type() == InputType::JOYSTICK) {
@@ -115,7 +115,7 @@ bool GuiInterface::run(IniFile* cfg)
   redraw_timer_.async_wait(std::bind(&GuiInterface::onRedrawTick, this, std::placeholders::_1));
 
   assert( cfg_ == NULL );
-  cfg_ = cfg;
+  cfg_ = &cfg;
   io_service_.run();
   cfg_ = NULL;
   return true;
@@ -137,27 +137,27 @@ void GuiInterface::swapScreen(Screen* screen)
 }
 
 
-void GuiInterface::onChat(Player* pl, const std::string& msg)
+void GuiInterface::onChat(Player& pl, const std::string& msg)
 {
   screen_->onChat(pl, msg);
 }
 
-void GuiInterface::onPlayerJoined(Player* pl)
+void GuiInterface::onPlayerJoined(Player& pl)
 {
   screen_->onPlayerJoined(pl);
 }
 
-void GuiInterface::onPlayerChangeNick(Player* pl, const std::string& nick)
+void GuiInterface::onPlayerChangeNick(Player& pl, const std::string& nick)
 {
   screen_->onPlayerChangeNick(pl, nick);
 }
 
-void GuiInterface::onPlayerStateChange(Player* pl)
+void GuiInterface::onPlayerStateChange(Player& pl)
 {
   screen_->onPlayerStateChange(pl);
 }
 
-void GuiInterface::onPlayerChangeFieldConf(Player* pl)
+void GuiInterface::onPlayerChangeFieldConf(Player& pl)
 {
   screen_->onPlayerChangeFieldConf(pl);
 }
@@ -172,12 +172,12 @@ void GuiInterface::onServerChangeFieldConfs()
   screen_->onServerChangeFieldConfs();
 }
 
-void GuiInterface::onPlayerStep(Player* pl)
+void GuiInterface::onPlayerStep(Player& pl)
 {
   screen_->onPlayerStep(pl);
 }
 
-void GuiInterface::onPlayerRanked(Player* pl)
+void GuiInterface::onPlayerRanked(Player& pl)
 {
   screen_->onPlayerRanked(pl);
 }

@@ -49,7 +49,7 @@ class ScreenJoinServer: public Screen
   ScreenJoinServer(GuiInterface& intf);
   virtual void enter();
   virtual bool onInputEvent(const sf::Event& ev);
-  virtual void onPlayerJoined(Player* );
+  virtual void onPlayerJoined(Player&);
   virtual void onServerConnect(bool success);
   virtual void onServerDisconnect();
 
@@ -103,10 +103,10 @@ class ScreenLobby: public Screen
   virtual bool onInputEvent(const sf::Event& ev);
   virtual void onStateChange();
   virtual void onServerChangeFieldConfs();
-  virtual void onPlayerJoined(Player*);
-  virtual void onPlayerChangeNick(Player*, const std::string&);
-  virtual void onPlayerStateChange(Player*);
-  virtual void onPlayerChangeFieldConf(Player*);
+  virtual void onPlayerJoined(Player&);
+  virtual void onPlayerChangeNick(Player&, const std::string&);
+  virtual void onPlayerStateChange(Player&);
+  virtual void onPlayerChangeFieldConf(Player&);
 
   /** @brief Return an unused input mapping
    *
@@ -154,7 +154,7 @@ class ScreenLobby: public Screen
    protected:
     virtual const std::string& type() const;
 
-    /// Focus a given widget
+    /// Focus a given widget, or nothing
     void focus(WFocusable* w);
 
    private:

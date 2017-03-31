@@ -66,7 +66,7 @@ struct FieldConf
    */
   void fromPacket(const netplay::FieldConf& pkt);
   /// Set configuration to a packet
-  void toPacket(netplay::FieldConf* pkt) const;
+  void toPacket(netplay::FieldConf& pkt) const;
 
   /** @brief Set configuration from a configuration file
    * @note Configuration validity is checked.
@@ -142,7 +142,7 @@ struct BkGarbage {
     MUTATE,      ///< will be transformed
     TRANSFORMED, ///< transformed from garbage to garbage
   } state;
-  Garbage* garbage;
+  Garbage* garbage;  ///< never null
 };
 
 /// Field block.
@@ -274,7 +274,7 @@ class Field
   void step(KeyState keys);
 
   /// Move a hanging garbage to wait list.
-  void waitGarbageDrop(Garbage* gb);
+  void waitGarbageDrop(const Garbage& gb);
   /** @brief Drop the next waiting garbage.
    *
    * Garbage will fall on the field as soon as possible.
@@ -292,7 +292,7 @@ class Field
    *
    * The garbage is released and returned.
    */
-  std::unique_ptr<Garbage> removeHangingGarbage(Garbage* gb);
+  std::unique_ptr<Garbage> removeHangingGarbage(const Garbage& gb);
 
   /** @brief Fill field with random blocks.
    *
@@ -311,7 +311,7 @@ class Field
   }
 
   /// Fill a packet message with grid content.
-  void setGridContentToPacket(google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block>* grid);
+  void setGridContentToPacket(google::protobuf::RepeatedPtrField<netplay::PktPlayerField_Block>& grid);
   /** @brief Set grid content from a packet.
    * @return \e false on invalid packet data.
    */
@@ -336,10 +336,10 @@ class Field
   void setRaiseColor(int x, int y=0);
 
   /// Set state for all blocks of a garbage.
-  void setGarbageState(const Garbage* gb, BkGarbage::State st);
+  void setGarbageState(const Garbage& gb, BkGarbage::State st);
 
   /// Handle garbage block fall.
-  void fallGarbage(Garbage* gb);
+  void fallGarbage(Garbage& gb);
 
   /** @brief Match garbage and its neighbors, recursively.
    *
@@ -349,7 +349,7 @@ class Field
    *
    * Return the number of matched garbage blocks.
    */
-  unsigned int matchGarbage(Block* bk);
+  unsigned int matchGarbage(const Block& bk);
 
   /** @brief Transform a garbage block to a color block.
    *
@@ -466,7 +466,7 @@ class Match
   /// Clear match fields and other state information
   void clear();
   /// Create and return a new field.
-  Field* addField(const FieldConf& conf, uint32_t seed);
+  Field& addField(const FieldConf& conf, uint32_t seed);
 
   /** @brief Return the match tick.
    *
@@ -498,7 +498,7 @@ class Match
    */
   void addGarbage(std::unique_ptr<Garbage> gb, unsigned int pos);
   /// Move a hanging garbage to wait list.
-  void waitGarbageDrop(const Garbage* gb);
+  void waitGarbageDrop(const Garbage& gb);
 
  protected:
   FieldContainer fields_;
@@ -530,11 +530,11 @@ class GarbageDistributor
   struct Observer
   {
     /// Called on new garbage.
-    virtual void onGarbageAdd(const Garbage* gb, unsigned int pos) = 0;
+    virtual void onGarbageAdd(const Garbage& gb, unsigned int pos) = 0;
     /// Called on garbage size change.
-    virtual void onGarbageUpdateSize(const Garbage* gb) = 0;
+    virtual void onGarbageUpdateSize(const Garbage& gb) = 0;
     /// Called on garbage (scheduled) drop.
-    virtual void onGarbageDrop(const Garbage* gb) = 0;
+    virtual void onGarbageDrop(const Garbage& gb) = 0;
   };
 
   GarbageDistributor(Match& match, Observer& obs);
@@ -548,7 +548,7 @@ class GarbageDistributor
    * This method uses combo/chain data of the last step.
    * The match is updated too.
    */
-  void updateGarbages(Field* fld);
+  void updateGarbages(Field& fld);
 
  private:
   /** @brief Create, add and return a new (hanging) garbage.

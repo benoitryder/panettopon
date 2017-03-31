@@ -66,9 +66,9 @@ Player* GameInstance::player(const Field* fld)
 }
 
 
-void GameInstance::doStepPlayer(Player* pl, KeyState keys)
+void GameInstance::doStepPlayer(Player& pl, KeyState keys)
 {
-  Field* fld = pl->field();
+  Field* fld = pl.field();
   assert( !fld->lost() );
   Tick prev_tick = fld->tick();
   assert( prev_tick+1 < match_.tick() + conf_.tk_lag_max );
@@ -88,9 +88,9 @@ void GameInstance::doStepPlayer(Player* pl, KeyState keys)
   observer().onPlayerStep(pl);
 }
 
-void GameInstance::stepRemotePlayer(Player* pl, KeyState keys)
+void GameInstance::stepRemotePlayer(Player& pl, KeyState keys)
 {
-  Field* fld = pl->field();
+  Field* fld = pl.field();
   if( fld->lost() ) {
     throw netplay::CallbackError("field lost, cannot step");
   }
@@ -147,14 +147,14 @@ void GameInputScheduler::onInputTick(const boost::system::error_code& ec)
   for(;;) {
     PlayerContainer::iterator it;
     for(it=players_.begin(); it!=players_.end(); ) {
-      Player* pl = (*it);
-      if( !pl->local() || pl->field() == NULL ) {
+      Player& pl = *(*it);
+      if(!pl.local() || pl.field() == nullptr) {
         ++it;
         continue;
       }
       // note: all local players still playing should have the same tick
       // thus, break instead of continue
-      Tick tk = pl->field()->tick();
+      Tick tk = pl.field()->tick();
       if( tk+1 >= instance_.match().tick() + instance_.conf().tk_lag_max ) {
         break;
       }
@@ -165,7 +165,7 @@ void GameInputScheduler::onInputTick(const boost::system::error_code& ec)
         return; // scheduler and/or match stopped
       }
 
-      if( pl->field()->lost() ) {
+      if(pl.field()->lost()) {
         it = players_.erase(it);
       } else {
         ++it;

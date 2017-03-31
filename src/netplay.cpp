@@ -217,7 +217,7 @@ void PeerSocket::processError(const std::string& msg, const boost::system::error
 void PeerSocket::processPacket(const netplay::Packet& pkt)
 {
   if(server_) {
-    server_->observer_.onPeerPacket(this, pkt);
+    server_->observer_.onPeerPacket(*this, pkt);
   }
 }
 
@@ -230,7 +230,7 @@ void PeerSocket::close()
     for(auto it=peers.begin(); it!=peers.end(); ++it) {
       if( (*it).get() == this ) {
         peers.erase(it);
-        server_->observer_.onPeerDisconnect((*it).get());
+        server_->observer_.onPeerDisconnect(*(*it).get());
         server_ = nullptr;
         return;
       }
@@ -310,7 +310,7 @@ void ServerSocket::onAccept(const boost::system::error_code& ec)
       // setting no delay may fail on some systems, ignore error
     }
     try {
-      observer_.onPeerConnect(&peer);
+      observer_.onPeerConnect(peer);
     } catch(const CallbackError& e) {
       peer.PacketSocket::processError(std::string("peer connection failed: ")+e.what());
     }

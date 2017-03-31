@@ -68,11 +68,11 @@ std::string ResourceManager::getResourceFilename(const std::string& filename) co
   return res_path_+"/"+filename;
 }
 
-const sf::Texture* ResourceManager::getImage(const std::string& name) const
+const sf::Texture& ResourceManager::getImage(const std::string& name) const
 {
   const auto it = images_.find(name);
   if( it != images_.end() ) {
-    return (*it).second.get();
+    return *(*it).second.get();
   }
 
   sf::Texture* img = new sf::Texture;
@@ -82,14 +82,14 @@ const sf::Texture* ResourceManager::getImage(const std::string& name) const
   }
   images_[name] = pimg;
 
-  return img;
+  return *img;
 }
 
-const sf::Font* ResourceManager::getFont(const std::string& name) const
+const sf::Font& ResourceManager::getFont(const std::string& name) const
 {
   const auto it = fonts_.find(name);
   if( it != fonts_.end() ) {
-    return (*it).second.get();
+    return *(*it).second.get();
   }
 
   sf::Font* font = new sf::Font;
@@ -99,14 +99,14 @@ const sf::Font* ResourceManager::getFont(const std::string& name) const
   }
   fonts_[name] = pfont;
 
-  return font;
+  return *font;
 }
 
-const sf::SoundBuffer* ResourceManager::getSound(const std::string& name) const
+const sf::SoundBuffer& ResourceManager::getSound(const std::string& name) const
 {
   const auto it = sounds_.find(name);
   if(it != sounds_.end()) {
-    return (*it).second.get();
+    return *(*it).second.get();
   }
 
   sf::SoundBuffer* sound = new sf::SoundBuffer;
@@ -124,7 +124,7 @@ const sf::SoundBuffer* ResourceManager::getSound(const std::string& name) const
   }
   sounds_[name] = psound;
 
-  return sound;
+  return *sound;
 }
 
 std::string ResourceManager::getLang(const std::string& key) const
@@ -143,18 +143,18 @@ ImageTile::ImageTile():
 {
 }
 
-void ImageTile::create(const sf::Texture* img, const sf::IntRect& rect)
+void ImageTile::create(const sf::Texture& img, const sf::IntRect& rect)
 {
-  image_ = img;
+  image_ = &img;
   rect_ = rect;
 }
 
-void ImageTile::create(const sf::Texture* img, int sx, int sy, int x, int y)
+void ImageTile::create(const sf::Texture& img, int sx, int sy, int x, int y)
 {
-  assert( img->getSize().x % sx == 0 );
-  assert( img->getSize().y % sy == 0 );
-  const int kx = img->getSize().x / sx;
-  const int ky = img->getSize().y / sy;
+  assert(img.getSize().x % sx == 0);
+  assert(img.getSize().y % sy == 0);
+  const int kx = img.getSize().x / sx;
+  const int ky = img.getSize().y / sy;
   this->create(img, sf::IntRect(kx*x, ky*y, kx, ky));
 }
 
@@ -180,12 +180,12 @@ void ImageTile::render(sf::RenderTarget& target, sf::RenderStates states, float 
   this->render(target, states, x, y, rect_.width, rect_.height, c);
 }
 
-void ImageTile::setToSprite(sf::Sprite* spr, bool center) const
+void ImageTile::setToSprite(sf::Sprite& spr, bool center) const
 {
-  spr->setTexture(*image_);
-  spr->setTextureRect(rect_);
-  if( center ) {
-    spr->setOrigin( rect_.width/2., rect_.height/2. );
+  spr.setTexture(*image_);
+  spr.setTextureRect(rect_);
+  if(center) {
+    spr.setOrigin(rect_.width/2., rect_.height/2.);
   }
 }
 
@@ -195,9 +195,9 @@ ImageFrame::ImageFrame():
 {
 }
 
-void ImageFrame::create(const sf::Texture* img, const sf::IntRect& rect, const sf::IntRect& inside)
+void ImageFrame::create(const sf::Texture& img, const sf::IntRect& rect, const sf::IntRect& inside)
 {
-  image_ = img;
+  image_ = &img;
   rect_ = rect;
   inside_ = inside;
 }
@@ -273,7 +273,7 @@ void ImageFrame::Style::load(const StyleLoader& loader)
   const ResourceManager& res_mgr = loader.res_mgr();
   std::string key;
 
-  image = res_mgr.getImage(loader.getStyle<std::string>("Image"));
+  image = &res_mgr.getImage(loader.getStyle<std::string>("Image"));
   if(!loader.fetchStyle("ImageRect", rect)) {
     rect = sf::IntRect(0, 0, image->getSize().x, image->getSize().y);
   }
@@ -289,7 +289,7 @@ void ImageFrame::Style::load(const StyleLoader& loader)
 
 void ImageFrame::Style::apply(ImageFrame& o) const
 {
-  o.create(image, rect, inside);
+  o.create(*image, rect, inside);
   o.setColor(color);
 }
 
@@ -299,9 +299,9 @@ ImageFrameX::ImageFrameX():
 {
 }
 
-void ImageFrameX::create(const sf::Texture* img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width)
+void ImageFrameX::create(const sf::Texture& img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width)
 {
-  image_ = img;
+  image_ = &img;
   rect_ = rect;
   inside_left_ = inside_left;
   inside_width_ = inside_width;
@@ -353,7 +353,7 @@ void ImageFrameX::Style::load(const StyleLoader& loader)
   const ResourceManager& res_mgr = loader.res_mgr();
   std::string key;
 
-  image = res_mgr.getImage(loader.getStyle<std::string>("Image"));
+  image = &res_mgr.getImage(loader.getStyle<std::string>("Image"));
   if(!loader.fetchStyle("ImageRect", rect)) {
     rect = sf::IntRect(0, 0, image->getSize().x, image->getSize().y);
   }
@@ -370,7 +370,7 @@ void ImageFrameX::Style::load(const StyleLoader& loader)
 
 void ImageFrameX::Style::apply(ImageFrameX& o) const
 {
-  o.create(image, rect, inside_left, inside_width);
+  o.create(*image, rect, inside_left, inside_width);
   o.setColor(color);
 }
 

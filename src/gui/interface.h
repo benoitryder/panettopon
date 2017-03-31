@@ -47,7 +47,7 @@ class GuiInterface: public ClientInstance::Observer
 
   GuiInterface();
   virtual ~GuiInterface();
-  bool run(IniFile* cfg);
+  bool run(IniFile& cfg);
   boost::asio::io_service &io_service() { return io_service_; }
   IniFile& cfg() const { return *cfg_; }
   const StyleGlobal& style() const { return style_; }
@@ -67,15 +67,15 @@ class GuiInterface: public ClientInstance::Observer
 
   /** @name Instance observer methods. */
   //@{
-  virtual void onChat(Player* pl, const std::string& msg);
-  virtual void onPlayerJoined(Player* pl);
-  virtual void onPlayerChangeNick(Player* pl, const std::string& nick);
-  virtual void onPlayerStateChange(Player* pl);
-  virtual void onPlayerChangeFieldConf(Player* pl);
+  virtual void onChat(Player& pl, const std::string& msg);
+  virtual void onPlayerJoined(Player& pl);
+  virtual void onPlayerChangeNick(Player& pl, const std::string& nick);
+  virtual void onPlayerStateChange(Player& pl);
+  virtual void onPlayerChangeFieldConf(Player& pl);
   virtual void onStateChange();
   virtual void onServerChangeFieldConfs();
-  virtual void onPlayerStep(Player* pl);
-  virtual void onPlayerRanked(Player* pl);
+  virtual void onPlayerStep(Player& pl);
+  virtual void onPlayerRanked(Player& pl);
   virtual void onNotification(GameInstance::Severity, const std::string& );
   virtual void onServerConnect(bool success);
   virtual void onServerDisconnect();

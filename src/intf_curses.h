@@ -22,24 +22,24 @@ class CursesInterface: public ClientInstance::Observer,
  public:
   CursesInterface();
   virtual ~CursesInterface();
-  bool run(IniFile* cfg);
+  bool run(IniFile& cfg);
 
   /** @name ClientInstance::Observer methods. */
   //@{
-  virtual void onChat(Player* pl, const std::string& msg);
-  virtual void onPlayerJoined(Player* pl);
-  virtual void onPlayerChangeNick(Player* pl, const std::string& nick);
-  virtual void onPlayerStateChange(Player* pl);
-  virtual void onPlayerChangeFieldConf(Player* pl);
+  virtual void onChat(Player& pl, const std::string& msg);
+  virtual void onPlayerJoined(Player& pl);
+  virtual void onPlayerChangeNick(Player& pl, const std::string& nick);
+  virtual void onPlayerStateChange(Player& pl);
+  virtual void onPlayerChangeFieldConf(Player& pl);
   virtual void onStateChange();
   virtual void onServerChangeFieldConfs();
-  virtual void onPlayerStep(Player* pl);
-  virtual void onPlayerRanked(Player* pl);
+  virtual void onPlayerStep(Player& pl);
+  virtual void onPlayerRanked(Player& pl);
   virtual void onNotification(GameInstance::Severity, const std::string&);
   virtual void onServerConnect(bool success);
   virtual void onServerDisconnect();
   //@}
-  virtual KeyState getNextInput(Player* pl);
+  virtual KeyState getNextInput(const Player& pl);
 
   /// Add a message in given color.
   void addMessage(int color, const char* fmt, ...);

@@ -141,11 +141,11 @@ class ServerSocket: public std::enable_shared_from_this<ServerSocket>
   struct Observer
   {
     /// Called on client connection.
-    virtual void onPeerConnect(PeerSocket* peer) = 0;
+    virtual void onPeerConnect(PeerSocket& peer) = 0;
     /// Called after a peer disconnection.
-    virtual void onPeerDisconnect(PeerSocket* peer) = 0;
+    virtual void onPeerDisconnect(PeerSocket& peer) = 0;
     /// Called on input packet on a peer.
-    virtual void onPeerPacket(PeerSocket* peer, const Packet& pkt) = 0;
+    virtual void onPeerPacket(PeerSocket& peer, const Packet& pkt) = 0;
   };
 
   ServerSocket(Observer& obs, boost::asio::io_service& io_service);

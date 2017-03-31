@@ -41,11 +41,11 @@ class ResourceManager
   /// Get filename to use for a given resource filename
   std::string getResourceFilename(const std::string& filename) const;
   /// Get an image from its name.
-  const sf::Texture* getImage(const std::string& name) const;
+  const sf::Texture& getImage(const std::string& name) const;
   /// Get a font from its name
-  const sf::Font* getFont(const std::string& name) const;
+  const sf::Font& getFont(const std::string& name) const;
   /// Get a sound buffer from its name
-  const sf::SoundBuffer* getSound(const std::string& name) const;
+  const sf::SoundBuffer& getSound(const std::string& name) const;
   /// Style accessors
   const IniFile& style() const { return style_; }
   /// Get a language string from its section and name
@@ -74,9 +74,9 @@ class ImageTile
   ImageTile();
 
   /// Initialize the tile using image subrect
-  void create(const sf::Texture* img, const sf::IntRect& rect);
+  void create(const sf::Texture& img, const sf::IntRect& rect);
   /// Initialize the tile (x,y) from a (sx,sy) tilemap
-  void create(const sf::Texture* img, int sx, int sy, int x, int y);
+  void create(const sf::Texture& img, int sx, int sy, int x, int y);
   /// Draw the tile at given position, with given scaling
   void render(sf::RenderTarget& target, sf::RenderStates states, float x, float y, float kx, float ky, const sf::Color& c=sf::Color::White) const;
   /// Draw the tile at given position
@@ -85,7 +85,7 @@ class ImageTile
    *
    * If \e center is \e true, sprite's origin is set to be centred on the tile.
    */
-  void setToSprite(sf::Sprite* spr, bool center=false) const;
+  void setToSprite(sf::Sprite& spr, bool center=false) const;
 
  private:
   const sf::Texture* image_;
@@ -113,7 +113,7 @@ class ImageFrame
 
   ImageFrame();
   /// Initialize the frame using image subrect and frame inside subrect
-  void create(const sf::Texture* img, const sf::IntRect& rect, const sf::IntRect& inside);
+  void create(const sf::Texture& img, const sf::IntRect& rect, const sf::IntRect& inside);
   /// Set drawing color
   void setColor(const sf::Color& color) { color_ = color; }
   /// Draw the frame at given position, with given size
@@ -145,7 +145,7 @@ class ImageFrameX
 
   ImageFrameX();
   /// Initialize the frame using image subrect and margin
-  void create(const sf::Texture* img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width);
+  void create(const sf::Texture& img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width);
   /// Set drawing color
   void setColor(const sf::Color& color) { color_ = color; }
   /// Draw the frame at given position, with given size

@@ -35,20 +35,20 @@ class Screen: public StyleLoader
    * @return true if processed, false otherwise.
    */
   virtual bool onInputEvent(const sf::Event& ev) = 0;
-  /// Focus a given widget
+  /// Focus a given widget, or nothing
   void focus(WFocusable* w);
 
   /** @name Instance observer methods. */
   //@{
-  virtual void onChat(Player* , const std::string& ) {}
-  virtual void onPlayerJoined(Player* ) {}
-  virtual void onPlayerChangeNick(Player*, const std::string&) {}
-  virtual void onPlayerStateChange(Player*) {}
-  virtual void onPlayerChangeFieldConf(Player*) {}
+  virtual void onChat(Player&, const std::string& ) {}
+  virtual void onPlayerJoined(Player&) {}
+  virtual void onPlayerChangeNick(Player&, const std::string&) {}
+  virtual void onPlayerStateChange(Player&) {}
+  virtual void onPlayerChangeFieldConf(Player&) {}
   virtual void onStateChange() {}
   virtual void onServerChangeFieldConfs() {}
-  virtual void onPlayerStep(Player*) {}
-  virtual void onPlayerRanked(Player*) {}
+  virtual void onPlayerStep(Player&) {}
+  virtual void onPlayerRanked(Player&) {}
   virtual void onNotification(GameInstance::Severity, const std::string&) {}
   virtual void onServerConnect(bool) {}
   virtual void onServerDisconnect() {}

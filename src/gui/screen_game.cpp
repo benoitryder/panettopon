@@ -12,63 +12,71 @@ void StyleField::load(const StyleLoader& loader, const StyleGlobal& global)
   this->global = &global;
   unsigned int color_nb = global.colors.size() - 1;
 
-  const sf::Texture* img;
-
   // Block tiles (and block size)
-  img = res_mgr.getImage("BkColor-map");
-  if(img->getSize().x % color_nb != 0 || img->getSize().y % 5 != 0) {
-    throw std::runtime_error("block map size does not match tile count");
-  }
-  bk_size = img->getSize().y/5;
-  tiles_bk_color.resize(color_nb); // create sprites, uninitialized
-  for(unsigned int i=0; i<color_nb; i++) {
-    TilesBkColor& tiles = tiles_bk_color[i];
-    tiles.normal.create(img, color_nb, 5, i, 0);
-    tiles.bg    .create(img, color_nb, 5, i, 1);
-    tiles.face  .create(img, color_nb, 5, i, 2);
-    tiles.flash .create(img, color_nb, 5, i, 3);
-    tiles.mutate.create(img, color_nb, 5, i, 4);
+  {
+    const sf::Texture& img = res_mgr.getImage("BkColor-map");
+    if(img.getSize().x % color_nb != 0 || img.getSize().y % 5 != 0) {
+      throw std::runtime_error("block map size does not match tile count");
+    }
+    bk_size = img.getSize().y/5;
+    tiles_bk_color.resize(color_nb); // create sprites, uninitialized
+    for(unsigned int i=0; i<color_nb; i++) {
+      TilesBkColor& tiles = tiles_bk_color[i];
+      tiles.normal.create(img, color_nb, 5, i, 0);
+      tiles.bg    .create(img, color_nb, 5, i, 1);
+      tiles.face  .create(img, color_nb, 5, i, 2);
+      tiles.flash .create(img, color_nb, 5, i, 3);
+      tiles.mutate.create(img, color_nb, 5, i, 4);
+    }
   }
 
   // Garbages
-  img = res_mgr.getImage("BkGarbage-map");
-  for(int x=0; x<4; x++) {
-    for(int y=0; y<4; y++) {
-      tiles_gb.tiles[x][y].create(img, 8, 4, x, y);
+  {
+    const sf::Texture& img = res_mgr.getImage("BkGarbage-map");
+    for(int x=0; x<4; x++) {
+      for(int y=0; y<4; y++) {
+        tiles_gb.tiles[x][y].create(img, 8, 4, x, y);
+      }
     }
-  }
-  //XXX center: setRepeat(true)
-  for(int x=0; x<2; x++) {
-    for(int y=0; y<2; y++) {
-      tiles_gb.center[x][y].create(img, 8, 4, 4+x, y);
+    //XXX center: setRepeat(true)
+    for(int x=0; x<2; x++) {
+      for(int y=0; y<2; y++) {
+        tiles_gb.center[x][y].create(img, 8, 4, 4+x, y);
+      }
     }
+    tiles_gb.mutate.create(img, 4, 2, 3, 0);
+    tiles_gb.flash .create(img, 4, 2, 3, 1);
   }
-  tiles_gb.mutate.create(img, 4, 2, 3, 0);
-  tiles_gb.flash .create(img, 4, 2, 3, 1);
 
   // Frame
-  img_field_frame = res_mgr.getImage("Field-Frame");
+  img_field_frame = &res_mgr.getImage("Field-Frame");
   frame_origin = loader.getStyle<sf::Vector2f>("FrameOrigin");
 
   // Cursor
-  img = res_mgr.getImage("SwapCursor");
-  tiles_cursor[0].create(img, 1, 2, 0, 0);
-  tiles_cursor[1].create(img, 1, 2, 0, 1);
+  {
+    const sf::Texture& img = res_mgr.getImage("SwapCursor");
+    tiles_cursor[0].create(img, 1, 2, 0, 0);
+    tiles_cursor[1].create(img, 1, 2, 0, 1);
+  }
 
   // Signs
-  img = res_mgr.getImage("Signs");
-  tiles_signs.combo.create(img, 2, 1, 0, 0);
-  tiles_signs.chain.create(img, 2, 1, 1, 0);
-  sign_style.load(StyleLoaderPrefix(loader, "Sign"));
+  {
+    const sf::Texture& img = res_mgr.getImage("Signs");
+    tiles_signs.combo.create(img, 2, 1, 0, 0);
+    tiles_signs.chain.create(img, 2, 1, 1, 0);
+    sign_style.load(StyleLoaderPrefix(loader, "Sign"));
+  }
 
   // Hanging garbages
-  img = res_mgr.getImage("GbHanging-map");
-  const size_t gb_hanging_sx = FIELD_WIDTH/2; // on 2 rows
-  for(int i=0; i<FIELD_WIDTH; i++) {
-    tiles_gb_hanging.blocks[i].create(img, gb_hanging_sx+1, 2, i%gb_hanging_sx, i/gb_hanging_sx);
+  {
+    const sf::Texture& img = res_mgr.getImage("GbHanging-map");
+    const size_t gb_hanging_sx = FIELD_WIDTH/2; // on 2 rows
+    for(int i=0; i<FIELD_WIDTH; i++) {
+      tiles_gb_hanging.blocks[i].create(img, gb_hanging_sx+1, 2, i%gb_hanging_sx, i/gb_hanging_sx);
+    }
+    tiles_gb_hanging.line.create(img, gb_hanging_sx+1, 2, gb_hanging_sx, 0);
+    gb_hanging_style.load(StyleLoaderPrefix(loader, "Garbage"));
   }
-  tiles_gb_hanging.line.create(img, gb_hanging_sx+1, 2, gb_hanging_sx, 0);
-  gb_hanging_style.load(StyleLoaderPrefix(loader, "Garbage"));
 
   // Start countdown
   start_countdown_style.load(StyleLoaderPrefix(loader, "StartCountdown"));
@@ -144,22 +152,22 @@ bool ScreenGame::onInputEvent(const sf::Event& ev)
   return false;
 }
 
-void ScreenGame::onPlayerStep(Player* pl)
+void ScreenGame::onPlayerStep(Player& pl)
 {
-  assert(pl->field());
-  if(pl->field()) {
-    auto fdp = field_displays_.find(pl->field()->fldid());
+  assert(pl.field());
+  if(pl.field()) {
+    auto fdp = field_displays_.find(pl.field()->fldid());
     if(fdp != field_displays_.end()) {
       (*fdp).second->step();
     }
   }
 }
 
-void ScreenGame::onPlayerRanked(Player* pl)
+void ScreenGame::onPlayerRanked(Player& pl)
 {
-  assert(pl->field());
-  if(pl->field()) {
-    auto fdp = field_displays_.find(pl->field()->fldid());
+  assert(pl.field());
+  if(pl.field()) {
+    auto fdp = field_displays_.find(pl.field()->fldid());
     if(fdp != field_displays_.end()) {
       (*fdp).second->doRank();
     }
@@ -198,7 +206,7 @@ void ScreenGame::onStateChange()
     for(auto& pair : intf_.instance()->players()) {
       Player& pl = *pair.second;
       if(pl.local()) {
-        intf_.instance()->playerSetState(&pl, Player::State::GAME_READY);
+        intf_.instance()->playerSetState(pl, Player::State::GAME_READY);
       }
     }
 
@@ -209,12 +217,12 @@ void ScreenGame::onStateChange()
 }
 
 
-KeyState ScreenGame::getNextInput(Player* pl)
+KeyState ScreenGame::getNextInput(const Player& pl)
 {
   if(!intf_.focused()) {
     return GAME_KEY_NONE;
   }
-  const InputMapping& mapping = input_mappings_[pl->plid()];
+  const InputMapping& mapping = input_mappings_[pl.plid()];
   int key = GAME_KEY_NONE;
   if(mapping.up.isActive()) key |= GAME_KEY_UP;
   if(mapping.down.isActive()) key |= GAME_KEY_DOWN;
@@ -264,21 +272,21 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
     text_start_countdown_->setPosition(style_.bk_size * FIELD_WIDTH/2, style_.bk_size * 2);
   }
 
-  style_.tiles_cursor[0].setToSprite(&spr_cursor_, true);
+  style_.tiles_cursor[0].setToSprite(spr_cursor_, true);
 
   // load sounds
-  sounds_.move.setBuffer(*intf_.res_mgr().getSound("move"));
-  sounds_.swap.both.setBuffer(*intf_.res_mgr().getSound("swap-both"));
-  sounds_.swap.left.setBuffer(*intf_.res_mgr().getSound("swap-left"));
-  sounds_.swap.right.setBuffer(*intf_.res_mgr().getSound("swap-right"));
-  sounds_.fall.setBuffer(*intf_.res_mgr().getSound("fall"));
+  sounds_.move.setBuffer(intf_.res_mgr().getSound("move"));
+  sounds_.swap.both.setBuffer(intf_.res_mgr().getSound("swap-both"));
+  sounds_.swap.left.setBuffer(intf_.res_mgr().getSound("swap-left"));
+  sounds_.swap.right.setBuffer(intf_.res_mgr().getSound("swap-right"));
+  sounds_.fall.setBuffer(intf_.res_mgr().getSound("fall"));
   for(int i=0;; i++) {
     sounds_.pops.emplace_back();
     auto& sub_pops = sounds_.pops.back();
     for(int j=0;; j++) {
       std::string name = "pop-" + std::to_string(i) + '-' + std::to_string(j);
       try {
-        sub_pops.emplace_back(*intf_.res_mgr().getSound(name));
+        sub_pops.emplace_back(intf_.res_mgr().getSound(name));
       } catch(const ResourceManager::LoadError&) {
         if(i == 0 && j == 0) {
           throw;  // except at least one entry
@@ -382,7 +390,7 @@ void FieldDisplay::step()
 
   // cursor
   if( field_.tick() % 15 == 0 ) {
-    style_.tiles_cursor[ (field_.tick()/15) % 2 ].setToSprite(&spr_cursor_, true);
+    style_.tiles_cursor[ (field_.tick()/15) % 2 ].setToSprite(spr_cursor_, true);
   }
   spr_cursor_.setPosition(
       style_.bk_size * (field_.cursor().x + 1),
@@ -615,9 +623,8 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
 
   } else if( bk.isGarbage() ) {
     const StyleField::TilesGb& tiles = style_.tiles_gb;
-    const Garbage* gb = bk.bk_garbage.garbage;
-    //XXX gb is reset before being transformed
-    const sf::Color& color = intf_.style().colors[(gb && gb->from) ? gb->from->fldid() : 0];
+    const Garbage& gb = *bk.bk_garbage.garbage;
+    const sf::Color& color = intf_.style().colors[gb.from ? gb.from->fldid() : 0];
 
     if( bk.bk_garbage.state == BkGarbage::FLASH ) {
       if( (bk.ntick - field_.tick()) % 2 == 0 ) {
@@ -628,69 +635,69 @@ void FieldDisplay::renderBlock(sf::RenderTarget& target, sf::RenderStates states
     } else if( bk.bk_garbage.state == BkGarbage::MUTATE ) {
       tiles.mutate.render(target, states, x, y, 1, 1, color);
     } else {
-      bool center_mark = gb->size.x > 2 && gb->size.y > 1;
-      const int rel_x = 2*(x-gb->pos.x);
-      const int rel_y = 2*(y-gb->pos.y);
+      bool center_mark = gb.size.x > 2 && gb.size.y > 1;
+      const int rel_x = 2*(x-gb.pos.x);
+      const int rel_y = 2*(y-gb.pos.y);
 
       // draw 4 sub-tiles
       const ImageTile* tile;
 
       // top left
       if( center_mark &&
-         (rel_x == gb->size.x || rel_x == gb->size.x-1) &&
-         (rel_y+1 == gb->size.y || rel_y+1 == gb->size.y-1)
+         (rel_x == gb.size.x || rel_x == gb.size.x-1) &&
+         (rel_y+1 == gb.size.y || rel_y+1 == gb.size.y-1)
         ) {
-        int tx = ( rel_x   == gb->size.x ) ? 1 : 0;
-        int ty = ( rel_y+1 == gb->size.y ) ? 0 : 1;
+        int tx = (rel_x   == gb.size.x) ? 1 : 0;
+        int ty = (rel_y+1 == gb.size.y) ? 0 : 1;
         tile = &tiles.center[tx][ty];
       } else {
-        int tx = ( x == gb->pos.x              ) ? 0 : 2;
-        int ty = ( y == gb->pos.y+gb->size.y-1 ) ? 0 : 2;
+        int tx = (x == gb.pos.x            ) ? 0 : 2;
+        int ty = (y == gb.pos.y+gb.size.y-1) ? 0 : 2;
         tile = &tiles.tiles[tx][ty];
       }
       tile->render(target, states, x, y+0.5, 0.5, 0.5, color);
 
       // top right
       if( center_mark &&
-         (rel_x+1 == gb->size.x || rel_x+1 == gb->size.x-1) &&
-         (rel_y+1 == gb->size.y || rel_y+1 == gb->size.y-1)
+         (rel_x+1 == gb.size.x || rel_x+1 == gb.size.x-1) &&
+         (rel_y+1 == gb.size.y || rel_y+1 == gb.size.y-1)
         ) {
-        int tx = ( rel_x+1 == gb->size.x ) ? 1 : 0;
-        int ty = ( rel_y+1 == gb->size.y ) ? 0 : 1;
+        int tx = (rel_x+1 == gb.size.x) ? 1 : 0;
+        int ty = (rel_y+1 == gb.size.y) ? 0 : 1;
         tile = &tiles.center[tx][ty];
       } else {
-        int tx = ( x == gb->pos.x+gb->size.x-1 ) ? 3 : 1;
-        int ty = ( y == gb->pos.y+gb->size.y-1 ) ? 0 : 2;
+        int tx = (x == gb.pos.x+gb.size.x-1) ? 3 : 1;
+        int ty = (y == gb.pos.y+gb.size.y-1) ? 0 : 2;
         tile = &tiles.tiles[tx][ty];
       }
       tile->render(target, states, x+0.5, y+0.5, 0.5, 0.5, color);
 
       // bottom left
       if( center_mark &&
-          (rel_x == gb->size.x || rel_x == gb->size.x-1) &&
-          (rel_y == gb->size.y || rel_y == gb->size.y-1)
+          (rel_x == gb.size.x || rel_x == gb.size.x-1) &&
+          (rel_y == gb.size.y || rel_y == gb.size.y-1)
         ) {
-        int tx = ( rel_x == gb->size.x ) ? 1 : 0;
-        int ty = ( rel_y == gb->size.y ) ? 0 : 1;
+        int tx = (rel_x == gb.size.x) ? 1 : 0;
+        int ty = (rel_y == gb.size.y) ? 0 : 1;
         tile = &tiles.center[tx][ty];
       } else {
-        int tx = ( x == gb->pos.x ) ? 0 : 2;
-        int ty = ( y == gb->pos.y ) ? 3 : 1;
+        int tx = (x == gb.pos.x) ? 0 : 2;
+        int ty = (y == gb.pos.y) ? 3 : 1;
         tile = &tiles.tiles[tx][ty];
       }
       tile->render(target, states, x, y, 0.5, 0.5, color);
 
       // bottom right
       if( center_mark &&
-         (rel_x+1 == gb->size.x || rel_x+1 == gb->size.x-1) &&
-         (rel_y == gb->size.y || rel_y == gb->size.y-1)
+         (rel_x+1 == gb.size.x || rel_x+1 == gb.size.x-1) &&
+         (rel_y == gb.size.y || rel_y == gb.size.y-1)
         ) {
-        int tx = ( rel_x+1 == gb->size.x ) ? 1 : 0;
-        int ty = ( rel_y   == gb->size.y ) ? 0 : 1;
+        int tx = (rel_x+1 == gb.size.x) ? 1 : 0;
+        int ty = (rel_y   == gb.size.y) ? 0 : 1;
         tile = &tiles.center[tx][ty];
       } else {
-        int tx = ( x == gb->pos.x+gb->size.x-1 ) ? 3 : 1;
-        int ty = ( y == gb->pos.y              ) ? 3 : 1;
+        int tx = (x == gb.pos.x+gb.size.x-1) ? 3 : 1;
+        int ty = (y == gb.pos.y            ) ? 3 : 1;
         tile = &tiles.tiles[tx][ty];
       }
       tile->render(target, states, x+0.5, y, 0.5, 0.5, color);
@@ -739,9 +746,9 @@ FieldDisplay::Sign::Sign(const StyleField& style, const FieldPos& pos, bool chai
 
   // initialize sprite
   if( chain ) {
-    style_.tiles_signs.chain.setToSprite(&bg_, true);
+    style_.tiles_signs.chain.setToSprite(bg_, true);
   } else {
-    style_.tiles_signs.combo.setToSprite(&bg_, true);
+    style_.tiles_signs.combo.setToSprite(bg_, true);
   }
 }
 
@@ -784,9 +791,9 @@ FieldDisplay::GbHanging::GbHanging(const StyleField& style, const Garbage& gb):
 {
   // initialize sprite
   if( gb.type == Garbage::TYPE_CHAIN ) {
-    style_.tiles_gb_hanging.line.setToSprite(&bg_, true);
+    style_.tiles_gb_hanging.line.setToSprite(bg_, true);
   } else if( gb.type == Garbage::TYPE_COMBO ) {
-    style_.tiles_gb_hanging.blocks[gb.size.x-1].setToSprite(&bg_, true);
+    style_.tiles_gb_hanging.blocks[gb.size.x-1].setToSprite(bg_, true);
   } else {
     //TODO not handled yet
   }

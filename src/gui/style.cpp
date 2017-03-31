@@ -69,7 +69,7 @@ void StyleText::load(const StyleLoader& loader)
   const IniFile& ini = res_mgr.style();
   std::string key;
 
-  font = res_mgr.getFont(loader.getStyle<std::string>("Font"));
+  font = &res_mgr.getFont(loader.getStyle<std::string>("Font"));
 
   loader.fetchStyle<unsigned int>("FontSize", size);
   loader.fetchStyle<unsigned int>("FontOutlineThickness", border_width);
@@ -114,7 +114,7 @@ void StyleSprite::load(const StyleLoader& loader)
 {
   const ResourceManager& res_mgr = loader.res_mgr();
 
-  image = res_mgr.getImage(loader.getStyle<std::string>("Image"));
+  image = &res_mgr.getImage(loader.getStyle<std::string>("Image"));
   if(!loader.fetchStyle<decltype(rect)>("ImageRect", rect)) {
     rect = sf::IntRect(0, 0, image->getSize().x, image->getSize().y);
   }

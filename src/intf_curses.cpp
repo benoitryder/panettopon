@@ -28,10 +28,10 @@ CursesInterface::~CursesInterface()
 }
 
 
-bool CursesInterface::run(IniFile* cfg)
+bool CursesInterface::run(IniFile& cfg)
 {
 #define CONF_LOAD_KEY(n,ini) do{ \
-  const std::string s = cfg->get({CONF_SECTION, #ini}, ""); \
+  const std::string s = cfg.get({CONF_SECTION, #ini}, ""); \
   if( s.empty() ) break; \
   int key = str2key(s); \
   if( key == 0 ) { \
@@ -49,8 +49,8 @@ bool CursesInterface::run(IniFile* cfg)
   CONF_LOAD_KEY(quit,  KeyQuit );
 #undef CONF_LOAD_KEY
 
-  int port = cfg->get<int>("Global.Port", DEFAULT_PNP_PORT);
-  const std::string host = cfg->get("Client.Hostname", "localhost");
+  int port = cfg.get<int>("Global.Port", DEFAULT_PNP_PORT);
+  const std::string host = cfg.get("Client.Hostname", "localhost");
 
   if( !this->initCurses() ) {
     LOG("terminal initialization failed");
@@ -59,7 +59,7 @@ bool CursesInterface::run(IniFile* cfg)
   instance_.connect(host.c_str(), port, 3000);
 
   assert(!cfg_);
-  cfg_ = cfg;
+  cfg_ = &cfg;
   io_service_.run();
   cfg_ = 0;
   return true;
@@ -169,9 +169,9 @@ int CursesInterface::str2key(const std::string& s)
 }
 
 
-void CursesInterface::onChat(Player* pl, const std::string& msg)
+void CursesInterface::onChat(Player& pl, const std::string& msg)
 {
-  this->addMessage(0, "%s(%u): %s", pl->nick().c_str(), pl->plid(), msg.c_str());
+  this->addMessage(0, "%s(%u): %s", pl.nick().c_str(), pl.plid(), msg.c_str());
 }
 
 void CursesInterface::onNotification(GameInstance::Severity sev, const std::string& msg)
@@ -200,41 +200,41 @@ void CursesInterface::onServerDisconnect()
   io_service_.stop();
 }
 
-void CursesInterface::onPlayerJoined(Player* pl)
+void CursesInterface::onPlayerJoined(Player& pl)
 {
-  this->addMessage(2, "%s(%u) joined", pl->nick().c_str(), pl->plid());
-  if( pl->local() ) {
-    assert( player_ == NULL );
-    player_ = pl;
-    instance_.playerSetState(player_, Player::State::LOBBY_READY);
+  this->addMessage(2, "%s(%u) joined", pl.nick().c_str(), pl.plid());
+  if(pl.local()) {
+    assert(player_ == nullptr);
+    player_ = &pl;
+    instance_.playerSetState(*player_, Player::State::LOBBY_READY);
   }
 }
 
-void CursesInterface::onPlayerChangeNick(Player* pl, const std::string& nick)
+void CursesInterface::onPlayerChangeNick(Player& pl, const std::string& nick)
 {
   this->addMessage(2, "%s(%u) is now known as %s",
-                   nick.c_str(), pl->plid(), pl->nick().c_str());
+                   nick.c_str(), pl.plid(), pl.nick().c_str());
 }
 
-void CursesInterface::onPlayerStateChange(Player* pl)
+void CursesInterface::onPlayerStateChange(Player& pl)
 {
-  Player::State state = pl->state();
+  Player::State state = pl.state();
   if(state == Player::State::QUIT) {
-    this->addMessage(2, "%s(%u) has quit", pl->nick().c_str(), pl->plid());
-    if(pl == player_) {
-      player_ = NULL;
+    this->addMessage(2, "%s(%u) has quit", pl.nick().c_str(), pl.plid());
+    if(&pl == player_) {
+      player_ = nullptr;
       io_service_.stop();
     }
   } else if(state == Player::State::LOBBY_READY || state == Player::State::GAME_READY) {
-    this->addMessage(2, "%s(%u) is ready", pl->nick().c_str(), pl->plid());
+    this->addMessage(2, "%s(%u) is ready", pl.nick().c_str(), pl.plid());
   } else if(state == Player::State::LOBBY && instance_.state() == GameInstance::State::LOBBY) {
-    this->addMessage(2, "%s(%u) is not ready", pl->nick().c_str(), pl->plid());
+    this->addMessage(2, "%s(%u) is not ready", pl.nick().c_str(), pl.plid());
   }
 }
 
-void CursesInterface::onPlayerChangeFieldConf(Player* pl)
+void CursesInterface::onPlayerChangeFieldConf(Player& pl)
 {
-  this->addMessage(2, "%s(%u) changed configuration", pl->nick().c_str(), pl->plid());
+  this->addMessage(2, "%s(%u) changed configuration", pl.nick().c_str(), pl.plid());
 }
 
 void CursesInterface::onStateChange()
@@ -245,7 +245,7 @@ void CursesInterface::onStateChange()
     this->addMessage(2, "match end");
     fdisplays_.clear();
     if( player_ != NULL ) {
-      instance_.playerSetState(player_, Player::State::LOBBY_READY);
+      instance_.playerSetState(*player_, Player::State::LOBBY_READY);
     }
 
   } else if(state == GameInstance::State::GAME_INIT) {
@@ -262,16 +262,15 @@ void CursesInterface::onStateChange()
     assert( wmsg_ != NULL ); //XXX error
     ::scrollok(wmsg_, TRUE);
 
-    for(const auto& field : instance_.match().fields()) {
-      const Field* fld = &field;
-      FieldDisplay* fdp = new FieldDisplay(*this, field, fdisplays_.size());
-      fdisplays_.insert(fld, fdp);
-      fdp->draw();
+    for(const auto& fld : instance_.match().fields()) {
+      auto fdp = std::make_unique<FieldDisplay>(*this, *fld, fdisplays_.size());
+      auto it = fdisplays_.emplace(fld.get(), std::move(fdp)).first;
+      it->second->draw();
     }
     ::redrawwin(stdscr);
     ::refresh();
     if( player_ != NULL ) {
-      instance_.playerSetState(player_, Player::State::GAME_READY);
+      instance_.playerSetState(*player_, Player::State::GAME_READY);
     }
 
   } else if(state == GameInstance::State::GAME) {
@@ -284,24 +283,24 @@ void CursesInterface::onServerChangeFieldConfs()
 {
 }
 
-void CursesInterface::onPlayerStep(Player* pl)
+void CursesInterface::onPlayerStep(Player& pl)
 {
-  FieldDisplayMap::iterator it = fdisplays_.find(pl->field());
+  FieldDisplayMap::iterator it = fdisplays_.find(pl.field());
   assert( it != fdisplays_.end() );
   (*it).second->step();
   (*it).second->draw();
   ::refresh();
-  if( pl->field()->lost() ) {
-    this->addMessage(2, "%s(%u) lost", pl->nick().c_str(), pl->plid());
+  if(pl.field()->lost()) {
+    this->addMessage(2, "%s(%u) lost", pl.nick().c_str(), pl.plid());
   }
 }
 
-void CursesInterface::onPlayerRanked(Player* pl)
+void CursesInterface::onPlayerRanked(Player& pl)
 {
-  this->addMessage(2, "%s(%u) ranked %d", pl->nick().c_str(), pl->plid(), pl->field()->rank());
+  this->addMessage(2, "%s(%u) ranked %d", pl.nick().c_str(), pl.plid(), pl.field()->rank());
 }
 
-KeyState CursesInterface::getNextInput(Player*)
+KeyState CursesInterface::getNextInput(const Player&)
 {
   GameKey key = GAME_KEY_NONE;
   for(;;) {
@@ -506,34 +505,34 @@ void FieldDisplay::drawBlock(int x, int y)
       chs[0] |= ':';
     } else {
       chs[1] = chs[0];
-      const Garbage* gb = bk.bk_garbage.garbage;
+      const Garbage& gb = *bk.bk_garbage.garbage;
       int c1, c2;
-      if( gb->size.y == 1 ) {
+      if(gb.size.y == 1) {
         c1 = c2 = ACS_HLINE;
-        if( x == gb->pos.x ) {
+        if(x == gb.pos.x) {
           c1 =' ';
-        } else if( x == gb->pos.x + gb->size.x-1 ) {
+        } else if(x == gb.pos.x + gb.size.x-1) {
           c2 = ' ';
         }
       } else {
         c1 = c2 = ' ';
-        if( y == gb->pos.y ) {
+        if(y == gb.pos.y) {
           c1 = c2 = ACS_HLINE;
-          if( x == gb->pos.x ) {
+          if(x == gb.pos.x) {
             c1 = ACS_LLCORNER;
-          } else if( x == gb->pos.x + gb->size.x-1 ) {
+          } else if(x == gb.pos.x + gb.size.x-1) {
             c2 = ACS_LRCORNER;
           }
-        } else if( y == gb->pos.y + gb->size.y-1 ) {
+        } else if(y == gb.pos.y + gb.size.y-1) {
           c1 = c2 = ACS_HLINE;
-          if( x == gb->pos.x ) {
+          if(x == gb.pos.x) {
             c1 = ACS_ULCORNER;
-          } else if( x == gb->pos.x + gb->size.x-1 ) {
+          } else if(x == gb.pos.x + gb.size.x-1) {
             c2 = ACS_URCORNER;
           }
-        } else if( x == gb->pos.x ) {
+        } else if(x == gb.pos.x) {
           c1 = ACS_VLINE;
-        } else if( x == gb->pos.x + gb->size.x-1 ) {
+        } else if(x == gb.pos.x + gb.size.x-1) {
           c2 = ACS_VLINE;
         }
       }

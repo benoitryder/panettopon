@@ -124,23 +124,23 @@ class GameInstance
   struct Observer
   {
     /// Called on chat message.
-    virtual void onChat(Player* pl, const std::string& msg) = 0;
+    virtual void onChat(Player& pl, const std::string& msg) = 0;
     /// Called on new player (even local).
-    virtual void onPlayerJoined(Player* pl) = 0;
+    virtual void onPlayerJoined(Player& pl) = 0;
     /// Called after player's nick change.
-    virtual void onPlayerChangeNick(Player* pl, const std::string& nick) = 0;
+    virtual void onPlayerChangeNick(Player& pl, const std::string& nick) = 0;
     /// Called after state update
-    virtual void onPlayerStateChange(Player* pl) = 0;
+    virtual void onPlayerStateChange(Player& pl) = 0;
     /// Called after player's field configuration change.
-    virtual void onPlayerChangeFieldConf(Player* pl) = 0;
+    virtual void onPlayerChangeFieldConf(Player& pl) = 0;
     /// Called on state update.
     virtual void onStateChange() = 0;
     /// Called on server field configurations change.
     virtual void onServerChangeFieldConfs() = 0;
     /// Called after a player field step.
-    virtual void onPlayerStep(Player* pl) = 0;
+    virtual void onPlayerStep(Player& pl) = 0;
     /// Called when a player rank is set.
-    virtual void onPlayerRanked(Player* pl) = 0;
+    virtual void onPlayerRanked(Player& pl) = 0;
   };
 
   typedef std::map<PlId, std::unique_ptr<Player>> PlayerContainer;
@@ -159,11 +159,11 @@ class GameInstance
    * Modify the player and send packets, if needed.
    */
   //@{
-  virtual void playerSetNick(Player* pl, const std::string& nick) = 0;
-  virtual void playerSetFieldConf(Player* pl, const FieldConf& conf) = 0;
-  virtual void playerSetState(Player* pl, Player::State state) = 0;
-  virtual void playerSendChat(Player* pl, const std::string& msg) = 0;
-  virtual void playerStep(Player* pl, KeyState keys) = 0;
+  virtual void playerSetNick(Player& pl, const std::string& nick) = 0;
+  virtual void playerSetFieldConf(Player& pl, const FieldConf& conf) = 0;
+  virtual void playerSetState(Player& pl, Player::State state) = 0;
+  virtual void playerSendChat(Player& pl, const std::string& msg) = 0;
+  virtual void playerStep(Player& pl, KeyState keys) = 0;
   //@}
 
   /// Return the player with a given PlId or \e NULL.
@@ -173,9 +173,9 @@ class GameInstance
 
  protected:
   /// Step a player field, update match tick.
-  virtual void doStepPlayer(Player* pl, KeyState keys);
+  virtual void doStepPlayer(Player& pl, KeyState keys);
   /// Like doStepPlayer() but throw netplay::CallbackError.
-  void stepRemotePlayer(Player* pl, KeyState keys);
+  void stepRemotePlayer(Player& pl, KeyState keys);
 
   /**@ brief Observer accessor.
    *
@@ -200,7 +200,7 @@ class GameInputScheduler
  public:
   struct InputProvider {
     /// Return next input for a given player.
-    virtual KeyState getNextInput(Player* pl) = 0;
+    virtual KeyState getNextInput(const Player& pl) = 0;
   };
 
   GameInputScheduler(GameInstance& instance, InputProvider& input_, boost::asio::io_service& io_service);

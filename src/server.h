@@ -33,29 +33,29 @@ class ServerInstance: public GameInstance,
   void stopServer();
 
   /// Create and return a new local player.
-  Player* newLocalPlayer(const std::string& nick);
+  Player& newLocalPlayer(const std::string& nick);
 
   /** @name Local player operations. */
   //@{
-  virtual void playerSetNick(Player* pl, const std::string& nick);
-  virtual void playerSetFieldConf(Player* pl, const FieldConf& conf);
-  virtual void playerSetState(Player* pl, Player::State state);
-  virtual void playerSendChat(Player* pl, const std::string& msg);
-  virtual void playerStep(Player* pl, KeyState keys);
+  virtual void playerSetNick(Player& pl, const std::string& nick);
+  virtual void playerSetFieldConf(Player& pl, const FieldConf& conf);
+  virtual void playerSetState(Player& pl, Player::State state);
+  virtual void playerSendChat(Player& pl, const std::string& msg);
+  virtual void playerStep(Player& pl, KeyState keys);
   //@}
 
   /** @name ServerSocket::Observer interface. */
   //@{
-  virtual void onPeerConnect(netplay::PeerSocket* peer);
-  virtual void onPeerDisconnect(netplay::PeerSocket* peer);
-  virtual void onPeerPacket(netplay::PeerSocket* peer, const netplay::Packet& pkt);
+  virtual void onPeerConnect(netplay::PeerSocket& peer);
+  virtual void onPeerDisconnect(netplay::PeerSocket& peer);
+  virtual void onPeerPacket(netplay::PeerSocket& peer, const netplay::Packet& pkt);
   //@}
 
   /** @name GarbageDistributor::Observer interface. */
   //@{
-  virtual void onGarbageAdd(const Garbage* gb, unsigned int pos);
-  virtual void onGarbageUpdateSize(const Garbage* gb);
-  virtual void onGarbageDrop(const Garbage* gb);
+  virtual void onGarbageAdd(const Garbage& gb, unsigned int pos);
+  virtual void onGarbageUpdateSize(const Garbage& gb);
+  virtual void onGarbageDrop(const Garbage& gb);
   //@}
 
  protected:
@@ -71,7 +71,7 @@ class ServerInstance: public GameInstance,
    *
    * If peer is \e NULL, a local player is created.
    */
-  Player* newPlayer(netplay::PeerSocket* peer, const std::string& nick);
+  Player& newPlayer(netplay::PeerSocket* peer, const std::string& nick);
   /// Remove a player.
   void removePlayer(PlId plid);
 
@@ -86,20 +86,20 @@ class ServerInstance: public GameInstance,
    *
    * If player is not found or is not associated to the peer, it is an error.
    */
-  Player* checkPeerPlayer(PlId plid, const netplay::PeerSocket* peer);
+  Player& checkPeerPlayer(PlId plid, const netplay::PeerSocket& peer);
 
-  void processPktInput(netplay::PeerSocket* peer, const netplay::PktInput& pkt);
-  void processPktGarbageState(netplay::PeerSocket* peer, const netplay::PktGarbageState& pkt);
-  void processPktPlayerJoin(netplay::PeerSocket* peer, const netplay::PktPlayerJoin& pkt);
-  void processPktPlayerConf(netplay::PeerSocket* peer, const netplay::PktPlayerConf& pkt);
-  void processPktPlayerState(netplay::PeerSocket* peer, const netplay::PktPlayerState& pkt);
+  void processPktInput(netplay::PeerSocket& peer, const netplay::PktInput& pkt);
+  void processPktGarbageState(netplay::PeerSocket& peer, const netplay::PktGarbageState& pkt);
+  void processPktPlayerJoin(netplay::PeerSocket& peer, const netplay::PktPlayerJoin& pkt);
+  void processPktPlayerConf(netplay::PeerSocket& peer, const netplay::PktPlayerConf& pkt);
+  void processPktPlayerState(netplay::PeerSocket& peer, const netplay::PktPlayerState& pkt);
   //@}
 
   /// Check if all players are ready and take actions
   void checkAllPlayersReady();
 
   /// Step a player field, process garbages, send Input packets.
-  virtual void doStepPlayer(Player* pl, KeyState keys);
+  virtual void doStepPlayer(Player& pl, KeyState keys);
 
   /// Update fields ranks, stop the match if needed
   void updateRanks();
