@@ -267,7 +267,7 @@ void ClientInstance::processPktUpdateGarbage(const netplay::PktUpdateGarbage& pk
     if( pkt.has_plid_to() && pkt.plid_to() != pl_to->plid() ) {
       // actual target change
       pl_to = this->player(pkt.plid_to());
-      if( pl_to != NULL && pl_to->field() != NULL ) {
+      if( pl_to == NULL || pl_to->field() == NULL ) {
         throw netplay::CallbackError("invalid garbage target");
       }
     }
