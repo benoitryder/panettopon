@@ -2,6 +2,7 @@
 #include "log.h"
 #include "intf_curses.h"
 
+
 namespace curses {
 
 

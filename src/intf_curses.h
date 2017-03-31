@@ -2,9 +2,10 @@
 #define INTF_CURSES_H_
 
 #include "client.h"
-
 // curses last to avoid naming conflicts due to bloody curses macros
-#include <curses.h>
+#undef KEY_EVENT  // conflicting name, defined in windows headers
+#define CURSES_INCLUDE_FILE_BRACKETS <CURSES_INCLUDE_FILE>
+#include CURSES_INCLUDE_FILE_BRACKETS
 
 class IniFile;
 
