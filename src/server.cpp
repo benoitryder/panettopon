@@ -336,7 +336,7 @@ void ServerInstance::onGarbageDrop(const Garbage& gb)
 
 Player& ServerInstance::newPlayer(netplay::PeerSocket* peer, const std::string& nick)
 {
-  auto pl_unique = std::unique_ptr<Player>(new Player(this->nextPlayerId(), peer==NULL));
+  auto pl_unique = std::make_unique<Player>(this->nextPlayerId(), peer == nullptr);
   Player& pl = *pl_unique.get();
   LOG("init player: %d", pl.plid());
   pl.setState(Player::State::LOBBY);

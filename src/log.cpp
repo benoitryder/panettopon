@@ -37,9 +37,9 @@ void Logger::glog(const char* fmt, ...)
   va_end(ap);
 }
 
-void Logger::setLogger(Logger* logger)
+void Logger::setLogger(std::unique_ptr<Logger> logger)
 {
-  logger_.reset(logger);
+  logger_ = std::move(logger);
 }
 
 

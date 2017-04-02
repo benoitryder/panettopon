@@ -25,10 +25,12 @@ class Logger
   /// Global logging method.
   static void glog(const char* fmt, ...);
 
+  static Logger* getLogger() { return logger_.get(); }
   /** @brief Set global logger.
    * @note The given pointer is owned by the Logger class.
    */
-  static void setLogger(Logger* logger);
+  static void setLogger(std::unique_ptr<Logger> logger);
+  /// Get global logger
 
  private:
   /// Global logger instance.

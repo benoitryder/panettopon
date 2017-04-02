@@ -122,13 +122,13 @@ bool GuiInterface::run(IniFile& cfg)
 }
 
 
-void GuiInterface::swapScreen(Screen* screen)
+void GuiInterface::swapScreen(std::unique_ptr<Screen> screen)
 {
   if(screen_) {
     screen_->exit();
     io_service_.post(deletion_handler<Screen>(std::move(screen_)));
   }
-  screen_.reset(screen);
+  screen_ = std::move(screen);
   if(!screen_) {
     this->endDisplay();
   } else {
@@ -204,8 +204,9 @@ void GuiInterface::onServerDisconnect()
 void GuiInterface::startServer(int port)
 {
   assert(!instance_);
-  server_instance_ = new ServerInstance(*this, io_service_);
-  instance_.reset(server_instance_);
+  auto ptr = std::make_unique<ServerInstance>(*this, io_service_);
+  server_instance_ = ptr.get();
+  instance_ = std::move(ptr);
   server_instance_->loadConf(*cfg_);
   server_instance_->startServer(port);
 }
@@ -213,8 +214,9 @@ void GuiInterface::startServer(int port)
 void GuiInterface::startClient(const std::string& host, int port)
 {
   assert(!instance_);
-  client_instance_ = new ClientInstance(*this, io_service_);
-  instance_.reset(client_instance_);
+  auto ptr = std::make_unique<ClientInstance>(*this, io_service_);
+  client_instance_ = ptr.get();
+  instance_ = std::move(ptr);
   client_instance_->connect(host.c_str(), port, 3000);
 }
 
@@ -265,7 +267,7 @@ void GuiInterface::endDisplay()
 
 void GuiInterface::enterFirstScreen()
 {
-  this->swapScreen(new ScreenStart(*this));
+  this->swapScreen(std::make_unique<ScreenStart>(*this));
 }
 
 void GuiInterface::onRedrawTick(const boost::system::error_code& ec)

@@ -104,9 +104,9 @@ int main(int /*argc*/, char** argv)
       { 0, 0, OPTGET_NONE, {} }
     };
 
-    FileLogger* logger = new FileLogger;
-    Logger::setLogger(logger);
-
+    auto ptr_logger = std::make_unique<FileLogger>();
+    FileLogger& file_logger = *ptr_logger;
+    Logger::setLogger(std::move(ptr_logger));
 
     // Program arguments
     const char* conf_file = NULL;
@@ -148,7 +148,7 @@ int main(int /*argc*/, char** argv)
             nick = opt->value.str;
             break;
           case 'o':
-            logger->setFile( opt->value.str );
+            file_logger.setFile( opt->value.str );
             break;
           case 'h':
             usage();

@@ -75,12 +75,11 @@ const sf::Texture& ResourceManager::getImage(const std::string& name) const
     return *(*it).second.get();
   }
 
-  sf::Texture* img = new sf::Texture;
-  std::shared_ptr<sf::Texture> pimg(img);
+  auto img = std::make_shared<sf::Texture>();
   if( ! img->loadFromFile(this->getResourceFilename(name+".png")) ) {
     throw LoadError("failed to load image "+name);
   }
-  images_[name] = pimg;
+  images_[name] = img;
 
   return *img;
 }
@@ -92,12 +91,11 @@ const sf::Font& ResourceManager::getFont(const std::string& name) const
     return *(*it).second.get();
   }
 
-  sf::Font* font = new sf::Font;
-  std::shared_ptr<sf::Font> pfont(font);
+  auto font = std::make_shared<sf::Font>();
   if( ! font->loadFromFile(this->getResourceFilename(name+".ttf")) ) {
     throw LoadError("failed to load font "+name);
   }
-  fonts_[name] = pfont;
+  fonts_[name] = font;
 
   return *font;
 }
@@ -109,9 +107,7 @@ const sf::SoundBuffer& ResourceManager::getSound(const std::string& name) const
     return *(*it).second.get();
   }
 
-  sf::SoundBuffer* sound = new sf::SoundBuffer;
-  std::shared_ptr<sf::SoundBuffer> psound(sound);
-
+  auto sound = std::make_shared<sf::SoundBuffer>();
   bool loaded = false;
   for(auto& ext : sound_ext) {
     if(sound->loadFromFile(this->getResourceFilename("sound/"+name+"."+ext))) {
@@ -122,7 +118,7 @@ const sf::SoundBuffer& ResourceManager::getSound(const std::string& name) const
   if(!loaded) {
     throw LoadError("failed to load sound "+name);
   }
-  sounds_[name] = psound;
+  sounds_[name] = sound;
 
   return *sound;
 }

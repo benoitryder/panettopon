@@ -77,7 +77,7 @@ void ScreenStart::onDebugStart()
   auto new_screen = std::make_unique<ScreenGame>(intf_);
   new_screen->setPlayerMapping(pl1, InputMapping::DefaultKeyboardMapping);
   new_screen->setPlayerMapping(pl2, InputMapping::DefaultKeyboardMapping);
-  intf_.swapScreen(new_screen.release());
+  intf_.swapScreen(std::move(new_screen));
   // lobby: players are ready
   GameInstance* instance = intf_.instance();
   instance->playerSetState(pl1, Player::State::LOBBY_READY);
@@ -86,12 +86,12 @@ void ScreenStart::onDebugStart()
 
 void ScreenStart::onJoinServer()
 {
-  intf_.swapScreen(new ScreenJoinServer(intf_));
+  intf_.swapScreen(std::make_unique<ScreenJoinServer>(intf_));
 }
 
 void ScreenStart::onCreateServer()
 {
-  intf_.swapScreen(new ScreenCreateServer(intf_));
+  intf_.swapScreen(std::make_unique<ScreenCreateServer>(intf_));
 }
 
 
@@ -142,7 +142,7 @@ bool ScreenJoinServer::onInputEvent(const sf::Event& ev)
     return true;
   }
   if(InputMapping::Global.cancel.match(ev)) {
-    intf_.swapScreen(new ScreenStart(intf_));
+    intf_.swapScreen(std::make_unique<ScreenStart>(intf_));
     return true;
   } else if(InputMapping::Global.confirm.match(ev)) {
     this->submit(ev);
@@ -159,7 +159,7 @@ void ScreenJoinServer::onPlayerJoined(Player& pl)
     InputMapping mapping = new_screen->getUnusedInputMapping(submitting_event_);
     assert(mapping.type() != InputType::NONE);
     new_screen->addLocalPlayer(pl, mapping);
-    intf_.swapScreen(new_screen.release());
+    intf_.swapScreen(std::move(new_screen));
   }
 }
 
@@ -251,7 +251,7 @@ bool ScreenCreateServer::onInputEvent(const sf::Event& ev)
     return true;
   }
   if(InputMapping::Global.cancel.match(ev)) {
-    intf_.swapScreen(new ScreenStart(intf_));
+    intf_.swapScreen(std::make_unique<ScreenStart>(intf_));
     return true;
   } else if(InputMapping::Global.confirm.match(ev)) {
     this->submit(ev);
@@ -293,7 +293,7 @@ void ScreenCreateServer::submit(const sf::Event& ev)
   assert(mapping.type() != InputType::NONE);
   Player& pl = intf_.server()->newLocalPlayer(entry_nick_->text());
   new_screen->addLocalPlayer(pl, mapping);
-  intf_.swapScreen(new_screen.release());
+  intf_.swapScreen(std::move(new_screen));
 }
 
 
@@ -346,7 +346,7 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
 
   // global keyboard cancel: exit
   if(ev.type == sf::Event::KeyPressed && InputMapping::Global.cancel.match(ev)) {
-    intf_.swapScreen(new ScreenStart(intf_));
+    intf_.swapScreen(std::make_unique<ScreenStart>(intf_));
     return true;
   }
 
@@ -375,7 +375,7 @@ void ScreenLobby::onStateChange()
         new_screen->setPlayerMapping(frame.player(), frame.mapping());
       }
     }
-    intf_.swapScreen(new_screen.release());
+    intf_.swapScreen(std::move(new_screen));
   }
 }
 

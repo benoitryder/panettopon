@@ -132,7 +132,7 @@ bool ScreenGame::onInputEvent(const sf::Event& ev)
   }
 
   if(InputMapping::Global.cancel.match(ev)) {
-    intf_.swapScreen(new ScreenStart(intf_));
+    intf_.swapScreen(std::make_unique<ScreenStart>(intf_));
     return true;
   } else if(InputMapping::Global.confirm.match(ev)) {
     if(intf_.instance()->state() == GameInstance::State::LOBBY) {
@@ -144,7 +144,7 @@ bool ScreenGame::onInputEvent(const sf::Event& ev)
           new_screen->addLocalPlayer(pl, input_mappings_[pl.plid()]);
         }
       }
-      intf_.swapScreen(new_screen.release());
+      intf_.swapScreen(std::move(new_screen));
       return true;
     }
   }
@@ -263,7 +263,7 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
 
   // start countdown
   {
-    text_start_countdown_ = std::unique_ptr<sf::Text>(new sf::Text());
+    text_start_countdown_ = std::make_unique<sf::Text>();
     style_.start_countdown_style.apply(*text_start_countdown_);
     // use a dummy string to center the text
     text_start_countdown_->setString("0.0");
@@ -511,7 +511,6 @@ void FieldDisplay::step()
       gbd_it = gbw_drbs_.insert(gbd_it, std::make_unique<GbHanging>(style_, gb));
     } else if( gbd_it != gbd_it2 ) {
       // found: move it at the right position (swap)
-      //note: do the '.release()' "by hand" to help the compiler
       gbd_it = gbw_drbs_.insert(gbd_it, std::move(*gbd_it2));
       gbw_drbs_.erase(gbd_it2);
     }
@@ -543,7 +542,7 @@ void FieldDisplay::doRank()
   assert(field_.rank());
   const ResourceManager& res_mgr = intf_.res_mgr();
 
-  text_rank_sign_ = std::unique_ptr<sf::Text>(new sf::Text());
+  text_rank_sign_ = std::make_unique<sf::Text>();
 
   // use different text/style depending on player count
   // default to "Lose"

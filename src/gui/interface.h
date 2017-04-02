@@ -59,7 +59,7 @@ class GuiInterface: public ClientInstance::Observer
    * The screen will be owned by the interface.
    * Current screen will be deleted before the next redraw.
    */
-  void swapScreen(Screen* screen);
+  void swapScreen(std::unique_ptr<Screen> screen);
 
   sf::RenderWindow& window() { return window_; }
   bool focused() const { return focused_; }
