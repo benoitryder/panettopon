@@ -124,6 +124,7 @@ void ServerInstance::playerSetState(Player& pl, Player::State state)
   }
 
   bool state_valid = false;
+  bool erase_player = false;
   switch(state) {
     case Player::State::QUIT:
       if(pl.field() != nullptr) {
@@ -131,7 +132,7 @@ void ServerInstance::playerSetState(Player& pl, Player::State state)
         match_.updateTick(); // field lost, tick must be updated
         pl.setField(nullptr);
       }
-      players_.erase(pl.plid());
+      erase_player = true;
       state_valid = true;
       break;
     case Player::State::LOBBY:
@@ -165,6 +166,9 @@ void ServerInstance::playerSetState(Player& pl, Player::State state)
   np_state->set_state(static_cast<netplay::PktPlayerState::State>(state));
   socket_->broadcastPacket(pkt);
 
+  if(erase_player) {
+    players_.erase(pl.plid());
+  }
   this->checkAllPlayersReady();
 }
 
