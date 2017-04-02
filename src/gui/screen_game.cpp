@@ -132,8 +132,12 @@ bool ScreenGame::onInputEvent(const sf::Event& ev)
   }
 
   if(InputMapping::Global.cancel.match(ev)) {
-    intf_.swapScreen(std::make_unique<ScreenStart>(intf_));
-    return true;
+    if(ev.type == sf::Event::KeyPressed) {
+      // only for keyboard, because button can be used by joystick mappings to
+      // play, and could be pressed by mistake
+      intf_.swapScreen(std::make_unique<ScreenStart>(intf_));
+      return true;
+    }
   } else if(InputMapping::Global.confirm.match(ev)) {
     if(intf_.instance()->state() == GameInstance::State::LOBBY) {
       auto new_screen = std::make_unique<ScreenLobby>(intf_);
