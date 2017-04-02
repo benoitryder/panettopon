@@ -134,14 +134,15 @@ class ScreenLobby: public Screen
   class WPlayerFrame: public WContainer
   {
    public:
-    WPlayerFrame(const Screen& screen, Player& pl);
+    WPlayerFrame(ScreenLobby& screen, Player& pl, const InputMapping& mapping={});
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
     const Player& player() const { return player_; }
     const InputMapping& mapping() const { return mapping_; }
-    void setMapping(const InputMapping& mapping) { mapping_ = mapping; }
     WFrame& frame() const { return *frame_; }
     /// Update the widget after player state changes
     void update();
+    /// Update mapping choices
+    void updateMappingItems();
     /// Update server list of configurations
     void updateConfItems();
     /** @brief Process events on the frame
@@ -156,17 +157,26 @@ class ScreenLobby: public Screen
 
     /// Focus a given widget, or nothing
     void focus(WFocusable* w);
+    /// Callback for mapping choice change
+    void onMappingChange();
+    /// Callback for conf choice change
+    void onConfChange();
 
    private:
+    ScreenLobby& screen_lobby_;
     Player& player_;
     InputMapping mapping_;
     WFrame* frame_;
     WLabel* nick_;
+    WChoice* choice_mapping_;
     WChoice* choice_conf_;
     sf::Sprite ready_;
     WFocusable* focused_;
+    std::vector<std::reference_wrapper<const InputMapping>> choice_mapping_values_;
   };
 
+  void setMapping(const InputMapping& mapping);
+  bool isMappingUsed(const InputMapping& mapping);
   void updatePlayerFramesLayout();
 
   WButton* button_ready_;

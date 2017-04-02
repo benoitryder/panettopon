@@ -432,11 +432,13 @@ void ScreenLobby::addLocalPlayer(Player& pl, const InputMapping& mapping)
 {
   LOG("adding local player %u to lobby", pl.plid());
   assert(pl.local());
-  auto frame_ptr = std::make_unique<WPlayerFrame>(*this, pl);
-  WPlayerFrame& frame = *frame_ptr;
-  frame.setMapping(mapping);
-  player_frames_.emplace(pl.plid(), std::move(frame_ptr));
-  frame.updateConfItems();
+  auto frame = std::make_unique<WPlayerFrame>(*this, pl, mapping);
+  player_frames_.emplace(pl.plid(), std::move(frame));
+  // refresh other players frames mappings (not automatically refreshed
+  // because the new frame was not in player_frames_ yet)
+  for(auto& f : player_frames_) {
+    f.second->updateMappingItems();
+  }
   intf_.instance()->playerSetState(pl, Player::State::LOBBY);
   this->updatePlayerFramesLayout();
 }
@@ -445,20 +447,24 @@ void ScreenLobby::addRemotePlayer(Player& pl)
 {
   LOG("adding remote player %u to lobby", pl.plid());
   assert(!pl.local());
-  auto frame_ptr = std::make_unique<WPlayerFrame>(*this, pl);
-  WPlayerFrame& frame = *frame_ptr;
-  player_frames_.emplace(pl.plid(), std::move(frame_ptr));
-  frame.updateConfItems();
+  auto frame = std::make_unique<WPlayerFrame>(*this, pl);
+  player_frames_.emplace(pl.plid(), std::move(frame));
   this->updatePlayerFramesLayout();
+}
+
+
+bool ScreenLobby::isMappingUsed(const InputMapping& mapping)
+{
+  auto it = std::find_if(player_frames_.begin(), player_frames_.end(),
+                         [&mapping](auto& kv) { return mapping.isEquivalent(kv.second->mapping()); });
+  return it != player_frames_.end();
 }
 
 InputMapping ScreenLobby::getUnusedInputMapping(const sf::Event& event)
 {
   if(event.type == sf::Event::KeyPressed) {
     for(auto& mapping : intf_.inputMappings().keyboard) {
-      auto it = std::find_if(player_frames_.begin(), player_frames_.end(),
-                             [&mapping](auto& kv) { return mapping.isEquivalent(kv.second->mapping()); });
-      if(it == player_frames_.end()) {
+      if(!this->isMappingUsed(mapping)) {
         return mapping;
       }
     }
@@ -487,21 +493,43 @@ const std::string& ScreenLobby::WPlayerFrame::type() const {
   return type;
 }
 
-ScreenLobby::WPlayerFrame::WPlayerFrame(const Screen& screen, Player& pl):
-    WContainer(screen, ""), player_(pl), mapping_(), focused_(nullptr)
+ScreenLobby::WPlayerFrame::WPlayerFrame(ScreenLobby& screen, Player& pl, const InputMapping& mapping):
+    WContainer(screen, ""), screen_lobby_(screen),
+    player_(pl), mapping_(), focused_(nullptr)
 {
+  assert(player_.local() == (mapping.type() != InputType::NONE));
+
   frame_ = &addWidget<WFrame>(screen, IniFile::join(type(), "Border"));
 
   nick_ = &addWidget<WLabel>(screen, IniFile::join(type(), "Nick"));
+  if(player_.local()) {
+    choice_mapping_ = &addWidget<WChoice>(screen, IniFile::join(type(), "Mapping"));
+  } else {
+    choice_mapping_ = nullptr;
+  }
   choice_conf_ = &addWidget<WChoice>(screen, IniFile::join(type(), "Conf"));
 
   this->applyStyle(ready_, "Ready");
   ready_.setOrigin(ready_.getLocalBounds().width/2.f, ready_.getLocalBounds().height/2.f);
   ready_.setPosition(getStyle<sf::Vector2f>("Ready.Pos"));
 
+  if(player_.local()) {
+    choice_mapping_->setNeighbors(choice_conf_, choice_conf_, nullptr, nullptr);
+    choice_conf_->setNeighbors(choice_mapping_, choice_mapping_, nullptr, nullptr);
+
+    mapping_ = mapping;
+    this->updateMappingItems();
+  }
+
   this->updateConfItems();
   this->update();
   this->focus(choice_conf_);
+
+  // set callbacks after all init, to avoid repeated callback calls
+  choice_conf_->setCallback(std::bind(&onConfChange, this));
+  if(choice_mapping_) {
+    choice_mapping_->setCallback(std::bind(&onMappingChange, this));
+  }
 }
 
 void ScreenLobby::WPlayerFrame::draw(sf::RenderTarget& target, sf::RenderStates states) const
@@ -520,6 +548,46 @@ void ScreenLobby::WPlayerFrame::update()
   if(!choice_conf_->selectValue(conf_name)) {
     choice_conf_->select(choice_conf_->addItem(conf_name));
   }
+}
+
+
+void ScreenLobby::WPlayerFrame::updateMappingItems()
+{
+  if(!player_.local()) {
+    return;  // nothing to do
+  }
+
+  const auto& mappings = screen_.intf().inputMappings();
+  WChoice::ItemContainer items;
+  unsigned int selected = 0;
+
+  choice_mapping_values_.clear();
+  if(mapping_.type() == InputType::KEYBOARD) {
+    for(unsigned int i=0; i<mappings.keyboard.size(); i++) {
+      auto& mapping = mappings.keyboard[i];
+      if(mapping.isEquivalent(mapping_)) {
+        selected = items.size();
+      } else if(screen_lobby_.isMappingUsed(mapping)) {
+        continue;
+      }
+      items.push_back("Kb. " + std::string(1, 'A' + i));
+      choice_mapping_values_.push_back(mapping);
+    }
+
+  } else if(mapping_.type() == InputType::JOYSTICK) {
+    // note: items will never change for joystick
+    for(unsigned int i=0; i<mappings.joystick.size(); i++) {
+      auto& mapping = mappings.joystick[i];
+      if(mapping.isEquivalent(mapping_)) {
+        selected = items.size();
+      }
+      items.push_back("Joy. " + std::string(1, 'A' + i));
+      choice_mapping_values_.push_back(mapping);
+    }
+  }
+
+  choice_mapping_->setItems(items);
+  choice_mapping_->select(selected);
 }
 
 void ScreenLobby::WPlayerFrame::updateConfItems()
@@ -544,6 +612,7 @@ void ScreenLobby::WPlayerFrame::updateConfItems()
   }
 }
 
+
 void ScreenLobby::WPlayerFrame::focus(WFocusable* w)
 {
   if(focused_) {
@@ -555,6 +624,31 @@ void ScreenLobby::WPlayerFrame::focus(WFocusable* w)
   }
 }
 
+void ScreenLobby::WPlayerFrame::onMappingChange()
+{
+  const auto& new_mapping = choice_mapping_values_[choice_mapping_->index()].get();
+  if(!new_mapping.isEquivalent(mapping_)) {
+    mapping_ = new_mapping;
+    for(auto& frame : screen_lobby_.player_frames_) {
+      frame.second->updateMappingItems();
+    }
+  }
+}
+
+void ScreenLobby::WPlayerFrame::onConfChange()
+{
+  if(player_.local()) {
+    if(player_.fieldConf().name != choice_conf_->value()) {
+      auto instance = screen_.intf().instance();
+      auto* fc = instance->conf().fieldConf(choice_conf_->value());
+      if(fc) {  // should always be true
+        instance->playerSetFieldConf(player_, *fc);
+      }
+    }
+  }
+}
+
+
 bool ScreenLobby::WPlayerFrame::onInputEvent(const sf::Event& ev)
 {
   if(!player_.local()) {
@@ -562,17 +656,7 @@ bool ScreenLobby::WPlayerFrame::onInputEvent(const sf::Event& ev)
   }
 
   if(focused_) {
-    // detect conf change
-    unsigned int conf_index = choice_conf_->index();
     if(focused_->onInputEvent(mapping_, ev)) {
-      if(choice_conf_->index() != conf_index) {
-        // choice updated
-        auto instance = screen_.intf().instance();
-        auto* fc = instance->conf().fieldConf(choice_conf_->value());
-        if(fc) {  // should always be true
-          instance->playerSetFieldConf(player_, *fc);
-        }
-      }
       return true;
     }
   }

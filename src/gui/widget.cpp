@@ -454,7 +454,7 @@ const std::string& WChoice::type() const {
 }
 
 WChoice::WChoice(const Screen& screen, const std::string& name):
-    WFocusable(screen, name)
+    WFocusable(screen, name), callback_(nullptr)
 {
   style_.load(*this);
   style_focus_.load(StyleLoaderPrefix(*this, "Focus", true));
@@ -474,10 +474,14 @@ void WChoice::setItems(const ItemContainer& items)
 
 void WChoice::select(unsigned int i)
 {
+  assert(i < items_.size());
   text_.setString(items_[i]);
   index_ = i;
   sf::FloatRect r = text_.getLocalBounds();
   text_.setOrigin(r.width/2, text_.getFont()->getLineSpacing(text_.getCharacterSize())/2);
+  if(callback_) {
+    callback_();
+  }
 }
 
 bool WChoice::selectValue(const ItemContainer::value_type& v)

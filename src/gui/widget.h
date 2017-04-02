@@ -289,6 +289,7 @@ class WChoice: public WFocusable
   };
 
   typedef std::vector<std::string> ItemContainer;
+  typedef std::function<void()> Callback;
 
   WChoice(const Screen& screen, const std::string& name);
   const ItemContainer& items() const { return items_; }
@@ -304,6 +305,9 @@ class WChoice: public WFocusable
   virtual bool onInputEvent(const InputMapping&, const sf::Event&);
   virtual void focus(bool focused);
 
+  /// Set a callback to call on value change
+  void setCallback(Callback cb) { callback_ = cb; }
+
  protected:
   virtual const std::string& type() const;
 
@@ -315,6 +319,7 @@ class WChoice: public WFocusable
   float width_;
   Style style_;
   Style style_focus_;
+  Callback callback_;
 };
 
 
