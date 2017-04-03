@@ -19,7 +19,7 @@ namespace gui {
  *  - an animation functor, which will update animation state
  *  - timing information (duration, looping, ...)
  *
- * Time provided to time() must use the same scale than duration (typically,
+ * Time provided to time() must use the same scale as duration (typically,
  * seconds). It must be positive and increase between two update calls.
  */
 class Animation
@@ -36,7 +36,6 @@ class Animation
     NONE = 0,  ///< not started, not configured
     STARTED,  ///< animation started, waiting for first update
     RUNNING,  ///< animation is running
-    PAUSED,  ///< animation has been stopped
     STOPPED,  ///< animation has been stopped, or just configured
   };
 
