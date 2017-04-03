@@ -187,14 +187,26 @@ void ScreenGame::onStateChange()
   } else if(state == GameInstance::State::GAME_READY) {
     const auto& fields = intf_.instance()->match().fields();
     // compute values for field display position and size
-    const float field_width = style_field_.bk_size * (FIELD_WIDTH+2);
-    const float field_height = style_field_.bk_size * (FIELD_HEIGHT+4);
     const auto screen_size = intf_.window().getView().getSize();
-    const float dx = screen_size.x / fields.size();
-    const float scale = std::min(dx / field_width, screen_size.y / field_height);
+    const float min_width = fields.size() * GuiInterface::REF_FIELD_SIZE.x;
+    float scale = 1;
+    if(screen_size.x < min_width) {
+      // zoom-out for all fields to fit
+      scale = screen_size.x / min_width;
+    } else {
+      scale = 1;
+    }
+    // evenly separate the extra space as margins (avoid large gap between
+    // fields and smaller margins on screen sides)
+    const float space_x = (screen_size.x / scale - GuiInterface::REF_FIELD_SIZE.x * fields.size()) / (fields.size() + 1);
+
+    // once dx has been computed, apply block_size scaling
+    scale *= GuiInterface::REF_BLOCK_SIZE / static_cast<float>(style_field_.bk_size);
+    // restrict to 0.25 zoom steps to avoid ugly scaling
+    scale = std::ceil(4 * scale) / 4.;
 
     // create a field display for each playing player
-    float x = (-0.5*fields.size() + 0.5) * dx;
+    float x = -0.5 * (GuiInterface::REF_FIELD_SIZE.x + space_x) * (fields.size() - 1);
     for(const auto& field : fields) {
       if(intf_.style().colors.size() - 1 < field->conf().color_nb) {
         throw std::runtime_error("not enough configured colors to display fields");
@@ -204,7 +216,7 @@ void ScreenGame::onStateChange()
       fdp->scale(scale, scale);
       fdp->move(x, 0);
       field_displays_.emplace(fldid, std::move(fdp));
-      x += dx;
+      x += GuiInterface::REF_FIELD_SIZE.x + space_x;
     }
 
     for(auto& pair : intf_.instance()->players()) {

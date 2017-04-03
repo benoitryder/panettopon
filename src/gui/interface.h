@@ -45,6 +45,17 @@ class GuiInterface: public ClientInstance::Observer
     std::vector<InputMapping> keyboard;
   };
 
+  /// Reference block size used to compute VIEW_SIZE
+  static const unsigned int REF_BLOCK_SIZE;
+  /** @brief Minimal display size of a file
+   *
+   * Value is used to compute view size; two fields must fit side by side.
+   *
+   * With this value, 4 fields fit on 1080p with 64px blocks. Minimal height
+   * has been increased to have an exact x2 zoom with this resolution.
+   */
+  static const sf::Vector2f REF_FIELD_SIZE;
+
   GuiInterface();
   virtual ~GuiInterface();
   bool run(IniFile& cfg);
@@ -113,6 +124,7 @@ class GuiInterface: public ClientInstance::Observer
 
   bool initDisplay();
   void endDisplay();
+  void updateView(unsigned int width, unsigned int height);
   void enterFirstScreen();
   void onRedrawTick(const boost::system::error_code& ec);
 

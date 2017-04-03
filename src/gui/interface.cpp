@@ -29,6 +29,8 @@ void StyleGlobal::load(const StyleLoader& loader)
 
 
 const std::string GuiInterface::CONF_SECTION("GUI");
+const unsigned int GuiInterface::REF_BLOCK_SIZE{32};
+const sf::Vector2f GuiInterface::REF_FIELD_SIZE{224, 512};
 
 GuiInterface::GuiInterface():
     cfg_(NULL), focused_(false), redraw_timer_(io_service_),
@@ -253,9 +255,8 @@ bool GuiInterface::initDisplay()
   icon.loadFromFile(res_mgr_.getResourceFilename("icon-32.png"));
   window_.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 
-  sf::View view = window_.getDefaultView();
-  view.setCenter(0,0);
-  window_.setView(view);
+  const auto& window_size = window_.getSize();
+  this->updateView(window_size.x, window_size.y);
 
   return true;
 }
@@ -263,6 +264,20 @@ bool GuiInterface::initDisplay()
 void GuiInterface::endDisplay()
 {
   window_.close();
+}
+
+void GuiInterface::updateView(unsigned int width, unsigned int height)
+{
+  float zoom = std::max(2*REF_FIELD_SIZE.x/width, REF_FIELD_SIZE.y/height);
+  // restrict to 0.25 zoom steps to avoid ugly scaling
+  zoom = std::ceil(4 * zoom) / 4.;
+
+  sf::View view = window_.getView();
+  view.setSize(zoom * width, zoom * height);
+  view.setCenter(0,0);
+  LOG("setting view: (%d, %d) -> (%.0f, %.0f)  zoom: %.2f",
+      width, height, view.getSize().x, view.getSize().y, zoom);
+  window_.setView(view);
 }
 
 void GuiInterface::enterFirstScreen()
@@ -305,6 +320,8 @@ void GuiInterface::onRedrawTick(const boost::system::error_code& ec)
       focused_ = true;
     } else if( event.type == sf::Event::LostFocus ) {
       focused_ = false;
+    } else if(event.type == sf::Event::Resized) {
+      this->updateView(event.size.width, event.size.height);
     }
   }
 

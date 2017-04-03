@@ -82,8 +82,9 @@ void Screen::Background::draw(sf::RenderTarget& target, sf::RenderStates states)
   if( img ) {
     states.texture = img;
     states.blendMode = sf::BlendMultiply;
-    const float wx = target.getSize().x / 2. + 1;
-    const float wy = target.getSize().y / 2. + 1;
+    const auto& view_size = target.getView().getSize();
+    const float wx = view_size.x / 2.;
+    const float wy = view_size.y / 2.;
     const sf::Vertex vertices[] = {
       sf::Vertex(sf::Vector2f(-wx, +wy), sf::Vector2f(-wx, +wy)),
       sf::Vertex(sf::Vector2f(-wx, -wy), sf::Vector2f(-wx, -wy)),
