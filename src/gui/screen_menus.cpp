@@ -628,7 +628,13 @@ void ScreenLobby::WPlayerFrame::onMappingChange()
 {
   const auto& new_mapping = choice_mapping_values_[choice_mapping_->index()].get();
   if(!new_mapping.isEquivalent(mapping_)) {
-    mapping_ = new_mapping;
+    if(mapping_.type() == InputType::JOYSTICK) {
+      unsigned int joystick_id = mapping_.up.joystick.id;
+      mapping_ = new_mapping;
+      mapping_.setJoystickId(joystick_id);
+    } else {
+      mapping_ = new_mapping;
+    }
     for(auto& frame : screen_lobby_.player_frames_) {
       frame.second->updateMappingItems();
     }
