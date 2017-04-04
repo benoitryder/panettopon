@@ -5,6 +5,7 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
 #include "widget.h"
+#include "animation.h"
 #include "../instance.h"
 
 class IniFile;
@@ -65,11 +66,17 @@ class Screen: public StyleLoader
   virtual bool searchStyle(const std::string& prop, std::string& key) const;
   virtual std::string styleErrorSection() const { return name_; }
 
+  /// Update all registered animations
+  void updateAnimations(float time);
+  void addAnimation(Animation& animation);
+  void removeAnimation(const Animation& animation);
+
  protected:
   GuiInterface& intf_;
   const std::string name_;
   WContainer container_;
   WFocusable* focused_;
+  std::vector<Animation*> animations_;
  private:
   /// Dummy drawable, to have a renderer
   class Background: public sf::Drawable {

@@ -120,5 +120,29 @@ bool Screen::searchStyle(const std::string& prop, std::string& key) const
 }
 
 
+void Screen::updateAnimations(float time)
+{
+  for(auto& ani : animations_) {
+    ani->update(time);
+  }
+}
+
+void Screen::addAnimation(Animation& animation)
+{
+  animations_.push_back(&animation);
+}
+
+void Screen::removeAnimation(const Animation& animation)
+{
+  for(auto it=animations_.begin(); it!=animations_.end(); ++it) {
+    if(*it == &animation) {
+      animations_.erase(it);
+      return;
+    }
+  }
+  assert(false);  // not found
+}
+
+
 }
 

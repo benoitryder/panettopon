@@ -1,3 +1,4 @@
+#include <chrono>
 #include "interface.h"
 #include "screen_menus.h"
 #include "../inifile.h"
@@ -326,6 +327,8 @@ void GuiInterface::onRedrawTick(const boost::system::error_code& ec)
   }
 
   if(screen_) {  // screen may have been removed by a swapScreen()
+    auto tnow = std::chrono::steady_clock::now().time_since_epoch();
+    screen_->updateAnimations(std::chrono::duration_cast<std::chrono::milliseconds>(tnow).count());
     screen_->redraw();
     window_.display();
   }
