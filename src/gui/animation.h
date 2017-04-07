@@ -9,88 +9,81 @@ namespace sf {
 
 namespace gui {
 
+/** @brief Functor to update animation state
+ *
+ * First parameter is the animation progress as a number in [0,1].
+ */
+typedef std::function<void(float)> Animator;
+/** @brief Functor to interpolate time progress into animation progress
+ */
+typedef std::function<float(float)> Tween;
+
 
 /** @brief GUI animation
  *
  * Animation is a general term for any time-based changes. This includes widget
  * moves, animated sprite, fading, zooming, ...
  *
- * Each animation requires:
- *  - an animation functor, which will update animation state
- *  - timing information (duration, looping, ...)
- *
- * Time provided to time() must use the same scale as duration (typically,
- * seconds). It must be positive and increase between two update calls.
+ * Time provided to update() must use the same scale as duration (typically,
+ * milliseconds). It must be positive and increase between two calls.
  */
 class Animation
 {
  public:
-  /** @brief Animation functor to update animation state
-   *
-   * First parameter is the animation progress as a number in [0,1].
-   */
-  typedef std::function<void(float)> Animator;
-
   /// Animation state
   enum class State {
-    NONE = 0,  ///< not started, not configured
+    NONE,  ///< animation not configured
     STARTED,  ///< animation started, waiting for first update
     RUNNING,  ///< animation is running
-    STOPPED,  ///< animation has been stopped, or just configured
+    STOPPED,  ///< animation has been stopped
   };
 
-  Animation(Animator animator);
+  Animation();
+  Animation(const Animator& animator, const Tween& tween, unsigned long duration, bool loop=false);
 
-  /// Return animation state
   State state() const { return state_; }
-
-  /** @brief Start animation for given period
-   *
-   * If animation is running, it is restarted using provided parameters.
-   */
-  void start(float duration, bool loop=false);
-  /// Restart animation with current parameters
   void restart();
-  /// Stop animation
   void stop();
 
   /// Update animation state
-  void update(float time);
+  void update(unsigned long time);
 
  private:
   Animator animator_;
-  State state_;  ///< animation state
-  float start_time_;  ///< animation start time
-  float duration_;  ///< animation duration (or looping period)
+  Tween tween_;
+  State state_;
+  unsigned long start_time_;  ///< animation start time
+  unsigned long duration_;  ///< animation duration (or looping period)
   bool loop_;  ///< true if animation is looping
 };
 
 
-/** @brief Type used for animation tweening
+/** @brief Type for binded animation
  *
- * Tween instances define how to interpolate values to animate.
+ * Animators are constructed with the animated object, which may not be known
+ * immediately (e.g. when parsing a style).
  *
- * First parameter is the animation progress as a number in [0,1].
+ * This type can be used for unresolved animations.
  */
-typedef std::function<float(float)> Tween;
+template<typename ... Args> using AnimationBind = std::function<Animation(Args...)>;
 
-/// Linear tween (identity)
-const Tween TweenLinear = [](float x) { return x; };
+template<typename ... Args> using AnimatorBind = std::function<Animator(Args...)>;
 
 
 /// Animate position
 class AnimatorPosition
 {
  public:
-  AnimatorPosition(sf::Transformable& animated, const sf::Vector2f& from, const sf::Vector2f& to, const Tween& tween=TweenLinear);
+  AnimatorPosition(sf::Transformable& animated, const sf::Vector2f& from, const sf::Vector2f& to);
   void operator()(float progress);
  private:
   sf::Transformable& animated_;
-  Tween tween_;
   sf::Vector2f from_;
   sf::Vector2f move_;
 };
 
+
+inline float TweenLinear(float x) { return x; }
 
 }
 

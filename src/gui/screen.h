@@ -67,7 +67,7 @@ class Screen: public StyleLoader
   virtual std::string styleErrorSection() const { return name_; }
 
   /// Update all registered animations
-  void updateAnimations(float time);
+  void updateAnimations(unsigned long time);
   void addAnimation(Animation& animation);
   void removeAnimation(const Animation& animation);
 

@@ -120,7 +120,7 @@ bool Screen::searchStyle(const std::string& prop, std::string& key) const
 }
 
 
-void Screen::updateAnimations(float time)
+void Screen::updateAnimations(unsigned long time)
 {
   for(auto& ani : animations_) {
     ani->update(time);

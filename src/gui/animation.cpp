@@ -7,42 +7,37 @@
 namespace gui {
 
 
-Animation::Animation(Animator animator):
-    animator_(animator),
+Animation::Animation():
     state_(State::NONE)
 {
 }
 
 
-void Animation::start(float duration, bool loop)
+Animation::Animation(const Animator& animator, const Tween& tween, unsigned long duration, bool loop):
+    animator_(animator),
+    tween_(tween),
+    state_(State::STARTED),
+    duration_(duration),
+    loop_(loop)
 {
-  assert(duration > 0);
-  duration_ = duration;
-  loop_ = loop;
-  state_ = State::STOPPED;
-  this->restart();
+  assert(duration_ > 0);
 }
-
 
 void Animation::restart()
 {
-  if(state_ == State::NONE) {
-    throw std::runtime_error("animation never started, cannot restart it");
-  }
-  this->stop();
+  assert(state_ != State::NONE);
   state_ = State::STARTED;
 }
 
 void Animation::stop()
 {
-  if(state_ == State::NONE) {
-    return;  // nothing to do
-  }
+  assert(state_ != State::NONE);
   state_ = State::STOPPED;
 }
 
-void Animation::update(float time)
+void Animation::update(unsigned long time)
 {
+  assert(state_ != State::NONE);
   if(state_ == State::STARTED) {
     start_time_ = time;
     state_ = State::RUNNING;
@@ -50,26 +45,26 @@ void Animation::update(float time)
     return;  // nothing to do
   }
 
-  float progress = (time - start_time_) / duration_;
+  float progress = static_cast<float>(time - start_time_) / duration_;
   if(loop_) {
     progress -= std::floor(progress);
   } else if(progress > 1.0) {
     progress = 1.0;
     state_ = State::STOPPED;
   }
-  animator_(progress);
+
+  animator_(tween_(progress));
 }
 
 
-AnimatorPosition::AnimatorPosition(sf::Transformable& animated, const sf::Vector2f& from, const sf::Vector2f& to, const Tween& tween):
-    animated_(animated), tween_(tween),
-    from_(from), move_(to-from)
+AnimatorPosition::AnimatorPosition(sf::Transformable& animated, const sf::Vector2f& from, const sf::Vector2f& to):
+    animated_(animated), from_(from), move_(to-from)
 {
 }
 
 void AnimatorPosition::operator()(float progress)
 {
-  animated_.setPosition(from_ + move_ * tween_(progress));
+  animated_.setPosition(from_ + move_ * progress);
 }
 
 
