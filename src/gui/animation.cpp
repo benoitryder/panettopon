@@ -70,3 +70,62 @@ void AnimatorPosition::operator()(float progress)
 
 }
 
+
+using namespace gui;
+
+
+AnimationBind<sf::Transformable&> IniFileConverter<AnimationBind<sf::Transformable&>>::parse(const std::string& value)
+{
+  size_t pos = 0;
+
+  AnimatorBind<sf::Transformable&> animator;
+  pos = parsing::convertUntil(value, pos, ':', animator);
+  Tween tween;
+  pos = parsing::convertUntil(value, pos, ':', tween);
+  float duration_seconds;
+  pos = parsing::castUntil(value, pos, ':', duration_seconds);
+  unsigned long duration = duration_seconds * 1000;
+
+  bool loop = false;
+  if(pos != std::string::npos) {
+    if(value.substr(pos) == "loop") {
+      loop = true;
+    } else {
+      throw std::invalid_argument("invalid animation loop parameter");
+    }
+  }
+
+  return [=](sf::Transformable& o) { return Animation(animator(o), tween, duration, loop); };
+}
+
+
+AnimatorBind<sf::Transformable&> IniFileConverter<AnimatorBind<sf::Transformable&>>::parse(const std::string& value)
+{
+  size_t pos = 0;
+  std::string name;
+  pos = parsing::castUntil(value, pos, ',', name);
+  if(name == "position") {
+    float x0, x1, y0, y1;
+    pos = parsing::castUntil(value, pos, ',', x0);
+    pos = parsing::castUntil(value, pos, ',', y0);
+    pos = parsing::castUntil(value, pos, ',', x1);
+    pos = parsing::castUntil(value, pos, 0, y1);
+    return [=](sf::Transformable& o) { return AnimatorPosition(o, {x0, y0}, {x1, y1}); };
+  } else {
+    throw std::invalid_argument("unknown animator name");
+  }
+}
+
+
+Tween IniFileConverter<Tween>::parse(const std::string& value)
+{
+  size_t pos = 0;
+  std::string name;
+  pos = parsing::castUntil(value, pos, ',', name);
+  if(name == "linear") {
+    return TweenLinear;
+  } else {
+    throw std::invalid_argument("unknown tween name");
+  }
+}
+

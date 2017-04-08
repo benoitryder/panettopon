@@ -2,6 +2,8 @@
 #define GUI_ANIMATION_H_
 
 #include <functional>
+#include "../inifile.h"
+
 
 namespace sf {
   class Transformable;
@@ -86,5 +88,36 @@ class AnimatorPosition
 inline float TweenLinear(float x) { return x; }
 
 }
+
+
+/** @brief Parse a (binded) animation style value
+ *
+ * Format: <tt>animator;tween;duration[;loop]</tt>
+ */
+template <> struct IniFileConverter<gui::AnimationBind<sf::Transformable&>>
+{
+  static gui::AnimationBind<sf::Transformable&> parse(const std::string& value);
+};
+
+/** @brief Parse a (binded) animator
+ *
+ * Formats:
+ *  - <tt>position,x0,y0,x1,y0</tt>
+ */
+template <> struct IniFileConverter<gui::AnimatorBind<sf::Transformable&>>
+{
+  static gui::AnimatorBind<sf::Transformable&> parse(const std::string& value);
+};
+
+/** @brief Parse a twee
+ *
+ * Formats:
+ *  - <tt>linear</tt>
+ */
+template <> struct IniFileConverter<gui::Tween>
+{
+  static gui::Tween parse(const std::string& value);
+};
+
 
 #endif
