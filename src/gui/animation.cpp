@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include <cassert>
 #include <cmath>
 #include <stdexcept>
@@ -68,6 +70,10 @@ void AnimatorPosition::operator()(float progress)
 }
 
 
+float TweenSin(float x) { return std::sin(x * M_PI); }
+float TweenSinLoop(float x) { return std::sin(x * 2 * M_PI); }
+
+
 }
 
 
@@ -124,6 +130,12 @@ Tween IniFileConverter<Tween>::parse(const std::string& value)
   pos = parsing::castUntil(value, pos, ',', name);
   if(name == "linear") {
     return TweenLinear;
+  } else if(name == "linearloop") {
+    return TweenLinearLoop;
+  } else if(name == "sin") {
+    return TweenSin;
+  } else if(name == "sinloop") {
+    return TweenSinLoop;
   } else {
     throw std::invalid_argument("unknown tween name");
   }

@@ -86,6 +86,9 @@ class AnimatorPosition
 
 
 inline float TweenLinear(float x) { return x; }
+inline float TweenLinearLoop(float x) { return x <= 0.5 ? 2*x : 2-2*x; }
+float TweenSin(float x);
+float TweenSinLoop(float x);
 
 }
 
@@ -113,6 +116,8 @@ template <> struct IniFileConverter<gui::AnimatorBind<sf::Transformable&>>
  *
  * Formats:
  *  - <tt>linear</tt>
+ *  - <tt>linearloop</tt>
+ *  - <tt>sin</tt>
  */
 template <> struct IniFileConverter<gui::Tween>
 {
