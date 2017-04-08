@@ -131,7 +131,7 @@ template <typename T> T IniFile::get(const std::string& key) const
   if( it != entries_.end() ) {
     try {
       return IniFileConverter<T>::parse(it->second);
-    } catch(const std::exception&) {
+    } catch(const std::exception& e) {
       throw ParseError(key);
     }
   }
@@ -195,6 +195,49 @@ template <typename T> T IniFile::get(Path path, const T& def) const
 inline std::string IniFile::get(Path path, const char* def) const
 {
   return get<std::string>(join(path), def);
+}
+
+
+/** @brief Parsing helpers
+ */
+namespace parsing {
+
+/** @brief Parse a value from a string, ending at a given delimiter.
+ *
+ * Parse value from \a source substring starting at \a pos and ending at the
+ * first delimiter found after \a pos.
+ * If delimiter is not found, parse the whole remaining string.
+ *
+ * Return the position after the delimiter (or std::string::npos if not found).
+ */
+template <typename T> size_t castUntil(const std::string& source, size_t pos, char delim, T& value)
+{
+  if(pos > source.size()) {
+    throw std::out_of_range("cannot parse value, missing data");
+  }
+  size_t sep = source.find(delim, pos);
+  value = boost::lexical_cast<T>(source.substr(pos, sep - pos));
+  if(sep != std::string::npos) {
+    sep++;
+  }
+  return sep;
+}
+
+/// Same as parseUntil(), but using IniFileConverter::parse
+template <typename T> size_t convertUntil(const std::string& source, size_t pos, char delim, T& value)
+{
+  if(pos > source.size()) {
+    throw std::out_of_range("cannot parse value, missing data");
+  }
+  size_t sep = source.find(delim, pos);
+  value = IniFileConverter<T>::parse(source.substr(pos, sep - pos));
+  if(sep != std::string::npos) {
+    sep++;
+  }
+  return sep;
+}
+
+
 }
 
 
