@@ -205,16 +205,11 @@ template <typename T> struct IniFileConverter<sf::Rect<T>>
   static sf::Rect<T> parse(const std::string& value)
   {
     sf::Rect<T> rect;
-    T left, top, width, height;
-    char c1, c2, c3;
-    std::istringstream in(value);
-    in >> left >> c1 >> top >> c2 >> width >> c3 >> height;
-    if( in && c1 == ',' && c2 == ',' && c3 == ',' && width >= 0 && height >= 0 ) {
-      rect.left = left;
-      rect.top = top;
-      rect.width = width;
-      rect.height = height;
-    }
+    size_t pos = 0;
+    pos = parsing::castUntil(value, pos, ',', rect.left);
+    pos = parsing::castUntil(value, pos, ',', rect.top);
+    pos = parsing::castUntil(value, pos, ',', rect.width);
+    pos = parsing::castUntil(value, pos, 0, rect.height);
     return rect;
   }
 };
@@ -224,14 +219,9 @@ template <typename T> struct IniFileConverter<sf::Vector2<T>>
   static sf::Vector2<T> parse(const std::string& value)
   {
     sf::Vector2<T> vect;
-    T x, y;
-    char c;
-    std::istringstream in(value);
-    in >> x >> c >> y;
-    if( in && c == ',' ) {
-      vect.x = x;
-      vect.y = y;
-    }
+    size_t pos = 0;
+    pos = parsing::castUntil(value, pos, ',', vect.x);
+    pos = parsing::castUntil(value, pos, 0, vect.y);
     return vect;
   }
 };
@@ -241,15 +231,9 @@ template <typename T1, typename T2> struct IniFileConverter<std::pair<T1, T2>>
   static std::pair<T1, T2> parse(const std::string& value)
   {
     std::pair<T1, T2> pair;
-    T1 v1;
-    T2 v2;
-    char c;
-    std::istringstream in(value);
-    in >> v1 >> c >> v2;
-    if( in && c == ',' ) {
-      pair.first = v1;
-      pair.second = v2;
-    }
+    size_t pos = 0;
+    pos = parsing::castUntil(value, pos, ',', pair.first);
+    pos = parsing::castUntil(value, pos, 0, pair.second);
     return pair;
   }
 };

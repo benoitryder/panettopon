@@ -411,22 +411,19 @@ void SoundPool::play()
 
 sf::Color IniFileConverter<sf::Color>::parse(const std::string& value)
 {
-  sf::Color color;
-  char c;
-  std::string s;
-  std::istringstream in(value);
-  in >> c >> s;
-  if( in && c == '#' && (s.size() == 6 || s.size() == 8) ) {
-    uint32_t argb;
-    std::istringstream iss(s);
-    iss >> std::hex >> argb;
-    if( iss ) {
-      color.r = (argb>>16) & 0xff;
-      color.g = (argb>>8) & 0xff;
-      color.b = argb & 0xff;
-      color.a = s.size() == 6 ? 0xff : (argb>>24) & 0xff;
-    }
+  if((value.size() != 7 && value.size() != 9) || value[0] != '#') {
+    throw std::invalid_argument("invalid color value");
   }
+  char* end = nullptr;
+  uint32_t argb = std::strtoul(value.c_str() + 1, &end, 16);
+  if(end == 0 || *end != 0) {
+    throw std::invalid_argument("invalid color value");
+  }
+  sf::Color color;
+  color.r = (argb >> 16) & 0xff;
+  color.g = (argb >> 8) & 0xff;
+  color.b = argb & 0xff;
+  color.a = value.size() == 7 ? 0xff : (argb >> 24) & 0xff;
   return color;
 }
 
