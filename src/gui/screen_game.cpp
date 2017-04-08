@@ -322,15 +322,16 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
 
 void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
+  const float field_sx = style_.bk_size * FIELD_WIDTH;
+  const float field_sy = style_.bk_size * FIELD_HEIGHT;
+
   states.transform *= getTransform();
   {
     // change view to clip rendered block to the fied area
     // use field position and size in relative screen coordinates
     sf::View view_orig = target.getView();
     sf::View view(sf::Vector2f(FIELD_WIDTH/2, FIELD_HEIGHT/2), sf::Vector2f(FIELD_WIDTH, FIELD_HEIGHT));
-    sf::FloatRect field_rect = states.transform.transformRect(sf::FloatRect(
-            0, 0,
-            style_.bk_size*FIELD_WIDTH, style_.bk_size*FIELD_HEIGHT));
+    sf::FloatRect field_rect = states.transform.transformRect({0, 0, field_sx, field_sy});
     view.setViewport(sf::FloatRect(
             (field_rect.left - view_orig.getCenter().x) / view_orig.getSize().x + 0.5,
             (field_rect.top - view_orig.getCenter().y) / view_orig.getSize().y + 0.5,
@@ -376,13 +377,11 @@ void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
   if(field_.rank()) {
     sf::RenderStates states_dark(sf::BlendMultiply, states.transform, nullptr, nullptr);
     const sf::Color dark(64, 64, 64);
-    const float sx = style_.bk_size * FIELD_WIDTH;
-    const float sy = style_.bk_size * FIELD_HEIGHT;
     const sf::Vertex vertices[] = {
-      sf::Vertex(sf::Vector2f(0, 0), dark),
-      sf::Vertex(sf::Vector2f(sx, 0), dark),
-      sf::Vertex(sf::Vector2f(sx, sy), dark),
-      sf::Vertex(sf::Vector2f(0, sy), dark),
+      {{0, 0}, dark},
+      {{field_sx, 0}, dark},
+      {{field_sx, field_sy}, dark},
+      {{0, field_sy}, dark},
     };
     target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::Quads, states_dark);
   }

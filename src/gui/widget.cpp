@@ -432,8 +432,8 @@ WEntry::Cursor::Cursor():
 
 void WEntry::Cursor::setHeight(float h)
 {
-  vertices_[0] = sf::Vertex(sf::Vector2f(0, -h/2));
-  vertices_[1] = sf::Vertex(sf::Vector2f(0, h/2));
+  vertices_[0] = {{0, -h/2}};
+  vertices_[1] = {{0, h/2}};
 }
 
 void WEntry::Cursor::draw(sf::RenderTarget& target, sf::RenderStates states) const

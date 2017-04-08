@@ -168,10 +168,10 @@ void ImageTile::render(sf::RenderTarget& target, sf::RenderStates states, float 
   const float bottom = rect_.top  + rect_.height - 0.1;
 
   const sf::Vertex vertices[] = {
-    sf::Vertex(sf::Vector2f(x,   y),   c, sf::Vector2f(left,  bottom)),
-    sf::Vertex(sf::Vector2f(x+w, y),   c, sf::Vector2f(right, bottom)),
-    sf::Vertex(sf::Vector2f(x,   y+h), c, sf::Vector2f(left,  top)),
-    sf::Vertex(sf::Vector2f(x+w, y+h), c, sf::Vector2f(right, top)),
+    {{x,   y},   c, {left,  bottom}},
+    {{x+w, y},   c, {right, bottom}},
+    {{x,   y+h}, c, {left,  top}},
+    {{x+w, y+h}, c, {right, top}},
   };
   target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::TrianglesStrip, states);
 }
@@ -227,40 +227,32 @@ void ImageFrame::render(sf::RenderTarget& target, sf::RenderStates states, const
   const float tex_x2 = rect_.left + inside_.left + inside_.width;
   const float tex_y2 = rect_.top + inside_.top  + inside_.height;
 
-  const sf::Vertex vertices0[] = {
-    sf::Vertex(sf::Vector2f(img_x0, img_y0), color_, sf::Vector2f(tex_x0, tex_y3)),
-    sf::Vertex(sf::Vector2f(img_x0, img_y1), color_, sf::Vector2f(tex_x0, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y0), color_, sf::Vector2f(tex_x1, tex_y3)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y1), color_, sf::Vector2f(tex_x1, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y0), color_, sf::Vector2f(tex_x2, tex_y3)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y1), color_, sf::Vector2f(tex_x2, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y0), color_, sf::Vector2f(tex_x3, tex_y3)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y1), color_, sf::Vector2f(tex_x3, tex_y2)),
-  };
-  const sf::Vertex vertices1[] = {
-    sf::Vertex(sf::Vector2f(img_x0, img_y1), color_, sf::Vector2f(tex_x0, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x0, img_y2), color_, sf::Vector2f(tex_x0, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y1), color_, sf::Vector2f(tex_x1, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y2), color_, sf::Vector2f(tex_x1, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y1), color_, sf::Vector2f(tex_x2, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y2), color_, sf::Vector2f(tex_x2, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y1), color_, sf::Vector2f(tex_x3, tex_y2)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y2), color_, sf::Vector2f(tex_x3, tex_y1)),
-  };
-  const sf::Vertex vertices2[] = {
-    sf::Vertex(sf::Vector2f(img_x0, img_y2), color_, sf::Vector2f(tex_x0, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x0, img_y3), color_, sf::Vector2f(tex_x0, tex_y0)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y2), color_, sf::Vector2f(tex_x1, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y3), color_, sf::Vector2f(tex_x1, tex_y0)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y2), color_, sf::Vector2f(tex_x2, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y3), color_, sf::Vector2f(tex_x2, tex_y0)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y2), color_, sf::Vector2f(tex_x3, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y3), color_, sf::Vector2f(tex_x3, tex_y0)),
+  const sf::Vertex vertices[] = {
+    {{img_x0, img_y0}, color_, {tex_x0, tex_y3}},
+    {{img_x0, img_y1}, color_, {tex_x0, tex_y2}},
+    {{img_x1, img_y0}, color_, {tex_x1, tex_y3}},
+    {{img_x1, img_y1}, color_, {tex_x1, tex_y2}},
+    {{img_x2, img_y0}, color_, {tex_x2, tex_y3}},
+    {{img_x2, img_y1}, color_, {tex_x2, tex_y2}},
+    {{img_x3, img_y0}, color_, {tex_x3, tex_y3}},
+    {{img_x3, img_y1}, color_, {tex_x3, tex_y2}},
+    {{img_x3, img_y2}, color_, {tex_x3, tex_y1}},
+    {{img_x2, img_y1}, color_, {tex_x2, tex_y2}},
+    {{img_x2, img_y2}, color_, {tex_x2, tex_y1}},
+    {{img_x1, img_y1}, color_, {tex_x1, tex_y2}},
+    {{img_x1, img_y2}, color_, {tex_x1, tex_y1}},
+    {{img_x0, img_y1}, color_, {tex_x0, tex_y2}},
+    {{img_x0, img_y2}, color_, {tex_x0, tex_y1}},
+    {{img_x0, img_y3}, color_, {tex_x0, tex_y0}},
+    {{img_x1, img_y2}, color_, {tex_x1, tex_y1}},
+    {{img_x1, img_y3}, color_, {tex_x1, tex_y0}},
+    {{img_x2, img_y2}, color_, {tex_x2, tex_y1}},
+    {{img_x2, img_y3}, color_, {tex_x2, tex_y0}},
+    {{img_x3, img_y2}, color_, {tex_x3, tex_y1}},
+    {{img_x3, img_y3}, color_, {tex_x3, tex_y0}},
   };
 
-  target.draw(vertices0, sizeof(vertices0)/sizeof(*vertices0), sf::TrianglesStrip, states);
-  target.draw(vertices1, sizeof(vertices1)/sizeof(*vertices1), sf::TrianglesStrip, states);
-  target.draw(vertices2, sizeof(vertices2)/sizeof(*vertices2), sf::TrianglesStrip, states);
+  target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::TrianglesStrip, states);
 }
 
 void ImageFrame::render(sf::RenderTarget& target, sf::RenderStates states, const sf::Vector2f& size) const
@@ -329,16 +321,16 @@ void ImageFrameX::render(sf::RenderTarget& target, sf::RenderStates states, cons
 
   const sf::Vertex vertices[] = {
     // left
-    sf::Vertex(sf::Vector2f(img_x0, img_y0), color_, sf::Vector2f(tex_x0, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x0, img_y1), color_, sf::Vector2f(tex_x0, tex_y0)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y0), color_, sf::Vector2f(tex_x1, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x1, img_y1), color_, sf::Vector2f(tex_x1, tex_y0)),
+    {{img_x0, img_y0}, color_, {tex_x0, tex_y1}},
+    {{img_x0, img_y1}, color_, {tex_x0, tex_y0}},
+    {{img_x1, img_y0}, color_, {tex_x1, tex_y1}},
+    {{img_x1, img_y1}, color_, {tex_x1, tex_y0}},
     // middle
-    sf::Vertex(sf::Vector2f(img_x2, img_y0), color_, sf::Vector2f(tex_x2, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x2, img_y1), color_, sf::Vector2f(tex_x2, tex_y0)),
+    {{img_x2, img_y0}, color_, {tex_x2, tex_y1}},
+    {{img_x2, img_y1}, color_, {tex_x2, tex_y0}},
     // right
-    sf::Vertex(sf::Vector2f(img_x3, img_y0), color_, sf::Vector2f(tex_x3, tex_y1)),
-    sf::Vertex(sf::Vector2f(img_x3, img_y1), color_, sf::Vector2f(tex_x3, tex_y0)),
+    {{img_x3, img_y0}, color_, {tex_x3, tex_y1}},
+    {{img_x3, img_y1}, color_, {tex_x3, tex_y0}},
   };
   target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::TrianglesStrip, states);
 }

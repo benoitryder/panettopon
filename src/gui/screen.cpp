@@ -86,10 +86,10 @@ void Screen::Background::draw(sf::RenderTarget& target, sf::RenderStates states)
     const float wx = view_size.x / 2.;
     const float wy = view_size.y / 2.;
     const sf::Vertex vertices[] = {
-      sf::Vertex(sf::Vector2f(-wx, +wy), sf::Vector2f(-wx, +wy)),
-      sf::Vertex(sf::Vector2f(-wx, -wy), sf::Vector2f(-wx, -wy)),
-      sf::Vertex(sf::Vector2f(+wx, -wy), sf::Vector2f(+wx, -wy)),
-      sf::Vertex(sf::Vector2f(+wx, +wy), sf::Vector2f(+wx, +wy)),
+      {{-wx, +wy}, {-wx, +wy}},
+      {{-wx, -wy}, {-wx, -wy}},
+      {{+wx, -wy}, {+wx, -wy}},
+      {{+wx, +wy}, {+wx, +wy}},
     };
     target.draw(vertices, sizeof(vertices)/sizeof(*vertices), sf::Quads, states);
   }
