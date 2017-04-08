@@ -6,6 +6,7 @@
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Audio/Sound.hpp>
 #include <SFML/Audio/SoundBuffer.hpp>
+#include <SFML/System/FileInputStream.hpp>
 #include "resources.h"
 #include "style.h"
 
@@ -111,9 +112,12 @@ const sf::SoundBuffer& ResourceManager::getSound(const std::string& name) const
   auto sound = std::make_shared<sf::SoundBuffer>();
   bool loaded = false;
   for(auto& ext : sound_ext) {
-    if(sound->loadFromFile(this->getResourceFilename("sound/"+name+"."+ext))) {
-      loaded = true;
-      break;
+    sf::FileInputStream stream;
+    if(stream.open(this->getResourceFilename("sound/"+name+"."+ext))) {
+      if(sound->loadFromStream(stream)) {
+        loaded = true;
+        break;
+      }
     }
   }
   if(!loaded) {
