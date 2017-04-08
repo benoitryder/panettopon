@@ -462,7 +462,6 @@ void FieldDisplay::step()
     if(!info.blocks.popped.empty()) {
       unsigned int max_chain = sounds_.pops.size();
       for(auto& combo : info.blocks.popped) {
-        LOG("[%u] play pop %u %u", field_.tick(), combo.chain, combo.pos);
         auto& pop_sounds = sounds_.pops[std::min(combo.chain, max_chain) - 1];
         unsigned int max_pos = pop_sounds.size() - 1;
         pop_sounds[std::min(combo.pos, max_pos)].play();
