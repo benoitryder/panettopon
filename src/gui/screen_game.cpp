@@ -455,6 +455,8 @@ void FieldDisplay::step()
       } else {
         sounds_.swap.both.play();  // both blocks, play 'both' sound
       }
+    }
+    if(info.blocks.laid) {
       sounds_.fall.play();
     }
     if(!info.blocks.popped.empty()) {
