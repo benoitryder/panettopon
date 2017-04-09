@@ -196,31 +196,50 @@ ImageFrame::ImageFrame():
 {
 }
 
-void ImageFrame::create(const sf::Texture& img, const sf::IntRect& rect, const sf::IntRect& inside)
+void ImageFrame::create(const sf::Texture& img, const sf::IntRect& rect, const sf::IntRect& inside, Border border)
 {
   image_ = &img;
   rect_ = rect;
   inside_ = inside;
+  border_ = border;
 }
 
 void ImageFrame::render(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& rect) const
 {
   states.texture = image_;
 
-  const float img_x0 = rect.left;
-  const float img_y0 = rect.top;
-  const float img_x3 = rect.left + rect.width;
-  const float img_y3 = rect.top  + rect.height;
+  float img_x0, img_y0;
+  float img_x1, img_y1;
+  float img_x2, img_y2;
+  float img_x3, img_y3;
+
+  switch(border_) {
+    case Border::INSIDE:
+      img_x0 = rect.left;
+      img_y0 = rect.top;
+      img_x1 = rect.left + inside_.left;
+      img_y1 = rect.top  + inside_.top;
+      img_x2 = rect.left + rect.width  - (rect_.width  - inside_.left - inside_.width);
+      img_y2 = rect.top  + rect.height - (rect_.height - inside_.top  - inside_.height);
+      img_x3 = rect.left + rect.width;
+      img_y3 = rect.top  + rect.height;
+      break;
+    case Border::OUTSIDE:
+      img_x0 = rect.left - inside_.left;
+      img_y0 = rect.top  - inside_.top;
+      img_x1 = rect.left;
+      img_y1 = rect.top;
+      img_x2 = rect.left + rect.width;
+      img_y2 = rect.top  + rect.height;
+      img_x3 = rect.left + rect.width  + (rect_.width  - inside_.left - inside_.width);
+      img_y3 = rect.top  + rect.height + (rect_.height - inside_.top  - inside_.height);
+      break;
+  }
 
   const float tex_x0 = rect_.left;
   const float tex_y0 = rect_.top;
   const float tex_x3 = rect_.left + rect_.width;
   const float tex_y3 = rect_.top  + rect_.height;
-
-  const float img_x1 = rect.left + inside_.left;
-  const float img_y1 = rect.top  + inside_.top;
-  const float img_x2 = rect.left + rect.width  - (rect_.width  - inside_.left - inside_.width);
-  const float img_y2 = rect.top  + rect.height - (rect_.height - inside_.top  - inside_.height);
 
   const float tex_x1 = rect_.left + inside_.left;
   const float tex_y1 = rect_.top + inside_.top;
@@ -277,12 +296,13 @@ void ImageFrame::Style::load(const StyleLoader& loader)
     throw StyleError(key, "image inside not contained in image size");
   }
 
+  border = loader.getStyle<decltype(border)>("ImageBorder");
   loader.fetchStyle<sf::Color>("Color", color);
 }
 
 void ImageFrame::Style::apply(ImageFrame& o) const
 {
-  o.create(*image, rect, inside);
+  o.create(*image, rect, inside, border);
   o.setColor(color);
 }
 
@@ -292,32 +312,49 @@ ImageFrameX::ImageFrameX():
 {
 }
 
-void ImageFrameX::create(const sf::Texture& img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width)
+void ImageFrameX::create(const sf::Texture& img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width, Border border)
 {
   image_ = &img;
   rect_ = rect;
   inside_left_ = inside_left;
   inside_width_ = inside_width;
+  border_ = border;
 }
 
 void ImageFrameX::render(sf::RenderTarget& target, sf::RenderStates states, const sf::FloatRect& rect) const
 {
   states.texture = image_;
 
-  const float img_x0 = rect.left;
-  const float img_y0 = rect.top;
-  const float img_x3 = rect.left + rect.width;
-  const float img_y1 = rect.top + rect.height;
+  float img_x0, img_y0;
+  float img_x1;
+  float img_x2;
+  float img_x3, img_y1;
+
+  switch(border_) {
+    case Border::INSIDE:
+      img_x0 = rect.left;
+      img_y0 = rect.top;
+      img_x1 = rect.left + inside_left_;
+      img_x2 = rect.left + rect.width - (rect_.width - inside_left_ - inside_width_);
+      img_x3 = rect.left + rect.width;
+      img_y1 = rect.top  + rect.height;
+      break;
+    case Border::OUTSIDE:
+      img_x0 = rect.left - inside_left_;
+      img_y0 = rect.top;
+      img_x1 = rect.left;
+      img_x2 = rect.left + rect.width;
+      img_x3 = rect.left + rect.width + (rect_.width - inside_left_ - inside_width_);
+      img_y1 = rect.top  + rect.height;
+      break;
+  }
 
   const float tex_x0 = rect_.left;
   const float tex_y0 = rect_.top;
-  const float tex_x3 = rect_.left + rect_.width;
-  const float tex_y1 = rect_.top  + rect_.height;
-
-  const float img_x1 = rect.left + inside_left_;
-  const float img_x2 = rect.left + rect.width  - (rect_.width  - inside_left_ - inside_width_);
   const float tex_x1 = rect_.left + inside_left_;
   const float tex_x2 = rect_.left + inside_left_ + inside_width_;
+  const float tex_x3 = rect_.left + rect_.width;
+  const float tex_y1 = rect_.top  + rect_.height;
 
   const sf::Vertex vertices[] = {
     // left
@@ -358,12 +395,13 @@ void ImageFrameX::Style::load(const StyleLoader& loader)
   inside_left = inside.first;
   inside_width = inside.second;
 
+  border = loader.getStyle<decltype(border)>("ImageBorder");
   loader.fetchStyle<sf::Color>("Color", color);
 }
 
 void ImageFrameX::Style::apply(ImageFrameX& o) const
 {
-  o.create(*image, rect, inside_left, inside_width);
+  o.create(*image, rect, inside_left, inside_width, border);
   o.setColor(color);
 }
 
@@ -421,5 +459,17 @@ sf::Color IniFileConverter<sf::Color>::parse(const std::string& value)
   color.b = argb & 0xff;
   color.a = value.size() == 7 ? 0xff : (argb >> 24) & 0xff;
   return color;
+}
+
+
+gui::ImageFrame::Border IniFileConverter<gui::ImageFrame::Border>::parse(const std::string& value)
+{
+  if(value == "inside") {
+    return gui::ImageFrame::Border::INSIDE;
+  } else if(value == "outside") {
+    return gui::ImageFrame::Border::OUTSIDE;
+  } else {
+    throw std::invalid_argument("invalid border value");
+  }
 }
 

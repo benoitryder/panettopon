@@ -98,14 +98,23 @@ class ImageTile
  * Sides and inside are stretched to fill the drawn area while preserving the
  * original aspect size.
  * The inside subrect is the inner part rect in the whole frame image.
+ * The outside border can be drawn as part of the rendering size, or outside of
+ * it.
  */
 class ImageFrame
 {
  public:
+  enum class Border
+  {
+    INSIDE,
+    OUTSIDE
+  };
+
   struct Style {
     const sf::Texture* image = nullptr;
     sf::IntRect rect;
     sf::IntRect inside;
+    Border border;
     sf::Color color = sf::Color::White;
     void load(const StyleLoader& loader);
     void apply(ImageFrame& o) const;
@@ -113,7 +122,7 @@ class ImageFrame
 
   ImageFrame();
   /// Initialize the frame using image subrect and frame inside subrect
-  void create(const sf::Texture& img, const sf::IntRect& rect, const sf::IntRect& inside);
+  void create(const sf::Texture& img, const sf::IntRect& rect, const sf::IntRect& inside, Border border);
   /// Set drawing color
   void setColor(const sf::Color& color) { color_ = color; }
   /// Draw the frame at given position, with given size
@@ -125,6 +134,7 @@ class ImageFrame
   const sf::Texture* image_;
   sf::IntRect rect_;
   sf::IntRect inside_;
+  Border border_;
   sf::Color color_;
 };
 
@@ -133,11 +143,14 @@ class ImageFrame
 class ImageFrameX
 {
  public:
+  typedef ImageFrame::Border Border;
+
   struct Style {
     const sf::Texture* image = nullptr;
     sf::IntRect rect;
     unsigned int inside_left;
     unsigned int inside_width;
+    Border border;
     sf::Color color = sf::Color::White;
     void load(const StyleLoader& loader);
     void apply(ImageFrameX& o) const;
@@ -145,7 +158,7 @@ class ImageFrameX
 
   ImageFrameX();
   /// Initialize the frame using image subrect and margin
-  void create(const sf::Texture& img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width);
+  void create(const sf::Texture& img, const sf::IntRect& rect, unsigned int inside_left, unsigned int inside_width, Border border);
   /// Set drawing color
   void setColor(const sf::Color& color) { color_ = color; }
   /// Draw the frame at given position, with given size
@@ -158,6 +171,7 @@ class ImageFrameX
   sf::IntRect rect_;
   unsigned int inside_left_;
   unsigned int inside_width_;
+  Border border_;
   sf::Color color_;
 };
 
@@ -236,6 +250,11 @@ template <typename T1, typename T2> struct IniFileConverter<std::pair<T1, T2>>
     pos = parsing::castUntil(value, pos, 0, pair.second);
     return pair;
   }
+};
+
+template <> struct IniFileConverter<gui::ImageFrame::Border>
+{
+  static gui::ImageFrame::Border parse(const std::string& value);
 };
 
 //@}
