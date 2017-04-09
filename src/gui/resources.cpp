@@ -80,7 +80,6 @@ const sf::Texture& ResourceManager::getImage(const std::string& name) const
   if( ! img->loadFromFile(this->getResourceFilename(name+".png")) ) {
     throw LoadError("failed to load image "+name);
   }
-  img->setSmooth(true);
   images_[name] = img;
 
   return *img;
