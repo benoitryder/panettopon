@@ -215,7 +215,7 @@
     <!-- Field parts -->
 
     <!-- Filter for 3D light effect on border -->
-    <filter id="Field-Frame-blur" x="-20%" y="-20%" width="140%" height="140%">
+    <filter id="Field-Frame-blur" filterUnits="userSpaceOnUse" x="-20" y="-20" width="40" height="40">
       <feGaussianBlur in="SourceGraphic" stdDeviation="1" result="blur"/>
     </filter>
 
@@ -786,33 +786,37 @@
   </g>
 
   <g id="Field-Frame"
-    transform="translate(1400,16)">
+    transform="translate(1400,16) scale(2)">
     <!-- force the bounding box for the export -->
     <rect id="Field-Frame-container"
-      width="452" height="900"
+      width="32" height="32"
       style="stroke: none; fill: none;"
       />
+    <clipPath id="Field-Frame-clip-path">
+      <use xlink:href="#Field-Frame-border-bg" clip-rule="evenodd"/>
+    </clipPath>
     <g id="Field-Frame-border"
-      transform="translate(226,450)">
+      transform="translate(16,16)"
+      clip-path="url(#Field-Frame-clip-path)">
       <path id="Field-Frame-border-bg"
         fill-rule="evenodd" stroke-width="0"
         d="
-        M -192,-384 h 384 v 768 h -384 z
-        M -200,-386 a 6,6 0,0,1  6,-6
-        h    388    a 6,6 0,0,1  6, 6
-        v    772    a 6,6 0,0,1 -6, 6
-        h   -388    a 6,6 0,0,1 -6,-6
+        M  -8, -8 h 16 v 16 h -16 z
+        M -16,-10 a 6,6 0,0,1  6,-6
+        h    20   a 6,6 0,0,1  6, 6
+        v    20   a 6,6 0,0,1 -6, 6
+        h   -20   a 6,6 0,0,1 -6,-6
         z
         " />
       <path id="Field-Frame-border-fg"
         fill-rule="evenodd" stroke-width="0"
         filter="url(#Field-Frame-blur)"
         d="
-        M -194,-386 h 388 v 772 h -388 z
-        M -198,-386 a 4,4 0,0,1  4,-4
-        h    388    a 4,4 0,0,1  4, 4
-        v    772    a 4,4 0,0,1 -4, 4
-        h   -388    a 4,4 0,0,1 -4,-4
+        M -10,-10 h 20 v 20 h -20 z
+        M -14,-10 a 4,4 0,0,1  4,-4
+        h    20   a 4,4 0,0,1  4, 4
+        v    20   a 4,4 0,0,1 -4, 4
+        h   -20   a 4,4 0,0,1 -4,-4
         z
         " />
     </g>

@@ -46,7 +46,7 @@ struct StyleField
   } tiles_gb;
 
   /// Field frame
-  const sf::Texture* img_field_frame = nullptr;
+  ImageFrame::Style field_frame_style;
   /// Origin of field blocks in frame (top left corner)
   sf::Vector2f frame_origin;
 
@@ -151,7 +151,7 @@ class FieldDisplay: public sf::Drawable, public sf::Transformable
   const GuiInterface& intf_;
   const Field& field_;
   const StyleField& style_;
-  sf::Sprite spr_frame_;
+  ImageFrame field_frame_;
   sf::Sprite spr_cursor_;
   std::unique_ptr<sf::Text> text_start_countdown_;
   std::unique_ptr<sf::Text> text_rank_sign_;

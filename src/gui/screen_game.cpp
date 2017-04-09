@@ -49,8 +49,7 @@ void StyleField::load(const StyleLoader& loader, const StyleGlobal& global)
   }
 
   // Frame
-  img_field_frame = &res_mgr.getImage("Field-Frame");
-  frame_origin = loader.getStyle<sf::Vector2f>("FrameOrigin");
+  field_frame_style.load(StyleLoaderPrefix(loader, "Frame"));
 
   // Cursor
   {
@@ -272,10 +271,8 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
   ::memset(crouch_dt_, 0, sizeof(crouch_dt_));
   this->setOrigin(style_.bk_size*FIELD_WIDTH/2, style_.bk_size*FIELD_HEIGHT/2);
 
-  spr_frame_.setTexture(*style_.img_field_frame);
-  spr_frame_.setOrigin(style_.frame_origin.x, style_.frame_origin.y);
-  spr_frame_.setScale(2,2);
-  spr_frame_.setColor(intf_.style().colors[field_.fldid()]);
+  style_.field_frame_style.apply(field_frame_);
+  field_frame_.setColor(intf_.style().colors[field_.fldid()]);
 
   // start countdown
   {
@@ -353,7 +350,7 @@ void FieldDisplay::draw(sf::RenderTarget& target, sf::RenderStates states) const
     target.setView(view_orig);
   }
 
-  target.draw(spr_frame_, states);
+  field_frame_.render(target, states, {0, 0, field_sx, field_sy});
 
   // hanging garbages
   GbHangingList::const_iterator gb_it;
