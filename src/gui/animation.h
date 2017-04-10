@@ -43,6 +43,8 @@ class Animation
   Animation();
   Animation(const Animator& animator, const Tween& tween, unsigned long duration, bool loop=false);
 
+  operator bool() const { return state_ == State::NONE; }
+
   State state() const { return state_; }
   void restart();
   void stop();
