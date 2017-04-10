@@ -107,6 +107,7 @@ class ScreenLobby: public Screen
   virtual void onPlayerChangeNick(Player&, const std::string&);
   virtual void onPlayerStateChange(Player&);
   virtual void onPlayerChangeFieldConf(Player&);
+  virtual void onNotification(GameInstance::Severity, const std::string&);
 
   /** @brief Return an unused input mapping
    *
@@ -182,6 +183,7 @@ class ScreenLobby: public Screen
   WButton* button_ready_;
   typedef std::map<PlId, std::unique_ptr<WPlayerFrame>> PlayerFramesContainer;
   PlayerFramesContainer player_frames_;
+  InputMapping pending_local_mapping_;
   sf::Vector2f player_frames_pos_;
   sf::Vector2f player_frames_dpos_;
 };

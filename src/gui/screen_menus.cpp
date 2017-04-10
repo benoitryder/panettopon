@@ -355,8 +355,15 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
     InputMapping mapping = this->getUnusedInputMapping(ev);
     if(mapping.type() != InputType::NONE) {
       auto nick = intf_.cfg().get<std::string>("Client.Nick");
-      Player& pl = intf_.server()->newLocalPlayer(nick);
-      this->addLocalPlayer(pl, mapping);
+      if(intf_.server()) {
+        Player& pl = intf_.server()->newLocalPlayer(nick);
+        this->addLocalPlayer(pl, mapping);
+      } else {
+        if(pending_local_mapping_.type() == InputType::NONE) {
+          intf_.client()->newLocalPlayer(nick);
+          pending_local_mapping_ = mapping;
+        }
+      }
     }
     return true;
   }
@@ -388,7 +395,18 @@ void ScreenLobby::onServerChangeFieldConfs()
 
 void ScreenLobby::onPlayerJoined(Player& pl)
 {
-  if(!pl.local()) {
+  if(pl.local()) {
+    if(intf_.client()) {
+      if(pending_local_mapping_.type() != InputType::NONE) {
+        this->addLocalPlayer(pl, pending_local_mapping_);
+        pending_local_mapping_ = InputMapping();
+      } else {
+        // a notification for another message cleared pending_local_mapping_
+        // we can't process the new player, remove it from server
+        intf_.instance()->playerSetState(pl, Player::State::QUIT);
+      }
+    }
+  } else {
     this->addRemotePlayer(pl);
   }
 }
@@ -411,6 +429,15 @@ void ScreenLobby::onPlayerStateChange(Player& pl)
 void ScreenLobby::onPlayerChangeFieldConf(Player& pl)
 {
   player_frames_.find(pl.plid())->second->update();
+}
+
+void ScreenLobby::onNotification(GameInstance::Severity sev, const std::string&)
+{
+  if(sev == GameInstance::SEVERITY_ERROR) {
+    // reset pending mapping on error, even if this may not be an error
+    // triggered by the player creation
+    pending_local_mapping_ = InputMapping();
+  }
 }
 
 
