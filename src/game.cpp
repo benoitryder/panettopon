@@ -70,11 +70,11 @@ void FieldConf::fromIniFile(const IniFile& cfg, const std::string& section)
 
   const std::string s_raise_adjacent = cfg.get<std::string>({section, "RaiseAdjacent"});
   if(s_raise_adjacent == "never") {
-    raise_adjacent = ADJACENT_NEVER;
+    raise_adjacent = RaiseAdjacent::NEVER;
   } else if(s_raise_adjacent == "always") {
-    raise_adjacent = ADJACENT_ALWAYS;
+    raise_adjacent = RaiseAdjacent::ALWAYS;
   } else if(s_raise_adjacent == "alternate") {
-    raise_adjacent = ADJACENT_ALTERNATE;
+    raise_adjacent = RaiseAdjacent::ALTERNATE;
   } else {
     throw std::runtime_error("invalid RaiseAdjacent value: "+s_raise_adjacent);
   }
@@ -483,13 +483,13 @@ void Field::step(KeyState keys)
     Block bkgb;
     bkgb.type = Block::GARBAGE;
     bkgb.bk_garbage = (BkGarbage){ BkGarbage::REST, &gb };
-    if( gb.type == Garbage::TYPE_CHAIN ) {
+    if( gb.type == Garbage::Type::CHAIN ) {
       // new chain
       gb.pos.x = 0;
       for( x=0; x<FIELD_WIDTH; x++ ) {
         grid_[x][FIELD_HEIGHT] = bkgb;
       }
-    } else if( gb.type == Garbage::TYPE_COMBO ) {
+    } else if( gb.type == Garbage::Type::COMBO ) {
       // new combo
       int xx = gb_drop_pos_[gb.size.x];
       gb.pos.x = xx;
@@ -831,8 +831,8 @@ void Field::setRaiseColor(int x, int y)
   //XXX if y>0, the method is used to fill the screen (at init) and mode
   // 'never' is always used
   const int bad_dx = ( y == 0 &&
-      ( conf_.raise_adjacent == FieldConf::ADJACENT_ALWAYS ||
-       ( conf_.raise_adjacent == FieldConf::ADJACENT_ALTERNATE &&
+      ( conf_.raise_adjacent == FieldConf::RaiseAdjacent::ALWAYS ||
+       ( conf_.raise_adjacent == FieldConf::RaiseAdjacent::ALTERNATE &&
         raised_lines_ % 2 == 0 ) ) ) ? 2 : 1;
   int bad_color1 = -1;
   if( x >= bad_dx ) {
@@ -1237,7 +1237,7 @@ void GarbageDistributor::updateGarbages(Field& fld)
         const size_t nb_gb = fld2->hangingGarbageCount();
         for( nb_chain=0; nb_chain<nb_gb; nb_chain++ ) {
           // chain garbages are put at the beginning
-          if( fld2->hangingGarbage(nb_chain).type != Garbage::TYPE_CHAIN ) {
+          if( fld2->hangingGarbage(nb_chain).type != Garbage::Type::CHAIN ) {
             break;
           }
         }
@@ -1253,14 +1253,14 @@ void GarbageDistributor::updateGarbages(Field& fld)
       assert( target_fld != NULL );
       (*targets_it).second = it_min;
     }
-    this->newGarbage(&fld, target_fld, Garbage::TYPE_CHAIN, 1);
+    this->newGarbage(&fld, target_fld, Garbage::Type::CHAIN, 1);
 
   } else if( info.chain > 2 ) {
     // increase chain garbage
     GbChainMap::iterator it = gbs_chain_.find(&fld);
     assert( it != gbs_chain_.end() );
     Garbage& gb = *(*it).second;
-    assert(gb.type == Garbage::TYPE_CHAIN);
+    assert(gb.type == Garbage::Type::CHAIN);
     gb.size.y++;
     drop_ticks_[&gb] = fld.tick() + fld.conf().gb_hang_tk;
     observer_.onGarbageUpdateSize(gb);
@@ -1291,12 +1291,12 @@ void GarbageDistributor::updateGarbages(Field& fld)
 
     if( info.combo-1 <= FIELD_WIDTH ) {
       // one block
-      this->newGarbage(&fld, target_fld, Garbage::TYPE_COMBO, info.combo-1);
+      this->newGarbage(&fld, target_fld, Garbage::Type::COMBO, info.combo-1);
     } else if( info.combo <= 2*FIELD_WIDTH ) {
       // two blocks
       unsigned int n = (info.combo > FIELD_WIDTH*3/2) ? info.combo : info.combo-1;
-      this->newGarbage(&fld, target_fld, Garbage::TYPE_COMBO, n/2);
-      this->newGarbage(&fld, target_fld, Garbage::TYPE_COMBO, n/2+n%2);
+      this->newGarbage(&fld, target_fld, Garbage::Type::COMBO, n/2);
+      this->newGarbage(&fld, target_fld, Garbage::Type::COMBO, n/2+n%2);
     } else {
       // n blocks
       unsigned int n;
@@ -1310,7 +1310,7 @@ void GarbageDistributor::updateGarbages(Field& fld)
         n = 8;
       }
       while( n-- > 0 ) {
-        this->newGarbage(&fld, target_fld, Garbage::TYPE_COMBO, FIELD_WIDTH);
+        this->newGarbage(&fld, target_fld, Garbage::Type::COMBO, FIELD_WIDTH);
       }
     }
   }
@@ -1329,15 +1329,15 @@ void GarbageDistributor::newGarbage(Field* from, Field* to, Garbage::Type type, 
   gb.type = type;
 
   unsigned int pos;
-  if( type == Garbage::TYPE_CHAIN ) {
+  if( type == Garbage::Type::CHAIN ) {
     gb.size = FieldPos(FIELD_WIDTH, size);
     const unsigned int n = to->hangingGarbageCount();
     for( pos=0; pos<n; pos++ ) {
-      if( to->hangingGarbage(pos).type == Garbage::TYPE_CHAIN ) {
+      if( to->hangingGarbage(pos).type == Garbage::Type::CHAIN ) {
         break;
       }
     }
-  } else if( type == Garbage::TYPE_COMBO ) {
+  } else if( type == Garbage::Type::COMBO ) {
     gb.size = FieldPos(size, 1);
     pos = to->hangingGarbageCount(); // push back
   } else {
@@ -1347,7 +1347,7 @@ void GarbageDistributor::newGarbage(Field* from, Field* to, Garbage::Type type, 
   drop_ticks_[&gb] = to->tick() + to->conf().gb_hang_tk;
 
   match_.addGarbage(std::move(gb_unique), pos);
-  if( type == Garbage::TYPE_CHAIN ) {
+  if( type == Garbage::Type::CHAIN ) {
     gbs_chain_[from] = &gb;
   }
 

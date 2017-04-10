@@ -802,9 +802,9 @@ FieldDisplay::GbHanging::GbHanging(const StyleField& style, const Garbage& gb):
   style_(style), gb_(gb), txt_size_(0)
 {
   // initialize sprite
-  if( gb.type == Garbage::TYPE_CHAIN ) {
+  if( gb.type == Garbage::Type::CHAIN ) {
     style_.tiles_gb_hanging.line.setToSprite(bg_, true);
-  } else if( gb.type == Garbage::TYPE_COMBO ) {
+  } else if( gb.type == Garbage::Type::COMBO ) {
     style_.tiles_gb_hanging.blocks[gb.size.x-1].setToSprite(bg_, true);
   } else {
     //TODO not handled yet
@@ -839,7 +839,7 @@ void FieldDisplay::GbHanging::step()
 void FieldDisplay::GbHanging::updateText()
 {
   // text for >x1 chain garbages only
-  if( gb_.type != Garbage::TYPE_CHAIN || gb_.size.y < 2 ) {
+  if( gb_.type != Garbage::Type::CHAIN || gb_.size.y < 2 ) {
     // not actually needed: type does not change and size only increases
     txt_size_ = 0;
     return;

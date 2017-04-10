@@ -300,7 +300,7 @@ void ServerInstance::onGarbageAdd(const Garbage& gb, unsigned int pos)
   np_garbage->set_plid_to( pl_to->plid() );
   np_garbage->set_plid_from( pl_from == NULL ? 0 : pl_from->plid() );
   np_garbage->set_type(static_cast<netplay::GarbageType>(gb.type));
-  np_garbage->set_size(gb.type == Garbage::TYPE_COMBO ? gb.size.x : gb.size.y);
+  np_garbage->set_size(gb.type == Garbage::Type::COMBO ? gb.size.x : gb.size.y);
   socket_->broadcastPacket(pkt);
 }
 
@@ -309,7 +309,7 @@ void ServerInstance::onGarbageUpdateSize(const Garbage& gb)
   netplay::Packet pkt;
   netplay::PktUpdateGarbage* np_garbage = pkt.mutable_update_garbage();
   np_garbage->set_gbid(gb.gbid);
-  np_garbage->set_size(gb.type == Garbage::TYPE_COMBO ? gb.size.x : gb.size.y);
+  np_garbage->set_size(gb.type == Garbage::Type::COMBO ? gb.size.x : gb.size.y);
   socket_->broadcastPacket(pkt);
 }
 

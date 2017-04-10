@@ -433,7 +433,7 @@ void ScreenLobby::onPlayerChangeFieldConf(Player& pl)
 
 void ScreenLobby::onNotification(GameInstance::Severity sev, const std::string&)
 {
-  if(sev == GameInstance::SEVERITY_ERROR) {
+  if(sev == GameInstance::Severity::ERROR) {
     // reset pending mapping on error, even if this may not be an error
     // triggered by the player creation
     pending_local_mapping_ = InputMapping();

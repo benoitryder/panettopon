@@ -51,10 +51,10 @@ struct FieldConf
   uint16_t color_nb;      ///< number of available colors
 
   /// Random color picking mode for raised lines.
-  enum RaiseAdjacent {
-    ADJACENT_NEVER = 1,
-    ADJACENT_ALWAYS = 2,
-    ADJACENT_ALTERNATE = 3,
+  enum class RaiseAdjacent {
+    NEVER = 1,
+    ALWAYS = 2,
+    ALTERNATE = 3,
   };
   /// Allow or not identical adjacent color blocks in raised lines.
   RaiseAdjacent raise_adjacent;
@@ -101,11 +101,11 @@ struct FieldConf
 /// Garbage.
 struct Garbage
 {
-  enum Type {
-    TYPE_NONE = 0,
-    TYPE_COMBO,
-    TYPE_CHAIN,
-    TYPE_SPECIAL, ///< for !-blocks
+  enum class Type {
+    NONE = 0,
+    COMBO,
+    CHAIN,
+    SPECIAL, ///< for !-blocks
   };
 
   GbId gbid;

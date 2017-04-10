@@ -179,10 +179,10 @@ void CursesInterface::onNotification(GameInstance::Severity sev, const std::stri
 {
   int c = 0;
   switch( sev ) {
-    case GameInstance::SEVERITY_MESSAGE: c = 2; break;
-    case GameInstance::SEVERITY_NOTICE:  c = 3; break;
-    case GameInstance::SEVERITY_WARNING: c = 7; break;
-    case GameInstance::SEVERITY_ERROR:   c = 8; break;
+    case GameInstance::Severity::MESSAGE: c = 2; break;
+    case GameInstance::Severity::NOTICE:  c = 3; break;
+    case GameInstance::Severity::WARNING: c = 7; break;
+    case GameInstance::Severity::ERROR:   c = 8; break;
   }
   this->addMessage(c, ">> %s", msg.c_str());
 }
@@ -392,9 +392,9 @@ void FieldDisplay::draw()
   size_t gb_i=0;
   for( gb_i=0, x=0; gb_i<gb_nb && x<FIELD_WIDTH; gb_i++ ) {
     const Garbage& gb = field_.hangingGarbage(gb_i);
-    if( gb.type == Garbage::TYPE_CHAIN ) {
+    if( gb.type == Garbage::Type::CHAIN ) {
       x += snprintf(buf+x, sizeof(buf-x), "x%u", gb.size.y);
-    } else if( gb.type == Garbage::TYPE_COMBO ) {
+    } else if( gb.type == Garbage::Type::COMBO ) {
       x += snprintf(buf+x, sizeof(buf-x), "%u", gb.size.x);
     }
     if( x < FIELD_WIDTH ) {

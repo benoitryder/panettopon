@@ -234,9 +234,9 @@ void ClientInstance::processPktNewGarbage(const netplay::PktNewGarbage& pkt)
   if( pkt.size() == 0 ) {
     throw netplay::CallbackError("invalid garbage size");
   }
-  if( gb->type == Garbage::TYPE_CHAIN ) {
+  if( gb->type == Garbage::Type::CHAIN ) {
     gb->size = FieldPos(FIELD_WIDTH, pkt.size());
-  } else if( gb->type == Garbage::TYPE_COMBO ) {
+  } else if( gb->type == Garbage::Type::COMBO ) {
     gb->size = FieldPos(pkt.size(), 1);
   } else {
     assert( !"not supported yet" );
@@ -285,9 +285,9 @@ void ClientInstance::processPktUpdateGarbage(const netplay::PktUpdateGarbage& pk
     if( pkt.size() == 0 ) {
       throw netplay::CallbackError("invalid garbage size");
     }
-    if( gb.type == Garbage::TYPE_CHAIN ) {
+    if( gb.type == Garbage::Type::CHAIN ) {
       gb.size = FieldPos(FIELD_WIDTH, pkt.size());
-    } else if( gb.type == Garbage::TYPE_COMBO ) {
+    } else if( gb.type == Garbage::Type::COMBO ) {
       gb.size = FieldPos(pkt.size(), 1);
     } else {
       assert( !"not supported yet" );

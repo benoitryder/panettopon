@@ -8,9 +8,6 @@
 #include "monotone_timer.hpp"
 #include "game.h"
 
-// undef Windows conflicting macro
-#undef SEVERITY_ERROR
-
 
 /** @brief Server configuration values.
  */
@@ -114,11 +111,11 @@ class GameInstance
     GAME,
   };
 
-  enum Severity {
-    SEVERITY_MESSAGE = 1,
-    SEVERITY_NOTICE,
-    SEVERITY_WARNING,
-    SEVERITY_ERROR,
+  enum class Severity {
+    MESSAGE = 1,
+    NOTICE,
+    WARNING,
+    ERROR,
   };
 
   struct Observer
