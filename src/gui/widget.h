@@ -21,7 +21,7 @@ class InputMapping;
 /** @brief Base class for widgets.
  *
  * Style properties:
- *  - Position: x,y vector
+ *  - Pos: x,y vector
  *
  * @note Name does not have to be unique and may be empty.
  */
