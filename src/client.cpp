@@ -488,6 +488,7 @@ void ClientInstance::processPktPlayerState(const netplay::PktPlayerState& pkt)
   }
 
   bool state_valid = false;
+  bool erase_player = false;
   switch(new_state) {
     case Player::State::QUIT:
       if(pl->field() != NULL) {
@@ -495,7 +496,7 @@ void ClientInstance::processPktPlayerState(const netplay::PktPlayerState& pkt)
         match_.updateTick(); // field lost, tick must be updated
         pl->setField(NULL);
       }
-      players_.erase(pl->plid());
+      erase_player = true;
       state_valid = true;
       break;
     case Player::State::LOBBY:
@@ -521,6 +522,10 @@ void ClientInstance::processPktPlayerState(const netplay::PktPlayerState& pkt)
   pl->setState(new_state);
   LOG("%s(%u): state set to %d", pl->nick().c_str(), pl->plid(), static_cast<int>(new_state));
   observer_.onPlayerStateChange(*pl);
+
+  if(erase_player) {
+    players_.erase(pl->plid());
+  }
 }
 
 void ClientInstance::processPktPlayerRank(const netplay::PktPlayerRank& pkt)
