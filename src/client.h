@@ -35,12 +35,13 @@ class ClientInstance: public GameInstance,
   /// Close connection to the server.
   void disconnect();
 
-  /** @brief Create a new local player.
+  typedef std::function<void(Player*, const std::string&)> NewPlayerCallback;
+  /** @brief Create a new local player
    *
-   * The player will not be actually created until the server replies. Events
-   * should be observed to known when player creation is completed.
+   * On success, the callback is called with the created player.
+   * On error, the player is null and the second parameter contains the error message.
    */
-  void newLocalPlayer(const std::string& nick);
+  void newLocalPlayer(const std::string& nick, NewPlayerCallback cb);
 
   /** @name Local player operations. */
   //@{
@@ -53,9 +54,9 @@ class ClientInstance: public GameInstance,
 
   /** @name ClientSocket::Observer interface. */
   //@{
-  virtual void onClientPacket(const netplay::Packet& pkt);
   virtual void onServerConnect(bool success);
   virtual void onServerDisconnect();
+  virtual void onServerEvent(const netplay::ServerEvent& event);
   //@}
 
  protected:
@@ -67,13 +68,15 @@ class ClientInstance: public GameInstance,
   /** @name Packet processing.
    *
    * Methods called from onClientPacket().
-   * netplay::Callback exceptions are thrown on error.
+   * netplay::CallbackError exceptions are thrown on error.
    */
   //@{
   void processPktInput(const netplay::PktInput& pkt);
   void processPktNewGarbage(const netplay::PktNewGarbage& pkt);
   void processPktUpdateGarbage(const netplay::PktUpdateGarbage& pkt);
   void processPktGarbageState(const netplay::PktGarbageState& pkt);
+  void processPktChat(const netplay::PktChat& pkt);
+  void processPktNotification(const netplay::PktNotification& pkt);
   void processPktServerConf(const netplay::PktServerConf& pkt);
   void processPktServerState(const netplay::PktServerState& pkt);
   void processPktPlayerConf(const netplay::PktPlayerConf& pkt);
@@ -81,6 +84,12 @@ class ClientInstance: public GameInstance,
   void processPktPlayerRank(const netplay::PktPlayerRank& pkt);
   void processPktPlayerField(const netplay::PktPlayerField& pkt);
   //@}
+
+  /** @brief Create and register new player from its conf
+   * @note Observer method is not called.
+   */
+  Player& createNewPlayer(const netplay::PktPlayerConf& pkt, bool local);
+  void processNewPlayerResponse(const netplay::ServerResponse& response, NewPlayerCallback cb);
 
   void stopMatch();
 

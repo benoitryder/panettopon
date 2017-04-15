@@ -1,44 +1,92 @@
-syntax = "proto2";
+syntax = "proto3";
 
 package netplay;
-//XXX option optimize_for = LITE_RUNTIME;
+//option optimize_for = LITE_RUNTIME;
 
 
-// Wrapper packet
-// Only one field must be set.
+// Generic message packet
 message Packet {
-  optional PktInput input = 1;
-  optional PktNewGarbage new_garbage = 2;
-  optional PktUpdateGarbage update_garbage = 3;
-  optional PktGarbageState garbage_state = 4;
-  optional PktChat chat = 10;
-  optional PktNotification notification = 11;
-  optional PktServerConf server_conf = 20;
-  optional PktServerState server_state = 21;
-  optional PktPlayerJoin player_join = 30;
-  optional PktPlayerConf player_conf = 31;
-  optional PktPlayerState player_state = 32;
-  optional PktPlayerRank player_rank = 33;
-  optional PktPlayerField player_field = 34;
+  oneof pkt {
+    ServerEvent server_event = 1;
+    ClientEvent client_event = 2;
+    ClientCommand client_command = 3;
+    ServerResponse server_response = 4;
+  }
+}
+
+
+// Event broadcasted to clients
+message ServerEvent {
+  oneof pkt {
+    PktInput input = 10;
+    PktNewGarbage new_garbage = 11;
+    PktUpdateGarbage update_garbage = 12;
+    PktGarbageState garbage_state = 13;
+    PktChat chat = 20;
+    PktNotification notification = 21;
+    PktServerConf server_conf = 30;
+    PktServerState server_state = 31;
+    PktPlayerJoin player_join = 40;
+    PktPlayerConf player_conf = 41;
+    PktPlayerState player_state = 42;
+    PktPlayerRank player_rank = 43;
+    PktPlayerField player_field = 44;
+  }
+}
+
+// Event sent by client to the server
+message ClientEvent {
+  oneof pkt {
+    PktInput input = 10;
+    PktGarbageState garbage_state = 13;
+  }
+}
+
+// Command sent by client to the server
+// A ServerResponse is expected in return. It can be sent as soon as the
+// command is validated, even if it has not been executed yet.
+message ClientCommand {
+  oneof pkt {
+    PktChat chat = 20;
+    PktPlayerJoin player_join = 40;
+    PktPlayerConf player_conf = 41;
+    PktPlayerState player_state = 42;
+  }
+}
+
+// Server response to a ClientCommand
+message ServerResponse {
+  enum Result {
+    OK = 0;
+    ERROR = 1;
+  }
+  Result result = 1;
+  string reason = 2;  // in case of error, its reason
+
+  // Response data, if any
+  // Field names correspond to command name, not field type
+  oneof pkt {
+    PktPlayerConf player_join = 40;
+  }
 }
 
 
 // Chat message from a player
 message PktChat {
-  required uint32 plid = 1;
-  required string txt = 2;
+  uint32 plid = 1;
+  string text = 2;
 }
 
 // Server message
 message PktNotification {
   enum Severity {
-    MESSAGE = 1;
-    NOTICE  = 2;
-    WARNING = 3;
-    ERROR   = 4;
+    MESSAGE = 0;
+    NOTICE = 1;
+    ERROR = 2;
+    FATAL = 3;
   }
-  required string txt = 1;
-  optional Severity severity = 2 [default = MESSAGE];
+  string text = 1;
+  Severity severity = 2;
 }
 
 
@@ -49,28 +97,28 @@ message PktNotification {
 message FieldConf {
   // random color picking mode for raised lines
   enum RaiseAdjacent {
-    NEVER     = 1;
-    ALWAYS    = 2;
-    ALTERNATE = 3;
+    NEVER = 0;
+    ALWAYS = 1;
+    ALTERNATE = 2;
   }
-  optional string name = 1 [default = ""];
-  repeated uint32 raise_speeds = 2 [packed = true];
-  required uint32 manual_raise_speed = 3;
-  repeated uint32 raise_speed_changes = 18 [packed=true];
-  required uint32 swap_tk = 4;
-  required uint32 stop_combo_0 = 5;
-  required uint32 stop_combo_k = 6;
-  required uint32 stop_chain_0 = 7;
-  required uint32 stop_chain_k = 8;
-  required uint32 lost_tk = 9;
-  required uint32 gb_hang_tk = 10;
-  required uint32 flash_tk = 11;
-  required uint32 levitate_tk = 12;
-  required uint32 pop_tk = 13;
-  required uint32 pop0_tk = 14;
-  required uint32 transform_tk = 15;
-  required uint32 color_nb = 16;
-  required RaiseAdjacent raise_adjacent = 17;
+  string name = 1;
+  repeated uint32 raise_speeds = 2;
+  uint32 manual_raise_speed = 3;
+  repeated uint32 raise_speed_changes = 18;
+  uint32 swap_tk = 4;
+  uint32 stop_combo_0 = 5;
+  uint32 stop_combo_k = 6;
+  uint32 stop_chain_0 = 7;
+  uint32 stop_chain_k = 8;
+  uint32 lost_tk = 9;
+  uint32 gb_hang_tk = 10;
+  uint32 flash_tk = 11;
+  uint32 levitate_tk = 12;
+  uint32 pop_tk = 13;
+  uint32 pop0_tk = 14;
+  uint32 transform_tk = 15;
+  uint32 color_nb = 16;
+  RaiseAdjacent raise_adjacent = 17;
 }
 
 
@@ -80,46 +128,46 @@ message FieldConf {
 // Only valid in LOBBY client state.
 // If field_confs is empty, current field configurations are not updated.
 message PktServerConf {
-  optional uint32 pl_nb_max    = 1 [default =     2];
-  optional uint32 tk_usec      = 2 [default = 16667]; // 60Hz
-  optional uint32 tk_lag_max   = 3 [default =    60]; // 1s (at 60Hz)
-  optional uint32 tk_start_countdown = 4 [default = 180]; // 3s (at 60Hz)
+  uint32 pl_nb_max = 1;
+  uint32 tk_usec = 2;
+  uint32 tk_lag_max = 3;
+  uint32 tk_start_countdown = 4;
   repeated FieldConf field_confs = 10;
 }
 
 // Change server state
 message PktServerState {
   enum State {
+    NONE = 0;
     LOBBY = 1;  // no active match
     GAME_INIT = 2;  // match init are being sent
-    GAME_READY = 3;  // init done, waiting for players to be ready
     GAME = 4;  // match is running
+    GAME_READY = 3;  // init done, waiting for players to be ready
   }
-  required State state = 1;
+  State state = 1;
 }
 
 
 ////  Player and field
 
-// Client join request.
-// The server will reply with a PktPlayerConf with join field set to true.
+// Client join request
 message PktPlayerJoin {
-  optional string nick = 2;
+  string nick = 2;
 }
 
 // Set player configuration
 // For new players, nick and field_conf must be set.
-// From client, only valid in LOBBY server state.
+// In ClientCommand, only valid in LOBBY server state.
 message PktPlayerConf {
-  required uint32 plid = 1;
-  optional string nick = 2;
-  optional FieldConf field_conf = 5;
-  optional bool join = 10 [default = false];
+  uint32 plid = 1;
+  string nick = 2;
+  FieldConf field_conf = 5;
 }
 
 // Change player state
 message PktPlayerState {
   enum State {
+    NONE = 0;
     QUIT = 1;  // left or is leaving the server
     LOBBY = 2;  // in the lobby
     LOBBY_READY = 3;  // in the lobby, ready to play
@@ -128,14 +176,14 @@ message PktPlayerState {
     GAME_INIT = 4;  // initializing game
     GAME = 6;  // in game
   }
-  required uint32 plid = 1;
-  required State state = 2;
+  uint32 plid = 1;
+  State state = 2;
 }
 
 // Rank a player's field
 message PktPlayerRank {
-  required uint32 plid = 1;
-  required uint32 rank = 2; // 0: still playing, 1: first, 2: second ...
+  uint32 plid = 1;
+  uint32 rank = 2; // 0: still playing, 1: first, 2: second ...
 }
 
 // Field description
@@ -143,43 +191,45 @@ message PktPlayerRank {
 message PktPlayerField {
   message BkColor {
     enum State {
-      REST        = 1;
-      FALL        = 2;
-      LAID        = 3;
-      LEVITATE    = 4;
-      FLASH       = 5;
-      MUTATE      = 6;
-      CLEARED     = 7;
+      NONE = 0;
+      REST = 1;
+      FALL = 2;
+      LAID = 3;
+      LEVITATE = 4;
+      FLASH = 5;
+      MUTATE = 6;
+      CLEARED = 7;
       TRANSFORMED = 8;
     }
-    required State state = 1;
-    required uint32 color = 2;
+    State state = 1;
+    uint32 color = 2;
   }
 
   message BkGarbage {
     enum State {
-      REST        = 1;
-      FALL        = 2;
-      FLASH       = 3;
-      MUTATE      = 4;
+      NONE = 0;
+      REST = 1;
+      FALL = 2;
+      FLASH = 3;
+      MUTATE = 4;
       TRANSFORMED = 5;
     }
-    required State state = 1;
+    State state = 1;
     //TODO required uint32 garbage
   }
 
   // Block content
   // Either bk_color or bk_garbage must be set, but not both.
   message Block {
-    optional BkColor bk_color = 1;
-    optional BkGarbage bk_garbage = 2;
-    optional bool swapped = 3 [default = false];
-    optional bool chaining = 4 [default = false];
-    optional uint32 ntick = 5 [default = 0];
+    BkColor bk_color = 1;
+    BkGarbage bk_garbage = 2;
+    bool swapped = 3;
+    bool chaining = 4;
+    uint32 ntick = 5;
   }
 
-  required uint32 plid = 1;
-  required fixed32 seed = 2;
+  uint32 plid = 1;
+  fixed32 seed = 2;
   // Grid content, starting at (x,y) = (0,0)
   // repeat order: (0,0) (1,0) ... (0,1) (1,1) ...
   repeated Block blocks = 10;
@@ -201,46 +251,48 @@ message PktInput {
     SWAP  = 16;
     RAISE = 32;
   };
-  required uint32 plid = 1;
-  required uint32 tick = 2; // tick of the first given keys
-  repeated uint32 keys = 3 [packed = true]; // successive input keys
+  uint32 plid = 1;
+  uint32 tick = 2; // tick of the first given keys
+  repeated uint32 keys = 3; // successive input keys
 }
 
 
 ////  Garbages
 
 enum GarbageType {
-  COMBO   = 1;
-  CHAIN   = 2;
+  NONE = 0;
+  COMBO = 1;
+  CHAIN = 2;
   SPECIAL = 3;
 }
 
 // New garbage
 message PktNewGarbage {
-  required uint32 gbid = 1;
-  optional uint32 plid_from = 2;
-  required uint32 plid_to = 3;
-  required uint32 pos = 4;
-  required GarbageType type = 5;
-  required uint32 size = 6;
+  uint32 gbid = 1;
+  uint32 plid_from = 2;
+  uint32 plid_to = 3;
+  uint32 pos = 4;
+  GarbageType type = 5;
+  uint32 size = 6;
 }
 
 // Update a garbage
-// Only valid when garbage is hanging
+// Only valid when garbage is hanging.
 message PktUpdateGarbage {
-  required uint32 gbid = 1;
-  optional uint32 plid_to = 3;
-  optional uint32 pos = 4; // required if plid_to is set
-  optional uint32 size = 6;
+  uint32 gbid = 1;
+  uint32 plid_to = 3;
+  uint32 pos = 4;
+  uint32 size = 6;
 }
 
 // Change garbage state
 message PktGarbageState {
   enum State {
+    NONE = 0;
     WAIT = 1; // waiting for being dropped (requested by server)
     DROP = 2; // drop confirmed by client
   }
-  required uint32 gbid = 1;
-  required State state = 2;
+  uint32 gbid = 1;
+  State state = 2;
 }
 

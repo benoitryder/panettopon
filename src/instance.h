@@ -112,10 +112,10 @@ class GameInstance
   };
 
   enum class Severity {
-    MESSAGE = 1,
+    MESSAGE = 0,
     NOTICE,
-    WARNING,
     ERROR,
+    FATAL,
   };
 
   struct Observer

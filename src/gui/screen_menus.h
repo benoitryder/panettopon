@@ -49,12 +49,12 @@ class ScreenJoinServer: public Screen
   ScreenJoinServer(GuiInterface& intf);
   virtual void enter();
   virtual bool onInputEvent(const sf::Event& ev);
-  virtual void onPlayerJoined(Player&);
   virtual void onServerConnect(bool success);
   virtual void onServerDisconnect();
 
  protected:
   void submit(const sf::Event& ev);
+  void onFirstPlayerCreated(Player* pl, const std::string& msg);
 
  private:
   WEntry* entry_host_;
@@ -107,7 +107,6 @@ class ScreenLobby: public Screen
   virtual void onPlayerChangeNick(Player&, const std::string&);
   virtual void onPlayerStateChange(Player&);
   virtual void onPlayerChangeFieldConf(Player&);
-  virtual void onNotification(GameInstance::Severity, const std::string&);
 
   /** @brief Return an unused input mapping
    *

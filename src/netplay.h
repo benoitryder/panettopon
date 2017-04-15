@@ -22,15 +22,33 @@
 namespace netplay {
 
 class Packet;
+class ServerEvent;
+class ClientEvent;
+class ClientCommand;
+class ServerResponse;
 class PeerSocket;
 class ServerSocket;
 
+enum class ResponseResult {
+  OK = 0,
+  ERROR = 1,
+};
 
-/// Exception to be raised by callbacks.
+/// Callback for ClientCommand
+typedef std::function<void(const ServerResponse&)> CommandCallback;
+
+/// Exception to be raised on netplay fatal error
 class CallbackError: public std::runtime_error
 {
  public:
   CallbackError(const std::string& s): std::runtime_error(s) {}
+};
+
+/// Exception to be raised for a error ServerResponse
+class CommandError: public std::runtime_error
+{
+ public:
+  CommandError(const std::string& s): std::runtime_error(s) {}
 };
 
 
@@ -64,7 +82,7 @@ class PacketSocket: public BaseSocket
   virtual ~PacketSocket();
 
  protected:
-  /** @brief Send and process an error.
+  /** @brief Send and process a netplay fatal error
    *
    * On error, the next read/write operation is not prepared.
    */
@@ -73,16 +91,17 @@ class PacketSocket: public BaseSocket
   /// Process an incoming packet.
   virtual void processPacket(const Packet& pkt) = 0;
 
- public:
   static std::string serializePacket(const Packet& pkt);
 
+ public:
   void readNext();
+ protected:
   void writeNext();
+  void writeRaw(const std::string& s);
   void writePacket(const Packet& pkt)
   {
     return this->writeRaw(serializePacket(pkt));
   }
-  void writeRaw(const std::string& s);
 
   /** @brief Do pending write operations and close.
    *
@@ -120,12 +139,16 @@ class PeerSocket: public PacketSocket
 
   /// Close the socket and remove the peer from the server.
   virtual void close();
+  /// Send a ServerEvent to the peer
+  void sendServerEvent(std::unique_ptr<ServerEvent> event);
+  /// Send a ServerResponse to the peer
+  void sendServerResponse(std::unique_ptr<ServerResponse> response);
   /// Send an error notification and close the socket.
   void sendError(const std::string& msg) { PacketSocket::processError(msg); }
 
  protected:
-  virtual void processError(const std::string& msg, const boost::system::error_code& ec);
-  virtual void processPacket(const Packet& pkt);
+  virtual void processError(const std::string& msg, const boost::system::error_code& ec) final;
+  virtual void processPacket(const Packet& pkt) final;
  private:
   ServerSocket* server_;
   boost::asio::ip::tcp::endpoint peer_;
@@ -144,8 +167,10 @@ class ServerSocket: public std::enable_shared_from_this<ServerSocket>
     virtual void onPeerConnect(PeerSocket& peer) = 0;
     /// Called after a peer disconnection.
     virtual void onPeerDisconnect(PeerSocket& peer) = 0;
-    /// Called on input packet on a peer.
-    virtual void onPeerPacket(PeerSocket& peer, const Packet& pkt) = 0;
+    /// Called on ClientEvent packet from a peer
+    virtual void onPeerClientEvent(PeerSocket& peer, const ClientEvent& event) = 0;
+    /// Called on ClientCommand packet from a peer, must call peer.sendServerResponse()
+    virtual void onPeerClientCommand(PeerSocket& peer, const ClientCommand& command) = 0;
   };
 
   ServerSocket(Observer& obs, boost::asio::io_service& io_service);
@@ -159,8 +184,8 @@ class ServerSocket: public std::enable_shared_from_this<ServerSocket>
   void close();
   boost::asio::io_service& io_service() { return acceptor_.get_io_service(); }
 
-  /// Send a packet to all peers, excepting \e except.
-  void broadcastPacket(const netplay::Packet& pkt, const PeerSocket* except=NULL);
+  /// Send a ServerEvent to all peers, excepting \e except.
+  void broadcastEvent(std::unique_ptr<ServerEvent> event, const PeerSocket* except=nullptr);
 
  private:
   void acceptNext();
@@ -183,12 +208,12 @@ class ClientSocket: public PacketSocket
  public:
   struct Observer
   {
-    /// Called on input packet.
-    virtual void onClientPacket(const Packet& pkt) = 0;
     /// Called on server connection or connection error
     virtual void onServerConnect(bool success) = 0;
     /// Called on server disconnection.
     virtual void onServerDisconnect() = 0;
+    /// Called on ServerEvent packet from a peer
+    virtual void onServerEvent(const ServerEvent& event) = 0;
   };
 
   ClientSocket(Observer& obs, boost::asio::io_service& io_service);
@@ -205,14 +230,20 @@ class ClientSocket: public PacketSocket
   /// Close the socket.
   virtual void close();
 
+  /// Send a ClientEvent to the server
+  void sendClientEvent(std::unique_ptr<ClientEvent> event);
+  /// Send a ClientCommand to the server
+  void sendClientCommand(std::unique_ptr<ClientCommand> command, CommandCallback cb);
+
  protected:
-  virtual void processError(const std::string& msg, const boost::system::error_code& ec);
-  virtual void processPacket(const netplay::Packet& pkt);
+  virtual void processError(const std::string& msg, const boost::system::error_code& ec) final;
+  virtual void processPacket(const Packet& pkt) final;
  private:
   void onTimeout(const boost::system::error_code& ec);
   void onConnect(const boost::system::error_code& ec);
 
   Observer& observer_;
+  std::queue<CommandCallback> command_callbacks_;  ///< callbacks for command responses
   boost::asio::monotone_timer timer_; ///< for timeouts
   bool connected_;
 };

@@ -151,23 +151,12 @@ bool ScreenJoinServer::onInputEvent(const sf::Event& ev)
   return false;
 }
 
-void ScreenJoinServer::onPlayerJoined(Player& pl)
-{
-  if(pl.local()) {
-    assert(submitting_event_.type != sf::Event::Count);
-    auto new_screen = std::make_unique<ScreenLobby>(intf_);
-    InputMapping mapping = new_screen->getUnusedInputMapping(submitting_event_);
-    assert(mapping.type() != InputType::NONE);
-    new_screen->addLocalPlayer(pl, mapping);
-    intf_.swapScreen(std::move(new_screen));
-  }
-}
-
 void ScreenJoinServer::onServerConnect(bool success)
 {
   assert(submitting_event_.type != sf::Event::Count);
   if(success) {
-    intf_.client()->newLocalPlayer(entry_nick_->text());
+    auto cb = [this](Player* pl, const std::string& msg) { this->onFirstPlayerCreated(pl, msg); };
+    intf_.client()->newLocalPlayer(entry_nick_->text(), cb);
   }
 }
 
@@ -202,6 +191,21 @@ void ScreenJoinServer::submit(const sf::Event& ev)
   intf_.cfg().set("Client.Nick", entry_nick_->text());
   intf_.startClient(entry_host_->text(), port);
   submitting_event_ = ev;
+}
+
+void ScreenJoinServer::onFirstPlayerCreated(Player* pl, const std::string& msg)
+{
+  assert(submitting_event_.type != sf::Event::Count);
+  if(pl) {
+    auto new_screen = std::make_unique<ScreenLobby>(intf_);
+    InputMapping mapping = new_screen->getUnusedInputMapping(submitting_event_);
+    assert(mapping.type() != InputType::NONE);
+    new_screen->addLocalPlayer(*pl, mapping);
+    intf_.swapScreen(std::move(new_screen));
+  } else {
+    //TODO display error message
+    (void)msg;
+  }
 }
 
 
@@ -359,10 +363,14 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
         Player& pl = intf_.server()->newLocalPlayer(nick);
         this->addLocalPlayer(pl, mapping);
       } else {
-        if(pending_local_mapping_.type() == InputType::NONE) {
-          intf_.client()->newLocalPlayer(nick);
-          pending_local_mapping_ = mapping;
-        }
+        auto cb = [this,mapping](Player* pl, const std::string& msg) {
+          if(pl) {
+            this->addLocalPlayer(*pl, mapping);
+          } else {
+            (void)msg; //TODO
+          }
+        };
+        intf_.client()->newLocalPlayer(nick, cb);
       }
     }
     return true;
@@ -395,18 +403,7 @@ void ScreenLobby::onServerChangeFieldConfs()
 
 void ScreenLobby::onPlayerJoined(Player& pl)
 {
-  if(pl.local()) {
-    if(intf_.client()) {
-      if(pending_local_mapping_.type() != InputType::NONE) {
-        this->addLocalPlayer(pl, pending_local_mapping_);
-        pending_local_mapping_ = InputMapping();
-      } else {
-        // a notification for another message cleared pending_local_mapping_
-        // we can't process the new player, remove it from server
-        intf_.instance()->playerSetState(pl, Player::State::QUIT);
-      }
-    }
-  } else {
+  if(!pl.local()) {
     this->addRemotePlayer(pl);
   }
 }
@@ -429,15 +426,6 @@ void ScreenLobby::onPlayerStateChange(Player& pl)
 void ScreenLobby::onPlayerChangeFieldConf(Player& pl)
 {
   player_frames_.find(pl.plid())->second->update();
-}
-
-void ScreenLobby::onNotification(GameInstance::Severity sev, const std::string&)
-{
-  if(sev == GameInstance::Severity::ERROR) {
-    // reset pending mapping on error, even if this may not be an error
-    // triggered by the player creation
-    pending_local_mapping_ = InputMapping();
-  }
 }
 
 

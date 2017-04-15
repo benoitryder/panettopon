@@ -96,14 +96,12 @@ void PacketSocket::onReadData(const boost::system::error_code& ec)
     return;
   }
   if( !ec ) {
-    netplay::Packet pkt;
-    if( !pkt.ParsePartialFromArray(read_buf_, read_size_) ) {
+    Packet pkt;
+    if(!pkt.ParseFromArray(read_buf_, read_size_)) {
       this->processError("invalid packet");
-    } else if( !pkt.IsInitialized() ) {
-      LOG("missing required fields:\n%s", pkt.DebugString().c_str());
-      std::string msg("missing required fields: ");
-      msg += pkt.InitializationErrorString();
-      this->processError(msg);
+    } else if(pkt.pkt_case() == Packet::PKT_NOT_SET) {
+      LOG("packet without data");
+      this->processError("no packet data");
     } else {
       try {
         this->processPacket(pkt);
@@ -205,19 +203,23 @@ void PeerSocket::processError(const std::string& msg, const boost::system::error
   }
 
   // send notification
-  netplay::Packet pkt;
-  netplay::PktNotification* notif = pkt.mutable_notification();
-  notif->set_txt(msg);
-  notif->set_severity(netplay::PktNotification::ERROR);
-  this->writePacket(pkt);
+  auto event = std::make_unique<ServerEvent>();
+  auto* notif = event->mutable_notification();
+  notif->set_text(msg);
+  notif->set_severity(PktNotification::ERROR);
+  this->sendServerEvent(std::move(event));
 
   this->closeAfterWrites();
 }
 
-void PeerSocket::processPacket(const netplay::Packet& pkt)
+void PeerSocket::processPacket(const Packet& pkt)
 {
   if(server_) {
-    server_->observer_.onPeerPacket(*this, pkt);
+    if(pkt.has_client_event()) {
+      server_->observer_.onPeerClientEvent(*this, pkt.client_event());
+    } else if(pkt.has_client_command()) {
+      server_->observer_.onPeerClientCommand(*this, pkt.client_command());
+    }
   }
 }
 
@@ -237,6 +239,20 @@ void PeerSocket::close()
     }
     assert( !"peer not found" );
   }
+}
+
+void PeerSocket::sendServerEvent(std::unique_ptr<ServerEvent> event)
+{
+  Packet pkt;
+  pkt.set_allocated_server_event(event.release());
+  this->writePacket(pkt);
+}
+
+void PeerSocket::sendServerResponse(std::unique_ptr<ServerResponse> response)
+{
+  Packet pkt;
+  pkt.set_allocated_server_response(response.release());
+  this->writePacket(pkt);
 }
 
 
@@ -274,10 +290,11 @@ void ServerSocket::close()
 }
 
 
-void ServerSocket::broadcastPacket(const netplay::Packet& pkt, const PeerSocket* except/*=NULL*/)
+void ServerSocket::broadcastEvent(std::unique_ptr<ServerEvent> event, const PeerSocket* except)
 {
+  Packet pkt;
+  pkt.set_allocated_server_event(event.release());
   const std::string s = PacketSocket::serializePacket(pkt);
-  PeerSocketContainer::iterator it;
   for(auto& peer : peers_) {
     if(peer.get() != except) {
       peer->writeRaw(s);
@@ -365,10 +382,37 @@ void ClientSocket::close()
   observer_.onServerDisconnect();
 }
 
-
-void ClientSocket::processPacket(const netplay::Packet& pkt)
+void ClientSocket::sendClientEvent(std::unique_ptr<ClientEvent> event)
 {
-  observer_.onClientPacket(pkt);
+  Packet pkt;
+  pkt.set_allocated_client_event(event.release());
+  this->writePacket(pkt);
+}
+
+void ClientSocket::sendClientCommand(std::unique_ptr<ClientCommand> command, CommandCallback cb)
+{
+  Packet pkt;
+  pkt.set_allocated_client_command(command.release());
+  this->writePacket(pkt);
+  command_callbacks_.push(cb);
+}
+
+
+void ClientSocket::processPacket(const Packet& pkt)
+{
+  if(pkt.has_server_event()) {
+    observer_.onServerEvent(pkt.server_event());
+  } else if(pkt.has_server_response()) {
+    if(command_callbacks_.size()) {
+      auto callback = command_callbacks_.front();
+      command_callbacks_.pop();
+      if(callback) {
+        callback(pkt.server_response());
+      }
+    } else {
+      throw CallbackError("server response received but no command issued");
+    }
+  }
 }
 
 void ClientSocket::processError(const std::string& msg, const boost::system::error_code& ec)

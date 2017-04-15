@@ -48,7 +48,8 @@ class ServerInstance: public GameInstance,
   //@{
   virtual void onPeerConnect(netplay::PeerSocket& peer);
   virtual void onPeerDisconnect(netplay::PeerSocket& peer);
-  virtual void onPeerPacket(netplay::PeerSocket& peer, const netplay::Packet& pkt);
+  virtual void onPeerClientEvent(netplay::PeerSocket& peer, const netplay::ClientEvent& event);
+  virtual void onPeerClientCommand(netplay::PeerSocket& peer, const netplay::ClientCommand& command);
   //@}
 
   /** @name GarbageDistributor::Observer interface. */
@@ -78,7 +79,7 @@ class ServerInstance: public GameInstance,
   /** @name Packet processing.
    *
    * Methods called from onPeerPacket().
-   * netplay::Callback exceptions are thrown on error.
+   * netplay::CallbackError are thrown on error.
    */
   //@{
 
@@ -90,7 +91,8 @@ class ServerInstance: public GameInstance,
 
   void processPktInput(netplay::PeerSocket& peer, const netplay::PktInput& pkt);
   void processPktGarbageState(netplay::PeerSocket& peer, const netplay::PktGarbageState& pkt);
-  void processPktPlayerJoin(netplay::PeerSocket& peer, const netplay::PktPlayerJoin& pkt);
+  void processPktChat(netplay::PeerSocket& peer, const netplay::PktChat& pkt);
+  std::unique_ptr<netplay::PktPlayerConf> processPktPlayerJoin(netplay::PeerSocket& peer, const netplay::PktPlayerJoin& pkt);
   void processPktPlayerConf(netplay::PeerSocket& peer, const netplay::PktPlayerConf& pkt);
   void processPktPlayerState(netplay::PeerSocket& peer, const netplay::PktPlayerState& pkt);
   //@}
