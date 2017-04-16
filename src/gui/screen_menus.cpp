@@ -157,6 +157,9 @@ void ScreenJoinServer::onServerConnect(bool success)
   if(success) {
     auto cb = [this](Player* pl, const std::string& msg) { this->onFirstPlayerCreated(pl, msg); };
     intf_.client()->newLocalPlayer(entry_nick_->text(), cb);
+  } else {
+    this->addNotification({Notification::Severity::ERROR, "failed to connect"});
+    submitting_event_.type = sf::Event::Count;
   }
 }
 
