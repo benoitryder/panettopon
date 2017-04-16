@@ -363,8 +363,10 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
     if(mapping.type() != InputType::NONE) {
       auto nick = intf_.cfg().get<std::string>("Client.Nick");
       if(intf_.server()) {
-        Player& pl = intf_.server()->newLocalPlayer(nick);
-        this->addLocalPlayer(pl, mapping);
+        if(intf_.instance()->players().size() < intf_.instance()->conf().pl_nb_max) {
+          Player& pl = intf_.server()->newLocalPlayer(nick);
+          this->addLocalPlayer(pl, mapping);
+        }
       } else {
         auto cb = [this,mapping](Player* pl, const std::string& msg) {
           if(pl) {
