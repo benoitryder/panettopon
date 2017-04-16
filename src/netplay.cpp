@@ -1,7 +1,6 @@
 #include <cstring>
 #include <functional>
-#include <boost/asio/read.hpp>
-#include <boost/asio/write.hpp>
+#include <boost/asio.hpp>
 #include "netplay.h"
 #include "netplay.pb.h"
 #include "log.h"
@@ -268,7 +267,7 @@ ServerSocket::~ServerSocket()
 void ServerSocket::start(int port)
 {
   assert( started_ == false );
-  tcp::endpoint endpoint(tcp::v4(), port);
+  tcp::endpoint endpoint(tcp::v6(), port);
   acceptor_.open(endpoint.protocol());
   acceptor_.set_option(asio::socket_base::reuse_address(true));
   acceptor_.bind(endpoint);
@@ -354,13 +353,9 @@ ClientSocket::~ClientSocket()
 void ClientSocket::connect(const char* host, int port, int tout)
 {
   tcp::resolver resolver(io_service());
-  tcp::resolver::query query(tcp::v4(), host,
-                             "0"); // port cannot be an integer :(
-  tcp::endpoint ep = *resolver.resolve(query);
-  ep.port(port); // set port now
+  auto ep_it = resolver.resolve({host, std::to_string(port)});
   auto self = std::static_pointer_cast<ClientSocket>(shared_from_this());
-  socket_.async_connect(
-      ep, std::bind(&ClientSocket::onConnect, self, std::placeholders::_1));
+  boost::asio::async_connect(socket_, ep_it, std::bind(&ClientSocket::onConnect, self, std::placeholders::_1));
   try {
     socket_.set_option(tcp::no_delay(true));
   } catch(const boost::exception& e) {
