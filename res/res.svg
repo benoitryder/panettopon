@@ -358,6 +358,12 @@
         stroke-linejoin: round;
       }
 
+      #Menu-Notification {
+        fill: #000000;
+        fill-opacity: .75;
+        stroke: none;
+      }
+
       #Menu-Frame-inside {
         fill: #202020;
         fill-opacity:0.9;
@@ -786,7 +792,7 @@
   </g>
 
   <g id="Field-Frame"
-    transform="translate(1400,16) scale(2)">
+    transform="translate(1000,1100) scale(2)">
     <!-- force the bounding box for the export -->
     <rect id="Field-Frame-container"
       width="32" height="32"
@@ -826,7 +832,7 @@
   <!-- Menu elements -->
 
   <g id="Menu-map"
-    transform="translate(500,1100) scale(2)">
+    transform="translate(1400,16) scale(2)">
     <!-- force the bounding box for the export -->
     <rect id="Menu-map-container"
       width="256" height="192"
@@ -863,6 +869,12 @@
         d="m 59,0 -7,-16 0,32 z"
         />
     </g>
+    <rect id="Menu-Notification"
+      transform="translate(64,208)"
+      x="-61" y="-15"
+      width="122" height="30"
+      rx="16" ry="16"
+      />
     <g id="Menu-Frame"
       transform="translate(192,64)">
       <rect id="Menu-Frame-inside"

@@ -13,6 +13,37 @@ class IniFile;
 namespace gui {
 
 class GuiInterface;
+class Screen;
+
+
+/** @brief Notification text
+ *
+ * Style properties:
+ *  - StyleText properties
+ *  - ImageFrameX properties
+ *  - Width
+ */
+class WNotification: public Widget
+{
+ public:
+  struct Notification {
+    typedef GameInstance::Severity Severity;
+    Severity sev;
+    std::string msg;
+  };
+
+  WNotification(const Screen& screen, const std::string& name);
+  void setNotification(const Notification& notif);
+  virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+
+ protected:
+  virtual const std::string& type() const;
+
+ private:
+  sf::Text text_;
+  ImageFrameX frame_;
+  float width_;
+};
 
 
 /** @brief Basic screen
@@ -50,7 +81,7 @@ class Screen: public StyleLoader
   virtual void onServerChangeFieldConfs() {}
   virtual void onPlayerStep(Player&) {}
   virtual void onPlayerRanked(Player&) {}
-  virtual void onNotification(GameInstance::Severity, const std::string&) {}
+  virtual void onNotification(GameInstance::Severity, const std::string&);
   virtual void onServerConnect(bool) {}
   virtual void onServerDisconnect() {}
   //@}
@@ -71,6 +102,12 @@ class Screen: public StyleLoader
   void addAnimation(Animation& animation);
   void removeAnimation(const Animation& animation);
 
+  typedef WNotification::Notification Notification;
+  /// Add a notification
+  void addNotification(const Notification& notif);
+  /// Clear all notifications (current and pending)
+  void clearNotifications();
+
  protected:
   GuiInterface& intf_;
   const std::string name_;
@@ -86,6 +123,10 @@ class Screen: public StyleLoader
     const sf::Texture* img;
     sf::Color color;
   } background_;
+
+  std::vector<Notification> notifications_;
+  WNotification notification_widget_;
+  Animation notification_anim_;
 };
 
 

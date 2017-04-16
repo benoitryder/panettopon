@@ -10,7 +10,8 @@
 namespace gui {
 
 Screen::Screen(GuiInterface& intf, const std::string& name):
-    intf_(intf), name_(name), container_(*this, ""), focused_(nullptr)
+    intf_(intf), name_(name), container_(*this, ""), focused_(nullptr),
+    notification_widget_(*this, "Notif")
 {
   std::string val;
   if(fetchStyle<std::string>("BackgroundImage", val)) {
@@ -21,6 +22,16 @@ Screen::Screen(GuiInterface& intf, const std::string& name):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   }
   fetchStyle<sf::Color>("BackgroundColor", background_.color);
+
+  auto animator = [&](float x) {
+    // stop current notif earlier other are waiting
+    if(x >= 0.5 && notifications_.size()) {
+      notification_anim_.stop();
+    }
+  };
+  notification_anim_ = Animation(animator, TweenLinear, 4000);
+  this->addAnimation(notification_anim_);
+  notification_anim_.stop();
 }
 
 Screen::~Screen() {}
@@ -38,6 +49,16 @@ void Screen::redraw()
   sf::RenderWindow& w = intf_.window();
   w.draw(background_);
   w.draw(container_);
+  if(notification_anim_.state() == Animation::State::STOPPED) {
+    if(notifications_.size()) {
+      // update the widget, restart animation
+      notification_widget_.setNotification(notifications_[0]);
+      notifications_.erase(notifications_.begin());
+      notification_anim_.restart();
+    }
+  } else if(notification_anim_.state() == Animation::State::RUNNING) {
+    w.draw(notification_widget_);
+  }
 }
 
 
@@ -96,6 +117,12 @@ void Screen::Background::draw(sf::RenderTarget& target, sf::RenderStates states)
 }
 
 
+void Screen::onNotification(GameInstance::Severity sev, const std::string& msg)
+{
+  addNotification({sev, msg});
+}
+
+
 const ResourceManager& Screen::res_mgr() const
 {
   return intf_.res_mgr();
@@ -141,6 +168,53 @@ void Screen::removeAnimation(const Animation& animation)
     }
   }
   assert(false);  // not found
+}
+
+
+void Screen::addNotification(const Notification& notif)
+{
+  notifications_.push_back(notif);
+}
+
+void Screen::clearNotifications()
+{
+  notifications_.clear();
+}
+
+
+const std::string& WNotification::type() const {
+  static const std::string type("Notification");
+  return type;
+}
+
+WNotification::WNotification(const Screen& screen, const std::string& name):
+    Widget(screen, name)
+{
+  std::string key;
+
+  // load Pos again, to enable fallback based on widget type
+  this->setPosition(getStyle<sf::Vector2f>("Pos"));
+
+  applyStyle(text_);
+  applyStyle(frame_);
+  width_ = getStyle<float>("Width", key);
+  if(width_ <= 0) {
+    throw StyleError(key, "value must be positive");
+  }
+}
+
+void WNotification::setNotification(const Notification& notif)
+{
+  text_.setString(notif.msg);
+  sf::FloatRect r = text_.getLocalBounds();
+  text_.setOrigin(r.width/2, (text_.getFont()->getLineSpacing(text_.getCharacterSize()))/2);
+}
+
+void WNotification::draw(sf::RenderTarget& target, sf::RenderStates states) const
+{
+  states.transform *= getTransform();
+  frame_.render(target, states, width_);
+  target.draw(text_, states);
 }
 
 
