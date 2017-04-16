@@ -220,7 +220,7 @@ void ScreenGame::onStateChange()
 
     for(auto& pair : intf_.instance()->players()) {
       Player& pl = *pair.second;
-      if(pl.local()) {
+      if(pl.local() && pl.state() == Player::State::GAME_INIT) {
         intf_.instance()->playerSetState(pl, Player::State::GAME_READY);
       }
     }
