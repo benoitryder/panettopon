@@ -241,10 +241,10 @@
         <rect x="-2.54"  y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
         <rect x="-1.524" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
         <rect x="-0.508" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
-        <rect x=" 0.508" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
-        <rect x=" 1.524" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
-        <rect x=" 2.54"  y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
-        <rect x=" 3.556" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
+        <rect x="0.508" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
+        <rect x="1.524" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
+        <rect x="2.54"  y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
+        <rect x="3.556" y="0" width="0.7112" height="0.95" transform="translate(-0.3556)" />
       </g>
     </symbol>
 
