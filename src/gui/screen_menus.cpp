@@ -382,6 +382,13 @@ bool ScreenLobby::onInputEvent(const sf::Event& ev)
   return false;
 }
 
+void ScreenLobby::onServerDisconnect()
+{
+  auto new_screen = std::make_unique<ScreenStart>(intf_);
+  new_screen->addNotification({Notification::Severity::ERROR, "disconnected from server"});
+  intf_.swapScreen(std::move(new_screen));
+}
+
 void ScreenLobby::onStateChange()
 {
   auto state = intf_.instance()->state();

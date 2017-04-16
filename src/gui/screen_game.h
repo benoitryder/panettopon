@@ -88,6 +88,7 @@ class ScreenGame: public Screen, public GameInputScheduler::InputProvider
   virtual void exit();
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event& ev);
+  virtual void onServerDisconnect();
   virtual void onPlayerStep(Player& pl);
   virtual void onPlayerRanked(Player& pl);
   virtual void onStateChange();

@@ -101,6 +101,7 @@ class ScreenLobby: public Screen
   virtual void enter();
   virtual void redraw();
   virtual bool onInputEvent(const sf::Event& ev);
+  virtual void onServerDisconnect();
   virtual void onStateChange();
   virtual void onServerChangeFieldConfs();
   virtual void onPlayerJoined(Player&);

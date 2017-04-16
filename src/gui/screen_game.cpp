@@ -155,6 +155,13 @@ bool ScreenGame::onInputEvent(const sf::Event& ev)
   return false;
 }
 
+void ScreenGame::onServerDisconnect()
+{
+  auto new_screen = std::make_unique<ScreenStart>(intf_);
+  new_screen->addNotification({Notification::Severity::ERROR, "disconnected from server"});
+  intf_.swapScreen(std::move(new_screen));
+}
+
 void ScreenGame::onPlayerStep(Player& pl)
 {
   assert(pl.field());
