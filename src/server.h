@@ -73,8 +73,13 @@ class ServerInstance: public GameInstance,
    * If peer is \e NULL, a local player is created.
    */
   Player& newPlayer(netplay::PeerSocket* peer, const std::string& nick);
-  /// Remove a player.
-  void removePlayer(PlId plid);
+  /** @brief Remove a player
+   *
+   * If player is playing, its field is aborting and match is updated.
+   *
+   * @note \a pl will not exist anymore after call.
+   */
+  void removePlayer(Player& pl);
 
   /** @name Packet processing.
    *

@@ -124,17 +124,11 @@ void ServerInstance::playerSetState(Player& pl, Player::State state)
   }
 
   bool state_valid = false;
-  bool erase_player = false;
   switch(state) {
     case Player::State::QUIT:
-      if(pl.field() != nullptr) {
-        pl.field()->abort();
-        match_.updateTick(); // field lost, tick must be updated
-        pl.setField(nullptr);
-      }
-      erase_player = true;
-      state_valid = true;
-      break;
+      this->removePlayer(pl);
+      // QUIT state is broadcasted by removePlayer(), don't send it twice
+      return;
     case Player::State::LOBBY:
       state_valid = state_ == State::LOBBY || state_ == State::GAME;
       break;
@@ -166,9 +160,6 @@ void ServerInstance::playerSetState(Player& pl, Player::State state)
   np_state->set_state(static_cast<netplay::PktPlayerState::State>(state));
   socket_->broadcastEvent(std::move(event));
 
-  if(erase_player) {
-    players_.erase(pl.plid());
-  }
   this->checkAllPlayersReady();
 }
 
@@ -257,9 +248,10 @@ void ServerInstance::onPeerDisconnect(netplay::PeerSocket& peer)
 {
   for(auto it=peers_.begin(); it!=peers_.end(); ) {
     if((*it).second == &peer) {
-      PlId plid = (*it).first;
-      ++it; // increment to avoid invalidated iterator
-      this->removePlayer(plid);
+      Player* pl = this->player(it->first);
+      assert(pl);
+      ++it;  // increment now to avoid invalidated iterator
+      this->removePlayer(*pl);
     } else {
       ++it;
     }
@@ -381,22 +373,22 @@ Player& ServerInstance::newPlayer(netplay::PeerSocket* peer, const std::string& 
   return pl;
 }
 
-void ServerInstance::removePlayer(PlId plid)
+void ServerInstance::removePlayer(Player& pl)
 {
-  Player* pl = this->player(plid);
-  assert( pl != NULL );
-  pl->setState(Player::State::QUIT);
-  LOG("%s(%u): state set to QUIT", pl->nick().c_str(), pl->plid());
-  observer_.onPlayerStateChange(*pl);
+  pl.setState(Player::State::QUIT);
+  LOG("%s(%u): state set to QUIT", pl.nick().c_str(), pl.plid());
+  observer_.onPlayerStateChange(pl);
+
+  if(pl.field() != nullptr) {
+    pl.field()->abort();
+    match_.updateTick(); // field lost, tick must be updated
+    this->updateRanks();
+    pl.setField(nullptr);
+  }
+
+  PlId plid = pl.plid();
   players_.erase(plid);
   peers_.erase(plid);
-
-  // update ranks (this will stop match if necessary)
-  // the ranking message must to be sent before the QUIT or the player
-  // will not exist anymore on client side
-  if(state_ == State::GAME) {
-    this->updateRanks();
-  }
 
   // tell other players
   auto event = std::make_unique<netplay::ServerEvent>();
@@ -404,6 +396,8 @@ void ServerInstance::removePlayer(PlId plid)
   np_state->set_plid(plid);
   np_state->set_state(netplay::PktPlayerState::QUIT);
   socket_->broadcastEvent(std::move(event));
+
+  this->checkAllPlayersReady();
 }
 
 
@@ -558,9 +552,8 @@ void ServerInstance::processPktPlayerState(netplay::PeerSocket& peer, const netp
   bool state_valid = false;
   switch(new_state) {
     case Player::State::QUIT:
-      this->removePlayer(pl.plid()); // note: don't disconnect the peer
+      this->removePlayer(pl);
       // QUIT state is broadcasted by removePlayer(), don't send it twice
-      this->checkAllPlayersReady();
       return;
     case Player::State::LOBBY:
       state_valid = state_ == State::LOBBY || state_ == State::GAME;
