@@ -169,7 +169,7 @@ class InputHandler
    * It is then possible to check for actual moves by comparing joystick
    * position to 0.
    *
-   * @return \e true if filter should be processed, \e false if it has been filtered out.
+   * @return \e true if event should be processed, \e false if it has been filtered out.
    */
   bool filterEvent(const sf::Event& event);
 
