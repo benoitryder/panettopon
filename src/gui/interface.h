@@ -72,6 +72,11 @@ class GuiInterface: public ClientInstance::Observer
    */
   void swapScreen(std::unique_ptr<Screen> screen);
 
+  /// Enable or disable text input mode
+  void setTextInput(bool enable) { input_handler_.setTextInput(enable); }
+  bool textInput() const { return input_handler_.textInput(); }
+
+
   sf::RenderWindow& window() { return window_; }
   bool focused() const { return focused_; }
   const ResourceManager& res_mgr() const { return res_mgr_; }

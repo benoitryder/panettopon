@@ -352,8 +352,10 @@ void WEntry::focus(bool focused)
   WFocusable::focus(focused);
   if(focused) {
     style_focus_.apply(*this);
+    screen_.intf().setTextInput(true);
   } else {
     style_.apply(*this);
+    screen_.intf().setTextInput(false);
   }
 }
 

@@ -132,6 +132,7 @@ void GuiInterface::swapScreen(std::unique_ptr<Screen> screen)
     io_service_.post(deletion_handler<Screen>(std::move(screen_)));
   }
   screen_ = std::move(screen);
+  this->setTextInput(false);
   if(!screen_) {
     this->endDisplay();
   } else {

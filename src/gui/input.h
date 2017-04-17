@@ -173,12 +173,42 @@ class InputHandler
    */
   bool filterEvent(const sf::Event& event);
 
+  /** @brief Enable or disable text input mode
+   *
+   * In text mode, KeyPressed events are ignored in favor of TextEntered ones.
+   * In key mode, it is the opposite.
+   *
+   * To avoid repetition of a previous key event as TextEntered event, the text
+   * input mode is not actually active until the next KeyPressed event.
+   */
+  void setTextInput(bool enable);
+  /// Get text input mode state
+  bool textInput() const { return text_input_set_; }
+
+  /** @brief Return whether a key is used for text or not
+   *
+   * Non-text keys are not filtered out in text input mode.
+   */
+  static constexpr bool isTextKey(sf::Keyboard::Key key);
+
  private:
   /** @brief Current past-threshold position for each axis
    *
    * Possible Values 0, -1 and 1.
    */
   int joystick_axis_pos_[sf::Joystick::Count][sf::Joystick::AxisCount];
+  bool text_input_set_;
+  /** @brief Real text input mode state
+   *
+   * Since a KeyPressed/KeyReleased and a TextEntered events can be generated
+   * from a single action, text mode must not be enabled until pending
+   * TextEntered events are processed.
+   *
+   * Don't actually enable text input mode until the next key press.
+   *
+   * @note Characters input with dead keys will still be duplicated.
+   */
+  bool text_input_active_;
 };
 
 }

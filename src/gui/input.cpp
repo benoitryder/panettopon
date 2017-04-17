@@ -424,7 +424,8 @@ InputMapping InputMapping::Global{
 };
 
 InputHandler::InputHandler():
-    joystick_axis_pos_()
+    joystick_axis_pos_(),
+    text_input_set_(false), text_input_active_(false)
 {
 }
 
@@ -447,11 +448,75 @@ bool InputHandler::filterEvent(const sf::Event& event)
       joystick_axis_pos_[ev.joystickId][ev.axis] = new_pos;
       return new_pos != 0;
     }
-  } else {
-    return true;
+  } else if(event.type == sf::Event::KeyPressed) {
+    if(text_input_set_) {
+      text_input_active_ = true;
+      return !isTextKey(event.key.code);
+    }
+  } else if(event.type == sf::Event::TextEntered) {
+    if(!text_input_active_) {
+      return false;
+    }
   }
+  return true;
 }
 
+void InputHandler::setTextInput(bool enable)
+{
+  text_input_set_ = enable;
+  text_input_active_ = false;
+}
+
+
+constexpr bool InputHandler::isTextKey(sf::Keyboard::Key key)
+{
+  switch(key) {
+    case sf::Keyboard::Escape:
+    case sf::Keyboard::LControl:
+    case sf::Keyboard::LShift:
+    case sf::Keyboard::LAlt:
+    case sf::Keyboard::LSystem:
+    case sf::Keyboard::RControl:
+    case sf::Keyboard::RShift:
+    case sf::Keyboard::RAlt:
+    case sf::Keyboard::RSystem:
+    case sf::Keyboard::Menu:
+    case sf::Keyboard::LBracket:
+    case sf::Keyboard::RBracket:
+    case sf::Keyboard::Return:
+    case sf::Keyboard::BackSpace:
+    case sf::Keyboard::Tab:
+    case sf::Keyboard::PageUp:
+    case sf::Keyboard::PageDown:
+    case sf::Keyboard::End:
+    case sf::Keyboard::Home:
+    case sf::Keyboard::Insert:
+    case sf::Keyboard::Delete:
+    case sf::Keyboard::Left:
+    case sf::Keyboard::Right:
+    case sf::Keyboard::Up:
+    case sf::Keyboard::Down:
+    case sf::Keyboard::F1:
+    case sf::Keyboard::F2:
+    case sf::Keyboard::F3:
+    case sf::Keyboard::F4:
+    case sf::Keyboard::F5:
+    case sf::Keyboard::F6:
+    case sf::Keyboard::F7:
+    case sf::Keyboard::F8:
+    case sf::Keyboard::F9:
+    case sf::Keyboard::F10:
+    case sf::Keyboard::F11:
+    case sf::Keyboard::F12:
+    case sf::Keyboard::F13:
+    case sf::Keyboard::F14:
+    case sf::Keyboard::F15:
+    case sf::Keyboard::Pause:
+      return false;
+    default:
+      return true;
+  }
+}
 
 }
 
