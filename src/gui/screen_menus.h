@@ -168,7 +168,7 @@ class ScreenLobby: public Screen
     Player& player_;
     InputMapping mapping_;
     WFrame* frame_;
-    WLabel* nick_;
+    WEntry* nick_;
     WChoice* choice_mapping_;
     WChoice* choice_conf_;
     sf::Sprite ready_;

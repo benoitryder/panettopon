@@ -528,7 +528,7 @@ ScreenLobby::WPlayerFrame::WPlayerFrame(ScreenLobby& screen, Player& pl, const I
 
   frame_ = &addWidget<WFrame>(screen, IniFile::join(type(), "Border"));
 
-  nick_ = &addWidget<WLabel>(screen, IniFile::join(type(), "Nick"));
+  nick_ = &addWidget<WEntry>(screen, IniFile::join(type(), "Nick"));
   if(player_.local()) {
     choice_mapping_ = &addWidget<WChoice>(screen, IniFile::join(type(), "Mapping"));
   } else {
@@ -541,8 +541,9 @@ ScreenLobby::WPlayerFrame::WPlayerFrame(ScreenLobby& screen, Player& pl, const I
   ready_.setPosition(getStyle<sf::Vector2f>("Ready.Pos"));
 
   if(player_.local()) {
-    choice_mapping_->setNeighbors(choice_conf_, choice_conf_, nullptr, nullptr);
-    choice_conf_->setNeighbors(choice_mapping_, choice_mapping_, nullptr, nullptr);
+    nick_->setNeighbors(choice_mapping_, choice_conf_, nullptr, nullptr);
+    choice_mapping_->setNeighbors(choice_conf_, nick_, nullptr, nullptr);
+    choice_conf_->setNeighbors(nick_, choice_mapping_, nullptr, nullptr);
 
     mapping_ = mapping;
     this->updateMappingItems();
