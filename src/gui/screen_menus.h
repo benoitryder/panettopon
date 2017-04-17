@@ -180,7 +180,6 @@ class ScreenLobby: public Screen
   bool isMappingUsed(const InputMapping& mapping);
   void updatePlayerFramesLayout();
 
-  WButton* button_ready_;
   typedef std::map<PlId, std::unique_ptr<WPlayerFrame>> PlayerFramesContainer;
   PlayerFramesContainer player_frames_;
   InputMapping pending_local_mapping_;
