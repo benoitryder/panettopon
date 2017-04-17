@@ -212,6 +212,7 @@ class WLabel: public Widget
  *  - Width
  *  - TextMarginsX: left and right margin for text
  *  - Focus.*
+ *  - Active.*
  */
 class WEntry: public WFocusable
 {
@@ -227,7 +228,7 @@ class WEntry: public WFocusable
     void apply(WEntry& o);
   };
 
-  WEntry(const Screen& screen, const std::string& name);
+  WEntry(const Screen& screen, const std::string& name, bool auto_active=true);
   void setText(const std::string& caption);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
   virtual bool onInputEvent(const InputMapping&, const sf::Event&);
@@ -240,6 +241,7 @@ class WEntry: public WFocusable
  private:
   /// Update text image and cursor position after text input or cursor move
   void updateTextDisplay(bool force=false);
+  void activate(bool active);
 
  private:
   class Cursor: public sf::Drawable {
@@ -261,8 +263,11 @@ class WEntry: public WFocusable
   ImageFrameX frame_;
   unsigned int cursor_pos_;  ///< cursor position, in the complete string
   float width_;
+  bool active_;
+  bool auto_active_;
   Style style_;
   Style style_focus_;
+  Style style_active_;
 };
 
 

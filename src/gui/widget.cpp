@@ -272,11 +272,12 @@ const std::string& WEntry::type() const {
   return type;
 }
 
-WEntry::WEntry(const Screen& screen, const std::string& name):
-    WFocusable(screen, name), cursor_pos_(0)
+WEntry::WEntry(const Screen& screen, const std::string& name, bool auto_active):
+    WFocusable(screen, name), cursor_pos_(0), active_(false), auto_active_(auto_active)
 {
   style_.load(*this);
   style_focus_.load(StyleLoaderPrefix(*this, "Focus", true));
+  style_active_.load(StyleLoaderPrefix(*this, "Active", true));
   style_.apply(*this);
   cursor_.x = text_sprite_.getOrigin().x;
 }
@@ -292,57 +293,71 @@ void WEntry::draw(sf::RenderTarget& target, sf::RenderStates states) const
   states.transform *= getTransform();
   frame_.render(target, states, width_);
   target.draw(text_sprite_, states);
-  if(focused()) {
+  if(active_) {
     target.draw(cursor_, states);
   }
 }
 
-bool WEntry::onInputEvent(const InputMapping&, const sf::Event& ev)
+bool WEntry::onInputEvent(const InputMapping& mapping, const sf::Event& ev)
 {
-  if( ev.type == sf::Event::TextEntered ) {
-    sf::Uint32 c = ev.text.unicode;
-    if( c >= ' ' && c != 127 ) {  // 127 is DEL sometimes
-      sf::String s = text_.getString();
-      s.insert(cursor_pos_++, c);
-      this->setText(s);
+  if(active_) {
+    if( ev.type == sf::Event::TextEntered ) {
+      sf::Uint32 c = ev.text.unicode;
+      if( c >= ' ' && c != 127 ) {  // 127 is DEL sometimes
+        sf::String s = text_.getString();
+        s.insert(cursor_pos_++, c);
+        this->setText(s);
+        return true;
+      }
+    } else if( ev.type == sf::Event::KeyPressed ) {
+      sf::Keyboard::Key c = ev.key.code;
+      // move
+      if( c == sf::Keyboard::Home ) {
+        cursor_pos_ = 0;
+        this->updateTextDisplay();
+      } else if( c == sf::Keyboard::End ) {
+        cursor_pos_ = text_.getString().getSize();
+        this->updateTextDisplay();
+      } else if( c == sf::Keyboard::Left ) {
+        if( cursor_pos_ > 0 ) {
+          cursor_pos_--;
+          this->updateTextDisplay();
+        }
+      } else if( c == sf::Keyboard::Right ) {
+        if( cursor_pos_ < text_.getString().getSize() ) {
+          cursor_pos_++;
+          this->updateTextDisplay();
+        }
+      // edit
+      } else if( c == sf::Keyboard::BackSpace ) {
+        if( cursor_pos_ > 0 ) {
+          sf::String s = text_.getString();
+          s.erase(--cursor_pos_);
+          this->setText(s);
+        }
+      } else if( c == sf::Keyboard::Delete ) {
+        if( cursor_pos_ < text_.getString().getSize() ) {
+          sf::String s = text_.getString();
+          s.erase(cursor_pos_);
+          this->setText(s);
+        }
+      // validate
+      } else if(!auto_active_ && (c == sf::Keyboard::Return || c == sf::Keyboard::Escape)) {
+        this->activate(false);
+        return true;
+      // prevent focus switching when active (typed text has to be validated)
+      } else if(!auto_active_ && this->neighborToFocus(mapping, ev)) {
+        return true;
+      } else {
+        return false; // not processed
+      }
       return true;
     }
-  } else if( ev.type == sf::Event::KeyPressed ) {
-    sf::Keyboard::Key c = ev.key.code;
-    // move
-    if( c == sf::Keyboard::Home ) {
-      cursor_pos_ = 0;
-      this->updateTextDisplay();
-    } else if( c == sf::Keyboard::End ) {
-      cursor_pos_ = text_.getString().getSize();
-      this->updateTextDisplay();
-    } else if( c == sf::Keyboard::Left ) {
-      if( cursor_pos_ > 0 ) {
-        cursor_pos_--;
-        this->updateTextDisplay();
-      }
-    } else if( c == sf::Keyboard::Right ) {
-      if( cursor_pos_ < text_.getString().getSize() ) {
-        cursor_pos_++;
-        this->updateTextDisplay();
-      }
-    // edit
-    } else if( c == sf::Keyboard::BackSpace ) {
-      if( cursor_pos_ > 0 ) {
-        sf::String s = text_.getString();
-        s.erase(--cursor_pos_);
-        this->setText(s);
-      }
-    } else if( c == sf::Keyboard::Delete ) {
-      if( cursor_pos_ < text_.getString().getSize() ) {
-        sf::String s = text_.getString();
-        s.erase(cursor_pos_);
-        this->setText(s);
-      }
-    } else {
-      return false; // not processed
+  } else if(!auto_active_) {
+    if(mapping.confirm.match(ev)) {
+      this->activate(true);
+      return true;
     }
-    return true;
   }
   return false;
 }
@@ -351,11 +366,17 @@ void WEntry::focus(bool focused)
 {
   WFocusable::focus(focused);
   if(focused) {
-    style_focus_.apply(*this);
-    screen_.intf().setTextInput(true);
+    if(auto_active_) {
+      this->activate(true);
+    } else {
+      style_focus_.apply(*this);
+    }
   } else {
-    style_.apply(*this);
-    screen_.intf().setTextInput(false);
+    if(active_) {
+      this->activate(false);
+    } else {
+      style_.apply(*this);
+    }
   }
 }
 
@@ -389,6 +410,23 @@ void WEntry::updateTextDisplay(bool force)
     text_.setPosition(-x, 0);
     text_img_.draw(text_);
     text_img_.display();
+  }
+}
+
+void WEntry::activate(bool active)
+{
+  active_ = active;
+  if(active_) {
+    assert(focused());
+    style_active_.apply(*this);
+    screen_.intf().setTextInput(true);
+  } else {
+    if(focused()) {
+      style_focus_.apply(*this);
+    } else {
+      style_.apply(*this);
+    }
+    screen_.intf().setTextInput(false);
   }
 }
 
