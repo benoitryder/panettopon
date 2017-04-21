@@ -149,24 +149,23 @@ const std::string& WButton::type() const {
 }
 
 WButton::WButton(const Screen& screen, const std::string& name):
-    WFocusable(screen, name), callback_(NULL)
+    WFocusable(screen, name), current_style_(&style_), callback_(NULL)
 {
   style_.load(*this);
   style_focus_.load(StyleLoaderPrefix(*this, "Focus", true));
-  style_.apply(*this);
+  current_style_->apply(*this);
 }
 
 void WButton::setCaption(const std::string& caption)
 {
   caption_.setString(caption);
-  sf::FloatRect r = caption_.getLocalBounds();
-  caption_.setOrigin(r.width/2, (caption_.getFont()->getLineSpacing(caption_.getCharacterSize()))/2);
+  current_style_->align.apply(caption_);
 }
 
 void WButton::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
-  frame_.render(target, states, width_);
+  frame_.render(target, states, current_style_->width);
   target.draw(caption_, states);
 }
 
@@ -185,10 +184,11 @@ void WButton::focus(bool focused)
 {
   WFocusable::focus(focused);
   if(focused) {
-    style_focus_.apply(*this);
+    current_style_ = &style_focus_;
   } else {
-    style_.apply(*this);
+    current_style_ = &style_;
   }
+  current_style_->apply(*this);
 }
 
 
@@ -197,6 +197,7 @@ void WButton::Style::load(const StyleLoader& loader)
   std::string key;
 
   text.load(loader);
+  align.load(loader);
   frame.load(loader);
 
   width = loader.getStyle<float>("Width", key);
@@ -208,8 +209,8 @@ void WButton::Style::load(const StyleLoader& loader)
 void WButton::Style::apply(WButton& o)
 {
   text.apply(o.caption_);
+  align.apply(o.caption_);
   frame.apply(o.frame_);
-  o.width_ = width;
 }
 
 
@@ -219,51 +220,23 @@ const std::string& WLabel::type() const {
 }
 
 WLabel::WLabel(const Screen& screen, const std::string& name):
-    Widget(screen, name), align_(0)
+    Widget(screen, name)
 {
-  const IniFile& style = screen_.style();
-  std::string key;
-
   applyStyle(text_);
-  if(searchStyle("TextAlign", key)) {
-    const std::string align = style.get<std::string>(key);
-    if( align == "left" ) {
-      align_ = -1;
-    } else if( align == "center" ) {
-      align_ = 0;
-    } else if( align == "right" ) {
-      align_ = 1;
-    } else {
-      throw StyleError(key, "invalid value");
-    }
-  }
+  style_align_.load(*this);
+  style_align_.apply(text_);
 }
 
 void WLabel::setText(const std::string& text)
 {
   text_.setString(text);
-  this->setTextAlign(align_); // recompute origin
+  style_align_.apply(text_);
 }
 
 void WLabel::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
   target.draw(text_, states);
-}
-
-void WLabel::setTextAlign(int align)
-{
-  sf::FloatRect r = text_.getLocalBounds();
-  float x;
-  if( align == 0 ) {
-    x = r.width / 2;
-  } else if( align < 0 ) {
-    x = 0;
-  } else if( align > 0 ) {
-    x = r.width;
-  }
-  text_.setOrigin(x, text_.getFont()->getLineSpacing(text_.getCharacterSize())/2);
-  align_ = align;
 }
 
 
@@ -273,13 +246,13 @@ const std::string& WEntry::type() const {
 }
 
 WEntry::WEntry(const Screen& screen, const std::string& name, bool auto_active):
-    WFocusable(screen, name), cursor_pos_(0), active_(false), auto_active_(auto_active)
+    WFocusable(screen, name), cursor_pos_(0), active_(false), auto_active_(auto_active),
+    current_style_(&style_)
 {
   style_.load(*this);
   style_focus_.load(StyleLoaderPrefix(*this, "Focus", true));
   style_active_.load(StyleLoaderPrefix(*this, "Active", true));
-  style_.apply(*this);
-  cursor_.x = text_sprite_.getOrigin().x;
+  current_style_->apply(*this);
 }
 
 void WEntry::setText(const std::string& text)
@@ -291,10 +264,12 @@ void WEntry::setText(const std::string& text)
 void WEntry::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
-  frame_.render(target, states, width_);
-  target.draw(text_sprite_, states);
+  frame_.render(target, states, current_style_->width);
   if(active_) {
+    target.draw(text_sprite_, states);
     target.draw(cursor_, states);
+  } else {
+    target.draw(text_, states);
   }
 }
 
@@ -369,13 +344,15 @@ void WEntry::focus(bool focused)
     if(auto_active_) {
       this->activate(true);
     } else {
-      style_focus_.apply(*this);
+      current_style_ = &style_focus_;
+      current_style_->apply(*this);
     }
   } else {
     if(active_) {
       this->activate(false);
     } else {
-      style_.apply(*this);
+      current_style_ = &style_;
+      current_style_->apply(*this);
     }
   }
 }
@@ -383,33 +360,52 @@ void WEntry::focus(bool focused)
 
 void WEntry::updateTextDisplay(bool force)
 {
-  const size_t len = text_.getString().getSize();
-  if( cursor_pos_ > len ) {
-    cursor_pos_ = len;
-  }
-
-  const float text_width = text_img_.getSize().x;
-  float x = -text_.getPosition().x;
-  const float cursor_pos_x = text_.findCharacterPos(cursor_pos_).x + x;
-
-  if( cursor_pos_x - x > text_width ) {
-    x = cursor_pos_x - text_width;
-    force = true;
-  } else if( cursor_pos_x < x ) {
-    x = cursor_pos_x - text_width/4; // 4 is an arbitrary value
-    if( x < 0 ) {
-      x = 0;
+  const Style& style = *current_style_;
+  if(active_) {
+    const size_t len = text_.getString().getSize();
+    if( cursor_pos_ > len ) {
+      cursor_pos_ = len;
     }
-    force = true;
-  }
 
-  cursor_.x = cursor_pos_x - x - text_width/2;
-  // redraw only if needed
-  if( force ) {
-    text_img_.clear(sf::Color(0,0,0,0));
-    text_.setPosition(-x, 0);
-    text_img_.draw(text_);
-    text_img_.display();
+    const float text_width = text_img_.getSize().x;
+    float x = -text_.getPosition().x;
+    const float cursor_pos_x = text_.findCharacterPos(cursor_pos_).x + x;
+
+    if( cursor_pos_x - x > text_width ) {
+      x = cursor_pos_x - text_width;
+      force = true;
+    } else if( cursor_pos_x < x ) {
+      x = cursor_pos_x - text_width/4; // 4 is an arbitrary value
+      if( x < 0 ) {
+        x = 0;
+      }
+      force = true;
+    }
+
+    cursor_.x = cursor_pos_x - x - style.width/2 + current_style_->text_margin_left;
+    // redraw only if needed
+    if( force ) {
+      text_img_.clear(sf::Color(0,0,0,0));
+      text_.setPosition(-x, 0);
+      text_img_.draw(text_);
+      text_img_.display();
+    }
+  } else {
+    float x;
+    // don't use getLocalBounds(), it's width is slightly off
+    float width = text_.findCharacterPos(text_.getString().getSize()).x - text_.getPosition().x;
+    switch(style.xalign) {
+      case XAlign::LEFT:
+        x = style.text_margin_left - style.width/2;
+        break;
+      case XAlign::CENTER:
+        x = (style.text_margin_left - style.text_margin_right)/2 - width/2;
+        break;
+      case XAlign::RIGHT:
+        x = style.width/2 - style.text_margin_right - width;
+        break;
+    }
+    text_.setPosition(x, -text_.getFont()->getLineSpacing(text_.getCharacterSize())/2);
   }
 }
 
@@ -418,16 +414,21 @@ void WEntry::activate(bool active)
   active_ = active;
   if(active_) {
     assert(focused());
-    style_active_.apply(*this);
+    current_style_ = &style_active_;
+    // reset cursor at the end
+    cursor_pos_ = text_.getString().getSize();
+    // but ensure there is no extra space right
+    text_.setPosition(0, 0);
     screen_.intf().setTextInput(true);
   } else {
     if(focused()) {
-      style_focus_.apply(*this);
+      current_style_ = &style_focus_;
     } else {
-      style_.apply(*this);
+      current_style_ = &style_;
     }
     screen_.intf().setTextInput(false);
   }
+  current_style_->apply(*this);
 }
 
 
@@ -437,6 +438,10 @@ void WEntry::Style::load(const StyleLoader& loader)
 
   text.load(loader);
   frame.load(loader);
+
+  if(!loader.fetchStyle<XAlign>("XAlign", xalign)) {
+    xalign = XAlign::LEFT;
+  }
 
   width = loader.getStyle<float>("Width", key);
   if(width <= 0) {
@@ -453,7 +458,6 @@ void WEntry::Style::apply(WEntry& o)
 {
   text.apply(o.text_);
   frame.apply(o.frame_);
-  o.width_ = width;
 
   unsigned int text_height = o.text_.getFont()->getLineSpacing(o.text_.getCharacterSize());
   o.text_img_.create(width-(text_margin_left+text_margin_right), text_height);
@@ -494,11 +498,11 @@ const std::string& WChoice::type() const {
 }
 
 WChoice::WChoice(const Screen& screen, const std::string& name):
-    WFocusable(screen, name), callback_(nullptr)
+    WFocusable(screen, name), current_style_(&style_), callback_(nullptr)
 {
   style_.load(*this);
   style_focus_.load(StyleLoaderPrefix(*this, "Focus", true));
-  style_.apply(*this);
+  current_style_->apply(*this);
 }
 
 void WChoice::setItems(const ItemContainer& items)
@@ -516,9 +520,8 @@ void WChoice::select(unsigned int i)
 {
   assert(i < items_.size());
   text_.setString(items_[i]);
+  current_style_->align.apply(text_);
   index_ = i;
-  sf::FloatRect r = text_.getLocalBounds();
-  text_.setOrigin(r.width/2, text_.getFont()->getLineSpacing(text_.getCharacterSize())/2);
   if(callback_) {
     callback_();
   }
@@ -543,7 +546,7 @@ unsigned int WChoice::addItem(const ItemContainer::value_type& v)
 void WChoice::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
   states.transform *= getTransform();
-  frame_.render(target, states, width_);
+  frame_.render(target, states, current_style_->width);
   target.draw(text_, states);
 }
 
@@ -563,10 +566,11 @@ void WChoice::focus(bool focused)
 {
   WFocusable::focus(focused);
   if(focused) {
-    style_focus_.apply(*this);
+    current_style_ = &style_focus_;
   } else {
-    style_.apply(*this);
+    current_style_ = &style_;
   }
+  current_style_->apply(*this);
 }
 
 
@@ -575,6 +579,7 @@ void WChoice::Style::load(const StyleLoader& loader)
   std::string key;
 
   text.load(loader);
+  align.load(loader);
   frame.load(loader);
 
   width = loader.getStyle<float>("Width", key);
@@ -586,8 +591,8 @@ void WChoice::Style::load(const StyleLoader& loader)
 void WChoice::Style::apply(WChoice& o)
 {
   text.apply(o.text_);
+  align.apply(o.text_);
   frame.apply(o.frame_);
-  o.width_ = width;
 }
 
 

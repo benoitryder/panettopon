@@ -196,6 +196,8 @@ WNotification::WNotification(const Screen& screen, const std::string& name):
   this->setPosition(getStyle<sf::Vector2f>("Pos"));
 
   applyStyle(text_);
+  style_align_.load(*this);
+  style_align_.apply(text_);
   applyStyle(frame_);
   width_ = getStyle<float>("Width", key);
   if(width_ <= 0) {
@@ -206,8 +208,7 @@ WNotification::WNotification(const Screen& screen, const std::string& name):
 void WNotification::setNotification(const Notification& notif)
 {
   text_.setString(notif.msg);
-  sf::FloatRect r = text_.getLocalBounds();
-  text_.setOrigin(r.width/2, (text_.getFont()->getLineSpacing(text_.getCharacterSize()))/2);
+  style_align_.apply(text_);
 }
 
 void WNotification::draw(sf::RenderTarget& target, sf::RenderStates states) const

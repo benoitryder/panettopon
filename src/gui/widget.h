@@ -144,6 +144,7 @@ class WFrame: public Widget
  *
  * Style properties:
  *  - StyleText properties
+ *  - StyleTextAlign properties
  *  - ImageFrameX properties
  *  - Width
  *  - Focus.*: all properties
@@ -153,6 +154,7 @@ class WButton: public WFocusable
  public:
   struct Style {
     StyleText text;
+    StyleTextAlign align;
     ImageFrameX::Style frame;
     float width;
 
@@ -174,9 +176,9 @@ class WButton: public WFocusable
  private:
   sf::Text caption_;  ///< Button caption
   ImageFrameX frame_;
-  float width_;
   Style style_;
   Style style_focus_;
+  Style* current_style_;
   Callback callback_;
 };
 
@@ -185,7 +187,7 @@ class WButton: public WFocusable
  *
  * Style properties:
  *  - StyleText properties
- *  - TextAlign: left, center, right
+ *  - StyleTextAlign properties
  */
 class WLabel: public Widget
 {
@@ -193,14 +195,13 @@ class WLabel: public Widget
   WLabel(const Screen& screen, const std::string& name);
   void setText(const std::string& caption);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-  void setTextAlign(int align);
 
  protected:
   virtual const std::string& type() const;
 
  private:
   sf::Text text_;
-  int align_;  ///< Text alignement (-1, 0, 1).
+  StyleTextAlign style_align_;
 };
 
 
@@ -209,6 +210,7 @@ class WLabel: public Widget
  * Style properties:
  *  - StyleText properties
  *  - ImageFrameX properties
+ *  - XAlign
  *  - Width
  *  - TextMarginsX: left and right margin for text
  *  - Focus.*
@@ -220,6 +222,7 @@ class WEntry: public WFocusable
   struct Style {
     StyleText text;
     ImageFrameX::Style frame;
+    XAlign xalign;
     float width;
     float text_margin_left;
     float text_margin_right;
@@ -239,7 +242,7 @@ class WEntry: public WFocusable
   virtual const std::string& type() const;
 
  private:
-  /// Update text image and cursor position after text input or cursor move
+  /// Update text, text image and cursor position for display
   void updateTextDisplay(bool force=false);
   void activate(bool active);
 
@@ -262,12 +265,12 @@ class WEntry: public WFocusable
   Cursor cursor_;
   ImageFrameX frame_;
   unsigned int cursor_pos_;  ///< cursor position, in the complete string
-  float width_;
   bool active_;
   bool auto_active_;
   Style style_;
   Style style_focus_;
   Style style_active_;
+  Style* current_style_;
 };
 
 
@@ -277,6 +280,7 @@ class WEntry: public WFocusable
  *
  * Style properties:
  *  - StyleText properties
+ *  - StyleTextAlign properties
  *  - ImageFrameX properties
  *  - Width
  *  - Focus.*
@@ -286,6 +290,7 @@ class WChoice: public WFocusable
  public:
   struct Style {
     StyleText text;
+    StyleTextAlign align;
     ImageFrameX::Style frame;
     float width;
 
@@ -321,9 +326,9 @@ class WChoice: public WFocusable
   unsigned int index_;
   sf::Text text_;
   ImageFrameX frame_;
-  float width_;
   Style style_;
   Style style_focus_;
+  Style* current_style_;
   Callback callback_;
 };
 

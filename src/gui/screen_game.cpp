@@ -286,7 +286,7 @@ FieldDisplay::FieldDisplay(const GuiInterface& intf, const Field& fld, const Sty
     text_start_countdown_ = std::make_unique<sf::Text>();
     style_.start_countdown_style.apply(*text_start_countdown_);
     // use a dummy string to center the text
-    text_start_countdown_->setString("0.0");
+    text_start_countdown_->setString("0.00");
     sf::FloatRect r = text_start_countdown_->getLocalBounds();
     text_start_countdown_->setOrigin(r.width/2, 0);
     text_start_countdown_->setPosition(style_.bk_size * FIELD_WIDTH/2, style_.bk_size * 2);

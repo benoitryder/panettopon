@@ -20,6 +20,7 @@ class Screen;
  *
  * Style properties:
  *  - StyleText properties
+ *  - StyleTextAlign properties
  *  - ImageFrameX properties
  *  - Width
  */
@@ -43,6 +44,7 @@ class WNotification: public Widget
   sf::Text text_;
   ImageFrameX frame_;
   float width_;
+  StyleTextAlign style_align_;
 };
 
 
