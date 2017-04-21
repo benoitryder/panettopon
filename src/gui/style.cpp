@@ -110,6 +110,53 @@ void StyleText::apply(sf::Text& o) const
 }
 
 
+void StyleTextAlign::load(const StyleLoader& loader)
+{
+  if(!loader.fetchStyle<XAlign>("XAlign", xalign)) {
+    xalign = XAlign::CENTER;
+  }
+  if(!loader.fetchStyle<YAlign>("YAlign", yalign)) {
+    yalign = YAlign::BASELINE;
+  }
+}
+
+
+void StyleTextAlign::apply(sf::Text& o) const
+{
+  sf::FloatRect r = o.getLocalBounds();
+  float x;
+  switch(xalign) {
+    case XAlign::LEFT:
+      x = 0;
+      break;
+    case XAlign::CENTER:
+      x = r.width / 2;
+      break;
+    case XAlign::RIGHT:
+      x = r.width;
+      break;
+  }
+
+  float y;
+  switch(yalign) {
+    case YAlign::TOP:
+      y = 0;
+      break;
+    case YAlign::MIDDLE:
+      y = r.height/2;
+      break;
+    case YAlign::BOTTOM:
+      y = r.height;
+      break;
+    case YAlign::BASELINE:
+      y = o.getFont()->getLineSpacing(o.getCharacterSize())/2.;
+      break;
+  }
+
+  o.setOrigin(x, y);
+}
+
+
 void StyleSprite::load(const StyleLoader& loader)
 {
   const ResourceManager& res_mgr = loader.res_mgr();
@@ -128,5 +175,34 @@ void StyleSprite::apply(sf::Sprite& o) const
 }
 
 
+}
+
+
+gui::XAlign IniFileConverter<gui::XAlign>::parse(const std::string& value)
+{
+  if(value == "left") {
+    return gui::XAlign::LEFT;
+  } else if(value == "center") {
+    return gui::XAlign::CENTER;
+  } else if(value == "right") {
+    return gui::XAlign::RIGHT;
+  } else {
+    throw std::invalid_argument("invalid XAlign value");
+  }
+}
+
+gui::YAlign IniFileConverter<gui::YAlign>::parse(const std::string& value)
+{
+  if(value == "top") {
+    return gui::YAlign::TOP;
+  } else if(value == "middle") {
+    return gui::YAlign::MIDDLE;
+  } else if(value == "bottom") {
+    return gui::YAlign::BOTTOM;
+  } else if(value == "baseline") {
+    return gui::YAlign::BASELINE;
+  } else {
+    throw std::invalid_argument("invalid YAlign value");
+  }
 }
 

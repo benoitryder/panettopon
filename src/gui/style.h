@@ -196,6 +196,39 @@ struct StyleText
 };
 
 
+/// Horizontal alignment
+enum class XAlign
+{
+  LEFT, CENTER, RIGHT,
+};
+
+/// Vertical alignment
+enum class YAlign
+{
+  TOP, MIDDLE, BOTTOM,
+  BASELINE, ///< For text, align on baseline
+};
+
+/** @brief Style for alignement sf::Text
+ *
+ * Style properties:
+ *  - XAlign (default: center)
+ *  - YAlign (default: baseline)
+ *
+ * This is intended to be used along with StyleText.
+ * Since it has to be reapplied each time text content changes, it must be
+ * stored and cannot be applied once for ever.
+ */
+struct StyleTextAlign
+{
+  XAlign xalign;
+  YAlign yalign;
+
+  void load(const StyleLoader& loader);
+  void apply(sf::Text& o) const;
+};
+
+
 /** @brief Style for a sf::Sprite
  *
  * Style properties:
@@ -217,6 +250,21 @@ template <> struct StyleType<sf::Sprite> { typedef StyleSprite container; };
 
 
 }
+
+/** @name Conversions for style.ini */
+//@{
+
+template <> struct IniFileConverter<gui::XAlign>
+{
+  static gui::XAlign parse(const std::string& value);
+};
+
+template <> struct IniFileConverter<gui::YAlign>
+{
+  static gui::YAlign parse(const std::string& value);
+};
+
+//@}
 
 
 #endif
