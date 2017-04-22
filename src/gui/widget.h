@@ -237,6 +237,8 @@ class WEntry: public WFocusable
   virtual bool onInputEvent(const InputMapping&, const sf::Event&);
   virtual void focus(bool focused);
   std::string text() const { return text_.getString(); }
+  typedef std::function<void(bool)> Callback;
+  void setCallback(Callback cb) { callback_ = cb; }
 
  protected:
   virtual const std::string& type() const;
@@ -244,7 +246,8 @@ class WEntry: public WFocusable
  private:
   /// Update text, text image and cursor position for display
   void updateTextDisplay(bool force=false);
-  void activate(bool active);
+  void activate();
+  void deactivate(bool validate);
 
  private:
   class Cursor: public sf::Drawable {
@@ -271,6 +274,7 @@ class WEntry: public WFocusable
   Style style_focus_;
   Style style_active_;
   Style* current_style_;
+  Callback callback_;
 };
 
 

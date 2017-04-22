@@ -316,9 +316,9 @@ bool WEntry::onInputEvent(const InputMapping& mapping, const sf::Event& ev)
           s.erase(cursor_pos_);
           this->setText(s);
         }
-      // validate
+      // validate or cancel
       } else if(!auto_active_ && (c == sf::Keyboard::Return || c == sf::Keyboard::Escape)) {
-        this->activate(false);
+        this->deactivate(c == sf::Keyboard::Return);
         return true;
       // prevent focus switching when active (typed text has to be validated)
       } else if(!auto_active_ && this->neighborToFocus(mapping, ev)) {
@@ -330,7 +330,7 @@ bool WEntry::onInputEvent(const InputMapping& mapping, const sf::Event& ev)
     }
   } else if(!auto_active_) {
     if(mapping.confirm.match(ev)) {
-      this->activate(true);
+      this->activate();
       return true;
     }
   }
@@ -342,14 +342,14 @@ void WEntry::focus(bool focused)
   WFocusable::focus(focused);
   if(focused) {
     if(auto_active_) {
-      this->activate(true);
+      this->activate();
     } else {
       current_style_ = &style_focus_;
       current_style_->apply(*this);
     }
   } else {
     if(active_) {
-      this->activate(false);
+      this->deactivate(auto_active_);
     } else {
       current_style_ = &style_;
       current_style_->apply(*this);
@@ -409,26 +409,32 @@ void WEntry::updateTextDisplay(bool force)
   }
 }
 
-void WEntry::activate(bool active)
+void WEntry::activate()
 {
-  active_ = active;
-  if(active_) {
-    assert(focused());
-    current_style_ = &style_active_;
-    // reset cursor at the end
-    cursor_pos_ = text_.getString().getSize();
-    // but ensure there is no extra space right
-    text_.setPosition(0, 0);
-    screen_.intf().setTextInput(true);
-  } else {
-    if(focused()) {
-      current_style_ = &style_focus_;
-    } else {
-      current_style_ = &style_;
-    }
-    screen_.intf().setTextInput(false);
-  }
+  active_ = true;
+  assert(focused());
+  current_style_ = &style_active_;
+  // reset cursor at the end
+  cursor_pos_ = text_.getString().getSize();
+  // but ensure there is no extra space right
+  text_.setPosition(0, 0);
+  screen_.intf().setTextInput(true);
   current_style_->apply(*this);
+}
+
+void WEntry::deactivate(bool validate)
+{
+  active_ = false;
+  if(focused()) {
+    current_style_ = &style_focus_;
+  } else {
+    current_style_ = &style_;
+  }
+  screen_.intf().setTextInput(false);
+  current_style_->apply(*this);
+  if(callback_) {
+    callback_(validate);
+  }
 }
 
 
