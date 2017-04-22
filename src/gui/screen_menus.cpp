@@ -528,7 +528,7 @@ ScreenLobby::WPlayerFrame::WPlayerFrame(ScreenLobby& screen, Player& pl, const I
 
   frame_ = &addWidget<WFrame>(screen, IniFile::join(type(), "Border"));
 
-  nick_ = &addWidget<WEntry>(screen, IniFile::join(type(), "Nick"));
+  nick_ = &addWidget<WEntry>(screen, IniFile::join(type(), "Nick"), false);
   if(player_.local()) {
     choice_mapping_ = &addWidget<WChoice>(screen, IniFile::join(type(), "Mapping"));
   } else {
@@ -554,6 +554,7 @@ ScreenLobby::WPlayerFrame::WPlayerFrame(ScreenLobby& screen, Player& pl, const I
   this->focus(choice_conf_);
 
   // set callbacks after all init, to avoid repeated callback calls
+  nick_->setCallback(std::bind(&onNickChange, this, std::placeholders::_1));
   choice_conf_->setCallback(std::bind(&onConfChange, this));
   if(choice_mapping_) {
     choice_mapping_->setCallback(std::bind(&onMappingChange, this));
@@ -666,6 +667,18 @@ void ScreenLobby::WPlayerFrame::onMappingChange()
     for(auto& frame : screen_lobby_.player_frames_) {
       frame.second->updateMappingItems();
     }
+  }
+}
+
+void ScreenLobby::WPlayerFrame::onNickChange(bool validated)
+{
+  assert(player_.local());
+  if(validated) {
+    //TODO use callback to reset nick if call failed (invalid nick)
+    screen_.intf().instance()->playerSetNick(player_, nick_->text());
+  } else {
+    // cancelled, reset nick to the server value
+    nick_->setText(player_.nick());
   }
 }
 

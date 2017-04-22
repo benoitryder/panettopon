@@ -127,7 +127,7 @@ class ScreenLobby: public Screen
    *
    * Style properties:
    *  - Border (frame)
-   *  - Nick (label)
+   *  - Nick (entry)
    *  - Conf (choice)
    *  - Ready (sprite)
    *  - Ready.Pos
@@ -158,6 +158,8 @@ class ScreenLobby: public Screen
 
     /// Focus a given widget, or nothing
     void focus(WFocusable* w);
+    /// Callback for nick change
+    void onNickChange(bool validated);
     /// Callback for mapping choice change
     void onMappingChange();
     /// Callback for conf choice change
