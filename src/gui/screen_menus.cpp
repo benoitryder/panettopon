@@ -430,6 +430,9 @@ void ScreenLobby::onPlayerStateChange(Player& pl)
   if(pl.state() == Player::State::QUIT) {
     player_frames_.erase(pl.plid());
     this->updatePlayerFramesLayout();
+    for(auto& kv : player_frames_) {
+      kv.second->updateMappingItems();
+    }
   } else {
     player_frames_.find(pl.plid())->second->update();
   }
