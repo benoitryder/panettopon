@@ -181,8 +181,8 @@ void CursesInterface::onNotification(GameInstance::Severity sev, const std::stri
   switch( sev ) {
     case GameInstance::Severity::MESSAGE: c = 2; break;
     case GameInstance::Severity::NOTICE:  c = 3; break;
-    case GameInstance::Severity::WARNING: c = 7; break;
-    case GameInstance::Severity::ERROR:   c = 8; break;
+    case GameInstance::Severity::ERROR:   c = 7; break;
+    case GameInstance::Severity::FATAL:   c = 8; break;
   }
   this->addMessage(c, ">> %s", msg.c_str());
 }
@@ -190,7 +190,7 @@ void CursesInterface::onNotification(GameInstance::Severity sev, const std::stri
 void CursesInterface::onServerConnect(bool success)
 {
   if(success) {
-    instance_.newLocalPlayer(cfg_->get("Client.Nick", "Player"));
+    instance_.newLocalPlayer(cfg_->get("Client.Nick", "Player"), nullptr);
   } else {
     io_service_.stop();
   }

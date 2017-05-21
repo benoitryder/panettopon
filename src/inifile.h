@@ -17,6 +17,7 @@
  * Empty values are considered as unset.
  */
 
+#include <vector>
 #include <map>
 #include <string>
 #include <stdexcept>

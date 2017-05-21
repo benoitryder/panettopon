@@ -557,10 +557,10 @@ ScreenLobby::WPlayerFrame::WPlayerFrame(ScreenLobby& screen, Player& pl, const I
   this->focus(choice_conf_);
 
   // set callbacks after all init, to avoid repeated callback calls
-  nick_->setCallback(std::bind(&onNickChange, this, std::placeholders::_1));
-  choice_conf_->setCallback(std::bind(&onConfChange, this));
+  nick_->setCallback(std::bind(&WPlayerFrame::onNickChange, this, std::placeholders::_1));
+  choice_conf_->setCallback(std::bind(&WPlayerFrame::onConfChange, this));
   if(choice_mapping_) {
-    choice_mapping_->setCallback(std::bind(&onMappingChange, this));
+    choice_mapping_->setCallback(std::bind(&WPlayerFrame::onMappingChange, this));
   }
 }
 
