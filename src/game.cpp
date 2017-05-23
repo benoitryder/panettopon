@@ -961,7 +961,7 @@ void Field::transformGarbage(int x, int y)
     int yy;
     for( yy=y-1; yy>=0; yy-- ) {
       const Block& bk2 = block(x,yy);
-      if( bk2.isNone() ) {
+      if( !bk2.isColor() ) {
         continue;
       }
       if( !bk2.isState(BkColor::MUTATE) && !bk2.isState(BkColor::FLASH) ) {
