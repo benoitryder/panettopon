@@ -3,7 +3,7 @@ find_package(Inkscape REQUIRED)
 
 # In-game images
 INKSCAPE_CONVERT_SVG2PNG(GAME_PNGS res.svg 
-  DPI 45
+  DPI 48
   BkColor-map BkGarbage-map
   SwapCursor Signs
   GbHanging-map
