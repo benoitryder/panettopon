@@ -417,10 +417,6 @@ class Field
   unsigned int raise_speed_index_;
   /// True if manual raise is active
   bool manual_raise_;
-  /// Remaining raise step before next line.
-  unsigned int raise_step_;
-  /// Tick before next raise, -1 for manual raise.
-  int raise_dt_;
   /// Remaining stop ticks.
   unsigned int stop_dt_;
   /// Transformed block counter, for transforming garbages.
